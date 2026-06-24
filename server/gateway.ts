@@ -1,7 +1,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
-import { buildAutomationPlan } from "../src/domain/automation";
-import type { CabinetRun, CabinetRunMode, CabinetRole, ProviderConfig, SandboxPolicy } from "../src/domain/types";
+import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
+import type {
+  AutomationApprovalRecord,
+  CabinetRun,
+  CabinetRunMode,
+  CabinetRole,
+  ProviderConfig,
+  SandboxPolicy
+} from "../src/domain/types";
 import { runGatewayCabinet } from "./liveCabinet";
 import { validateProviderConfig } from "./providerAdapters";
 import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolicy";
@@ -24,7 +31,13 @@ const server = createServer(async (request, response) => {
       sendJson(response, 200, {
         ok: true,
         service: "naikaku-local-gateway",
-        capabilities: ["provider-test", "cabinet-run", "automation-plan", "sandbox-policy-check"],
+        capabilities: [
+          "provider-test",
+          "cabinet-run",
+          "automation-plan",
+          "executor-handoff",
+          "sandbox-policy-check"
+        ],
         timestamp: new Date().toISOString()
       });
       return;
@@ -66,6 +79,19 @@ const server = createServer(async (request, response) => {
         sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
       sendJson(response, 200, { actions: plan });
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/v1/executor/handoff") {
+      const body = await readJson<{
+        run: CabinetRun;
+        approvalRecords?: AutomationApprovalRecord[];
+      }>(request);
+      const handoff = buildExecutorHandoff({
+        run: body.run,
+        approvalRecords: body.approvalRecords || []
+      });
+      sendJson(response, 200, handoff);
       return;
     }
 

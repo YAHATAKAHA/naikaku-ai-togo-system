@@ -1,8 +1,10 @@
 import type {
   AutomationAction,
+  AutomationApprovalRecord,
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
+  ExecutorHandoff,
   ProviderConfig
 } from "./types";
 
@@ -98,6 +100,30 @@ export async function planAutomationViaGateway(
   }
 
   return (await response.json()) as Promise<{ actions: AutomationAction[] }>;
+}
+
+export async function createExecutorHandoffViaGateway(
+  run: CabinetRun,
+  approvalRecords: AutomationApprovalRecord[],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/executor/handoff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      run,
+      approvalRecords
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway executor handoff failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ExecutorHandoff;
 }
 
 export async function checkGatewayHealth() {

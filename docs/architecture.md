@@ -54,6 +54,8 @@ stage definition
   -> provider adapter invoke
   -> sandbox/tool action request
   -> automation queue policy decision
+  -> approval record
+  -> executor handoff
   -> artifact
   -> audit log
   -> scoring pass
@@ -80,7 +82,7 @@ Executor profiles model the runtime that can perform actions:
 
 Executors should be implemented as independent services. The frontend should never directly run host commands.
 
-Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Executors should only consume actions that are `allowed` or have a recorded human approval.
+Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows.
 
 ## Persistence
 
@@ -92,6 +94,7 @@ Production persistence should store:
 - Provider aliases, not raw keys.
 - Sandbox policy.
 - Runs, artifacts, logs, approvals, and score history.
+- Executor handoff bundles for replay and runner development.
 - Memory entries that pass retention policy.
 
 ## Parallel Development Boundaries

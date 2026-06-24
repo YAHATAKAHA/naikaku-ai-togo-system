@@ -18,7 +18,7 @@ import {
   Sparkles,
   Upload
 } from "lucide-react";
-import { AutomationQueue, type AutomationDecision } from "./components/AutomationQueue";
+import { AutomationQueue } from "./components/AutomationQueue";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
@@ -26,26 +26,40 @@ import { RunLog } from "./components/RunLog";
 import { SandboxPanel } from "./components/SandboxPanel";
 import {
   addRunHistoryItem,
+  clearCurrentRun,
   clearRunHistory,
   createDefaultWorkspace,
+  loadApprovalRecords,
+  loadCurrentRun,
   loadRunHistory,
   loadWorkspace,
   parseWorkspaceExport,
+  saveApprovalRecord,
+  saveCurrentRun,
   saveWorkspace,
+  serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
+import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { runCabinetMission } from "./domain/orchestrator";
 import { gatewayBaseUrl, runCabinetViaGateway } from "./domain/gatewayClient";
-import type { CabinetRole, CabinetRun, RunHistoryItem } from "./domain/types";
+import type {
+  AutomationAction,
+  AutomationApprovalDecision,
+  AutomationApprovalRecord,
+  CabinetRole,
+  CabinetRun,
+  RunHistoryItem
+} from "./domain/types";
 import type { CabinetRunMode } from "./domain/types";
 
 export function App() {
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
   const [selectedRoleId, setSelectedRoleId] = useState(workspace.roles[0]?.id || "");
   const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
-  const [run, setRun] = useState<CabinetRun | null>(null);
+  const [run, setRun] = useState<CabinetRun | null>(() => loadCurrentRun());
   const [runMode, setRunMode] = useState<CabinetRunMode>("dry-run");
-  const [automationDecisions, setAutomationDecisions] = useState<Record<string, AutomationDecision>>({});
+  const [approvalRecords, setApprovalRecords] = useState<AutomationApprovalRecord[]>([]);
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
@@ -53,6 +67,7 @@ export function App() {
     message: string;
   }>({ status: "idle", message: "Gateway ready when local service is running." });
   const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -61,6 +76,21 @@ export function App() {
   );
 
   const activeRoles = workspace.roles.filter((role) => role.enabled);
+  const approvalRecordsByAction = useMemo(
+    () => Object.fromEntries(approvalRecordsByActionId(approvalRecords)),
+    [approvalRecords]
+  );
+  const readyActionCount = useMemo(
+    () =>
+      run
+        ? buildExecutorHandoff({
+            run,
+            approvalRecords,
+            createdAt: run.completedAt
+          }).readyActions.length
+        : 0,
+    [approvalRecords, run]
+  );
 
   useEffect(() => {
     return () => {
@@ -71,7 +101,16 @@ export function App() {
   }, [exportLink]);
 
   useEffect(() => {
-    setAutomationDecisions({});
+    return () => {
+      if (handoffLink) {
+        URL.revokeObjectURL(handoffLink.href);
+      }
+    };
+  }, [handoffLink]);
+
+  useEffect(() => {
+    setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
+    setHandoffLink(null);
   }, [run?.id]);
 
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
@@ -111,6 +150,7 @@ export function App() {
     try {
       const result = await runCabinetViaGateway(workspace, runMode);
       setRun(result.run);
+      saveCurrentRun(result.run);
       setRunHistory((current) => addRunHistoryItem(result.run, result.source, current));
       setRunState({
         status: "gateway",
@@ -119,6 +159,7 @@ export function App() {
     } catch (error) {
       const fallbackRun = runCabinetMission(workspace);
       setRun(fallbackRun);
+      saveCurrentRun(fallbackRun);
       setRunHistory((current) => addRunHistoryItem(fallbackRun, "fallback", current));
       setRunState({
         status: "fallback",
@@ -140,7 +181,9 @@ export function App() {
     setWorkspace(next);
     setSelectedRoleId(next.roles[0].id);
     setRun(null);
-    setAutomationDecisions({});
+    clearCurrentRun();
+    setApprovalRecords([]);
+    setHandoffLink(null);
     setSessionSecrets({});
   }
 
@@ -170,7 +213,9 @@ export function App() {
       setWorkspace(imported);
       setSelectedRoleId(imported.roles[0]?.id || "");
       setRun(null);
-      setAutomationDecisions({});
+      clearCurrentRun();
+      setApprovalRecords([]);
+      setHandoffLink(null);
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -181,6 +226,35 @@ export function App() {
         message: error instanceof Error ? `Import failed: ${error.message}` : "Import failed."
       });
     }
+  }
+
+  function recordAutomationDecision(
+    action: AutomationAction,
+    decision: AutomationApprovalDecision
+  ) {
+    const record = createApprovalRecord({
+      action,
+      decision
+    });
+    const nextRecords = saveApprovalRecord(record).filter(
+      (candidate) => candidate.runId === action.runId
+    );
+    setApprovalRecords(nextRecords);
+    setHandoffLink(null);
+  }
+
+  function exportExecutorHandoff() {
+    if (!run) return;
+
+    const blob = new Blob([serializeRunBundle(run, approvalRecords)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-handoff-${run.id.replace(/[^a-z0-9-]/gi, "-")}.json`;
+
+    if (handoffLink) {
+      URL.revokeObjectURL(handoffLink.href);
+    }
+
+    setHandoffLink({ href: url, fileName });
   }
 
   return (
@@ -271,13 +345,11 @@ export function App() {
 
           <AutomationQueue
             actions={run?.automationActions || []}
-            decisions={automationDecisions}
-            onDecision={(actionId, decision) =>
-              setAutomationDecisions((current) => ({
-                ...current,
-                [actionId]: decision
-              }))
-            }
+            approvalRecords={approvalRecordsByAction}
+            readyCount={readyActionCount}
+            handoffLink={handoffLink}
+            onDecision={recordAutomationDecision}
+            onExportHandoff={exportExecutorHandoff}
           />
 
           <SandboxPanel

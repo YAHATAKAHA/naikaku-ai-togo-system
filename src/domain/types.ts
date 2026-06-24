@@ -95,6 +95,7 @@ export interface CabinetArtifact {
 }
 
 export type AutomationActionStatus = "allowed" | "needs-approval" | "blocked";
+export type AutomationApprovalDecision = "approved" | "rejected";
 
 export interface AutomationAction {
   id: string;
@@ -110,6 +111,31 @@ export interface AutomationAction {
   approvalRequired: boolean;
   reason: string;
   auditTags: string[];
+}
+
+export interface AutomationApprovalRecord {
+  id: string;
+  runId: string;
+  actionId: string;
+  decision: AutomationApprovalDecision;
+  decidedAt: string;
+  decidedBy: string;
+  reason: string;
+  actionSnapshot: AutomationAction;
+}
+
+export interface ExecutorHandoffAction extends AutomationAction {
+  approvalRecordId?: string;
+  handoffStatus: "ready";
+}
+
+export interface ExecutorHandoff {
+  id: string;
+  runId: string;
+  createdAt: string;
+  readyActions: ExecutorHandoffAction[];
+  heldActions: AutomationAction[];
+  approvalRecords: AutomationApprovalRecord[];
 }
 
 export interface CabinetLogEntry {

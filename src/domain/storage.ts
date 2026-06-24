@@ -1,8 +1,17 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
-import type { CabinetRole, CabinetRun, CabinetWorkspace, RunHistoryItem } from "./types";
+import { buildExecutorHandoff } from "./automation";
+import type {
+  AutomationApprovalRecord,
+  CabinetRole,
+  CabinetRun,
+  CabinetWorkspace,
+  RunHistoryItem
+} from "./types";
 
 const WORKSPACE_KEY = "naikaku.workspace.v1";
 const RUN_HISTORY_KEY = "naikaku.run-history.v1";
+const CURRENT_RUN_KEY = "naikaku.current-run.v1";
+const APPROVAL_RECORDS_KEY = "naikaku.approval-records.v1";
 const MAX_HISTORY_ITEMS = 12;
 
 export function createDefaultWorkspace(): CabinetWorkspace {
@@ -14,7 +23,7 @@ export function createDefaultWorkspace(): CabinetWorkspace {
 }
 
 export function loadWorkspace(): CabinetWorkspace {
-  if (typeof localStorage === "undefined") {
+  if (!canUseLocalStorage()) {
     return createDefaultWorkspace();
   }
 
@@ -36,7 +45,7 @@ export function loadWorkspace(): CabinetWorkspace {
 }
 
 export function saveWorkspace(workspace: CabinetWorkspace) {
-  if (typeof localStorage === "undefined") {
+  if (!canUseLocalStorage()) {
     return;
   }
 
@@ -86,7 +95,7 @@ function isWorkspaceEnvelope(
 }
 
 export function loadRunHistory(): RunHistoryItem[] {
-  if (typeof localStorage === "undefined") {
+  if (!canUseLocalStorage()) {
     return [];
   }
 
@@ -121,18 +130,123 @@ export function addRunHistoryItem(
     ...currentHistory.filter((item) => item.id !== run.id)
   ].slice(0, MAX_HISTORY_ITEMS);
 
-  if (typeof localStorage !== "undefined") {
+  if (canUseLocalStorage()) {
     localStorage.setItem(RUN_HISTORY_KEY, JSON.stringify(nextHistory));
   }
 
   return nextHistory;
 }
 
+export function loadCurrentRun(): CabinetRun | null {
+  if (!canUseLocalStorage()) {
+    return null;
+  }
+
+  const raw = localStorage.getItem(CURRENT_RUN_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as CabinetRun;
+    return parsed?.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveCurrentRun(run: CabinetRun) {
+  if (!canUseLocalStorage()) {
+    return;
+  }
+
+  localStorage.setItem(CURRENT_RUN_KEY, JSON.stringify(run));
+}
+
+export function clearCurrentRun() {
+  if (canUseLocalStorage()) {
+    localStorage.removeItem(CURRENT_RUN_KEY);
+  }
+}
+
 export function clearRunHistory() {
-  if (typeof localStorage !== "undefined") {
+  if (canUseLocalStorage()) {
     localStorage.removeItem(RUN_HISTORY_KEY);
   }
   return [];
+}
+
+export function loadApprovalRecords(runId?: string): AutomationApprovalRecord[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  const raw = localStorage.getItem(APPROVAL_RECORDS_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as AutomationApprovalRecord[];
+    const records = Array.isArray(parsed) ? parsed : [];
+    return runId ? records.filter((record) => record.runId === runId) : records;
+  } catch {
+    return [];
+  }
+}
+
+export function saveApprovalRecord(
+  record: AutomationApprovalRecord,
+  currentRecords = loadApprovalRecords()
+) {
+  const nextRecords = [
+    record,
+    ...currentRecords.filter(
+      (candidate) =>
+        candidate.runId !== record.runId || candidate.actionId !== record.actionId
+    )
+  ];
+
+  if (canUseLocalStorage()) {
+    localStorage.setItem(APPROVAL_RECORDS_KEY, JSON.stringify(nextRecords));
+  }
+
+  return nextRecords;
+}
+
+export function clearApprovalRecords(runId?: string) {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  if (!runId) {
+    localStorage.removeItem(APPROVAL_RECORDS_KEY);
+    return [];
+  }
+
+  const nextRecords = loadApprovalRecords().filter((record) => record.runId !== runId);
+  localStorage.setItem(APPROVAL_RECORDS_KEY, JSON.stringify(nextRecords));
+  return nextRecords;
+}
+
+export function serializeRunBundle(
+  run: CabinetRun,
+  approvalRecords: AutomationApprovalRecord[]
+) {
+  return JSON.stringify(
+    {
+      schema: "naikaku.run-bundle.v1",
+      exportedAt: new Date().toISOString(),
+      run,
+      approvalRecords,
+      executorHandoff: buildExecutorHandoff({
+        run,
+        approvalRecords
+      })
+    },
+    null,
+    2
+  );
 }
 
 export function stripUnsafeSecrets(workspace: CabinetWorkspace): CabinetWorkspace {
@@ -162,4 +276,13 @@ function mergeRoles(savedRoles: CabinetRole[]) {
       ...(savedById.get(role.id)?.permissions || {})
     }
   }));
+}
+
+function canUseLocalStorage() {
+  return (
+    typeof localStorage !== "undefined" &&
+    typeof localStorage.getItem === "function" &&
+    typeof localStorage.setItem === "function" &&
+    typeof localStorage.removeItem === "function"
+  );
 }

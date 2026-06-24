@@ -1,9 +1,13 @@
 import type {
   AutomationAction,
+  AutomationApprovalDecision,
+  AutomationApprovalRecord,
   AutomationActionStatus,
   CabinetRun,
   CabinetStageId,
   CabinetWorkspace,
+  ExecutorHandoff,
+  ExecutorHandoffAction,
   ExecutorProfileId,
   RiskLevel,
   RolePermissions
@@ -119,6 +123,81 @@ export function buildAutomationPlan({
   });
 }
 
+export function createApprovalRecord({
+  action,
+  decision,
+  decidedAt = new Date().toISOString(),
+  decidedBy = "local-operator",
+  reason = ""
+}: {
+  action: AutomationAction;
+  decision: AutomationApprovalDecision;
+  decidedAt?: string;
+  decidedBy?: string;
+  reason?: string;
+}): AutomationApprovalRecord {
+  return {
+    id: `${action.runId}-${action.id}-${decision}`,
+    runId: action.runId,
+    actionId: action.id,
+    decision,
+    decidedAt,
+    decidedBy,
+    reason: reason || defaultDecisionReason(decision),
+    actionSnapshot: action
+  };
+}
+
+export function buildExecutorHandoff({
+  run,
+  approvalRecords,
+  createdAt = new Date().toISOString()
+}: {
+  run: CabinetRun;
+  approvalRecords: AutomationApprovalRecord[];
+  createdAt?: string;
+}): ExecutorHandoff {
+  const actions = run.automationActions || [];
+  const approvalsByActionId = approvalRecordsByActionId(approvalRecords);
+  const readyActions: ExecutorHandoffAction[] = [];
+  const heldActions: AutomationAction[] = [];
+
+  for (const action of actions) {
+    const approval = approvalsByActionId.get(action.id);
+    if (action.status === "allowed") {
+      readyActions.push({
+        ...action,
+        handoffStatus: "ready"
+      });
+      continue;
+    }
+
+    if (action.status === "needs-approval" && approval?.decision === "approved") {
+      readyActions.push({
+        ...action,
+        approvalRecordId: approval.id,
+        handoffStatus: "ready"
+      });
+      continue;
+    }
+
+    heldActions.push(action);
+  }
+
+  return {
+    id: `${run.id}-executor-handoff`,
+    runId: run.id,
+    createdAt,
+    readyActions,
+    heldActions,
+    approvalRecords: approvalRecords.filter((record) => record.runId === run.id)
+  };
+}
+
+export function approvalRecordsByActionId(records: AutomationApprovalRecord[]) {
+  return new Map(records.map((record) => [record.actionId, record]));
+}
+
 function actionStatus(
   permissionBlock: string,
   allowed: boolean,
@@ -146,4 +225,10 @@ function permissionBlockReason(action: string, permissions: RolePermissions) {
   }
 
   return "";
+}
+
+function defaultDecisionReason(decision: AutomationApprovalDecision) {
+  return decision === "approved"
+    ? "Human approved this sandbox action for executor handoff."
+    : "Human rejected this sandbox action; executor handoff is blocked.";
 }

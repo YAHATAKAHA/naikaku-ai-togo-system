@@ -1,18 +1,26 @@
 import { Ban, CheckCircle2, CirclePause, ShieldCheck, XCircle } from "lucide-react";
-import type { AutomationAction } from "../domain/types";
-
-export type AutomationDecision = "approved" | "rejected";
+import type {
+  AutomationAction,
+  AutomationApprovalDecision,
+  AutomationApprovalRecord
+} from "../domain/types";
 
 interface AutomationQueueProps {
   actions: AutomationAction[];
-  decisions: Record<string, AutomationDecision>;
-  onDecision: (actionId: string, decision: AutomationDecision) => void;
+  approvalRecords: Record<string, AutomationApprovalRecord>;
+  readyCount: number;
+  handoffLink: { href: string; fileName: string } | null;
+  onDecision: (action: AutomationAction, decision: AutomationApprovalDecision) => void;
+  onExportHandoff: () => void;
 }
 
 export function AutomationQueue({
   actions,
-  decisions,
-  onDecision
+  approvalRecords,
+  readyCount,
+  handoffLink,
+  onDecision,
+  onExportHandoff
 }: AutomationQueueProps) {
   const counts = actions.reduce(
     (next, action) => ({
@@ -38,13 +46,27 @@ export function AutomationQueue({
         <span data-status="blocked">{counts.blocked} blocked</span>
       </div>
 
+      {actions.length ? (
+        <div className="handoff-strip">
+          <span>{readyCount} executor-ready actions</span>
+          <button type="button" onClick={onExportHandoff}>
+            Export handoff
+          </button>
+          {handoffLink ? (
+            <a href={handoffLink.href} download={handoffLink.fileName}>
+              Download JSON
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="queue-list">
         {actions.length ? (
           actions.map((action) => (
             <AutomationRow
               key={action.id}
               action={action}
-              decision={decisions[action.id]}
+              approvalRecord={approvalRecords[action.id]}
               onDecision={onDecision}
             />
           ))
@@ -58,14 +80,14 @@ export function AutomationQueue({
 
 function AutomationRow({
   action,
-  decision,
+  approvalRecord,
   onDecision
 }: {
   action: AutomationAction;
-  decision?: AutomationDecision;
-  onDecision: (actionId: string, decision: AutomationDecision) => void;
+  approvalRecord?: AutomationApprovalRecord;
+  onDecision: (action: AutomationAction, decision: AutomationApprovalDecision) => void;
 }) {
-  const finalStatus = decision || action.status;
+  const finalStatus = approvalRecord?.decision || action.status;
 
   return (
     <article className="queue-row" data-status={finalStatus}>
@@ -81,16 +103,22 @@ function AutomationRow({
           <span>{statusLabel(finalStatus)}</span>
         </div>
         <p>{action.reason}</p>
+        {approvalRecord ? (
+          <em>
+            {approvalRecord.decision} by {approvalRecord.decidedBy} at{" "}
+            {new Date(approvalRecord.decidedAt).toLocaleTimeString()}
+          </em>
+        ) : null}
         <small>
           {action.executorProfileId} / {action.action} / {action.target}
         </small>
       </div>
-      {action.status === "needs-approval" && !decision ? (
+      {action.status === "needs-approval" && !approvalRecord ? (
         <div className="queue-actions">
-          <button type="button" onClick={() => onDecision(action.id, "approved")}>
+          <button type="button" onClick={() => onDecision(action, "approved")}>
             Approve
           </button>
-          <button type="button" onClick={() => onDecision(action.id, "rejected")}>
+          <button type="button" onClick={() => onDecision(action, "rejected")}>
             Reject
           </button>
         </div>
@@ -99,6 +127,6 @@ function AutomationRow({
   );
 }
 
-function statusLabel(status: AutomationAction["status"] | AutomationDecision) {
+function statusLabel(status: AutomationAction["status"] | AutomationApprovalDecision) {
   return status === "needs-approval" ? "approval" : status;
 }

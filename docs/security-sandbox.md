@@ -86,6 +86,14 @@ Cabinet runs now produce sandbox action proposals before any executor work. Each
 
 Executors must treat this queue as the handoff boundary. A Browser Sandbox, Shell Container, Desktop VM, or MCP Proxy should not run a proposed action unless it is policy-allowed or has an explicit human approval record.
 
+Approval records are stored separately from action proposals and include the run id, action id, decision, timestamp, operator id, reason, and action snapshot. Executor handoff JSON is generated from the run plus those approval records:
+
+- `allowed` actions are handoff-ready.
+- `needs-approval` actions become handoff-ready only with an `approved` record.
+- `rejected`, `blocked`, and unapproved actions stay held.
+
+The workbench can export this handoff JSON for executor development. The gateway also exposes `/v1/executor/handoff` so runner services can use the same contract without reading frontend state.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
@@ -95,7 +103,7 @@ Treat web pages, emails, documents, files, and tool outputs as untrusted. A sand
 Before real computer control is enabled:
 
 1. Implement executor gateway authentication.
-2. Persist per-run approval records.
+2. Move per-run approval records from local storage into durable authenticated storage.
 3. Add immutable audit logs.
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.

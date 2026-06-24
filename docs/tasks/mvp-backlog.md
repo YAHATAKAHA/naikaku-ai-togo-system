@@ -51,6 +51,8 @@ Acceptance:
 - Add automation action proposal queue.
 - Add per-action approval UI.
 - Persist per-action approvals.
+- Add executor handoff export.
+- Move approval records to durable backend storage.
 - Add action replay logs.
 
 Acceptance:

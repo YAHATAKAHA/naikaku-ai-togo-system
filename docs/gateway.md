@@ -96,6 +96,31 @@ Response:
 }
 ```
 
+### `POST /v1/executor/handoff`
+
+Builds the executor-facing handoff from a run plus approval records. This does not execute actions. It filters out blocked, rejected, and still-unapproved work.
+
+```json
+{
+  "run": { "id": "run-...", "automationActions": [] },
+  "approvalRecords": []
+}
+```
+
+Response:
+
+```json
+{
+  "id": "run-...-executor-handoff",
+  "runId": "run-...",
+  "readyActions": [],
+  "heldActions": [],
+  "approvalRecords": []
+}
+```
+
+Executors should consume `readyActions` only. A `needs-approval` action appears there only when it has a matching approved `AutomationApprovalRecord`.
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

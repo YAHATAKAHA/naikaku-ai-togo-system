@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
-import { buildAutomationPlan } from "./automation";
+import { buildAutomationPlan, buildExecutorHandoff, createApprovalRecord } from "./automation";
 import { runCabinetMission } from "./orchestrator";
 
 describe("automation planner", () => {
@@ -52,5 +52,45 @@ describe("automation planner", () => {
 
     expect(actions.every((action) => action.status === "blocked")).toBe(true);
     expect(actions.every((action) => action.reason.includes("kill switch"))).toBe(true);
+  });
+
+  it("builds executor handoff only from allowed or approved actions", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const approvalAction = run.automationActions?.find(
+      (action) => action.status === "needs-approval"
+    );
+    const rejectedAction = run.automationActions?.find(
+      (action) => action.status === "needs-approval" && action.id !== approvalAction?.id
+    );
+
+    if (!approvalAction || !rejectedAction) {
+      throw new Error("Expected at least two approval-gated actions in default run.");
+    }
+
+    const handoff = buildExecutorHandoff({
+      run,
+      approvalRecords: [
+        createApprovalRecord({
+          action: approvalAction,
+          decision: "approved",
+          decidedAt: "2026-06-24T00:00:00.000Z"
+        }),
+        createApprovalRecord({
+          action: rejectedAction,
+          decision: "rejected",
+          decidedAt: "2026-06-24T00:01:00.000Z"
+        })
+      ],
+      createdAt: "2026-06-24T00:02:00.000Z"
+    });
+
+    expect(handoff.readyActions.some((action) => action.id === approvalAction.id)).toBe(true);
+    expect(handoff.readyActions.some((action) => action.id === rejectedAction.id)).toBe(false);
+    expect(handoff.readyActions.every((action) => action.status !== "blocked")).toBe(true);
+    expect(handoff.heldActions.some((action) => action.id === rejectedAction.id)).toBe(true);
   });
 });

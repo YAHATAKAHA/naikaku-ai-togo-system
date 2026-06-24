@@ -679,6 +679,44 @@ meter {
   color: var(--red);
 }
 
+.handoff-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.handoff-strip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.handoff-strip button,
+.handoff-strip a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.handoff-strip a {
+  color: var(--green);
+}
+
 .queue-list {
   display: grid;
   gap: 8px;
@@ -746,6 +784,7 @@ meter {
 }
 
 .queue-copy p,
+.queue-copy em,
 .queue-copy small,
 .queue-empty {
   color: var(--muted);
@@ -760,6 +799,14 @@ meter {
 .queue-copy small {
   display: block;
   overflow-wrap: anywhere;
+}
+
+.queue-copy em {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--accent-2);
+  font-style: normal;
+  font-weight: 800;
 }
 
 .queue-actions {
@@ -1155,6 +1202,7 @@ meter {
   }
 
   .queue-actions,
+  .handoff-strip,
   .queue-copy div {
     align-items: flex-start;
     flex-wrap: wrap;
