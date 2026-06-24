@@ -1,5 +1,6 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildExecutorHandoff } from "./automation";
+import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
   CabinetRole,
@@ -264,18 +265,17 @@ export function stripUnsafeSecrets(workspace: CabinetWorkspace): CabinetWorkspac
 
 function mergeRoles(savedRoles: CabinetRole[]) {
   const savedById = new Map(savedRoles.map((role) => [role.id, role]));
-  return defaultRoles.map((role) => ({
-    ...role,
-    ...(savedById.get(role.id) || {}),
-    provider: {
-      ...role.provider,
-      ...(savedById.get(role.id)?.provider || {})
-    },
-    permissions: {
-      ...role.permissions,
-      ...(savedById.get(role.id)?.permissions || {})
-    }
-  }));
+  const mergedDefaults = defaultRoles.map((role) =>
+    completeRole({
+      ...role,
+      ...(savedById.get(role.id) || {})
+    })
+  );
+  const customRoles = savedRoles
+    .filter((role) => role.id && !isDefaultRoleId(role.id))
+    .map((role) => completeRole(role));
+
+  return [...mergedDefaults, ...customRoles];
 }
 
 function canUseLocalStorage() {

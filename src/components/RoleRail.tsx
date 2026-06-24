@@ -1,4 +1,4 @@
-import { Check, Circle, Crown, ShieldCheck } from "lucide-react";
+import { Check, Circle, Copy, Crown, Plus, ShieldCheck } from "lucide-react";
 import type { CabinetRole } from "../domain/types";
 
 interface RoleRailProps {
@@ -6,14 +6,31 @@ interface RoleRailProps {
   selectedRoleId: string;
   onSelect: (roleId: string) => void;
   onToggle: (roleId: string, enabled: boolean) => void;
+  onCreateRole: () => void;
+  onDuplicateRole: () => void;
 }
 
-export function RoleRail({ roles, selectedRoleId, onSelect, onToggle }: RoleRailProps) {
+export function RoleRail({
+  roles,
+  selectedRoleId,
+  onSelect,
+  onToggle,
+  onCreateRole,
+  onDuplicateRole
+}: RoleRailProps) {
   return (
     <aside className="role-rail">
       <div className="rail-heading">
         <span>Cabinet</span>
         <strong>{roles.filter((role) => role.enabled).length}/{roles.length}</strong>
+      </div>
+      <div className="rail-actions">
+        <button type="button" onClick={onCreateRole}>
+          <Plus size={15} /> Add role
+        </button>
+        <button type="button" onClick={onDuplicateRole} disabled={!selectedRoleId}>
+          <Copy size={15} /> Duplicate
+        </button>
       </div>
       <div className="role-list">
         {roles.map((role) => (

@@ -227,6 +227,33 @@ a.secondary-button {
   text-transform: none;
 }
 
+.rail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rail-actions button,
+.inspector-heading-actions button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.rail-actions button:disabled {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
 .role-list {
   display: grid;
   gap: 8px;
@@ -1168,6 +1195,18 @@ meter {
   padding: 14px;
   overflow: auto;
   max-height: calc(100vh - 104px);
+}
+
+.inspector-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inspector-heading-actions button {
+  width: 32px;
+  padding: 0;
+  color: var(--red);
 }
 
 .inspector-section {

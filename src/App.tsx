@@ -44,6 +44,7 @@ import {
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { runExecutorHandoff } from "./domain/executorRunner";
 import { runCabinetMission } from "./domain/orchestrator";
+import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
   createTeamHandoffViaGateway,
@@ -143,6 +144,12 @@ export function App() {
     setTeamHandoffLink(null);
   }, [run?.id, workspace]);
 
+  useEffect(() => {
+    if (!workspace.roles.some((role) => role.id === selectedRoleId)) {
+      setSelectedRoleId(workspace.roles[0]?.id || "");
+    }
+  }, [selectedRoleId, workspace.roles]);
+
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
     setWorkspace((current) => ({
       ...current,
@@ -170,6 +177,48 @@ export function App() {
       ...current,
       [roleId]: value
     }));
+  }
+
+  function addRole(sourceRole?: CabinetRole) {
+    setWorkspace((current) => {
+      const role = createCustomRole({
+        roles: current.roles,
+        sourceRole
+      });
+      setSelectedRoleId(role.id);
+      return {
+        ...current,
+        roles: [...current.roles, role]
+      };
+    });
+    setRunState({
+      status: "idle",
+      message: sourceRole
+        ? `Duplicated ${sourceRole.name}. Configure its provider and permissions before the next run.`
+        : "Added a custom role. Configure its provider and permissions before the next run."
+    });
+  }
+
+  function deleteRole(roleId: string) {
+    if (isDefaultRoleId(roleId)) return;
+
+    setWorkspace((current) => {
+      const nextRoles = current.roles.filter((role) => role.id !== roleId);
+      setSelectedRoleId(nextRoles[0]?.id || "");
+      return {
+        ...current,
+        roles: nextRoles
+      };
+    });
+    setSessionSecrets((current) => {
+      const next = { ...current };
+      delete next[roleId];
+      return next;
+    });
+    setRunState({
+      status: "idle",
+      message: "Custom role removed from the workspace."
+    });
   }
 
   async function runCabinet() {
@@ -412,6 +461,8 @@ export function App() {
           selectedRoleId={selectedRole?.id || ""}
           onSelect={setSelectedRoleId}
           onToggle={(roleId, enabled) => updateRole(roleId, { enabled })}
+          onCreateRole={() => addRole()}
+          onDuplicateRole={() => selectedRole && addRole(selectedRole)}
         />
 
         <section className="center-column">
@@ -464,8 +515,10 @@ export function App() {
         <RoleInspector
           role={selectedRole}
           sessionSecret={sessionSecrets[selectedRole?.id || ""] || ""}
+          canDelete={Boolean(selectedRole && !isDefaultRoleId(selectedRole.id))}
           onSecretChange={(value) => selectedRole && updateSecret(selectedRole.id, value)}
           onChange={(patch) => selectedRole && updateRole(selectedRole.id, patch)}
+          onDelete={() => selectedRole && deleteRole(selectedRole.id)}
         />
       </section>
 

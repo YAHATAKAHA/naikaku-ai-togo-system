@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { CheckCircle2, PlugZap, Shield, TestTube2, XCircle } from "lucide-react";
-import { executorProfiles } from "../data/defaultCabinet";
+import { CheckCircle2, PlugZap, Shield, TestTube2, Trash2, XCircle } from "lucide-react";
+import { cabinetStages, executorProfiles } from "../data/defaultCabinet";
 import { findAdapter } from "../domain/adapters";
 import { testProviderViaGateway } from "../domain/gatewayClient";
-import type { CabinetRole, ProviderKind } from "../domain/types";
+import type { CabinetRole, CabinetStageId, ProviderKind, RiskLevel } from "../domain/types";
 
 interface RoleInspectorProps {
   role: CabinetRole | undefined;
   sessionSecret: string;
+  canDelete: boolean;
   onSecretChange: (value: string) => void;
   onChange: (patch: Partial<CabinetRole>) => void;
+  onDelete: () => void;
 }
 
 export function RoleInspector({
   role,
   sessionSecret,
+  canDelete,
   onSecretChange,
-  onChange
+  onChange,
+  onDelete
 }: RoleInspectorProps) {
   const [testState, setTestState] = useState<{
     status: "idle" | "testing" | "ok" | "error";
@@ -53,7 +57,14 @@ export function RoleInspector({
     <aside className="inspector">
       <div className="inspector-heading">
         <span>Role inspector</span>
-        <strong>{role.ministry}</strong>
+        <div className="inspector-heading-actions">
+          <strong>{role.ministry}</strong>
+          {canDelete ? (
+            <button type="button" onClick={onDelete} aria-label={`Delete ${role.name}`}>
+              <Trash2 size={14} />
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <section className="inspector-section">
@@ -69,6 +80,35 @@ export function RoleInspector({
             onChange={(event) => onChange({ mandate: event.target.value })}
           />
         </label>
+        <label>
+          Ministry
+          <input value={role.ministry} onChange={(event) => onChange({ ministry: event.target.value })} />
+        </label>
+        <div className="dual-input">
+          <label>
+            Stage
+            <select
+              value={role.stage}
+              onChange={(event) => onChange({ stage: event.target.value as CabinetStageId })}
+            >
+              {cabinetStages.map((stage) => (
+                <option key={stage.id} value={stage.id}>{stage.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Risk
+            <select
+              value={role.riskLevel}
+              onChange={(event) => onChange({ riskLevel: event.target.value as RiskLevel })}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </label>
+        </div>
         <label>
           System prompt
           <textarea

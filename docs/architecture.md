@@ -21,8 +21,10 @@ User mission
 The current app is a React/Vite TypeScript workbench. It provides:
 
 - Role configuration.
+- Custom role creation, duplication, deletion, and workspace persistence.
 - Per-role provider settings.
 - Per-role executor and permission settings.
+- Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.
 - Sandbox policy editing.
 - Run artifacts, logs, and score cards.
@@ -105,6 +107,7 @@ Production persistence should store:
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
 - Team handoff packages for parallel development.
+- Custom role definitions beyond the default cabinet.
 - Memory entries that pass retention policy.
 
 ## Parallel Development Boundaries

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { createApprovalRecord } from "./automation";
 import { runCabinetMission } from "./orchestrator";
+import { createCustomRole } from "./roles";
 import { parseWorkspaceExport, saveApprovalRecord, serializeRunBundle, serializeWorkspace } from "./storage";
 
 describe("workspace import/export", () => {
@@ -35,6 +36,20 @@ describe("workspace import/export", () => {
     expect(imported.roles).toHaveLength(defaultRoles.length);
     expect(imported.sandboxPolicy.maxRunMinutes).toBe(30);
     expect(imported.mission).toBe("Imported mission");
+  });
+
+  it("preserves custom roles through workspace export and import", () => {
+    const customRole = createCustomRole({ roles: defaultRoles });
+    const exported = serializeWorkspace({
+      roles: [...defaultRoles, customRole],
+      sandboxPolicy: defaultSandboxPolicy,
+      mission: defaultMission
+    });
+    const imported = parseWorkspaceExport(exported);
+
+    expect(imported.roles).toHaveLength(defaultRoles.length + 1);
+    expect(imported.roles.some((role) => role.id === customRole.id)).toBe(true);
+    expect(exported).not.toContain("sessionSecret");
   });
 
   it("exports run bundles with approvals and executor handoff", () => {

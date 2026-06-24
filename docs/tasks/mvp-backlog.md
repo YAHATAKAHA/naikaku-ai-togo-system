@@ -7,6 +7,7 @@ This backlog is written so different contributors can work in parallel.
 - Refine responsive dashboard layout.
 - Add run history list.
 - Add role duplication and custom role creation.
+- Persist custom roles through save, export, and import.
 - Add keyboard shortcuts for run, save, and switch role.
 - Add import/export workspace JSON.
 - Add role-level team work package export.
