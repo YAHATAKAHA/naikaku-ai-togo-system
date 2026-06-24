@@ -56,6 +56,7 @@ stage definition
   -> automation queue policy decision
   -> approval record
   -> executor handoff
+  -> executor dry-run or runner service
   -> artifact
   -> audit log
   -> scoring pass
@@ -82,7 +83,7 @@ Executor profiles model the runtime that can perform actions:
 
 Executors should be implemented as independent services. The frontend should never directly run host commands.
 
-Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows.
+Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
 ## Persistence
 

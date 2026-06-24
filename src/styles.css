@@ -713,8 +713,74 @@ meter {
   text-decoration: none;
 }
 
+.handoff-strip button:disabled {
+  background: var(--surface-strong);
+}
+
 .handoff-strip a {
   color: var(--green);
+}
+
+.executor-result {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #b9dfd1;
+  border-radius: 8px;
+  background: #f3fbf7;
+  padding: 10px;
+}
+
+.executor-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.executor-result-heading strong,
+.executor-result-heading span {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.executor-result-heading strong {
+  color: var(--green);
+}
+
+.executor-result-heading span {
+  color: var(--muted);
+}
+
+.executor-step-list {
+  display: grid;
+  gap: 7px;
+}
+
+.executor-step {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 9px 10px;
+}
+
+.executor-step strong {
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.executor-step p {
+  margin: 5px 0;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.executor-step small {
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 
 .queue-list {
@@ -1203,6 +1269,7 @@ meter {
 
   .queue-actions,
   .handoff-strip,
+  .executor-result-heading,
   .queue-copy div {
     align-items: flex-start;
     flex-wrap: wrap;

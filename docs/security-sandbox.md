@@ -94,6 +94,8 @@ Approval records are stored separately from action proposals and include the run
 
 The workbench can export this handoff JSON for executor development. The gateway also exposes `/v1/executor/handoff` so runner services can use the same contract without reading frontend state.
 
+The current `/v1/executor/run` runner is deliberately dry-run only. It simulates what each executor profile would receive and records audit output, but it does not run commands, browse sites, control desktops, write files, send network requests, or call MCP tools.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
@@ -107,5 +109,6 @@ Before real computer control is enabled:
 3. Add immutable audit logs.
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.
-6. Add replayable screenshots or terminal logs.
-7. Add red-team tests for prompt injection and localhost/control-plane attacks.
+6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.
+7. Add replayable screenshots or terminal logs.
+8. Add red-team tests for prompt injection and localhost/control-plane attacks.

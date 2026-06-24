@@ -2,7 +2,8 @@ import { Ban, CheckCircle2, CirclePause, ShieldCheck, XCircle } from "lucide-rea
 import type {
   AutomationAction,
   AutomationApprovalDecision,
-  AutomationApprovalRecord
+  AutomationApprovalRecord,
+  ExecutorRun
 } from "../domain/types";
 
 interface AutomationQueueProps {
@@ -10,8 +11,11 @@ interface AutomationQueueProps {
   approvalRecords: Record<string, AutomationApprovalRecord>;
   readyCount: number;
   handoffLink: { href: string; fileName: string } | null;
+  executorRun: ExecutorRun | null;
+  executorRunning: boolean;
   onDecision: (action: AutomationAction, decision: AutomationApprovalDecision) => void;
   onExportHandoff: () => void;
+  onRunExecutor: () => void;
 }
 
 export function AutomationQueue({
@@ -19,8 +23,11 @@ export function AutomationQueue({
   approvalRecords,
   readyCount,
   handoffLink,
+  executorRun,
+  executorRunning,
   onDecision,
-  onExportHandoff
+  onExportHandoff,
+  onRunExecutor
 }: AutomationQueueProps) {
   const counts = actions.reduce(
     (next, action) => ({
@@ -52,11 +59,32 @@ export function AutomationQueue({
           <button type="button" onClick={onExportHandoff}>
             Export handoff
           </button>
+          <button type="button" onClick={onRunExecutor} disabled={executorRunning || readyCount === 0}>
+            {executorRunning ? "Running..." : "Run dry-run"}
+          </button>
           {handoffLink ? (
             <a href={handoffLink.href} download={handoffLink.fileName}>
               Download JSON
             </a>
           ) : null}
+        </div>
+      ) : null}
+
+      {executorRun ? (
+        <div className="executor-result">
+          <div className="executor-result-heading">
+            <strong>{executorRun.summary.simulated} simulated</strong>
+            <span>{executorRun.summary.held} held</span>
+          </div>
+          <div className="executor-step-list">
+            {executorRun.steps.map((step) => (
+              <article key={step.id} className="executor-step">
+                <strong>{step.executorProfileId}</strong>
+                <p>{step.output}</p>
+                <small>{step.action} / {step.target}</small>
+              </article>
+            ))}
+          </div>
         </div>
       ) : null}
 

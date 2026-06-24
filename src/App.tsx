@@ -41,14 +41,20 @@ import {
   serializeWorkspace
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
+import { runExecutorHandoff } from "./domain/executorRunner";
 import { runCabinetMission } from "./domain/orchestrator";
-import { gatewayBaseUrl, runCabinetViaGateway } from "./domain/gatewayClient";
+import {
+  gatewayBaseUrl,
+  runCabinetViaGateway,
+  runExecutorHandoffViaGateway
+} from "./domain/gatewayClient";
 import type {
   AutomationAction,
   AutomationApprovalDecision,
   AutomationApprovalRecord,
   CabinetRole,
   CabinetRun,
+  ExecutorRun,
   RunHistoryItem
 } from "./domain/types";
 import type { CabinetRunMode } from "./domain/types";
@@ -60,6 +66,8 @@ export function App() {
   const [run, setRun] = useState<CabinetRun | null>(() => loadCurrentRun());
   const [runMode, setRunMode] = useState<CabinetRunMode>("dry-run");
   const [approvalRecords, setApprovalRecords] = useState<AutomationApprovalRecord[]>([]);
+  const [executorRun, setExecutorRun] = useState<ExecutorRun | null>(null);
+  const [executorRunning, setExecutorRunning] = useState(false);
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
@@ -111,6 +119,7 @@ export function App() {
   useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
+    setExecutorRun(null);
   }, [run?.id]);
 
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
@@ -183,6 +192,7 @@ export function App() {
     setRun(null);
     clearCurrentRun();
     setApprovalRecords([]);
+    setExecutorRun(null);
     setHandoffLink(null);
     setSessionSecrets({});
   }
@@ -215,6 +225,7 @@ export function App() {
       setRun(null);
       clearCurrentRun();
       setApprovalRecords([]);
+      setExecutorRun(null);
       setHandoffLink(null);
       setRunState({
         status: "idle",
@@ -241,6 +252,7 @@ export function App() {
     );
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
+    setExecutorRun(null);
   }
 
   function exportExecutorHandoff() {
@@ -255,6 +267,33 @@ export function App() {
     }
 
     setHandoffLink({ href: url, fileName });
+  }
+
+  async function runExecutorDryRun() {
+    if (!run) return;
+
+    const handoff = buildExecutorHandoff({
+      run,
+      approvalRecords
+    });
+    setExecutorRunning(true);
+    try {
+      setExecutorRun(await runExecutorHandoffViaGateway(handoff));
+      setRunState({
+        status: "gateway",
+        message: "Executor dry-run completed through the local gateway."
+      });
+    } catch (error) {
+      setExecutorRun(runExecutorHandoff({ handoff }));
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway executor unavailable; used local dry-run. ${error.message}`
+          : "Gateway executor unavailable; used local dry-run."
+      });
+    } finally {
+      setExecutorRunning(false);
+    }
   }
 
   return (
@@ -348,8 +387,11 @@ export function App() {
             approvalRecords={approvalRecordsByAction}
             readyCount={readyActionCount}
             handoffLink={handoffLink}
+            executorRun={executorRun}
+            executorRunning={executorRunning}
             onDecision={recordAutomationDecision}
             onExportHandoff={exportExecutorHandoff}
+            onRunExecutor={runExecutorDryRun}
           />
 
           <SandboxPanel

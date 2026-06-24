@@ -1,11 +1,13 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
+import { runExecutorHandoff } from "../src/domain/executorRunner";
 import type {
   AutomationApprovalRecord,
   CabinetRun,
   CabinetRunMode,
   CabinetRole,
+  ExecutorHandoff,
   ProviderConfig,
   SandboxPolicy
 } from "../src/domain/types";
@@ -36,6 +38,7 @@ const server = createServer(async (request, response) => {
           "cabinet-run",
           "automation-plan",
           "executor-handoff",
+          "executor-run-dry",
           "sandbox-policy-check"
         ],
         timestamp: new Date().toISOString()
@@ -92,6 +95,17 @@ const server = createServer(async (request, response) => {
         approvalRecords: body.approvalRecords || []
       });
       sendJson(response, 200, handoff);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/v1/executor/run") {
+      const body = await readJson<{
+        handoff: ExecutorHandoff;
+      }>(request);
+      const executorRun = runExecutorHandoff({
+        handoff: body.handoff
+      });
+      sendJson(response, 200, executorRun);
       return;
     }
 

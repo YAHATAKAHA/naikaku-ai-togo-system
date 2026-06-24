@@ -52,7 +52,9 @@ Acceptance:
 - Add per-action approval UI.
 - Persist per-action approvals.
 - Add executor handoff export.
+- Add safe executor dry-run runner.
 - Move approval records to durable backend storage.
+- Replace dry-run runner with authenticated Shell/Browser/Desktop executors.
 - Add action replay logs.
 
 Acceptance:

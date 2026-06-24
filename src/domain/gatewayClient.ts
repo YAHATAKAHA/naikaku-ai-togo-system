@@ -5,6 +5,7 @@ import type {
   CabinetRunMode,
   CabinetWorkspace,
   ExecutorHandoff,
+  ExecutorRun,
   ProviderConfig
 } from "./types";
 
@@ -124,6 +125,26 @@ export async function createExecutorHandoffViaGateway(
   }
 
   return (await response.json()) as ExecutorHandoff;
+}
+
+export async function runExecutorHandoffViaGateway(
+  handoff: ExecutorHandoff,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/executor/run`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ handoff }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway executor run failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ExecutorRun;
 }
 
 export async function checkGatewayHealth() {

@@ -121,6 +121,35 @@ Response:
 
 Executors should consume `readyActions` only. A `needs-approval` action appears there only when it has a matching approved `AutomationApprovalRecord`.
 
+### `POST /v1/executor/run`
+
+Dry-runs executor-ready actions from a handoff. This endpoint does not execute shell commands, browser navigation, desktop input, file writes, or MCP calls. It returns simulated executor steps for audit and UI development.
+
+```json
+{
+  "handoff": {
+    "id": "run-...-executor-handoff",
+    "runId": "run-...",
+    "readyActions": [],
+    "heldActions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "mode": "dry-run",
+  "summary": {
+    "ready": 2,
+    "simulated": 2,
+    "held": 5
+  },
+  "steps": []
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

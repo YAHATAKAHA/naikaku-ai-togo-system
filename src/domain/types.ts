@@ -138,6 +138,38 @@ export interface ExecutorHandoff {
   approvalRecords: AutomationApprovalRecord[];
 }
 
+export type ExecutorRunMode = "dry-run";
+export type ExecutorRunStepStatus = "simulated" | "skipped";
+
+export interface ExecutorRunStep {
+  id: string;
+  handoffId: string;
+  actionId: string;
+  executorProfileId: ExecutorProfileId;
+  action: string;
+  target: string;
+  status: ExecutorRunStepStatus;
+  startedAt: string;
+  completedAt: string;
+  output: string;
+  auditTags: string[];
+}
+
+export interface ExecutorRun {
+  id: string;
+  handoffId: string;
+  runId: string;
+  mode: ExecutorRunMode;
+  startedAt: string;
+  completedAt: string;
+  steps: ExecutorRunStep[];
+  summary: {
+    ready: number;
+    simulated: number;
+    held: number;
+  };
+}
+
 export interface CabinetLogEntry {
   id: string;
   timestamp: string;
