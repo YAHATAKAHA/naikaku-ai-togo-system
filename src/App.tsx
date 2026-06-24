@@ -18,6 +18,7 @@ import {
   Sparkles,
   Upload
 } from "lucide-react";
+import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
@@ -27,9 +28,12 @@ import { SandboxPanel } from "./components/SandboxPanel";
 import { TeamHandoffPanel } from "./components/TeamHandoffPanel";
 import {
   addRunHistoryItem,
+  appendAuditEvent,
+  clearAuditEvents,
   clearCurrentRun,
   clearRunHistory,
   createDefaultWorkspace,
+  loadAuditEvents,
   loadApprovalRecords,
   loadCurrentRun,
   loadRunHistory,
@@ -38,10 +42,12 @@ import {
   saveApprovalRecord,
   saveCurrentRun,
   saveWorkspace,
+  serializeAuditLog,
   serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
+import { createAuditEvent } from "./domain/auditLog";
 import { runExecutorHandoff } from "./domain/executorRunner";
 import { runCabinetMission } from "./domain/orchestrator";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
@@ -56,6 +62,7 @@ import type {
   AutomationAction,
   AutomationApprovalDecision,
   AutomationApprovalRecord,
+  AuditEvent,
   CabinetRole,
   CabinetRun,
   ExecutorRun,
@@ -63,6 +70,8 @@ import type {
   TeamHandoff
 } from "./domain/types";
 import type { CabinetRunMode } from "./domain/types";
+
+type AuditEventInput = Parameters<typeof createAuditEvent>[0];
 
 export function App() {
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
@@ -74,6 +83,7 @@ export function App() {
   const [executorRun, setExecutorRun] = useState<ExecutorRun | null>(null);
   const [executorRunning, setExecutorRunning] = useState(false);
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => loadAuditEvents());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
@@ -82,6 +92,7 @@ export function App() {
   const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -135,6 +146,14 @@ export function App() {
   }, [teamHandoffLink]);
 
   useEffect(() => {
+    return () => {
+      if (auditLink) {
+        URL.revokeObjectURL(auditLink.href);
+      }
+    };
+  }, [auditLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
@@ -179,28 +198,44 @@ export function App() {
     }));
   }
 
+  function recordAudit(input: AuditEventInput) {
+    const event = createAuditEvent(input);
+    setAuditEvents((current) => appendAuditEvent(event, current));
+  }
+
   function addRole(sourceRole?: CabinetRole) {
-    setWorkspace((current) => {
-      const role = createCustomRole({
-        roles: current.roles,
-        sourceRole
-      });
-      setSelectedRoleId(role.id);
-      return {
-        ...current,
-        roles: [...current.roles, role]
-      };
+    const role = createCustomRole({
+      roles: workspace.roles,
+      sourceRole
     });
+    setWorkspace((current) => ({
+      ...current,
+      roles: [...current.roles, role]
+    }));
+    setSelectedRoleId(role.id);
     setRunState({
       status: "idle",
       message: sourceRole
         ? `Duplicated ${sourceRole.name}. Configure its provider and permissions before the next run.`
         : "Added a custom role. Configure its provider and permissions before the next run."
     });
+    recordAudit({
+      type: sourceRole ? "role.duplicated" : "role.created",
+      severity: "info",
+      summary: sourceRole ? `Duplicated role ${sourceRole.name}.` : `Created role ${role.name}.`,
+      roleId: role.id,
+      metadata: {
+        ministry: role.ministry,
+        stage: role.stage,
+        provider: role.provider.provider,
+        sourceRoleId: sourceRole?.id || null
+      }
+    });
   }
 
   function deleteRole(roleId: string) {
     if (isDefaultRoleId(roleId)) return;
+    const deletedRole = workspace.roles.find((role) => role.id === roleId);
 
     setWorkspace((current) => {
       const nextRoles = current.roles.filter((role) => role.id !== roleId);
@@ -219,6 +254,16 @@ export function App() {
       status: "idle",
       message: "Custom role removed from the workspace."
     });
+    recordAudit({
+      type: "role.deleted",
+      severity: "warning",
+      summary: `Deleted custom role ${deletedRole?.name || roleId}.`,
+      roleId,
+      metadata: {
+        ministry: deletedRole?.ministry || null,
+        stage: deletedRole?.stage || null
+      }
+    });
   }
 
   async function runCabinet() {
@@ -235,6 +280,18 @@ export function App() {
         status: "gateway",
         message: `Run completed through the local gateway in ${runMode} mode.`
       });
+      recordAudit({
+        type: "cabinet.run.completed",
+        severity: "success",
+        summary: `Cabinet run completed through ${result.source}.`,
+        runId: result.run.id,
+        metadata: {
+          mode: runMode,
+          decision: result.run.score.decision,
+          overall: result.run.score.overall,
+          automationActions: result.run.automationActions?.length || 0
+        }
+      });
     } catch (error) {
       const fallbackRun = runCabinetMission(workspace);
       setRun(fallbackRun);
@@ -246,6 +303,18 @@ export function App() {
           ? `Gateway unavailable; used local fallback. ${error.message}`
           : "Gateway unavailable; used local fallback."
       });
+      recordAudit({
+        type: "cabinet.run.completed",
+        severity: "warning",
+        summary: "Cabinet run completed through local fallback.",
+        runId: fallbackRun.id,
+        metadata: {
+          mode: "dry-run",
+          decision: fallbackRun.score.decision,
+          overall: fallbackRun.score.overall,
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
     }
   }
 
@@ -253,6 +322,15 @@ export function App() {
     saveWorkspace(workspace);
     setSaveState("saved");
     window.setTimeout(() => setSaveState("idle"), 1400);
+    recordAudit({
+      type: "workspace.saved",
+      severity: "success",
+      summary: "Workspace saved locally.",
+      metadata: {
+        roles: workspace.roles.length,
+        activeRoles: activeRoles.length
+      }
+    });
   }
 
   function resetWorkspace() {
@@ -266,6 +344,14 @@ export function App() {
     setHandoffLink(null);
     setTeamHandoffLink(null);
     setSessionSecrets({});
+    recordAudit({
+      type: "workspace.reset",
+      severity: "warning",
+      summary: "Workspace reset to default cabinet.",
+      metadata: {
+        roles: next.roles.length
+      }
+    });
   }
 
   function exportWorkspace() {
@@ -281,6 +367,15 @@ export function App() {
     setRunState({
       status: "idle",
       message: "Workspace export is ready. Use Download JSON before closing this page."
+    });
+    recordAudit({
+      type: "workspace.exported",
+      severity: "info",
+      summary: "Workspace export prepared.",
+      metadata: {
+        roles: workspace.roles.length,
+        activeRoles: activeRoles.length
+      }
     });
   }
 
@@ -302,6 +397,15 @@ export function App() {
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
+      });
+      recordAudit({
+        type: "workspace.imported",
+        severity: "success",
+        summary: `Imported workspace from ${file.name}.`,
+        metadata: {
+          roles: imported.roles.length,
+          activeRoles: imported.roles.filter((role) => role.enabled).length
+        }
       });
     } catch (error) {
       setRunState({
@@ -325,6 +429,20 @@ export function App() {
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
     setExecutorRun(null);
+    recordAudit({
+      type: "automation.decision.recorded",
+      severity: decision === "approved" ? "success" : "warning",
+      summary: `${decision === "approved" ? "Approved" : "Rejected"} automation action ${action.title}.`,
+      runId: action.runId,
+      roleId: action.roleId,
+      actionId: action.id,
+      metadata: {
+        decision,
+        executorProfileId: action.executorProfileId,
+        riskLevel: action.riskLevel,
+        target: action.target
+      }
+    });
   }
 
   function createTeamHandoffDownload(handoff: TeamHandoff) {
@@ -348,6 +466,17 @@ export function App() {
         status: "gateway",
         message: "Team work packages exported through the local gateway."
       });
+      recordAudit({
+        type: "team.handoff.exported",
+        severity: "info",
+        summary: "Team work packages exported through gateway.",
+        runId: gatewayHandoff.runId,
+        metadata: {
+          packages: gatewayHandoff.packages.length,
+          ready: gatewayHandoff.summary.ready,
+          blocked: gatewayHandoff.summary.blocked
+        }
+      });
     } catch (error) {
       createTeamHandoffDownload(teamHandoff);
       setRunState({
@@ -355,6 +484,16 @@ export function App() {
         message: error instanceof Error
           ? `Gateway team packages unavailable; used local export. ${error.message}`
           : "Gateway team packages unavailable; used local export."
+      });
+      recordAudit({
+        type: "team.handoff.exported",
+        severity: "warning",
+        summary: "Team work packages exported locally.",
+        runId: teamHandoff.runId,
+        metadata: {
+          packages: teamHandoff.packages.length,
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
       });
     }
   }
@@ -371,6 +510,16 @@ export function App() {
     }
 
     setHandoffLink({ href: url, fileName });
+    recordAudit({
+      type: "executor.handoff.exported",
+      severity: "info",
+      summary: "Executor handoff exported.",
+      runId: run.id,
+      metadata: {
+        approvalRecords: approvalRecords.length,
+        readyActions: buildExecutorHandoff({ run, approvalRecords }).readyActions.length
+      }
+    });
   }
 
   async function runExecutorDryRun() {
@@ -387,16 +536,58 @@ export function App() {
         status: "gateway",
         message: "Executor dry-run completed through the local gateway."
       });
+      recordAudit({
+        type: "executor.run.dry.completed",
+        severity: "success",
+        summary: "Executor dry-run completed through gateway.",
+        runId: handoff.runId,
+        metadata: {
+          readyActions: handoff.readyActions.length,
+          heldActions: handoff.heldActions.length
+        }
+      });
     } catch (error) {
-      setExecutorRun(runExecutorHandoff({ handoff }));
+      const localExecutorRun = runExecutorHandoff({ handoff });
+      setExecutorRun(localExecutorRun);
       setRunState({
         status: "fallback",
         message: error instanceof Error
           ? `Gateway executor unavailable; used local dry-run. ${error.message}`
           : "Gateway executor unavailable; used local dry-run."
       });
+      recordAudit({
+        type: "executor.run.dry.completed",
+        severity: "warning",
+        summary: "Executor dry-run completed locally.",
+        runId: localExecutorRun.runId,
+        metadata: {
+          simulated: localExecutorRun.summary.simulated,
+          held: localExecutorRun.summary.held,
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
     } finally {
       setExecutorRunning(false);
+    }
+  }
+
+  function exportAuditLog() {
+    const blob = new Blob([serializeAuditLog(auditEvents)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-audit-log-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (auditLink) {
+      URL.revokeObjectURL(auditLink.href);
+    }
+
+    setAuditLink({ href: url, fileName });
+  }
+
+  function clearAuditLog() {
+    setAuditEvents(clearAuditEvents());
+    if (auditLink) {
+      URL.revokeObjectURL(auditLink.href);
+      setAuditLink(null);
     }
   }
 
@@ -547,6 +738,12 @@ export function App() {
             />
           </div>
         </section>
+        <AuditTrailPanel
+          events={auditEvents}
+          exportLink={auditLink}
+          onExport={exportAuditLog}
+          onClear={clearAuditLog}
+        />
       </footer>
     </main>
   );

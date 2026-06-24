@@ -98,6 +98,12 @@ The current `/v1/executor/run` runner is deliberately dry-run only. It simulates
 
 Team package exports use provider aliases and role configuration only. They are intended for parallel development handoff and must not contain raw session secrets.
 
+## Audit Trail
+
+The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, and team handoff export. Operators can inspect and export these events from the UI.
+
+This is a local development ledger, not an immutable production ledger. Production should move audit events into authenticated append-only backend storage with server timestamps and operator identity.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
@@ -108,7 +114,7 @@ Before real computer control is enabled:
 
 1. Implement executor gateway authentication.
 2. Move per-run approval records from local storage into durable authenticated storage.
-3. Add immutable audit logs.
+3. Replace the local audit trail with immutable server-side audit logs.
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.
 6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.

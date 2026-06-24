@@ -14,6 +14,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
 - Browser-to-gateway run path with local fallback when the gateway is offline.
 - Automation queue proposals, persisted approval records, executor handoff export, and a safe executor dry-run before any real runner consumes work.
+- Local audit trail for workspace changes, role changes, runs, approvals, executor dry-runs, and team handoff exports.
 - Team work package generation so each role can split provider, executor, safety, memory, and UI work into parallel handoffs.
 - Workspace JSON import/export and recent run history for operator handoff.
 - Developer docs for architecture, adapter boundaries, sandbox security, open-source references, and MVP work streams.

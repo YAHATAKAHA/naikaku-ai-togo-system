@@ -29,6 +29,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Sandbox policy editing.
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
+- Local audit trail with export for operator actions and automation milestones.
 
 ## Domain Layer
 
@@ -43,6 +44,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `CabinetScore`
 - `TeamHandoff`
 - `TeamWorkPackage`
+- `AuditEvent`
 
 These contracts are intentionally framework-neutral so backend services, local CLIs, or remote workers can reuse them later.
 
@@ -108,7 +110,10 @@ Production persistence should store:
 - Executor handoff bundles for replay and runner development.
 - Team handoff packages for parallel development.
 - Custom role definitions beyond the default cabinet.
+- Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
 - Memory entries that pass retention policy.
+
+The current audit trail is local and exportable, not tamper-proof. Production should replace it with an authenticated append-only server-side store.
 
 ## Parallel Development Boundaries
 

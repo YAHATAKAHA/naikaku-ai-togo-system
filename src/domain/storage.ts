@@ -1,8 +1,10 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildExecutorHandoff } from "./automation";
+import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
+  AuditEvent,
   CabinetRole,
   CabinetRun,
   CabinetWorkspace,
@@ -13,6 +15,7 @@ const WORKSPACE_KEY = "naikaku.workspace.v1";
 const RUN_HISTORY_KEY = "naikaku.run-history.v1";
 const CURRENT_RUN_KEY = "naikaku.current-run.v1";
 const APPROVAL_RECORDS_KEY = "naikaku.approval-records.v1";
+const AUDIT_EVENTS_KEY = "naikaku.audit-events.v1";
 const MAX_HISTORY_ITEMS = 12;
 
 export function createDefaultWorkspace(): CabinetWorkspace {
@@ -228,6 +231,48 @@ export function clearApprovalRecords(runId?: string) {
   const nextRecords = loadApprovalRecords().filter((record) => record.runId !== runId);
   localStorage.setItem(APPROVAL_RECORDS_KEY, JSON.stringify(nextRecords));
   return nextRecords;
+}
+
+export function loadAuditEvents(): AuditEvent[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  const raw = localStorage.getItem(AUDIT_EVENTS_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as AuditEvent[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function appendAuditEvent(
+  event: AuditEvent,
+  currentEvents = loadAuditEvents()
+) {
+  const nextEvents = appendAuditEventRecord(currentEvents, event);
+
+  if (canUseLocalStorage()) {
+    localStorage.setItem(AUDIT_EVENTS_KEY, JSON.stringify(nextEvents));
+  }
+
+  return nextEvents;
+}
+
+export function clearAuditEvents() {
+  if (canUseLocalStorage()) {
+    localStorage.removeItem(AUDIT_EVENTS_KEY);
+  }
+  return [];
+}
+
+export function serializeAuditLog(events: AuditEvent[]) {
+  return serializeAuditEvents(events);
 }
 
 export function serializeRunBundle(

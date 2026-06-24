@@ -1246,7 +1246,7 @@ meter {
 
 .operator-footer {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 0.8fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr) minmax(320px, 0.8fr);
   gap: 16px;
   padding: 0 16px 16px;
   min-width: 0;
@@ -1424,6 +1424,107 @@ meter {
 .metric strong {
   margin-top: 4px;
   font-size: 13px;
+}
+
+.audit-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.audit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.audit-actions button,
+.audit-actions a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.audit-actions a {
+  color: var(--green);
+}
+
+.audit-actions button:last-of-type {
+  color: var(--red);
+}
+
+.audit-list {
+  display: grid;
+  gap: 7px;
+  max-height: 284px;
+  overflow: auto;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 9px 10px;
+}
+
+.audit-row[data-severity="success"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.audit-row[data-severity="warning"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.audit-row[data-severity="error"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.audit-row time {
+  color: var(--subtle);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.audit-row strong,
+.audit-row span,
+.audit-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.audit-row strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.audit-row span,
+.audit-row small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.audit-row span {
+  margin-top: 3px;
+  text-transform: uppercase;
+  font-weight: 900;
 }
 
 @media (max-width: 1220px) {

@@ -12,6 +12,7 @@ This backlog is written so different contributors can work in parallel.
 - Add import/export workspace JSON.
 - Add role-level team work package export.
 - Add gateway endpoint for team work packages.
+- Add local audit trail panel and audit JSON export.
 
 Acceptance:
 
@@ -71,6 +72,7 @@ Acceptance:
 - Add prompt-injection classifier.
 - Add high-impact action classifier.
 - Add approval payload preview.
+- Add local audit event ledger for operator and automation milestones.
 - Add immutable audit log store.
 - Add policy tests for blocked actions.
 - Add policy tests for automation proposal gates.

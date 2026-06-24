@@ -210,6 +210,35 @@ export interface TeamHandoff {
   };
 }
 
+export type AuditEventType =
+  | "workspace.saved"
+  | "workspace.imported"
+  | "workspace.exported"
+  | "workspace.reset"
+  | "role.created"
+  | "role.duplicated"
+  | "role.deleted"
+  | "cabinet.run.completed"
+  | "automation.decision.recorded"
+  | "executor.handoff.exported"
+  | "executor.run.dry.completed"
+  | "team.handoff.exported";
+
+export type AuditEventSeverity = "info" | "success" | "warning" | "error";
+
+export interface AuditEvent {
+  id: string;
+  type: AuditEventType;
+  timestamp: string;
+  actor: string;
+  severity: AuditEventSeverity;
+  summary: string;
+  runId?: string;
+  roleId?: string;
+  actionId?: string;
+  metadata: Record<string, string | number | boolean | null>;
+}
+
 export interface CabinetLogEntry {
   id: string;
   timestamp: string;

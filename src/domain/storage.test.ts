@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { createApprovalRecord } from "./automation";
+import { createAuditEvent } from "./auditLog";
 import { runCabinetMission } from "./orchestrator";
 import { createCustomRole } from "./roles";
-import { parseWorkspaceExport, saveApprovalRecord, serializeRunBundle, serializeWorkspace } from "./storage";
+import {
+  appendAuditEvent,
+  parseWorkspaceExport,
+  saveApprovalRecord,
+  serializeAuditLog,
+  serializeRunBundle,
+  serializeWorkspace
+} from "./storage";
 
 describe("workspace import/export", () => {
   it("round-trips a workspace export without raw session secrets", () => {
@@ -98,5 +106,19 @@ describe("workspace import/export", () => {
 
     expect(records).toHaveLength(1);
     expect(records[0].decision).toBe("rejected");
+  });
+
+  it("exports audit events through the storage envelope", () => {
+    const event = createAuditEvent({
+      type: "workspace.saved",
+      summary: "Workspace saved.",
+      timestamp: "2026-06-24T00:00:00.000Z"
+    });
+    const events = appendAuditEvent(event, []);
+    const exported = serializeAuditLog(events);
+    const parsed = JSON.parse(exported) as { schema: string; events: unknown[] };
+
+    expect(parsed.schema).toBe("naikaku.audit-log.v1");
+    expect(parsed.events).toHaveLength(1);
   });
 });
