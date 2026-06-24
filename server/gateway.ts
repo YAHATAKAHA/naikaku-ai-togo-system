@@ -7,6 +7,7 @@ import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolic
 
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
 const host = process.env.NAIKAKU_GATEWAY_HOST || "127.0.0.1";
+const corsOrigin = process.env.NAIKAKU_CORS_ORIGIN || "http://127.0.0.1:5173";
 
 const server = createServer(async (request, response) => {
   setCors(response);
@@ -85,7 +86,7 @@ server.listen(port, host, () => {
 });
 
 function setCors(response: ServerResponse) {
-  response.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5173");
+  response.setHeader("Access-Control-Allow-Origin", corsOrigin);
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 }

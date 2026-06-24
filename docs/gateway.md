@@ -14,6 +14,17 @@ Default URL:
 http://127.0.0.1:8787
 ```
 
+Environment:
+
+```bash
+VITE_NAIKAKU_GATEWAY_URL=http://127.0.0.1:8787
+NAIKAKU_GATEWAY_HOST=127.0.0.1
+NAIKAKU_GATEWAY_PORT=8787
+NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
+```
+
+`VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
+
 ## Endpoints
 
 ### `GET /health`

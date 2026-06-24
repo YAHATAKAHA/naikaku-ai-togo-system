@@ -11,6 +11,8 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - A local automation pipeline for planning, execution, critique, supervision, scoring, and iteration.
 - A sandbox-first computer-use model with Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate executor profiles.
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
+- Browser-to-gateway run path with local fallback when the gateway is offline.
+- Workspace JSON import/export and recent run history for team handoff.
 - Developer docs for architecture, adapter boundaries, sandbox security, open-source references, and MVP work streams.
 
 ## Product Principles
@@ -62,6 +64,7 @@ docs/
   security-sandbox.md
   reference/open-source-research.md
   tasks/mvp-backlog.md
+CONTRIBUTING.md
 ```
 
 ## Visual Direction

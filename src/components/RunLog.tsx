@@ -1,7 +1,15 @@
 import { ListChecks } from "lucide-react";
-import type { CabinetRun } from "../domain/types";
+import type { CabinetRun, RunHistoryItem } from "../domain/types";
 
-export function RunLog({ run }: { run: CabinetRun | null }) {
+export function RunLog({
+  run,
+  history,
+  onClearHistory
+}: {
+  run: CabinetRun | null;
+  history: RunHistoryItem[];
+  onClearHistory: () => void;
+}) {
   const entries = run?.logs || [
     {
       id: "empty",
@@ -26,6 +34,22 @@ export function RunLog({ run }: { run: CabinetRun | null }) {
             <span>{entry.message}</span>
           </article>
         ))}
+      </div>
+      <div className="history-heading">
+        <strong>Recent runs</strong>
+        <button type="button" onClick={onClearHistory}>Clear</button>
+      </div>
+      <div className="history-list">
+        {(history.length ? history : []).map((item) => (
+          <article className="history-row" data-decision={item.decision} key={item.id}>
+            <span>{item.decision}</span>
+            <strong>{item.overall}</strong>
+            <p>{item.mission}</p>
+            <time>{new Date(item.completedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time>
+            <small>{item.source}</small>
+          </article>
+        ))}
+        {!history.length ? <p className="empty-history">No saved runs yet.</p> : null}
       </div>
     </section>
   );

@@ -8,6 +8,10 @@ interface MissionControlProps {
   run: CabinetRun | null;
   roles: CabinetRole[];
   sandboxPolicy: SandboxPolicy;
+  runStatus: {
+    status: string;
+    message: string;
+  };
 }
 
 export function MissionControl({
@@ -15,7 +19,8 @@ export function MissionControl({
   onMissionChange,
   run,
   roles,
-  sandboxPolicy
+  sandboxPolicy,
+  runStatus
 }: MissionControlProps) {
   return (
     <section className="mission-panel">
@@ -27,6 +32,10 @@ export function MissionControl({
           onChange={(event) => onMissionChange(event.target.value)}
           rows={4}
         />
+        <div className="run-status" data-status={runStatus.status}>
+          <span>{runStatus.status}</span>
+          <strong>{runStatus.message}</strong>
+        </div>
       </div>
 
       <div className="stage-track" aria-label="Cabinet stage track">

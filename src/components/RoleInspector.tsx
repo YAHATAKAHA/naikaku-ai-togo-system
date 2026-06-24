@@ -1,6 +1,8 @@
-import { PlugZap, Shield, TestTube2 } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, PlugZap, Shield, TestTube2, XCircle } from "lucide-react";
 import { executorProfiles } from "../data/defaultCabinet";
 import { findAdapter } from "../domain/adapters";
+import { testProviderViaGateway } from "../domain/gatewayClient";
 import type { CabinetRole, ProviderKind } from "../domain/types";
 
 interface RoleInspectorProps {
@@ -16,6 +18,11 @@ export function RoleInspector({
   onSecretChange,
   onChange
 }: RoleInspectorProps) {
+  const [testState, setTestState] = useState<{
+    status: "idle" | "testing" | "ok" | "error";
+    message: string;
+  }>({ status: "idle", message: "" });
+
   if (!role) {
     return <aside className="inspector">No role selected.</aside>;
   }
@@ -23,9 +30,23 @@ export function RoleInspector({
   const currentRole = role;
 
   async function testConnection() {
-    const adapter = findAdapter(currentRole.provider);
-    const ok = await adapter.testConnection(currentRole.provider, sessionSecret);
-    window.alert(ok ? "Adapter configuration is structurally valid." : "Missing endpoint or model.");
+    setTestState({ status: "testing", message: "Testing through local gateway..." });
+    try {
+      const result = await testProviderViaGateway(currentRole.provider, sessionSecret);
+      setTestState({
+        status: result.ok ? "ok" : "error",
+        message: `${result.adapter}: ${result.message}`
+      });
+    } catch {
+      const adapter = findAdapter(currentRole.provider);
+      const ok = await adapter.testConnection(currentRole.provider, sessionSecret);
+      setTestState({
+        status: ok ? "ok" : "error",
+        message: ok
+          ? `${adapter.id}: local fallback accepted the structure.`
+          : "Gateway unavailable and local fallback found missing endpoint or model."
+      });
+    }
   }
 
   return (
@@ -151,8 +172,14 @@ export function RoleInspector({
           </label>
         </div>
         <button className="secondary-button full-width" type="button" onClick={testConnection}>
-          <TestTube2 size={16} /> Test adapter
+          <TestTube2 size={16} /> {testState.status === "testing" ? "Testing..." : "Test adapter"}
         </button>
+        {testState.message ? (
+          <div className="connection-result" data-status={testState.status}>
+            {testState.status === "ok" ? <CheckCircle2 size={15} /> : <XCircle size={15} />}
+            <span>{testState.message}</span>
+          </div>
+        ) : null}
       </section>
 
       <section className="inspector-section">

@@ -122,3 +122,12 @@ export interface CabinetWorkspace {
   sandboxPolicy: SandboxPolicy;
   mission: string;
 }
+
+export interface RunHistoryItem {
+  id: string;
+  mission: string;
+  completedAt: string;
+  decision: CabinetScore["decision"];
+  overall: number;
+  source: "gateway" | "fallback" | "local";
+}

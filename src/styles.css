@@ -42,6 +42,23 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -140,6 +157,14 @@ button {
 .secondary-button {
   color: var(--ink);
   font-weight: 650;
+}
+
+a.secondary-button {
+  text-decoration: none;
+}
+
+.download-link {
+  padding-inline: 10px;
 }
 
 .full-width {
@@ -352,6 +377,50 @@ button {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+}
+
+.run-status,
+.connection-result {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.run-status {
+  margin-top: 10px;
+}
+
+.run-status span,
+.connection-result[data-status="ok"] svg {
+  color: var(--green);
+}
+
+.run-status[data-status="fallback"] span,
+.run-status[data-status="error"] span,
+.connection-result[data-status="error"] svg {
+  color: var(--amber);
+}
+
+.run-status[data-status="running"] span {
+  color: var(--accent);
+}
+
+.run-status span {
+  min-width: 68px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.run-status strong {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 textarea,
@@ -643,7 +712,7 @@ meter {
   margin-top: 10px;
   display: grid;
   gap: 6px;
-  max-height: 184px;
+  max-height: 156px;
   overflow: auto;
 }
 
@@ -676,9 +745,104 @@ meter {
   background: #ffe8e5;
 }
 
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.history-heading strong {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.history-heading button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.history-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  max-height: 210px;
+  overflow: auto;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 70px 42px minmax(0, 1fr) 92px 70px;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 9px 10px;
+}
+
+.history-row span {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.history-row[data-decision="revise"] span {
+  color: var(--amber);
+}
+
+.history-row[data-decision="block"] span {
+  color: var(--red);
+}
+
+.history-row strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-row p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-row time,
+.history-row small,
+.empty-history {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.history-row small {
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.empty-history {
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px;
+}
+
 .metric-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -730,6 +894,10 @@ meter {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .operator-footer {
     grid-template-columns: 1fr;
   }
@@ -771,7 +939,8 @@ meter {
   .sandbox-grid,
   .executor-list,
   .score-grid,
-  .metric-strip {
+  .metric-strip,
+  .history-row {
     grid-template-columns: 1fr;
   }
 

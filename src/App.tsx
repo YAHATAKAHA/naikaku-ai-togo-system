@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
+  AlertTriangle,
   Brain,
   CheckCircle2,
+  Download,
   CircleStop,
+  Cloud,
   Cpu,
   FileKey2,
   GitBranch,
@@ -12,23 +15,41 @@ import {
   Save,
   Shield,
   SlidersHorizontal,
-  Sparkles
+  Sparkles,
+  Upload
 } from "lucide-react";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
 import { SandboxPanel } from "./components/SandboxPanel";
-import { createDefaultWorkspace, loadWorkspace, saveWorkspace } from "./domain/storage";
+import {
+  addRunHistoryItem,
+  clearRunHistory,
+  createDefaultWorkspace,
+  loadRunHistory,
+  loadWorkspace,
+  parseWorkspaceExport,
+  saveWorkspace,
+  serializeWorkspace
+} from "./domain/storage";
 import { runCabinetMission } from "./domain/orchestrator";
-import type { CabinetRole, CabinetRun } from "./domain/types";
+import { gatewayBaseUrl, runCabinetViaGateway } from "./domain/gatewayClient";
+import type { CabinetRole, CabinetRun, RunHistoryItem } from "./domain/types";
 
 export function App() {
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
   const [selectedRoleId, setSelectedRoleId] = useState(workspace.roles[0]?.id || "");
   const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
   const [run, setRun] = useState<CabinetRun | null>(null);
+  const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const [runState, setRunState] = useState<{
+    status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
+    message: string;
+  }>({ status: "idle", message: "Gateway ready when local service is running." });
+  const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
     () => workspace.roles.find((role) => role.id === selectedRoleId) || workspace.roles[0],
@@ -36,6 +57,14 @@ export function App() {
   );
 
   const activeRoles = workspace.roles.filter((role) => role.enabled);
+
+  useEffect(() => {
+    return () => {
+      if (exportLink) {
+        URL.revokeObjectURL(exportLink.href);
+      }
+    };
+  }, [exportLink]);
 
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
     setWorkspace((current) => ({
@@ -66,9 +95,30 @@ export function App() {
     }));
   }
 
-  function runCabinet() {
-    const nextRun = runCabinetMission(workspace);
-    setRun(nextRun);
+  async function runCabinet() {
+    setRunState({
+      status: "running",
+      message: `Calling local gateway at ${gatewayBaseUrl()}...`
+    });
+    try {
+      const result = await runCabinetViaGateway(workspace);
+      setRun(result.run);
+      setRunHistory((current) => addRunHistoryItem(result.run, result.source, current));
+      setRunState({
+        status: "gateway",
+        message: "Run completed through the local gateway."
+      });
+    } catch (error) {
+      const fallbackRun = runCabinetMission(workspace);
+      setRun(fallbackRun);
+      setRunHistory((current) => addRunHistoryItem(fallbackRun, "fallback", current));
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway unavailable; used local fallback. ${error.message}`
+          : "Gateway unavailable; used local fallback."
+      });
+    }
   }
 
   function persistWorkspace() {
@@ -83,6 +133,44 @@ export function App() {
     setSelectedRoleId(next.roles[0].id);
     setRun(null);
     setSessionSecrets({});
+  }
+
+  function exportWorkspace() {
+    const blob = new Blob([serializeWorkspace(workspace)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (exportLink) {
+      URL.revokeObjectURL(exportLink.href);
+    }
+
+    setExportLink({ href: url, fileName });
+    setRunState({
+      status: "idle",
+      message: "Workspace export is ready. Use Download JSON before closing this page."
+    });
+  }
+
+  async function importWorkspace(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const imported = parseWorkspaceExport(await file.text());
+      setWorkspace(imported);
+      setSelectedRoleId(imported.roles[0]?.id || "");
+      setRun(null);
+      setRunState({
+        status: "idle",
+        message: `Imported workspace from ${file.name}.`
+      });
+    } catch (error) {
+      setRunState({
+        status: "error",
+        message: error instanceof Error ? `Import failed: ${error.message}` : "Import failed."
+      });
+    }
   }
 
   return (
@@ -112,12 +200,30 @@ export function App() {
           <button className="icon-button" type="button" onClick={resetWorkspace} aria-label="Reset workspace">
             <RefreshCcw size={17} />
           </button>
+          <button className="icon-button" type="button" onClick={() => fileInputRef.current?.click()} aria-label="Import workspace">
+            <Upload size={17} />
+          </button>
+          <button className="icon-button" type="button" onClick={exportWorkspace} aria-label="Export workspace">
+            <Download size={17} />
+          </button>
+          {exportLink ? (
+            <a className="secondary-button download-link" href={exportLink.href} download={exportLink.fileName}>
+              <Download size={16} /> JSON
+            </a>
+          ) : null}
+          <input
+            ref={fileInputRef}
+            className="visually-hidden"
+            type="file"
+            accept="application/json,.json"
+            onChange={importWorkspace}
+          />
           <button className="secondary-button" type="button" onClick={persistWorkspace}>
             {saveState === "saved" ? <CheckCircle2 size={16} /> : <Save size={16} />}
             {saveState === "saved" ? "Saved" : "Save"}
           </button>
-          <button className="primary-button" type="button" onClick={runCabinet}>
-            <Play size={16} /> Run cabinet
+          <button className="primary-button" type="button" onClick={runCabinet} disabled={runState.status === "running"}>
+            <Play size={16} /> {runState.status === "running" ? "Running..." : "Run cabinet"}
           </button>
         </div>
       </header>
@@ -148,6 +254,7 @@ export function App() {
             run={run}
             roles={workspace.roles}
             sandboxPolicy={workspace.sandboxPolicy}
+            runStatus={runState}
           />
 
           <SandboxPanel
@@ -165,7 +272,11 @@ export function App() {
       </section>
 
       <footer className="operator-footer">
-        <RunLog run={run} />
+        <RunLog
+          run={run}
+          history={runHistory}
+          onClearHistory={() => setRunHistory(clearRunHistory())}
+        />
         <section className="footer-panel">
           <div className="panel-heading">
             <span>
@@ -178,6 +289,11 @@ export function App() {
             <Metric icon={<SlidersHorizontal size={16} />} label="Allowlist" value={`${workspace.sandboxPolicy.networkAllowlist.length} domains`} />
             <Metric icon={<CircleStop size={16} />} label="Blocked" value={`${workspace.sandboxPolicy.blockedActions.length} actions`} />
             <Metric icon={<Sparkles size={16} />} label="Next loop" value={run ? `${run.nextIteration.length} tasks` : "pending"} />
+            <Metric
+              icon={runState.status === "fallback" || runState.status === "error" ? <AlertTriangle size={16} /> : <Cloud size={16} />}
+              label="Run path"
+              value={runState.status}
+            />
           </div>
         </section>
       </footer>
