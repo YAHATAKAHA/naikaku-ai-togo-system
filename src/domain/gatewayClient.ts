@@ -6,7 +6,8 @@ import type {
   CabinetWorkspace,
   ExecutorHandoff,
   ExecutorRun,
-  ProviderConfig
+  ProviderConfig,
+  TeamHandoff
 } from "./types";
 
 const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8787";
@@ -145,6 +146,27 @@ export async function runExecutorHandoffViaGateway(
   }
 
   return (await response.json()) as ExecutorRun;
+}
+
+export async function createTeamHandoffViaGateway(
+  workspace: CabinetWorkspace,
+  run?: CabinetRun | null,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/team/packages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ workspace, run }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway team packages failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as TeamHandoff;
 }
 
 export async function checkGatewayHealth() {

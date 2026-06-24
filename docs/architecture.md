@@ -39,6 +39,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `CabinetRun`
 - `CabinetArtifact`
 - `CabinetScore`
+- `TeamHandoff`
+- `TeamWorkPackage`
 
 These contracts are intentionally framework-neutral so backend services, local CLIs, or remote workers can reuse them later.
 
@@ -85,6 +87,12 @@ Executors should be implemented as independent services. The frontend should nev
 
 Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
+## Team Handoffs
+
+Parallel development starts from `TeamHandoff`. A handoff turns the current workspace, and optionally the latest run, into one `TeamWorkPackage` per enabled role. Each package includes the role mandate, provider alias, executor boundary, permissions, stage tasks, dependencies, deliverables, acceptance criteria, security notes, automation action ids, and run linkage.
+
+The workbench can export these packages as JSON. The local gateway also exposes `/v1/team/packages` so backend services, separate teams, or future CI workflows can request the same structure without scraping frontend state.
+
 ## Persistence
 
 The frontend uses local storage for non-secret workspace configuration. Raw session secrets are kept in React state only and are not persisted by `saveWorkspace`.
@@ -96,6 +104,7 @@ Production persistence should store:
 - Sandbox policy.
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
+- Team handoff packages for parallel development.
 - Memory entries that pass retention policy.
 
 ## Parallel Development Boundaries

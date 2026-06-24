@@ -2,11 +2,13 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { runExecutorHandoff } from "../src/domain/executorRunner";
+import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type {
   AutomationApprovalRecord,
   CabinetRun,
   CabinetRunMode,
   CabinetRole,
+  CabinetWorkspace,
   ExecutorHandoff,
   ProviderConfig,
   SandboxPolicy
@@ -39,6 +41,7 @@ const server = createServer(async (request, response) => {
           "automation-plan",
           "executor-handoff",
           "executor-run-dry",
+          "team-packages",
           "sandbox-policy-check"
         ],
         timestamp: new Date().toISOString()
@@ -106,6 +109,24 @@ const server = createServer(async (request, response) => {
         handoff: body.handoff
       });
       sendJson(response, 200, executorRun);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/v1/team/packages") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const teamHandoff = buildTeamHandoff({
+        workspace,
+        run: Array.isArray(body.run?.artifacts) ? body.run : undefined
+      });
+      sendJson(response, 200, teamHandoff);
       return;
     }
 

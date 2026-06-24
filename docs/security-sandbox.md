@@ -96,6 +96,8 @@ The workbench can export this handoff JSON for executor development. The gateway
 
 The current `/v1/executor/run` runner is deliberately dry-run only. It simulates what each executor profile would receive and records audit output, but it does not run commands, browse sites, control desktops, write files, send network requests, or call MCP tools.
 
+Team package exports use provider aliases and role configuration only. They are intended for parallel development handoff and must not contain raw session secrets.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.

@@ -24,6 +24,7 @@ import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
 import { SandboxPanel } from "./components/SandboxPanel";
+import { TeamHandoffPanel } from "./components/TeamHandoffPanel";
 import {
   addRunHistoryItem,
   clearCurrentRun,
@@ -43,7 +44,9 @@ import {
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { runExecutorHandoff } from "./domain/executorRunner";
 import { runCabinetMission } from "./domain/orchestrator";
+import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
+  createTeamHandoffViaGateway,
   gatewayBaseUrl,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway
@@ -55,7 +58,8 @@ import type {
   CabinetRole,
   CabinetRun,
   ExecutorRun,
-  RunHistoryItem
+  RunHistoryItem,
+  TeamHandoff
 } from "./domain/types";
 import type { CabinetRunMode } from "./domain/types";
 
@@ -76,6 +80,7 @@ export function App() {
   }>({ status: "idle", message: "Gateway ready when local service is running." });
   const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -99,6 +104,10 @@ export function App() {
         : 0,
     [approvalRecords, run]
   );
+  const teamHandoff = useMemo(
+    () => buildTeamHandoff({ workspace, run }),
+    [run, workspace]
+  );
 
   useEffect(() => {
     return () => {
@@ -117,10 +126,22 @@ export function App() {
   }, [handoffLink]);
 
   useEffect(() => {
+    return () => {
+      if (teamHandoffLink) {
+        URL.revokeObjectURL(teamHandoffLink.href);
+      }
+    };
+  }, [teamHandoffLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
   }, [run?.id]);
+
+  useEffect(() => {
+    setTeamHandoffLink(null);
+  }, [run?.id, workspace]);
 
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
     setWorkspace((current) => ({
@@ -194,6 +215,7 @@ export function App() {
     setApprovalRecords([]);
     setExecutorRun(null);
     setHandoffLink(null);
+    setTeamHandoffLink(null);
     setSessionSecrets({});
   }
 
@@ -227,6 +249,7 @@ export function App() {
       setApprovalRecords([]);
       setExecutorRun(null);
       setHandoffLink(null);
+      setTeamHandoffLink(null);
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -253,6 +276,38 @@ export function App() {
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
     setExecutorRun(null);
+  }
+
+  function createTeamHandoffDownload(handoff: TeamHandoff) {
+    const blob = new Blob([serializeTeamHandoff(handoff)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = handoff.runId ? handoff.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-team-packages-${runSlug}.json`;
+
+    if (teamHandoffLink) {
+      URL.revokeObjectURL(teamHandoffLink.href);
+    }
+
+    setTeamHandoffLink({ href: url, fileName });
+  }
+
+  async function exportTeamHandoff() {
+    try {
+      const gatewayHandoff = await createTeamHandoffViaGateway(workspace, run);
+      createTeamHandoffDownload(gatewayHandoff);
+      setRunState({
+        status: "gateway",
+        message: "Team work packages exported through the local gateway."
+      });
+    } catch (error) {
+      createTeamHandoffDownload(teamHandoff);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway team packages unavailable; used local export. ${error.message}`
+          : "Gateway team packages unavailable; used local export."
+      });
+    }
   }
 
   function exportExecutorHandoff() {
@@ -392,6 +447,12 @@ export function App() {
             onDecision={recordAutomationDecision}
             onExportHandoff={exportExecutorHandoff}
             onRunExecutor={runExecutorDryRun}
+          />
+
+          <TeamHandoffPanel
+            handoff={teamHandoff}
+            exportLink={teamHandoffLink}
+            onExport={exportTeamHandoff}
           />
 
           <SandboxPanel

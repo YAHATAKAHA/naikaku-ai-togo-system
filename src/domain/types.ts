@@ -170,6 +170,46 @@ export interface ExecutorRun {
   };
 }
 
+export type TeamPackageStatus = "template" | "ready" | "needs-approval" | "blocked";
+
+export interface TeamWorkPackage {
+  id: string;
+  roleId: string;
+  roleName: string;
+  ministry: string;
+  stageId: CabinetStageId;
+  mission: string;
+  status: TeamPackageStatus;
+  provider: ProviderConfig;
+  executorProfileId: ExecutorProfileId;
+  permissions: RolePermissions;
+  objectives: string[];
+  tasks: string[];
+  acceptanceCriteria: string[];
+  dependencies: string[];
+  deliverables: string[];
+  securityNotes: string[];
+  automationActionIds: string[];
+  sourceRunId?: string;
+  generatedAt: string;
+}
+
+export interface TeamHandoff {
+  schema: "naikaku.team-handoff.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  packages: TeamWorkPackage[];
+  summary: {
+    roles: number;
+    ready: number;
+    needsApproval: number;
+    blocked: number;
+    templates: number;
+    tracks: string[];
+  };
+}
+
 export interface CabinetLogEntry {
   id: string;
   timestamp: string;

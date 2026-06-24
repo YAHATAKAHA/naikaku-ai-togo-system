@@ -9,11 +9,14 @@ This backlog is written so different contributors can work in parallel.
 - Add role duplication and custom role creation.
 - Add keyboard shortcuts for run, save, and switch role.
 - Add import/export workspace JSON.
+- Add role-level team work package export.
+- Add gateway endpoint for team work packages.
 
 Acceptance:
 
 - UI remains readable on desktop and tablet.
 - No raw API keys appear in exported JSON.
+- Each enabled role can receive a standalone package with provider alias, executor boundary, tasks, and acceptance criteria.
 
 ## Track 2: Provider Adapters
 

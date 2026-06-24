@@ -150,6 +150,41 @@ Response:
 }
 ```
 
+### `POST /v1/team/packages`
+
+Builds role-level development packages for parallel teams. The response is safe to export because it includes provider aliases and configuration, not raw session secrets. Include a full `CabinetRun` when packages should reflect automation status; omit it to create workspace templates.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.team-handoff.v1",
+  "summary": {
+    "roles": 8,
+    "ready": 1,
+    "needsApproval": 4,
+    "blocked": 2,
+    "templates": 1
+  },
+  "packages": []
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

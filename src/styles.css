@@ -185,6 +185,7 @@ a.secondary-button {
 .inspector,
 .footer-panel,
 .automation-panel,
+.team-panel,
 .sandbox-panel,
 .mission-panel {
   background: var(--surface);
@@ -368,6 +369,7 @@ a.secondary-button {
 
 .mission-panel,
 .automation-panel,
+.team-panel,
 .sandbox-panel {
   padding: 16px;
 }
@@ -907,6 +909,194 @@ meter {
   padding: 10px;
 }
 
+.team-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.team-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.team-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.team-summary span[data-status="ready"] {
+  color: var(--green);
+}
+
+.team-summary span[data-status="needs-approval"] {
+  color: var(--amber);
+}
+
+.team-summary span[data-status="blocked"] {
+  color: var(--red);
+}
+
+.team-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.team-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.team-export-row button,
+.team-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.team-export-row a {
+  color: var(--green);
+}
+
+.team-package-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.team-package-card {
+  display: grid;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.team-package-card[data-status="ready"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.team-package-card[data-status="needs-approval"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.team-package-card[data-status="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.team-package-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-package-heading strong,
+.team-package-heading span {
+  display: block;
+}
+
+.team-package-heading strong {
+  font-size: 13px;
+}
+
+.team-package-heading span,
+.team-package-card p,
+.team-package-card li,
+.team-package-card small,
+.team-package-meta span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.team-status-chip {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.team-status-chip[data-status="ready"] {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.team-status-chip[data-status="needs-approval"] {
+  color: var(--amber);
+  background: #fff0d0;
+}
+
+.team-status-chip[data-status="blocked"] {
+  color: var(--red);
+  background: #ffe3df;
+}
+
+.team-package-card p {
+  margin: 0;
+}
+
+.team-package-meta {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.team-package-meta span,
+.team-package-card small {
+  overflow-wrap: anywhere;
+}
+
+.team-package-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.team-package-card small {
+  display: block;
+}
+
 .sandbox-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1256,10 +1446,12 @@ meter {
 
   .stage-track,
   .artifact-grid,
+  .team-package-grid,
   .sandbox-grid,
   .executor-list,
   .score-grid,
   .metric-strip,
+  .team-summary,
   .queue-summary,
   .queue-row,
   .mode-row,
@@ -1269,6 +1461,7 @@ meter {
 
   .queue-actions,
   .handoff-strip,
+  .team-export-row,
   .executor-result-heading,
   .queue-copy div {
     align-items: flex-start;
