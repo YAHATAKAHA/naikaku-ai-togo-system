@@ -30,10 +30,19 @@ npm run dev
 
 Then open the local Vite URL and try the default mission. Use the right inspector to change role provider settings and the center workspace to run a cabinet cycle.
 
+For the local JSON gateway:
+
+```bash
+npm run gateway
+```
+
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, and sandbox policy-check endpoints.
+
 ## Scripts
 
 ```bash
 npm run dev       # start the app
+npm run gateway   # start the local cabinet/sandbox gateway
 npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
@@ -49,6 +58,7 @@ src/
 docs/
   architecture.md
   api-adapters.md
+  gateway.md
   security-sandbox.md
   reference/open-source-research.md
   tasks/mvp-backlog.md

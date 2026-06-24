@@ -5,19 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "gateway": "tsx server/gateway.ts",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
+    "lucide-react": "^0.468.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "lucide-react": "^0.468.0"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.0.0",
+    "@types/node": "^26.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.0",
     "vite": "^7.1.0",
     "vitest": "^3.2.0"
