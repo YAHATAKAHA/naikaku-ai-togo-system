@@ -12,6 +12,7 @@ describe("gateway cabinet modes", () => {
     });
 
     expect(run.artifacts.every((artifact) => artifact.providerStatus === "dry-run")).toBe(true);
+    expect(run.automationActions).toHaveLength(run.artifacts.length);
     expect(run.logs.some((log) => log.id === "log-provider-dry-run")).toBe(true);
   });
 

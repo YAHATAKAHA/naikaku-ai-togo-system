@@ -18,6 +18,7 @@ import {
   Sparkles,
   Upload
 } from "lucide-react";
+import { AutomationQueue, type AutomationDecision } from "./components/AutomationQueue";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
@@ -44,6 +45,7 @@ export function App() {
   const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
   const [run, setRun] = useState<CabinetRun | null>(null);
   const [runMode, setRunMode] = useState<CabinetRunMode>("dry-run");
+  const [automationDecisions, setAutomationDecisions] = useState<Record<string, AutomationDecision>>({});
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
@@ -67,6 +69,10 @@ export function App() {
       }
     };
   }, [exportLink]);
+
+  useEffect(() => {
+    setAutomationDecisions({});
+  }, [run?.id]);
 
   function updateRole(roleId: string, patch: Partial<CabinetRole>) {
     setWorkspace((current) => ({
@@ -134,6 +140,7 @@ export function App() {
     setWorkspace(next);
     setSelectedRoleId(next.roles[0].id);
     setRun(null);
+    setAutomationDecisions({});
     setSessionSecrets({});
   }
 
@@ -163,6 +170,7 @@ export function App() {
       setWorkspace(imported);
       setSelectedRoleId(imported.roles[0]?.id || "");
       setRun(null);
+      setAutomationDecisions({});
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -259,6 +267,17 @@ export function App() {
             runStatus={runState}
             runMode={runMode}
             onRunModeChange={setRunMode}
+          />
+
+          <AutomationQueue
+            actions={run?.automationActions || []}
+            decisions={automationDecisions}
+            onDecision={(actionId, decision) =>
+              setAutomationDecisions((current) => ({
+                ...current,
+                [actionId]: decision
+              }))
+            }
           />
 
           <SandboxPanel

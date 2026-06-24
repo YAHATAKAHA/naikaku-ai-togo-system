@@ -26,6 +26,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Mission pipeline visualization.
 - Sandbox policy editing.
 - Run artifacts, logs, and score cards.
+- Automation queue review with allowed, approval-required, and blocked action proposals.
 
 ## Domain Layer
 
@@ -52,6 +53,7 @@ stage definition
   -> owner role
   -> provider adapter invoke
   -> sandbox/tool action request
+  -> automation queue policy decision
   -> artifact
   -> audit log
   -> scoring pass
@@ -77,6 +79,8 @@ Executor profiles model the runtime that can perform actions:
 - Human Approval Gate
 
 Executors should be implemented as independent services. The frontend should never directly run host commands.
+
+Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Executors should only consume actions that are `allowed` or have a recorded human approval.
 
 ## Persistence
 

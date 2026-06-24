@@ -22,6 +22,7 @@ describe("cabinet orchestrator", () => {
     ]);
     expect(run.score.overall).toBeGreaterThan(70);
     expect(run.logs.length).toBeGreaterThanOrEqual(7);
+    expect(run.automationActions).toHaveLength(run.artifacts.length);
   });
 
   it("blocks when sandbox safety controls are weakened", () => {

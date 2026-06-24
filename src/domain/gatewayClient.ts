@@ -1,4 +1,10 @@
-import type { CabinetRun, CabinetRunMode, CabinetWorkspace, ProviderConfig } from "./types";
+import type {
+  AutomationAction,
+  CabinetRun,
+  CabinetRunMode,
+  CabinetWorkspace,
+  ProviderConfig
+} from "./types";
 
 const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8787";
 
@@ -67,6 +73,31 @@ export async function testProviderViaGateway(
   }
 
   return payload;
+}
+
+export async function planAutomationViaGateway(
+  run: CabinetRun,
+  workspace: CabinetWorkspace,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/automation/plan`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      run,
+      roles: workspace.roles,
+      sandboxPolicy: workspace.sandboxPolicy
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway automation plan failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as Promise<{ actions: AutomationAction[] }>;
 }
 
 export async function checkGatewayHealth() {

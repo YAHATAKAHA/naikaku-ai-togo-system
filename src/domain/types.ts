@@ -94,6 +94,24 @@ export interface CabinetArtifact {
   latencyMs?: number;
 }
 
+export type AutomationActionStatus = "allowed" | "needs-approval" | "blocked";
+
+export interface AutomationAction {
+  id: string;
+  runId: string;
+  stageId: CabinetStageId;
+  roleId: string;
+  executorProfileId: ExecutorProfileId;
+  title: string;
+  action: string;
+  target: string;
+  riskLevel: RiskLevel;
+  status: AutomationActionStatus;
+  approvalRequired: boolean;
+  reason: string;
+  auditTags: string[];
+}
+
 export interface CabinetLogEntry {
   id: string;
   timestamp: string;
@@ -116,6 +134,7 @@ export interface CabinetRun {
   startedAt: string;
   completedAt: string;
   artifacts: CabinetArtifact[];
+  automationActions?: AutomationAction[];
   logs: CabinetLogEntry[];
   score: CabinetScore;
   nextIteration: string[];

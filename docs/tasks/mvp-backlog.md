@@ -48,7 +48,9 @@ Acceptance:
 - Implement Shell Container runner.
 - Design Desktop VM gateway contract.
 - Add MCP Proxy allowlist.
-- Add per-action approvals.
+- Add automation action proposal queue.
+- Add per-action approval UI.
+- Persist per-action approvals.
 - Add action replay logs.
 
 Acceptance:
@@ -63,6 +65,7 @@ Acceptance:
 - Add approval payload preview.
 - Add immutable audit log store.
 - Add policy tests for blocked actions.
+- Add policy tests for automation proposal gates.
 - Add red-team fixtures for localhost/control-plane attacks.
 
 Acceptance:

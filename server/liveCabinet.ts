@@ -1,4 +1,5 @@
 import { cabinetStages } from "../src/data/defaultCabinet";
+import { buildAutomationPlan } from "../src/domain/automation";
 import { runCabinetMission } from "../src/domain/orchestrator";
 import type {
   CabinetArtifact,
@@ -19,13 +20,23 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
   const baseRun = runCabinetMission(input);
 
   if (mode === "dry-run") {
-    return {
+    const artifacts = baseRun.artifacts.map((artifact) => ({
+      ...artifact,
+      providerStatus: "dry-run" as const,
+      providerDetail: "Deterministic dry-run artifact; no external model call."
+    }));
+    const dryRun = {
       ...baseRun,
-      artifacts: baseRun.artifacts.map((artifact) => ({
-        ...artifact,
-        providerStatus: "dry-run",
-        providerDetail: "Deterministic dry-run artifact; no external model call."
-      })),
+      artifacts
+    };
+
+    return {
+      ...dryRun,
+      automationActions: buildAutomationPlan({
+        run: dryRun,
+        roles: input.roles.filter((role) => role.enabled),
+        sandboxPolicy: input.sandboxPolicy
+      }),
       logs: [
         ...baseRun.logs,
         {
@@ -87,6 +98,14 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
   return {
     ...baseRun,
     artifacts,
+    automationActions: buildAutomationPlan({
+      run: {
+        ...baseRun,
+        artifacts
+      },
+      roles: input.roles.filter((role) => role.enabled),
+      sandboxPolicy: input.sandboxPolicy
+    }),
     logs: [...baseRun.logs, ...providerLogs],
     nextIteration: skippedOrFailed.length
       ? [

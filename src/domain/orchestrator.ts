@@ -9,6 +9,7 @@ import type {
   RiskLevel,
   SandboxPolicy
 } from "./types";
+import { buildAutomationPlan } from "./automation";
 
 const riskWeight: Record<RiskLevel, number> = {
   low: 0,
@@ -39,7 +40,7 @@ export function runCabinetMission(input: RunCabinetMissionInput): CabinetRun {
   const logs = buildLogs(mission, artifacts, input.sandboxPolicy);
   const score = scoreCabinetRun(artifacts, activeRoles, input.sandboxPolicy);
 
-  return {
+  const run: CabinetRun = {
     id: `run-${startedAt}`,
     mission,
     startedAt,
@@ -48,6 +49,15 @@ export function runCabinetMission(input: RunCabinetMissionInput): CabinetRun {
     logs,
     score,
     nextIteration: buildNextIteration(score, artifacts)
+  };
+
+  return {
+    ...run,
+    automationActions: buildAutomationPlan({
+      run,
+      roles: activeRoles,
+      sandboxPolicy: input.sandboxPolicy
+    })
   };
 }
 

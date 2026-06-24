@@ -73,6 +73,19 @@ The current workbench starts with:
 - Destructive and external-send actions blocked.
 - Raw secrets session-only.
 
+## Automation Queue
+
+Cabinet runs now produce sandbox action proposals before any executor work. Each proposal records:
+
+- Stage and owning role.
+- Executor profile.
+- Action and target.
+- Risk level.
+- Policy status: `allowed`, `needs-approval`, or `blocked`.
+- Audit tags and reason.
+
+Executors must treat this queue as the handoff boundary. A Browser Sandbox, Shell Container, Desktop VM, or MCP Proxy should not run a proposed action unless it is policy-allowed or has an explicit human approval record.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
@@ -82,7 +95,7 @@ Treat web pages, emails, documents, files, and tool outputs as untrusted. A sand
 Before real computer control is enabled:
 
 1. Implement executor gateway authentication.
-2. Add per-run approval records.
+2. Persist per-run approval records.
 3. Add immutable audit logs.
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.

@@ -47,4 +47,36 @@ describe("sandbox policy gateway checks", () => {
     expect(decision.allowed).toBe(false);
     expect(decision.auditTags).toContain("network-denied");
   });
+
+  it("does not apply network allowlists to internal target schemes", () => {
+    const decision = evaluateSandboxAction(
+      {
+        executorProfileId: "mcp-proxy",
+        action: "create_plan",
+        target: "artifact://planning",
+        risk: "medium"
+      },
+      defaultSandboxPolicy
+    );
+
+    expect(decision.allowed).toBe(true);
+    expect(decision.approvalRequired).toBe(false);
+    expect(decision.auditTags).toContain("allowed");
+  });
+
+  it("requires approval for high-impact shell actions", () => {
+    const decision = evaluateSandboxAction(
+      {
+        executorProfileId: "shell-container",
+        action: "run_shell",
+        target: "/workspace:npm run test",
+        risk: "high"
+      },
+      defaultSandboxPolicy
+    );
+
+    expect(decision.allowed).toBe(true);
+    expect(decision.approvalRequired).toBe(true);
+    expect(decision.auditTags).toContain("approval-required");
+  });
 });

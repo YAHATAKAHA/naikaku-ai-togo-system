@@ -53,7 +53,7 @@ Live cabinet runs still resolve role secrets from gateway environment variables.
 
 ### `POST /v1/cabinet/run`
 
-Runs the current deterministic cabinet orchestrator and returns artifacts, logs, scores, and next-iteration tasks.
+Runs the cabinet orchestrator and returns artifacts, automation actions, logs, scores, and next-iteration tasks.
 
 ```json
 {
@@ -68,6 +68,33 @@ Runs the current deterministic cabinet orchestrator and returns artifacts, logs,
 - `live`: provider calls are attempted through server-side adapters. Missing keys or provider failures are recorded in artifact provider status fields.
 
 Live mode uses role-level `apiKeyAlias` values to read environment variables from the gateway process. The browser never receives raw provider keys.
+
+### `POST /v1/automation/plan`
+
+Builds sandbox action proposals for an existing run. This does not execute anything.
+
+```json
+{
+  "run": { "id": "run-...", "artifacts": [] },
+  "roles": [],
+  "sandboxPolicy": {}
+}
+```
+
+Response:
+
+```json
+{
+  "actions": [
+    {
+      "status": "needs-approval",
+      "executorProfileId": "shell-container",
+      "action": "run_shell",
+      "target": "/workspace:npm run test"
+    }
+  ]
+}
+```
 
 ### `POST /v1/sandbox/check`
 
