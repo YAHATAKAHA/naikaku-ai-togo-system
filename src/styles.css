@@ -29,6 +29,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
+  overflow-x: hidden;
 }
 
 button,
@@ -423,6 +424,36 @@ a.secondary-button {
   font-weight: 700;
 }
 
+.mode-row {
+  display: grid;
+  grid-template-columns: 108px 132px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.mode-row button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.mode-row button[data-active="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.mode-row span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 textarea,
 input,
 select {
@@ -530,6 +561,26 @@ select:focus {
   font-size: 12px;
   line-height: 1.5;
   white-space: pre-line;
+}
+
+.provider-line {
+  display: block;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.provider-line[data-status="called"] {
+  color: var(--green);
+}
+
+.provider-line[data-status="failed"] {
+  color: var(--red);
+}
+
+.provider-line[data-status="skipped"] {
+  color: var(--amber);
 }
 
 .risk-chip {
@@ -702,10 +753,12 @@ meter {
   grid-template-columns: minmax(0, 1.4fr) minmax(360px, 0.8fr);
   gap: 16px;
   padding: 0 16px 16px;
+  min-width: 0;
 }
 
 .footer-panel {
   padding: 14px;
+  min-width: 0;
 }
 
 .log-list {
@@ -940,11 +993,13 @@ meter {
   .executor-list,
   .score-grid,
   .metric-strip,
+  .mode-row,
   .history-row {
     grid-template-columns: 1fr;
   }
 
   .operator-footer {
     padding: 0 12px 12px;
+    min-width: 0;
   }
 }

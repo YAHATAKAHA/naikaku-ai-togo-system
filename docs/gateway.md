@@ -34,6 +34,8 @@ Returns service status and supported capabilities.
 ### `POST /v1/provider/test`
 
 Validates a provider configuration structurally. It does not persist secrets.
+If `sessionSecret` is provided, the gateway only uses it to mark this one-off test as secret-ready.
+Live cabinet runs still resolve role secrets from gateway environment variables.
 
 ```json
 {
@@ -55,9 +57,17 @@ Runs the current deterministic cabinet orchestrator and returns artifacts, logs,
 
 ```json
 {
-  "mission": "Build a sandbox-first cabinet automation system"
+  "mission": "Build a sandbox-first cabinet automation system",
+  "mode": "dry-run"
 }
 ```
+
+`mode` can be:
+
+- `dry-run`: no external model calls.
+- `live`: provider calls are attempted through server-side adapters. Missing keys or provider failures are recorded in artifact provider status fields.
+
+Live mode uses role-level `apiKeyAlias` values to read environment variables from the gateway process. The browser never receives raw provider keys.
 
 ### `POST /v1/sandbox/check`
 

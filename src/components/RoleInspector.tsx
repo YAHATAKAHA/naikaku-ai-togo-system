@@ -35,7 +35,7 @@ export function RoleInspector({
       const result = await testProviderViaGateway(currentRole.provider, sessionSecret);
       setTestState({
         status: result.ok ? "ok" : "error",
-        message: `${result.adapter}: ${result.message}`
+        message: `${result.provider || currentRole.provider.provider}: ${result.message}${result.secretReady ? " Secret ready." : ""}`
       });
     } catch {
       const adapter = findAdapter(currentRole.provider);

@@ -1,4 +1,4 @@
-import type { CabinetRun, CabinetWorkspace, ProviderConfig } from "./types";
+import type { CabinetRun, CabinetRunMode, CabinetWorkspace, ProviderConfig } from "./types";
 
 const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8787";
 
@@ -9,7 +9,10 @@ export interface GatewayRunResult {
 
 export interface ProviderTestResult {
   ok: boolean;
-  adapter: string;
+  provider?: string;
+  model?: string;
+  endpoint?: string;
+  secretReady?: boolean;
   message: string;
 }
 
@@ -20,6 +23,7 @@ export function gatewayBaseUrl() {
 
 export async function runCabinetViaGateway(
   workspace: CabinetWorkspace,
+  mode: CabinetRunMode,
   signal?: AbortSignal
 ): Promise<GatewayRunResult> {
   const response = await fetch(`${gatewayBaseUrl()}/v1/cabinet/run`, {
@@ -27,7 +31,7 @@ export async function runCabinetViaGateway(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(workspace),
+    body: JSON.stringify({ ...workspace, mode }),
     signal
   });
 
@@ -57,7 +61,7 @@ export async function testProviderViaGateway(
   if (!response.ok) {
     return {
       ok: false,
-      adapter: payload.adapter || "unknown",
+      provider: payload.provider || "unknown",
       message: payload.message || `Gateway provider test failed with HTTP ${response.status}.`
     };
   }

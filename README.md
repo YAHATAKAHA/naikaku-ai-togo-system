@@ -40,6 +40,8 @@ npm run gateway
 
 It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, and sandbox policy-check endpoints.
 
+The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
+
 ## Scripts
 
 ```bash

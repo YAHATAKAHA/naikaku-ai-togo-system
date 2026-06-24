@@ -57,6 +57,11 @@ stage definition
   -> scoring pass
 ```
 
+The current gateway already supports this in two modes:
+
+- `dry-run`: deterministic artifacts for local development and review.
+- `live`: server-side provider adapters attempt role-level model calls and annotate each artifact with `providerStatus`, `providerDetail`, token usage, and latency.
+
 ## Provider Adapters
 
 `src/domain/adapters.ts` defines the adapter shape. Real adapters should live behind a backend or local gateway so browser clients do not expose raw API keys.

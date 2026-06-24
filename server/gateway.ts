@@ -1,8 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
-import { findAdapter } from "../src/domain/adapters";
-import { runCabinetMission } from "../src/domain/orchestrator";
-import type { CabinetRole, ProviderConfig, SandboxPolicy } from "../src/domain/types";
+import type { CabinetRunMode, CabinetRole, ProviderConfig, SandboxPolicy } from "../src/domain/types";
+import { runGatewayCabinet } from "./liveCabinet";
+import { validateProviderConfig } from "./providerAdapters";
 import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolicy";
 
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
@@ -31,13 +31,8 @@ const server = createServer(async (request, response) => {
 
     if (request.method === "POST" && request.url === "/v1/provider/test") {
       const body = await readJson<{ provider: ProviderConfig; sessionSecret?: string }>(request);
-      const adapter = findAdapter(body.provider);
-      const ok = await adapter.testConnection(body.provider, body.sessionSecret);
-      sendJson(response, ok ? 200 : 422, {
-        ok,
-        adapter: adapter.id,
-        message: ok ? "Provider configuration is structurally valid." : "Provider endpoint or model is missing."
-      });
+      const validation = validateProviderConfig(body.provider, process.env, body.sessionSecret);
+      sendJson(response, validation.ok ? 200 : 422, validation);
       return;
     }
 
@@ -46,11 +41,13 @@ const server = createServer(async (request, response) => {
         mission?: string;
         roles?: CabinetRole[];
         sandboxPolicy?: SandboxPolicy;
+        mode?: CabinetRunMode;
       }>(request);
-      const run = runCabinetMission({
+      const run = await runGatewayCabinet({
         mission: body.mission || defaultMission,
         roles: body.roles || defaultRoles,
-        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
+        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy,
+        mode: body.mode || "dry-run"
       });
       sendJson(response, 200, run);
       return;

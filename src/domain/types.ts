@@ -88,6 +88,10 @@ export interface CabinetArtifact {
   body: string;
   riskLevel: RiskLevel;
   scoreImpact: number;
+  providerStatus?: "dry-run" | "skipped" | "called" | "failed";
+  providerDetail?: string;
+  tokensUsed?: number;
+  latencyMs?: number;
 }
 
 export interface CabinetLogEntry {
@@ -131,3 +135,5 @@ export interface RunHistoryItem {
   overall: number;
   source: "gateway" | "fallback" | "local";
 }
+
+export type CabinetRunMode = "dry-run" | "live";

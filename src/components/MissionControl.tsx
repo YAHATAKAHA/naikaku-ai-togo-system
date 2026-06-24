@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, Gauge, Layers3 } from "lucide-react";
 import { cabinetStages } from "../data/defaultCabinet";
-import type { CabinetRole, CabinetRun, SandboxPolicy } from "../domain/types";
+import type { CabinetArtifact, CabinetRole, CabinetRun, CabinetRunMode, SandboxPolicy } from "../domain/types";
 
 interface MissionControlProps {
   mission: string;
@@ -12,6 +12,8 @@ interface MissionControlProps {
     status: string;
     message: string;
   };
+  runMode: CabinetRunMode;
+  onRunModeChange: (mode: CabinetRunMode) => void;
 }
 
 export function MissionControl({
@@ -20,7 +22,9 @@ export function MissionControl({
   run,
   roles,
   sandboxPolicy,
-  runStatus
+  runStatus,
+  runMode,
+  onRunModeChange
 }: MissionControlProps) {
   return (
     <section className="mission-panel">
@@ -35,6 +39,27 @@ export function MissionControl({
         <div className="run-status" data-status={runStatus.status}>
           <span>{runStatus.status}</span>
           <strong>{runStatus.message}</strong>
+        </div>
+        <div className="mode-row" role="group" aria-label="Cabinet run mode">
+          <button
+            type="button"
+            data-active={runMode === "dry-run"}
+            onClick={() => onRunModeChange("dry-run")}
+          >
+            Dry-run
+          </button>
+          <button
+            type="button"
+            data-active={runMode === "live"}
+            onClick={() => onRunModeChange("live")}
+          >
+            Live providers
+          </button>
+          <span>
+            {runMode === "live"
+              ? "Uses gateway-resolved environment secrets and may call external model APIs."
+              : "Uses deterministic artifacts without external model calls."}
+          </span>
         </div>
       </div>
 
@@ -63,6 +88,11 @@ export function MissionControl({
               <strong>{artifact.title}</strong>
             </div>
             <p>{artifact.body}</p>
+            {artifact.providerStatus ? (
+              <small className="provider-line" data-status={artifact.providerStatus}>
+                {artifact.providerStatus}: {artifact.providerDetail}
+              </small>
+            ) : null}
             <span className="risk-chip" data-risk={artifact.riskLevel}>{artifact.riskLevel}</span>
           </article>
         ))}
@@ -91,7 +121,7 @@ function ScoreCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function previewArtifacts() {
+function previewArtifacts(): CabinetArtifact[] {
   return cabinetStages.slice(0, 3).map((stage, index) => ({
     id: `preview-${stage.id}`,
     stageId: stage.id,

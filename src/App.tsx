@@ -36,12 +36,14 @@ import {
 import { runCabinetMission } from "./domain/orchestrator";
 import { gatewayBaseUrl, runCabinetViaGateway } from "./domain/gatewayClient";
 import type { CabinetRole, CabinetRun, RunHistoryItem } from "./domain/types";
+import type { CabinetRunMode } from "./domain/types";
 
 export function App() {
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
   const [selectedRoleId, setSelectedRoleId] = useState(workspace.roles[0]?.id || "");
   const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
   const [run, setRun] = useState<CabinetRun | null>(null);
+  const [runMode, setRunMode] = useState<CabinetRunMode>("dry-run");
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
@@ -101,12 +103,12 @@ export function App() {
       message: `Calling local gateway at ${gatewayBaseUrl()}...`
     });
     try {
-      const result = await runCabinetViaGateway(workspace);
+      const result = await runCabinetViaGateway(workspace, runMode);
       setRun(result.run);
       setRunHistory((current) => addRunHistoryItem(result.run, result.source, current));
       setRunState({
         status: "gateway",
-        message: "Run completed through the local gateway."
+        message: `Run completed through the local gateway in ${runMode} mode.`
       });
     } catch (error) {
       const fallbackRun = runCabinetMission(workspace);
@@ -255,6 +257,8 @@ export function App() {
             roles={workspace.roles}
             sandboxPolicy={workspace.sandboxPolicy}
             runStatus={runState}
+            runMode={runMode}
+            onRunModeChange={setRunMode}
           />
 
           <SandboxPanel

@@ -61,6 +61,27 @@ POST /v1/cabinet/invoke
 
 The gateway resolves the secret alias, calls the provider, strips provider-specific noise, and returns a normalized artifact.
 
+## Implemented Gateway Adapters
+
+The local gateway now includes server-side adapters for:
+
+- OpenAI Responses API.
+- Anthropic Messages API.
+- OpenRouter / OpenAI-compatible chat completions.
+- Gemini `generateContent`.
+- Custom JSON endpoints.
+
+Run mode matters:
+
+- `dry-run`: deterministic local artifacts, no external provider calls.
+- `live`: attempts provider calls through the gateway. Missing secrets become `skipped` provider statuses, not frontend errors.
+
+Secret resolution rules:
+
+- `apiKeyAlias` must be an environment variable name such as `NAIKAKU_OPENAI_API_KEY`.
+- Raw-looking keys are rejected by the server adapter layer.
+- Local/custom providers may run without a secret when their endpoint allows it.
+
 ## Do Not
 
 - Do not persist raw keys in browser storage.
