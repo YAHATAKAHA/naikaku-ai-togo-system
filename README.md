@@ -18,6 +18,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Automation queue proposals, persisted approval records, executor handoff export, and a safe executor dry-run before any real runner consumes work.
 - Executor evidence bundles with per-step simulated transcripts, screenshot/artifact placeholders, evidence hashes, replay flags, and JSON export for future runner audit.
 - Runner authentication gate for executor handoff, dry-run, and evidence endpoints when `NAIKAKU_RUNNER_TOKEN` is configured.
+- Local gateway ledger for storing approval decisions and executor evidence bundles in `.naikaku-data`.
 - Local audit trail for workspace changes, role changes, runs, approvals, executor dry-runs, executor evidence exports, and team handoff exports.
 - Team work package generation so each role can split provider, executor, safety, memory, and UI work into parallel handoffs.
 - Development Board that converts role packages, next-loop tasks, and accepted memory into status-trackable work items for separate teams.
@@ -57,6 +58,8 @@ NAIKAKU_RUNNER_TOKEN=dev-runner-token npm run gateway
 ```
 
 Executor clients then send `Authorization: Bearer dev-runner-token` and `x-naikaku-runner-id`.
+
+Approval and evidence ledger files default to `.naikaku-data`; set `NAIKAKU_LEDGER_DIR` to move them elsewhere.
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 

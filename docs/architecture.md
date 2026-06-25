@@ -154,13 +154,14 @@ Production persistence should store:
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
 - Executor evidence bundles for replay, audit, and runner compatibility checks.
+- Local gateway ledger records for approval decisions and executor evidence bundles.
 - Team handoff packages for parallel development.
 - Development board items and status changes for separate implementation teams.
 - Custom role definitions beyond the default cabinet.
 - Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
 - Reviewed memory entries with accepted and rejected decisions, retention labels, and consent tags.
 
-The current audit trail is local and exportable, not tamper-proof. Production should replace it with an authenticated append-only server-side store.
+The current audit trail is local and exportable, not tamper-proof. The gateway now adds a local file ledger for approval records and executor evidence bundles under `NAIKAKU_LEDGER_DIR`, but production should replace that with an authenticated append-only server-side store.
 
 ## Parallel Development Boundaries
 

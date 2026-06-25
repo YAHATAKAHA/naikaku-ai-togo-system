@@ -74,10 +74,12 @@ import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
+  createExecutorEvidenceViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
+  saveApprovalRecordViaGateway,
   testProviderViaGateway
 } from "./domain/gatewayClient";
 import type {
@@ -536,6 +538,9 @@ export function App() {
     const nextRecords = saveApprovalRecord(record).filter(
       (candidate) => candidate.runId === action.runId
     );
+    void saveApprovalRecordViaGateway(record).catch(() => {
+      // Local approval storage remains the source of truth when the gateway is offline.
+    });
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
     setExecutorRun(null);
@@ -684,10 +689,26 @@ export function App() {
     }
   }
 
-  function exportExecutorEvidence() {
+  async function exportExecutorEvidence() {
     if (!executorRun) return;
 
-    const bundle = buildExecutorEvidenceBundle({ executorRun });
+    let bundle = buildExecutorEvidenceBundle({ executorRun });
+    let source: "gateway" | "local" = "local";
+
+    try {
+      bundle = await createExecutorEvidenceViaGateway(executorRun);
+      source = "gateway";
+      setRunState({
+        status: "gateway",
+        message: "Executor evidence exported and stored through the local gateway."
+      });
+    } catch {
+      setRunState({
+        status: "fallback",
+        message: "Gateway evidence ledger unavailable; prepared local evidence export."
+      });
+    }
+
     const blob = new Blob([serializeExecutorEvidenceExport(bundle)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-executor-evidence-${executorRun.id.replace(/[^a-z0-9-]/gi, "-")}.json`;
@@ -706,7 +727,8 @@ export function App() {
         executorRunId: executorRun.id,
         steps: executorRun.steps.length,
         evidenceItems: executorRun.summary.evidenceItems,
-        replayableSteps: executorRun.summary.replayableSteps
+        replayableSteps: executorRun.summary.replayableSteps,
+        source
       }
     });
   }

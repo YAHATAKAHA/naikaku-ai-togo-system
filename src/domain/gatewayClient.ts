@@ -4,6 +4,7 @@ import type {
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
+  ExecutorEvidenceBundle,
   ExecutorHandoff,
   ExecutorRun,
   ProviderConfig,
@@ -146,6 +147,54 @@ export async function runExecutorHandoffViaGateway(
   }
 
   return (await response.json()) as ExecutorRun;
+}
+
+export async function createExecutorEvidenceViaGateway(
+  executorRun: ExecutorRun,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/executor/evidence`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ executorRun }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway executor evidence failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ExecutorEvidenceBundle & {
+    stored?: boolean;
+    gatewayRunnerId?: string;
+    authMode?: string;
+  };
+}
+
+export async function saveApprovalRecordViaGateway(
+  record: AutomationApprovalRecord,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/ledger/approvals`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ record }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway approval ledger failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as Promise<{
+    ok: boolean;
+    stored: boolean;
+    record: AutomationApprovalRecord;
+  }>;
 }
 
 export async function createTeamHandoffViaGateway(

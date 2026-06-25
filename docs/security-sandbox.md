@@ -93,12 +93,14 @@ Approval records are stored separately from action proposals and include the run
 - `rejected`, `blocked`, and unapproved actions stay held.
 
 The workbench can export this handoff JSON for executor development. The gateway also exposes `/v1/executor/handoff` so runner services can use the same contract without reading frontend state.
+When the gateway receives approval records through handoff or `/v1/ledger/approvals`, it upserts them into the local ledger under `NAIKAKU_LEDGER_DIR`.
 
 The current `/v1/executor/run` runner is deliberately dry-run only. It simulates what each executor profile would receive and records audit output, but it does not run commands, browse sites, control desktops, write files, send network requests, or call MCP tools.
 
 Executor-facing gateway routes now support runner authentication. When `NAIKAKU_RUNNER_TOKEN` is configured, `/v1/executor/handoff`, `/v1/executor/run`, and `/v1/executor/evidence` require a valid bearer token or `x-naikaku-runner-token` plus `x-naikaku-runner-id`. If the token is not configured, `/health` reports `development-open` so local development is explicit rather than silently pretending to be production-secure.
 
 Each dry-run step emits `ExecutorEvidenceItem` records and an evidence hash. Browser actions receive screenshot and URL-log placeholders, shell actions receive command transcript and artifact-manifest placeholders, desktop actions receive frame and input-event placeholders, MCP actions receive schema and request-log placeholders, and approval-gate actions receive approval evidence. These are intentionally marked as dry-run evidence so production runners can replace them with real artifacts without changing the export contract.
+Generated evidence bundles are also upserted into the local evidence ledger and can be queried through `/v1/ledger/evidence`.
 
 ## Sandbox Capability Registry
 
@@ -133,7 +135,7 @@ Treat web pages, emails, documents, files, and tool outputs as untrusted. A sand
 Before real computer control is enabled:
 
 1. Move runner authentication from shared-token development mode to per-runner scoped identities.
-2. Move per-run approval records from local storage into durable authenticated storage.
+2. Replace the local file ledger with durable authenticated append-only storage.
 3. Replace the local audit trail with immutable server-side audit logs.
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.

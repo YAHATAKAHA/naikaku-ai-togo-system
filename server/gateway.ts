@@ -10,11 +10,19 @@ import type {
   CabinetRunMode,
   CabinetRole,
   CabinetWorkspace,
+  ExecutorEvidenceBundle,
   ExecutorRun,
   ExecutorHandoff,
   ProviderConfig,
   SandboxPolicy
 } from "../src/domain/types";
+import {
+  ledgerSummary,
+  listApprovalRecordsFromLedger,
+  listEvidenceBundlesFromLedger,
+  saveApprovalRecordToLedger,
+  saveEvidenceBundleToLedger
+} from "./ledgerStore";
 import { runGatewayCabinet } from "./liveCabinet";
 import { validateProviderConfig } from "./providerAdapters";
 import { evaluateRunnerAuth, runnerAuthPosture, type RunnerAuthDecision } from "./runnerAuth";
@@ -26,6 +34,7 @@ const corsOrigin = process.env.NAIKAKU_CORS_ORIGIN || "http://127.0.0.1:5173";
 
 const server = createServer(async (request, response) => {
   setCors(response);
+  const requestUrl = new URL(request.url || "/", `http://${request.headers.host || host}`);
 
   if (request.method === "OPTIONS") {
     response.writeHead(204);
@@ -34,7 +43,7 @@ const server = createServer(async (request, response) => {
   }
 
   try {
-    if (request.method === "GET" && request.url === "/health") {
+    if (request.method === "GET" && requestUrl.pathname === "/health") {
       sendJson(response, 200, {
         ok: true,
         service: "naikaku-local-gateway",
@@ -45,6 +54,7 @@ const server = createServer(async (request, response) => {
           "executor-handoff",
           "executor-run-dry",
           "executor-evidence",
+          "ledger-store",
           "team-packages",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -55,14 +65,14 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/provider/test") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/provider/test") {
       const body = await readJson<{ provider: ProviderConfig; sessionSecret?: string }>(request);
       const validation = validateProviderConfig(body.provider, process.env, body.sessionSecret);
       sendJson(response, validation.ok ? 200 : 422, validation);
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/cabinet/run") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/cabinet/run") {
       const body = await readJson<{
         mission?: string;
         roles?: CabinetRole[];
@@ -79,7 +89,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/automation/plan") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/automation/plan") {
       const body = await readJson<{
         run: CabinetRun;
         roles?: CabinetRole[];
@@ -94,7 +104,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/executor/handoff") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/executor/handoff") {
       const auth = authorizeExecutorRequest(request, response);
       if (!auth) return;
 
@@ -102,6 +112,9 @@ const server = createServer(async (request, response) => {
         run: CabinetRun;
         approvalRecords?: AutomationApprovalRecord[];
       }>(request);
+      await Promise.all(
+        (body.approvalRecords || []).map((record) => saveApprovalRecordToLedger({ record }))
+      );
       const handoff = buildExecutorHandoff({
         run: body.run,
         approvalRecords: body.approvalRecords || []
@@ -114,7 +127,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/executor/run") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/executor/run") {
       const auth = authorizeExecutorRequest(request, response);
       if (!auth) return;
 
@@ -132,7 +145,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/executor/evidence") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/executor/evidence") {
       const auth = authorizeExecutorRequest(request, response);
       if (!auth) return;
 
@@ -149,15 +162,96 @@ const server = createServer(async (request, response) => {
       const bundle = buildExecutorEvidenceBundle({
         executorRun: body.executorRun
       });
+      await saveEvidenceBundleToLedger({ bundle });
       sendJson(response, 200, {
         ...bundle,
+        stored: true,
         gatewayRunnerId: auth.runnerId,
         authMode: auth.mode
       });
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/team/packages") {
+    if (request.method === "GET" && requestUrl.pathname === "/v1/ledger/status") {
+      sendJson(response, 200, await ledgerSummary());
+      return;
+    }
+
+    if (request.method === "GET" && requestUrl.pathname === "/v1/ledger/approvals") {
+      const runId = requestUrl.searchParams.get("runId") || undefined;
+      const records = await listApprovalRecordsFromLedger({ runId });
+      sendJson(response, 200, {
+        schema: "naikaku.approval-ledger-query.v1",
+        runId: runId || null,
+        records
+      });
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/ledger/approvals") {
+      const body = await readJson<{
+        record?: AutomationApprovalRecord;
+      }>(request);
+      if (!body.record?.id) {
+        sendJson(response, 422, {
+          ok: false,
+          message: "record is required."
+        });
+        return;
+      }
+      const record = await saveApprovalRecordToLedger({ record: body.record });
+      sendJson(response, 200, {
+        ok: true,
+        stored: true,
+        record
+      });
+      return;
+    }
+
+    if (request.method === "GET" && requestUrl.pathname === "/v1/ledger/evidence") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
+      const runId = requestUrl.searchParams.get("runId") || undefined;
+      const executorRunId = requestUrl.searchParams.get("executorRunId") || undefined;
+      const bundles = await listEvidenceBundlesFromLedger({ runId, executorRunId });
+      sendJson(response, 200, {
+        schema: "naikaku.evidence-ledger-query.v1",
+        runId: runId || null,
+        executorRunId: executorRunId || null,
+        bundles,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/ledger/evidence") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
+      const body = await readJson<{
+        bundle?: ExecutorEvidenceBundle;
+      }>(request);
+      if (body.bundle?.schema !== "naikaku.executor-evidence.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.executor-evidence.v1 is required."
+        });
+        return;
+      }
+      const bundle = await saveEvidenceBundleToLedger({ bundle: body.bundle });
+      sendJson(response, 200, {
+        ok: true,
+        stored: true,
+        bundle,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/team/packages") {
       const body = await readJson<{
         workspace?: CabinetWorkspace;
         run?: CabinetRun;
@@ -175,7 +269,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/sandbox/check") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/sandbox/check") {
       const body = await readJson<{
         request: SandboxActionRequest;
         sandboxPolicy?: SandboxPolicy;
@@ -188,7 +282,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/v1/sandbox/capabilities") {
+    if (request.method === "POST" && requestUrl.pathname === "/v1/sandbox/capabilities") {
       const body = await readJson<{
         roles?: CabinetRole[];
         sandboxPolicy?: SandboxPolicy;

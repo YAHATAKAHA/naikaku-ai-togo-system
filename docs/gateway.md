@@ -22,11 +22,14 @@ NAIKAKU_GATEWAY_HOST=127.0.0.1
 NAIKAKU_GATEWAY_PORT=8787
 NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
 NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
+NAIKAKU_LEDGER_DIR=.naikaku-data
 ```
 
 `VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
 
 `NAIKAKU_RUNNER_TOKEN` protects executor-facing routes when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
+
+`NAIKAKU_LEDGER_DIR` controls where the gateway stores local approval and evidence ledgers. The default is `.naikaku-data`, which is ignored by Git.
 
 Authenticated runner requests use either:
 
@@ -131,6 +134,7 @@ Response:
 Builds the executor-facing handoff from a run plus approval records. This does not execute actions. It filters out blocked, rejected, and still-unapproved work.
 
 If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+Any supplied approval records are also upserted into the local ledger.
 
 ```json
 {
@@ -197,6 +201,7 @@ Response:
 Builds an exportable evidence bundle from an `ExecutorRun`. This endpoint does not execute anything. It normalizes per-step evidence, evidence hashes, runner ids, and replay flags into `naikaku.executor-evidence.v1` so future Browser, Shell, Desktop, and MCP runner services can satisfy the same audit contract.
 
 If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+The generated bundle is also upserted into the local evidence ledger.
 
 ```json
 {
@@ -221,6 +226,70 @@ Response:
     "replayableSteps": 2
   },
   "steps": []
+}
+```
+
+### `GET /v1/ledger/status`
+
+Returns local ledger counts and the active ledger directory.
+
+```json
+{
+  "schema": "naikaku.ledger-summary.v1",
+  "ledgerDir": ".naikaku-data",
+  "approvals": 3,
+  "evidenceBundles": 2
+}
+```
+
+### `GET /v1/ledger/approvals`
+
+Lists stored approval records. Add `?runId=run-...` to filter.
+
+```json
+{
+  "schema": "naikaku.approval-ledger-query.v1",
+  "runId": "run-...",
+  "records": []
+}
+```
+
+### `POST /v1/ledger/approvals`
+
+Upserts one `AutomationApprovalRecord` into the local ledger.
+
+```json
+{
+  "record": {
+    "id": "run-action-approved",
+    "runId": "run-...",
+    "actionId": "action-...",
+    "decision": "approved"
+  }
+}
+```
+
+### `GET /v1/ledger/evidence`
+
+Lists stored executor evidence bundles. Add `?runId=run-...` or `?executorRunId=...` to filter. If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+
+```json
+{
+  "schema": "naikaku.evidence-ledger-query.v1",
+  "bundles": []
+}
+```
+
+### `POST /v1/ledger/evidence`
+
+Upserts one `naikaku.executor-evidence.v1` bundle. If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+
+```json
+{
+  "bundle": {
+    "schema": "naikaku.executor-evidence.v1",
+    "executorRunId": "run-...-executor-run"
+  }
 }
 ```
 
@@ -313,5 +382,6 @@ The gateway is intentionally conservative:
 - It does not persist raw secrets.
 - It checks blocked actions and network allowlists before sandbox work.
 - It requires runner authentication for executor routes when `NAIKAKU_RUNNER_TOKEN` is configured.
+- It stores local ledger files under `NAIKAKU_LEDGER_DIR` and keeps that directory out of Git.
 
 Production work should add authentication, durable audit storage, real provider adapters, and executor backends.
