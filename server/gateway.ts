@@ -17,6 +17,7 @@ import type {
 } from "../src/domain/types";
 import { runGatewayCabinet } from "./liveCabinet";
 import { validateProviderConfig } from "./providerAdapters";
+import { evaluateRunnerAuth, runnerAuthPosture, type RunnerAuthDecision } from "./runnerAuth";
 import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolicy";
 
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
@@ -48,6 +49,7 @@ const server = createServer(async (request, response) => {
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
+        runnerAuth: runnerAuthPosture(process.env),
         timestamp: new Date().toISOString()
       });
       return;
@@ -93,6 +95,9 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/v1/executor/handoff") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
       const body = await readJson<{
         run: CabinetRun;
         approvalRecords?: AutomationApprovalRecord[];
@@ -101,22 +106,36 @@ const server = createServer(async (request, response) => {
         run: body.run,
         approvalRecords: body.approvalRecords || []
       });
-      sendJson(response, 200, handoff);
+      sendJson(response, 200, {
+        ...handoff,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
       return;
     }
 
     if (request.method === "POST" && request.url === "/v1/executor/run") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
       const body = await readJson<{
         handoff: ExecutorHandoff;
       }>(request);
       const executorRun = runExecutorHandoff({
         handoff: body.handoff
       });
-      sendJson(response, 200, executorRun);
+      sendJson(response, 200, {
+        ...executorRun,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
       return;
     }
 
     if (request.method === "POST" && request.url === "/v1/executor/evidence") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
       const body = await readJson<{
         executorRun: ExecutorRun;
       }>(request);
@@ -130,7 +149,11 @@ const server = createServer(async (request, response) => {
       const bundle = buildExecutorEvidenceBundle({
         executorRun: body.executorRun
       });
-      sendJson(response, 200, bundle);
+      sendJson(response, 200, {
+        ...bundle,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
       return;
     }
 
@@ -198,7 +221,10 @@ server.listen(port, host, () => {
 function setCors(response: ServerResponse) {
   response.setHeader("Access-Control-Allow-Origin", corsOrigin);
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  response.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Authorization,x-naikaku-runner-id,x-naikaku-runner-token"
+  );
 }
 
 function sendJson(response: ServerResponse, status: number, payload: unknown) {
@@ -215,4 +241,29 @@ async function readJson<T>(request: IncomingMessage): Promise<T> {
 
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? (JSON.parse(raw) as T) : ({} as T);
+}
+
+function authorizeExecutorRequest(
+  request: IncomingMessage,
+  response: ServerResponse
+): RunnerAuthDecision | null {
+  const decision = evaluateRunnerAuth({
+    headers: request.headers,
+    env: process.env
+  });
+
+  if (!decision.ok) {
+    sendJson(response, decision.status, {
+      ok: false,
+      message: decision.message,
+      runnerAuth: {
+        mode: decision.mode,
+        runnerId: decision.runnerId || null
+      },
+      auditTags: decision.auditTags
+    });
+    return null;
+  }
+
+  return decision;
 }

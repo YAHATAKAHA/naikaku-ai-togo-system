@@ -108,6 +108,8 @@ Executors should be implemented as independent services. The frontend should nev
 
 Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
+Executor-facing gateway routes have a runner authentication gate. In local development, missing `NAIKAKU_RUNNER_TOKEN` is reported as `development-open` in `/health`. Once that token is configured, `/v1/executor/handoff`, `/v1/executor/run`, and `/v1/executor/evidence` require a runner token and runner id before returning handoff, dry-run, or evidence data.
+
 Each executor step now carries `ExecutorEvidenceItem` records for policy decisions, simulated transcripts, screenshot placeholders, artifact manifests, approval records, or network logs depending on the executor profile. `ExecutorEvidenceBundle` exports those records as `naikaku.executor-evidence.v1` with runner ids, replay flags, and evidence hashes. Real runners should replace placeholders with actual screenshots, terminal transcripts, artifact manifests, and tool-call logs while preserving the same envelope.
 
 ## Team Handoffs

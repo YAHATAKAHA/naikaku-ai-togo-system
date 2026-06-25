@@ -21,15 +21,45 @@ VITE_NAIKAKU_GATEWAY_URL=http://127.0.0.1:8787
 NAIKAKU_GATEWAY_HOST=127.0.0.1
 NAIKAKU_GATEWAY_PORT=8787
 NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
+NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
 ```
 
 `VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
+
+`NAIKAKU_RUNNER_TOKEN` protects executor-facing routes when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
+
+Authenticated runner requests use either:
+
+```http
+Authorization: Bearer <NAIKAKU_RUNNER_TOKEN>
+x-naikaku-runner-id: shell-runner-01
+```
+
+or:
+
+```http
+x-naikaku-runner-token: <NAIKAKU_RUNNER_TOKEN>
+x-naikaku-runner-id: shell-runner-01
+```
 
 ## Endpoints
 
 ### `GET /health`
 
 Returns service status and supported capabilities.
+
+The response also includes runner auth posture:
+
+```json
+{
+  "runnerAuth": {
+    "mode": "token-required",
+    "configured": true,
+    "acceptedHeaders": ["Authorization: Bearer <token>", "x-naikaku-runner-token"],
+    "runnerIdRequired": true
+  }
+}
+```
 
 ### `POST /v1/provider/test`
 
@@ -100,6 +130,8 @@ Response:
 
 Builds the executor-facing handoff from a run plus approval records. This does not execute actions. It filters out blocked, rejected, and still-unapproved work.
 
+If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+
 ```json
 {
   "run": { "id": "run-...", "automationActions": [] },
@@ -124,6 +156,8 @@ Executors should consume `readyActions` only. A `needs-approval` action appears 
 ### `POST /v1/executor/run`
 
 Dry-runs executor-ready actions from a handoff. This endpoint does not execute shell commands, browser navigation, desktop input, file writes, or MCP calls. It returns simulated executor steps for audit and UI development.
+
+If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
 
 ```json
 {
@@ -161,6 +195,8 @@ Response:
 ### `POST /v1/executor/evidence`
 
 Builds an exportable evidence bundle from an `ExecutorRun`. This endpoint does not execute anything. It normalizes per-step evidence, evidence hashes, runner ids, and replay flags into `naikaku.executor-evidence.v1` so future Browser, Shell, Desktop, and MCP runner services can satisfy the same audit contract.
+
+If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
 
 ```json
 {
@@ -276,5 +312,6 @@ The gateway is intentionally conservative:
 - It does not operate the host desktop.
 - It does not persist raw secrets.
 - It checks blocked actions and network allowlists before sandbox work.
+- It requires runner authentication for executor routes when `NAIKAKU_RUNNER_TOKEN` is configured.
 
 Production work should add authentication, durable audit storage, real provider adapters, and executor backends.

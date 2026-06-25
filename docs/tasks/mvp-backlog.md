@@ -64,8 +64,10 @@ Acceptance:
 - Add safe executor dry-run runner.
 - Add Sandbox Capability registry with runner contracts, evidence requirements, and policy-evaluated representative actions.
 - Add executor evidence bundle export with per-step hashes, runner ids, replay flags, and dry-run evidence placeholders.
+- Add runner authentication gate for executor handoff, dry-run, and evidence endpoints.
 - Convert next-loop and automation work into status-trackable development items.
 - Move approval records to durable backend storage.
+- Replace shared runner token with per-runner scoped credentials and rotation.
 - Replace dry-run runner with authenticated Shell/Browser/Desktop executors that emit real evidence artifacts.
 - Add action replay logs backed by screenshots, terminal transcripts, artifact manifests, and MCP request logs.
 
