@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
+import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
@@ -32,9 +33,11 @@ import {
   appendAuditEvent,
   clearAuditEvents,
   clearCurrentRun,
+  clearDevelopmentItems,
   clearRunHistory,
   createDefaultWorkspace,
   loadAuditEvents,
+  loadDevelopmentItems,
   loadMemoryEntries,
   loadApprovalRecords,
   loadCurrentRun,
@@ -43,15 +46,18 @@ import {
   parseWorkspaceExport,
   saveApprovalRecord,
   saveCurrentRun,
+  saveDevelopmentWorkItem,
   saveMemoryEntry,
   saveWorkspace,
   serializeAuditLog,
+  serializeDevelopmentBoardExport,
   serializeMemoryLog,
   serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { createAuditEvent } from "./domain/auditLog";
+import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { runExecutorHandoff } from "./domain/executorRunner";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
@@ -70,6 +76,8 @@ import type {
   AuditEvent,
   CabinetRole,
   CabinetRun,
+  DevelopmentWorkItem,
+  DevelopmentWorkItemStatus,
   ExecutorRun,
   MemoryEntry,
   RunHistoryItem,
@@ -91,6 +99,7 @@ export function App() {
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => loadAuditEvents());
   const [memoryEntries, setMemoryEntries] = useState<MemoryEntry[]>(() => loadMemoryEntries());
+  const [developmentItems, setDevelopmentItems] = useState<DevelopmentWorkItem[]>(() => loadDevelopmentItems());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
@@ -101,6 +110,7 @@ export function App() {
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -131,6 +141,16 @@ export function App() {
   const memoryCandidates = useMemo(
     () => (run ? buildMemoryCandidates({ run }) : []),
     [run]
+  );
+  const developmentBoard = useMemo(
+    () =>
+      buildDevelopmentBoard({
+        handoff: teamHandoff,
+        run,
+        memoryEntries,
+        savedItems: developmentItems
+      }),
+    [developmentItems, memoryEntries, run, teamHandoff]
   );
 
   useEffect(() => {
@@ -174,10 +194,19 @@ export function App() {
   }, [memoryLink]);
 
   useEffect(() => {
+    return () => {
+      if (developmentBoardLink) {
+        URL.revokeObjectURL(developmentBoardLink.href);
+      }
+    };
+  }, [developmentBoardLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
     setMemoryLink(null);
+    setDevelopmentBoardLink(null);
   }, [run?.id]);
 
   useEffect(() => {
@@ -364,6 +393,8 @@ export function App() {
     setExecutorRun(null);
     setHandoffLink(null);
     setTeamHandoffLink(null);
+    setDevelopmentBoardLink(null);
+    setDevelopmentItems(clearDevelopmentItems());
     setSessionSecrets({});
     recordAudit({
       type: "workspace.reset",
@@ -415,6 +446,7 @@ export function App() {
       setExecutorRun(null);
       setHandoffLink(null);
       setTeamHandoffLink(null);
+      setDevelopmentBoardLink(null);
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -655,6 +687,61 @@ export function App() {
     });
   }
 
+  function changeDevelopmentItemStatus(
+    item: DevelopmentWorkItem,
+    status: DevelopmentWorkItemStatus
+  ) {
+    const nextItem = updateDevelopmentWorkItemStatus({
+      item,
+      status
+    });
+    const nextItems = saveDevelopmentWorkItem(nextItem);
+    setDevelopmentItems(nextItems);
+    if (developmentBoardLink) {
+      URL.revokeObjectURL(developmentBoardLink.href);
+      setDevelopmentBoardLink(null);
+    }
+    recordAudit({
+      type: "development.item.status.changed",
+      severity: status === "blocked" ? "warning" : status === "done" ? "success" : "info",
+      summary: `Set development item ${item.title} to ${status}.`,
+      runId: item.runId,
+      roleId: item.roleId,
+      metadata: {
+        itemId: item.id,
+        status,
+        source: item.source,
+        priority: item.priority
+      }
+    });
+  }
+
+  function exportDevelopmentBoard() {
+    const blob = new Blob([serializeDevelopmentBoardExport(developmentBoard)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = developmentBoard.runId
+      ? developmentBoard.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
+    const fileName = `naikaku-development-board-${runSlug}.json`;
+
+    if (developmentBoardLink) {
+      URL.revokeObjectURL(developmentBoardLink.href);
+    }
+
+    setDevelopmentBoardLink({ href: url, fileName });
+    recordAudit({
+      type: "development.board.exported",
+      severity: "info",
+      summary: "Development board export prepared.",
+      runId: developmentBoard.runId,
+      metadata: {
+        items: developmentBoard.summary.total,
+        blocked: developmentBoard.summary.blocked,
+        highPriority: developmentBoard.summary.highPriority
+      }
+    });
+  }
+
   function clearAuditLog() {
     setAuditEvents(clearAuditEvents());
     if (auditLink) {
@@ -767,6 +854,13 @@ export function App() {
             handoff={teamHandoff}
             exportLink={teamHandoffLink}
             onExport={exportTeamHandoff}
+          />
+
+          <DevelopmentBoardPanel
+            board={developmentBoard}
+            exportLink={developmentBoardLink}
+            onStatusChange={changeDevelopmentItemStatus}
+            onExport={exportDevelopmentBoard}
           />
 
           <MemoryInboxPanel

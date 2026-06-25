@@ -100,7 +100,7 @@ Team package exports use provider aliases and role configuration only. They are 
 
 ## Audit Trail
 
-The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, and team handoff export. Operators can inspect and export these events from the UI.
+The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, team handoff export, memory review, and development board status/export events. Operators can inspect and export these events from the UI.
 
 This is a local development ledger, not an immutable production ledger. Production should move audit events into authenticated append-only backend storage with server timestamps and operator identity.
 

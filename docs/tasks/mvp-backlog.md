@@ -13,12 +13,14 @@ This backlog is written so different contributors can work in parallel.
 - Add role-level team work package export.
 - Add gateway endpoint for team work packages.
 - Add local audit trail panel and audit JSON export.
+- Add local Development Board with team work items, status tracking, and JSON export.
 
 Acceptance:
 
 - UI remains readable on desktop and tablet.
 - No raw API keys appear in exported JSON.
 - Each enabled role can receive a standalone package with provider alias, executor boundary, tasks, and acceptance criteria.
+- Role packages can become status-trackable work items for parallel teams.
 
 ## Track 2: Provider Adapters
 
@@ -58,6 +60,7 @@ Acceptance:
 - Persist per-action approvals.
 - Add executor handoff export.
 - Add safe executor dry-run runner.
+- Convert next-loop and automation work into status-trackable development items.
 - Move approval records to durable backend storage.
 - Replace dry-run runner with authenticated Shell/Browser/Desktop executors.
 - Add action replay logs.

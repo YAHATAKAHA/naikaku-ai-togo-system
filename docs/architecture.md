@@ -30,6 +30,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
 - Local audit trail with export for operator actions and automation milestones.
+- Development Board for role-owned implementation items, next-loop tasks, accepted memory, status tracking, and JSON export.
 - Memory Inbox review for candidate lessons, decisions, skill proposals, risks, and next-cycle follow-ups.
 
 ## Domain Layer
@@ -45,6 +46,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `CabinetScore`
 - `TeamHandoff`
 - `TeamWorkPackage`
+- `DevelopmentBoard`
+- `DevelopmentWorkItem`
 - `AuditEvent`
 - `MemoryEntry`
 
@@ -99,6 +102,16 @@ Parallel development starts from `TeamHandoff`. A handoff turns the current work
 
 The workbench can export these packages as JSON. The local gateway also exposes `/v1/team/packages` so backend services, separate teams, or future CI workflows can request the same structure without scraping frontend state.
 
+## Development Board
+
+The Development Board converts planning output into work that separate teams can own. It merges:
+
+- One work item per enabled role package.
+- One work item per next-iteration task from the latest run.
+- Accepted memory items that represent skills, follow-ups, or risks.
+
+Each `DevelopmentWorkItem` keeps source linkage, owner role, stage, priority, acceptance criteria, deliverables, tags, and operator-controlled status. Status changes are stored locally and audited. The board can be exported as `naikaku.development-board.v1` JSON so human teams, GitHub issue tooling, or future automation services can consume the same work queue.
+
 ## Memory and Learning
 
 The Memory Secretary produces reviewable `MemoryEntry` candidates from the latest cabinet run:
@@ -123,6 +136,7 @@ Production persistence should store:
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
 - Team handoff packages for parallel development.
+- Development board items and status changes for separate implementation teams.
 - Custom role definitions beyond the default cabinet.
 - Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
 - Reviewed memory entries with accepted and rejected decisions, retention labels, and consent tags.

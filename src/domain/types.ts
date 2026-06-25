@@ -210,6 +210,46 @@ export interface TeamHandoff {
   };
 }
 
+export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
+export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
+export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
+
+export interface DevelopmentWorkItem {
+  id: string;
+  title: string;
+  body: string;
+  status: DevelopmentWorkItemStatus;
+  priority: DevelopmentWorkItemPriority;
+  source: DevelopmentWorkItemSource;
+  sourceId: string;
+  roleId?: string;
+  roleName?: string;
+  stageId?: CabinetStageId;
+  runId?: string;
+  generatedAt: string;
+  updatedAt?: string;
+  acceptanceCriteria: string[];
+  deliverables: string[];
+  tags: string[];
+}
+
+export interface DevelopmentBoard {
+  schema: "naikaku.development-board.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  items: DevelopmentWorkItem[];
+  summary: {
+    total: number;
+    todo: number;
+    inProgress: number;
+    blocked: number;
+    done: number;
+    highPriority: number;
+    teams: number;
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -225,7 +265,9 @@ export type AuditEventType =
   | "team.handoff.exported"
   | "memory.entry.accepted"
   | "memory.entry.rejected"
-  | "memory.log.exported";
+  | "memory.log.exported"
+  | "development.item.status.changed"
+  | "development.board.exported";
 
 export type AuditEventSeverity = "info" | "success" | "warning" | "error";
 

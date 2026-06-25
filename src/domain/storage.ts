@@ -1,6 +1,7 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildExecutorHandoff } from "./automation";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
+import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeMemoryEntries } from "./memory";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
@@ -9,6 +10,8 @@ import type {
   CabinetRole,
   CabinetRun,
   CabinetWorkspace,
+  DevelopmentBoard,
+  DevelopmentWorkItem,
   MemoryEntry,
   RunHistoryItem
 } from "./types";
@@ -19,6 +22,7 @@ const CURRENT_RUN_KEY = "naikaku.current-run.v1";
 const APPROVAL_RECORDS_KEY = "naikaku.approval-records.v1";
 const AUDIT_EVENTS_KEY = "naikaku.audit-events.v1";
 const MEMORY_ENTRIES_KEY = "naikaku.memory-entries.v1";
+const DEVELOPMENT_ITEMS_KEY = "naikaku.development-items.v1";
 const MAX_HISTORY_ITEMS = 12;
 
 export function createDefaultWorkspace(): CabinetWorkspace {
@@ -321,6 +325,51 @@ export function clearMemoryEntries() {
 
 export function serializeMemoryLog(entries: MemoryEntry[]) {
   return serializeMemoryEntries(entries);
+}
+
+export function loadDevelopmentItems(): DevelopmentWorkItem[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  const raw = localStorage.getItem(DEVELOPMENT_ITEMS_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as DevelopmentWorkItem[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveDevelopmentWorkItem(
+  item: DevelopmentWorkItem,
+  currentItems = loadDevelopmentItems()
+) {
+  const nextItems = [
+    item,
+    ...currentItems.filter((candidate) => candidate.id !== item.id)
+  ];
+
+  if (canUseLocalStorage()) {
+    localStorage.setItem(DEVELOPMENT_ITEMS_KEY, JSON.stringify(nextItems));
+  }
+
+  return nextItems;
+}
+
+export function clearDevelopmentItems() {
+  if (canUseLocalStorage()) {
+    localStorage.removeItem(DEVELOPMENT_ITEMS_KEY);
+  }
+  return [];
+}
+
+export function serializeDevelopmentBoardExport(board: DevelopmentBoard) {
+  return serializeDevelopmentBoard(board);
 }
 
 export function serializeRunBundle(

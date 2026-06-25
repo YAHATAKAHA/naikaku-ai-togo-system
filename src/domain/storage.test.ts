@@ -8,13 +8,17 @@ import {
   appendAuditEvent,
   parseWorkspaceExport,
   saveApprovalRecord,
+  saveDevelopmentWorkItem,
   saveMemoryEntry,
   serializeAuditLog,
+  serializeDevelopmentBoardExport,
   serializeMemoryLog,
   serializeRunBundle,
   serializeWorkspace
 } from "./storage";
 import { buildMemoryCandidates, createMemoryDecision } from "./memory";
+import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./developmentBoard";
+import { buildTeamHandoff } from "./teamPackages";
 
 describe("workspace import/export", () => {
   it("round-trips a workspace export without raw session secrets", () => {
@@ -155,5 +159,43 @@ describe("workspace import/export", () => {
 
     expect(parsed.schema).toBe("naikaku.memory-log.v1");
     expect(parsed.entries).toHaveLength(1);
+  });
+
+  it("keeps one development item status per generated work item", () => {
+    const handoff = buildTeamHandoff({
+      workspace: {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      }
+    });
+    const board = buildDevelopmentBoard({ handoff });
+    const inProgress = updateDevelopmentWorkItemStatus({
+      item: board.items[0],
+      status: "in-progress"
+    });
+    const done = updateDevelopmentWorkItemStatus({
+      item: board.items[0],
+      status: "done"
+    });
+    const items = saveDevelopmentWorkItem(done, saveDevelopmentWorkItem(inProgress, []));
+
+    expect(items).toHaveLength(1);
+    expect(items[0].status).toBe("done");
+  });
+
+  it("exports development boards through the storage envelope", () => {
+    const handoff = buildTeamHandoff({
+      workspace: {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      }
+    });
+    const exported = serializeDevelopmentBoardExport(buildDevelopmentBoard({ handoff }));
+    const parsed = JSON.parse(exported) as { schema: string; items: unknown[] };
+
+    expect(parsed.schema).toBe("naikaku.development-board.v1");
+    expect(parsed.items.length).toBe(defaultRoles.length);
   });
 });

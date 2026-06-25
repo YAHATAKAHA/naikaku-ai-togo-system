@@ -186,6 +186,7 @@ a.secondary-button {
 .footer-panel,
 .automation-panel,
 .team-panel,
+.development-panel,
 .memory-panel,
 .sandbox-panel,
 .mission-panel {
@@ -398,6 +399,7 @@ a.secondary-button {
 .mission-panel,
 .automation-panel,
 .team-panel,
+.development-panel,
 .memory-panel,
 .sandbox-panel {
   padding: 16px;
@@ -1124,6 +1126,196 @@ meter {
 
 .team-package-card small {
   display: block;
+}
+
+.development-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.development-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.development-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.development-summary span[data-status="todo"] {
+  color: var(--accent);
+}
+
+.development-summary span[data-status="in-progress"] {
+  color: var(--amber);
+}
+
+.development-summary span[data-status="blocked"] {
+  color: var(--red);
+}
+
+.development-summary span[data-status="done"] {
+  color: var(--green);
+}
+
+.development-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.development-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.development-export-row button,
+.development-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.development-export-row a {
+  color: var(--green);
+}
+
+.development-item-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 620px;
+  overflow: auto;
+}
+
+.development-item {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.development-item[data-status="in-progress"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.development-item[data-status="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.development-item[data-status="done"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.development-item-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  align-items: start;
+  gap: 10px;
+}
+
+.development-item-heading strong,
+.development-item-heading span {
+  display: block;
+}
+
+.development-item-heading strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.development-item-heading span,
+.development-item p,
+.development-item-meta span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.development-item-heading select {
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.development-item p {
+  margin: 0;
+  max-height: 86px;
+  overflow: auto;
+  white-space: pre-line;
+}
+
+.development-item-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.development-item-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.development-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.development-tags span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 850;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .memory-panel {
@@ -1865,15 +2057,19 @@ meter {
   .stage-track,
   .artifact-grid,
   .team-package-grid,
+  .development-item-list,
   .memory-candidate-grid,
   .sandbox-grid,
   .executor-list,
   .score-grid,
   .metric-strip,
   .team-summary,
+  .development-summary,
   .memory-summary,
   .queue-summary,
   .queue-row,
+  .development-item-heading,
+  .development-item-meta,
   .memory-ledger-row,
   .mode-row,
   .history-row {
@@ -1884,6 +2080,7 @@ meter {
   .memory-actions,
   .handoff-strip,
   .team-export-row,
+  .development-export-row,
   .memory-export-row,
   .executor-result-heading,
   .queue-copy div {
