@@ -222,7 +222,10 @@ export type AuditEventType =
   | "automation.decision.recorded"
   | "executor.handoff.exported"
   | "executor.run.dry.completed"
-  | "team.handoff.exported";
+  | "team.handoff.exported"
+  | "memory.entry.accepted"
+  | "memory.entry.rejected"
+  | "memory.log.exported";
 
 export type AuditEventSeverity = "info" | "success" | "warning" | "error";
 
@@ -236,6 +239,32 @@ export interface AuditEvent {
   runId?: string;
   roleId?: string;
   actionId?: string;
+  metadata: Record<string, string | number | boolean | null>;
+}
+
+export type MemoryEntryKind = "lesson" | "decision" | "skill" | "risk" | "follow-up";
+export type MemoryEntryStatus = "candidate" | "accepted" | "rejected";
+export type MemoryRetention = "session" | "project" | "long-term";
+export type MemoryConsentTag = "needs-review" | "operator-reviewed";
+export type MemoryEntrySource = "artifact" | "automation" | "iteration" | "scoring";
+
+export interface MemoryEntry {
+  id: string;
+  runId: string;
+  createdAt: string;
+  decidedAt?: string;
+  decidedBy?: string;
+  status: MemoryEntryStatus;
+  kind: MemoryEntryKind;
+  title: string;
+  body: string;
+  source: MemoryEntrySource;
+  retention: MemoryRetention;
+  consentTag: MemoryConsentTag;
+  tags: string[];
+  sourceStageId?: CabinetStageId;
+  sourceArtifactId?: string;
+  sourceActionId?: string;
   metadata: Record<string, string | number | boolean | null>;
 }
 

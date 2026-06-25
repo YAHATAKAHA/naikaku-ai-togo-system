@@ -1,6 +1,7 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildExecutorHandoff } from "./automation";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
+import { serializeMemoryEntries } from "./memory";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
@@ -8,6 +9,7 @@ import type {
   CabinetRole,
   CabinetRun,
   CabinetWorkspace,
+  MemoryEntry,
   RunHistoryItem
 } from "./types";
 
@@ -16,6 +18,7 @@ const RUN_HISTORY_KEY = "naikaku.run-history.v1";
 const CURRENT_RUN_KEY = "naikaku.current-run.v1";
 const APPROVAL_RECORDS_KEY = "naikaku.approval-records.v1";
 const AUDIT_EVENTS_KEY = "naikaku.audit-events.v1";
+const MEMORY_ENTRIES_KEY = "naikaku.memory-entries.v1";
 const MAX_HISTORY_ITEMS = 12;
 
 export function createDefaultWorkspace(): CabinetWorkspace {
@@ -273,6 +276,51 @@ export function clearAuditEvents() {
 
 export function serializeAuditLog(events: AuditEvent[]) {
   return serializeAuditEvents(events);
+}
+
+export function loadMemoryEntries(): MemoryEntry[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  const raw = localStorage.getItem(MEMORY_ENTRIES_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as MemoryEntry[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveMemoryEntry(
+  entry: MemoryEntry,
+  currentEntries = loadMemoryEntries()
+) {
+  const nextEntries = [
+    entry,
+    ...currentEntries.filter((candidate) => candidate.id !== entry.id)
+  ];
+
+  if (canUseLocalStorage()) {
+    localStorage.setItem(MEMORY_ENTRIES_KEY, JSON.stringify(nextEntries));
+  }
+
+  return nextEntries;
+}
+
+export function clearMemoryEntries() {
+  if (canUseLocalStorage()) {
+    localStorage.removeItem(MEMORY_ENTRIES_KEY);
+  }
+  return [];
+}
+
+export function serializeMemoryLog(entries: MemoryEntry[]) {
+  return serializeMemoryEntries(entries);
 }
 
 export function serializeRunBundle(

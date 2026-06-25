@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
+import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
@@ -34,6 +35,7 @@ import {
   clearRunHistory,
   createDefaultWorkspace,
   loadAuditEvents,
+  loadMemoryEntries,
   loadApprovalRecords,
   loadCurrentRun,
   loadRunHistory,
@@ -41,14 +43,17 @@ import {
   parseWorkspaceExport,
   saveApprovalRecord,
   saveCurrentRun,
+  saveMemoryEntry,
   saveWorkspace,
   serializeAuditLog,
+  serializeMemoryLog,
   serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { createAuditEvent } from "./domain/auditLog";
 import { runExecutorHandoff } from "./domain/executorRunner";
+import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
@@ -66,6 +71,7 @@ import type {
   CabinetRole,
   CabinetRun,
   ExecutorRun,
+  MemoryEntry,
   RunHistoryItem,
   TeamHandoff
 } from "./domain/types";
@@ -84,6 +90,7 @@ export function App() {
   const [executorRunning, setExecutorRunning] = useState(false);
   const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => loadAuditEvents());
+  const [memoryEntries, setMemoryEntries] = useState<MemoryEntry[]>(() => loadMemoryEntries());
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
@@ -93,6 +100,7 @@ export function App() {
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -119,6 +127,10 @@ export function App() {
   const teamHandoff = useMemo(
     () => buildTeamHandoff({ workspace, run }),
     [run, workspace]
+  );
+  const memoryCandidates = useMemo(
+    () => (run ? buildMemoryCandidates({ run }) : []),
+    [run]
   );
 
   useEffect(() => {
@@ -154,9 +166,18 @@ export function App() {
   }, [auditLink]);
 
   useEffect(() => {
+    return () => {
+      if (memoryLink) {
+        URL.revokeObjectURL(memoryLink.href);
+      }
+    };
+  }, [memoryLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
+    setMemoryLink(null);
   }, [run?.id]);
 
   useEffect(() => {
@@ -583,6 +604,57 @@ export function App() {
     setAuditLink({ href: url, fileName });
   }
 
+  function recordMemoryReview(
+    candidate: MemoryEntry,
+    decision: "accepted" | "rejected"
+  ) {
+    const entry = createMemoryDecision({
+      entry: candidate,
+      decision
+    });
+    const nextEntries = saveMemoryEntry(entry);
+    setMemoryEntries(nextEntries);
+    if (memoryLink) {
+      URL.revokeObjectURL(memoryLink.href);
+      setMemoryLink(null);
+    }
+    recordAudit({
+      type: decision === "accepted" ? "memory.entry.accepted" : "memory.entry.rejected",
+      severity: decision === "accepted" ? "success" : "warning",
+      summary: `${decision === "accepted" ? "Accepted" : "Rejected"} memory candidate ${candidate.title}.`,
+      runId: candidate.runId,
+      actionId: candidate.sourceActionId,
+      metadata: {
+        kind: candidate.kind,
+        source: candidate.source,
+        retention: candidate.retention,
+        tags: candidate.tags.slice(0, 4).join(",")
+      }
+    });
+  }
+
+  function exportMemoryLog() {
+    const blob = new Blob([serializeMemoryLog(memoryEntries)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-memory-log-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (memoryLink) {
+      URL.revokeObjectURL(memoryLink.href);
+    }
+
+    setMemoryLink({ href: url, fileName });
+    recordAudit({
+      type: "memory.log.exported",
+      severity: "info",
+      summary: "Memory log export prepared.",
+      metadata: {
+        entries: memoryEntries.length,
+        accepted: memoryEntries.filter((entry) => entry.status === "accepted").length,
+        rejected: memoryEntries.filter((entry) => entry.status === "rejected").length
+      }
+    });
+  }
+
   function clearAuditLog() {
     setAuditEvents(clearAuditEvents());
     if (auditLink) {
@@ -695,6 +767,14 @@ export function App() {
             handoff={teamHandoff}
             exportLink={teamHandoffLink}
             onExport={exportTeamHandoff}
+          />
+
+          <MemoryInboxPanel
+            candidates={memoryCandidates}
+            entries={memoryEntries}
+            exportLink={memoryLink}
+            onDecision={recordMemoryReview}
+            onExport={exportMemoryLog}
           />
 
           <SandboxPanel

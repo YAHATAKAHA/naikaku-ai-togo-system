@@ -104,6 +104,12 @@ The workbench records local `AuditEvent` entries for workspace save/import/expor
 
 This is a local development ledger, not an immutable production ledger. Production should move audit events into authenticated append-only backend storage with server timestamps and operator identity.
 
+## Memory Review
+
+Memory candidates are treated as privileged project knowledge. The Memory Inbox only persists a candidate after an operator accepts or rejects it. Entries carry retention labels and consent tags so production storage can enforce project policy instead of silently accumulating raw run context.
+
+Memory exports should not include raw provider secrets. Production memory storage should add search, deletion workflows, operator identity, and retention enforcement before long-term use.
+
 ## Prompt-Injection Handling
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
@@ -120,3 +126,4 @@ Before real computer control is enabled:
 6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.
 7. Add replayable screenshots or terminal logs.
 8. Add red-team tests for prompt injection and localhost/control-plane attacks.
+9. Move reviewed memory entries to durable storage with retention and deletion controls.

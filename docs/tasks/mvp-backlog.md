@@ -89,9 +89,12 @@ Acceptance:
 - Add retention policy.
 - Add consent tags.
 - Add skill extraction proposal flow.
+- Add local Memory Inbox with accepted/rejected review decisions.
+- Add memory JSON export.
 - Add searchable run lessons.
 
 Acceptance:
 
 - Memory entries are reviewable before persistence.
 - Rejected decisions are stored separately from accepted skills.
+- Memory exports avoid raw session secrets.

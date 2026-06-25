@@ -186,6 +186,7 @@ a.secondary-button {
 .footer-panel,
 .automation-panel,
 .team-panel,
+.memory-panel,
 .sandbox-panel,
 .mission-panel {
   background: var(--surface);
@@ -397,6 +398,7 @@ a.secondary-button {
 .mission-panel,
 .automation-panel,
 .team-panel,
+.memory-panel,
 .sandbox-panel {
   padding: 16px;
 }
@@ -1124,6 +1126,282 @@ meter {
   display: block;
 }
 
+.memory-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.memory-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.memory-summary span[data-status="candidate"] {
+  color: var(--accent);
+}
+
+.memory-summary span[data-status="accepted"] {
+  color: var(--green);
+}
+
+.memory-summary span[data-status="rejected"] {
+  color: var(--red);
+}
+
+.memory-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.memory-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.memory-export-row button,
+.memory-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.memory-export-row a {
+  color: var(--green);
+}
+
+.memory-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.memory-candidate-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.memory-candidate-card[data-status="accepted"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.memory-candidate-card[data-status="rejected"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.memory-candidate-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.memory-candidate-heading strong,
+.memory-candidate-heading span,
+.memory-candidate-card small {
+  display: block;
+}
+
+.memory-candidate-heading strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.memory-candidate-heading span,
+.memory-candidate-card p,
+.memory-candidate-card small,
+.memory-empty,
+.memory-ledger-row p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.memory-status-chip {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.memory-status-chip[data-status="candidate"] {
+  color: var(--accent);
+  background: #edf2ff;
+}
+
+.memory-status-chip[data-status="accepted"] {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.memory-status-chip[data-status="rejected"] {
+  color: var(--red);
+  background: #ffe3df;
+}
+
+.memory-candidate-card p {
+  margin: 0;
+  max-height: 118px;
+  overflow: auto;
+  white-space: pre-line;
+}
+
+.memory-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.memory-tags span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.memory-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.memory-actions button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.memory-actions button:first-child {
+  color: var(--green);
+}
+
+.memory-actions button:last-child {
+  color: var(--red);
+}
+
+.memory-empty {
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.memory-ledger {
+  display: grid;
+  gap: 7px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.memory-ledger > strong {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.memory-ledger-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 8px 10px;
+}
+
+.memory-ledger-row[data-status="accepted"] {
+  border-color: #b9dfd1;
+}
+
+.memory-ledger-row[data-status="rejected"] {
+  border-color: #f2b8b2;
+}
+
+.memory-ledger-row span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.memory-ledger-row[data-status="accepted"] span {
+  color: var(--green);
+}
+
+.memory-ledger-row[data-status="rejected"] span {
+  color: var(--red);
+}
+
+.memory-ledger-row p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sandbox-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1587,21 +1865,26 @@ meter {
   .stage-track,
   .artifact-grid,
   .team-package-grid,
+  .memory-candidate-grid,
   .sandbox-grid,
   .executor-list,
   .score-grid,
   .metric-strip,
   .team-summary,
+  .memory-summary,
   .queue-summary,
   .queue-row,
+  .memory-ledger-row,
   .mode-row,
   .history-row {
     grid-template-columns: 1fr;
   }
 
   .queue-actions,
+  .memory-actions,
   .handoff-strip,
   .team-export-row,
+  .memory-export-row,
   .executor-result-heading,
   .queue-copy div {
     align-items: flex-start;

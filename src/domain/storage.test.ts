@@ -8,10 +8,13 @@ import {
   appendAuditEvent,
   parseWorkspaceExport,
   saveApprovalRecord,
+  saveMemoryEntry,
   serializeAuditLog,
+  serializeMemoryLog,
   serializeRunBundle,
   serializeWorkspace
 } from "./storage";
+import { buildMemoryCandidates, createMemoryDecision } from "./memory";
 
 describe("workspace import/export", () => {
   it("round-trips a workspace export without raw session secrets", () => {
@@ -120,5 +123,37 @@ describe("workspace import/export", () => {
 
     expect(parsed.schema).toBe("naikaku.audit-log.v1");
     expect(parsed.events).toHaveLength(1);
+  });
+
+  it("keeps one reviewed memory decision per candidate", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const [candidate] = buildMemoryCandidates({ run });
+    const accepted = createMemoryDecision({ entry: candidate, decision: "accepted" });
+    const rejected = createMemoryDecision({ entry: candidate, decision: "rejected" });
+    const entries = saveMemoryEntry(rejected, saveMemoryEntry(accepted, []));
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].status).toBe("rejected");
+  });
+
+  it("exports reviewed memory entries through the storage envelope", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const accepted = createMemoryDecision({
+      entry: buildMemoryCandidates({ run })[0],
+      decision: "accepted"
+    });
+    const exported = serializeMemoryLog([accepted]);
+    const parsed = JSON.parse(exported) as { schema: string; entries: unknown[] };
+
+    expect(parsed.schema).toBe("naikaku.memory-log.v1");
+    expect(parsed.entries).toHaveLength(1);
   });
 });

@@ -30,6 +30,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
 - Local audit trail with export for operator actions and automation milestones.
+- Memory Inbox review for candidate lessons, decisions, skill proposals, risks, and next-cycle follow-ups.
 
 ## Domain Layer
 
@@ -45,6 +46,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `TeamHandoff`
 - `TeamWorkPackage`
 - `AuditEvent`
+- `MemoryEntry`
 
 These contracts are intentionally framework-neutral so backend services, local CLIs, or remote workers can reuse them later.
 
@@ -97,6 +99,18 @@ Parallel development starts from `TeamHandoff`. A handoff turns the current work
 
 The workbench can export these packages as JSON. The local gateway also exposes `/v1/team/packages` so backend services, separate teams, or future CI workflows can request the same structure without scraping frontend state.
 
+## Memory and Learning
+
+The Memory Secretary produces reviewable `MemoryEntry` candidates from the latest cabinet run:
+
+- Scoring decisions.
+- Iteration-stage lessons.
+- Skill extraction proposals.
+- Next-cycle follow-up tasks.
+- Blocked automation risks.
+
+Candidates are not persisted automatically. An operator must accept or reject each candidate. Accepted and rejected entries are both stored locally so future development can learn from approved lessons while preserving rejected decisions as governance evidence. The current memory log is exportable JSON and should later move behind durable storage, retention policy enforcement, search, and operator identity.
+
 ## Persistence
 
 The frontend uses local storage for non-secret workspace configuration. Raw session secrets are kept in React state only and are not persisted by `saveWorkspace`.
@@ -111,7 +125,7 @@ Production persistence should store:
 - Team handoff packages for parallel development.
 - Custom role definitions beyond the default cabinet.
 - Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
-- Memory entries that pass retention policy.
+- Reviewed memory entries with accepted and rejected decisions, retention labels, and consent tags.
 
 The current audit trail is local and exportable, not tamper-proof. Production should replace it with an authenticated append-only server-side store.
 
