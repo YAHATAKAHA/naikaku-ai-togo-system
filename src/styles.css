@@ -185,6 +185,7 @@ a.secondary-button {
 .inspector,
 .footer-panel,
 .automation-panel,
+.runbook-panel,
 .provider-panel,
 .capability-panel,
 .ledger-panel,
@@ -401,6 +402,7 @@ a.secondary-button {
 
 .mission-panel,
 .automation-panel,
+.runbook-panel,
 .provider-panel,
 .team-panel,
 .ledger-panel,
@@ -959,6 +961,219 @@ meter {
 }
 
 .queue-empty {
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.runbook-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.runbook-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.runbook-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.runbook-summary span[data-status="ready"],
+.runbook-summary span[data-status="runner"] {
+  color: var(--green);
+}
+
+.runbook-summary span[data-status="held"] {
+  color: var(--red);
+}
+
+.runbook-summary span[data-status="approval"] {
+  color: var(--amber);
+}
+
+.runbook-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.runbook-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.runbook-export-row button,
+.runbook-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.runbook-export-row button:disabled {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.runbook-export-row a {
+  color: var(--green);
+}
+
+.runbook-step-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.runbook-step {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.runbook-step[data-profile="shell-container"],
+.runbook-step[data-profile="browser-sandbox"],
+.runbook-step[data-profile="mcp-proxy"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.runbook-step[data-profile="human-approval"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.runbook-step-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.runbook-step-heading strong,
+.runbook-step-heading span,
+.runbook-step small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.runbook-step-heading strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.runbook-step-heading span,
+.runbook-step small,
+.runbook-gate-list li,
+.runbook-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.runbook-profile-chip {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.runbook-profile-chip[data-profile="shell-container"],
+.runbook-profile-chip[data-profile="browser-sandbox"],
+.runbook-profile-chip[data-profile="mcp-proxy"] {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.runbook-profile-chip[data-profile="human-approval"] {
+  color: var(--amber);
+  background: #fff0d0;
+}
+
+.runbook-step code {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.runbook-gate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.runbook-gate-list {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 8px;
+  min-width: 0;
+}
+
+.runbook-gate-list strong {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.runbook-gate-list ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+}
+
+.runbook-empty {
   margin: 0;
   background: var(--surface-soft);
   border-radius: 8px;
@@ -2679,6 +2894,7 @@ meter {
   .stage-track,
   .artifact-grid,
   .provider-row-list,
+  .runbook-step-list,
   .capability-card-list,
   .ledger-grid,
   .team-package-grid,
@@ -2689,6 +2905,7 @@ meter {
   .score-grid,
   .metric-strip,
   .provider-summary,
+  .runbook-summary,
   .capability-summary,
   .ledger-summary,
   .team-summary,
@@ -2710,17 +2927,23 @@ meter {
   .queue-actions,
   .memory-actions,
   .handoff-strip,
+  .runbook-export-row,
   .ledger-refresh-row,
   .provider-export-row,
   .team-export-row,
   .development-export-row,
   .memory-export-row,
   .executor-result-heading,
+  .runbook-step-heading,
   .ledger-row div,
   .queue-copy div {
     align-items: flex-start;
     flex-wrap: wrap;
     justify-content: flex-start;
+  }
+
+  .runbook-gate-grid {
+    grid-template-columns: 1fr;
   }
 
   .operator-footer {

@@ -12,6 +12,7 @@ import {
   saveMemoryEntry,
   saveProviderReadinessRow,
   serializeAuditLog,
+  serializeAutomationRunbookExport,
   serializeDevelopmentBoardExport,
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
@@ -22,6 +23,7 @@ import {
 import { buildMemoryCandidates, createMemoryDecision } from "./memory";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./developmentBoard";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./executorRunner";
+import { buildAutomationRunbook } from "./automationRunbook";
 import { buildTeamHandoff } from "./teamPackages";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./providerReadiness";
 
@@ -99,6 +101,35 @@ describe("workspace import/export", () => {
     expect(parsed.approvalRecords).toHaveLength(1);
     expect(parsed.executorHandoff.readyActions.length).toBeGreaterThan(0);
     expect(exported).not.toContain("sessionSecret");
+  });
+
+  it("exports automation runbooks with runner gates", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const action = run.automationActions?.find((candidate) => candidate.status === "needs-approval");
+    if (!action) {
+      throw new Error("Expected an approval-gated action.");
+    }
+
+    const runbook = buildAutomationRunbook({
+      run,
+      approvalRecords: [
+        createApprovalRecord({
+          action,
+          decision: "approved"
+        })
+      ],
+      generatedAt: "2026-06-25T00:00:00.000Z"
+    });
+    const parsed = JSON.parse(serializeAutomationRunbookExport(runbook)) as typeof runbook;
+
+    expect(parsed.schema).toBe("naikaku.automation-runbook.v1");
+    expect(parsed.steps.length).toBe(runbook.summary.ready);
+    expect(parsed.steps.every((step) => step.evidenceRequired.length > 0)).toBe(true);
+    expect(parsed.steps.every((step) => step.rollback.length > 0)).toBe(true);
   });
 
   it("keeps one approval decision per run action", () => {

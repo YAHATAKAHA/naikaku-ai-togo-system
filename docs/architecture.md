@@ -31,6 +31,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
+- Automation Runbook panel and export for runner commands, evidence requirements, verification gates, and rollback notes derived from executor-ready actions.
 - Server Ledger panel for refreshing gateway-side approval records and executor evidence bundles without exposing runner credentials to the browser.
 - Local audit trail with export for operator actions and automation milestones.
 - Development Board for role-owned implementation items, next-loop tasks, accepted memory, status tracking, and JSON export.
@@ -109,6 +110,8 @@ Executors should be implemented as independent services. The frontend should nev
 
 Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
+`AutomationRunbook` sits between handoff and runner implementation. It converts executor-ready actions into `naikaku.automation-runbook.v1` steps with runner command templates, preflight checks, execution notes, required evidence, verification gates, rollback notes, and audit tags. This lets Shell, Browser, Desktop, MCP, and Human Approval runner teams build against the same operational contract while the current product remains sandbox-first.
+
 Executor-facing gateway routes have a runner authentication gate. In local development, missing `NAIKAKU_RUNNER_TOKEN` is reported as `development-open` in `/health`. Once that token is configured, `/v1/executor/handoff`, `/v1/executor/run`, and `/v1/executor/evidence` require a runner token and runner id before returning handoff, dry-run, or evidence data.
 
 Each executor step now carries `ExecutorEvidenceItem` records for policy decisions, simulated transcripts, screenshot placeholders, artifact manifests, approval records, or network logs depending on the executor profile. `ExecutorEvidenceBundle` exports those records as `naikaku.executor-evidence.v1` with runner ids, replay flags, and evidence hashes. Real runners should replace placeholders with actual screenshots, terminal transcripts, artifact manifests, and tool-call logs while preserving the same envelope.
@@ -154,6 +157,7 @@ Production persistence should store:
 - Sandbox capability registry snapshots for runner compatibility and preflight review.
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
+- Automation runbooks for runner implementation, evidence gates, and rollback review.
 - Executor evidence bundles for replay, audit, and runner compatibility checks.
 - Local gateway ledger records for approval decisions and executor evidence bundles.
 - Team handoff packages for parallel development.

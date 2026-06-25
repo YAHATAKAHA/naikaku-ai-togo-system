@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
+import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -51,6 +52,7 @@ const server = createServer(async (request, response) => {
           "provider-test",
           "cabinet-run",
           "automation-plan",
+          "automation-runbook",
           "executor-handoff",
           "executor-run-dry",
           "executor-evidence",
@@ -101,6 +103,26 @@ const server = createServer(async (request, response) => {
         sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
       sendJson(response, 200, { actions: plan });
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/automation/runbook") {
+      const body = await readJson<{
+        run: CabinetRun;
+        approvalRecords?: AutomationApprovalRecord[];
+      }>(request);
+      if (!body.run?.id) {
+        sendJson(response, 422, {
+          ok: false,
+          message: "run is required."
+        });
+        return;
+      }
+      const runbook = buildAutomationRunbook({
+        run: body.run,
+        approvalRecords: body.approvalRecords || []
+      });
+      sendJson(response, 200, runbook);
       return;
     }
 

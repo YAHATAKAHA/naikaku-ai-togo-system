@@ -1,6 +1,7 @@
 import type {
   AutomationAction,
   AutomationApprovalRecord,
+  AutomationRunbook,
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
@@ -140,6 +141,30 @@ export async function planAutomationViaGateway(
   }
 
   return (await response.json()) as Promise<{ actions: AutomationAction[] }>;
+}
+
+export async function createAutomationRunbookViaGateway(
+  run: CabinetRun,
+  approvalRecords: AutomationApprovalRecord[],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/automation/runbook`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      run,
+      approvalRecords
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway automation runbook failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as AutomationRunbook;
 }
 
 export async function createExecutorHandoffViaGateway(

@@ -63,6 +63,7 @@ Acceptance:
 - Add per-action approval UI.
 - Persist per-action approvals.
 - Add executor handoff export.
+- Add Automation Runbook export with runner command templates, evidence gates, verification gates, and rollback notes.
 - Add safe executor dry-run runner.
 - Add Sandbox Capability registry with runner contracts, evidence requirements, and policy-evaluated representative actions.
 - Add executor evidence bundle export with per-step hashes, runner ids, replay flags, and dry-run evidence placeholders.
@@ -80,6 +81,7 @@ Acceptance:
 - No executor inherits host secrets by default.
 - Kill switch stops an active run.
 - Every executor-ready action produces an auditable evidence bundle before it can be considered complete.
+- Runner teams can consume a runbook before implementing real Shell, Browser, Desktop, or MCP executors.
 
 ## Track 5: Security and Governance
 

@@ -131,6 +131,39 @@ Response:
 }
 ```
 
+### `POST /v1/automation/runbook`
+
+Builds a runner-facing automation runbook from a run plus approval records. This does not execute actions. It converts executor-ready actions into command templates, preflight checks, evidence requirements, verification gates, and rollback notes for Shell, Browser, Desktop, MCP, and Human Approval runner teams.
+
+```json
+{
+  "run": { "id": "run-...", "automationActions": [] },
+  "approvalRecords": []
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.automation-runbook.v1",
+  "runId": "run-...",
+  "handoffId": "run-...-executor-handoff",
+  "summary": {
+    "ready": 2,
+    "held": 5,
+    "approvalGated": 1
+  },
+  "steps": [
+    {
+      "runnerId": "naikaku.shell-container.runner",
+      "command": "sandbox.shell.run --cwd \"/workspace\" --command \"npm run test\"",
+      "evidenceRequired": ["Command transcript", "Exit code and runtime"]
+    }
+  ]
+}
+```
+
 ### `POST /v1/executor/handoff`
 
 Builds the executor-facing handoff from a run plus approval records. This does not execute actions. It filters out blocked, rejected, and still-unapproved work.

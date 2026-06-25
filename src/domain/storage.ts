@@ -1,5 +1,6 @@
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildExecutorHandoff } from "./automation";
+import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
@@ -8,6 +9,7 @@ import { serializeProviderReadinessMatrix } from "./providerReadiness";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
+  AutomationRunbook,
   AuditEvent,
   CabinetRole,
   CabinetRun,
@@ -425,6 +427,10 @@ export function serializeProviderReadinessExport(matrix: ProviderReadinessMatrix
 
 export function serializeExecutorEvidenceExport(bundle: ExecutorEvidenceBundle) {
   return serializeExecutorEvidenceBundle(bundle);
+}
+
+export function serializeAutomationRunbookExport(runbook: AutomationRunbook) {
+  return serializeAutomationRunbook(runbook);
 }
 
 export function serializeRunBundle(

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
+import { AutomationRunbookPanel } from "./components/AutomationRunbookPanel";
 import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
@@ -55,6 +56,7 @@ import {
   saveProviderReadinessRow,
   saveWorkspace,
   serializeAuditLog,
+  serializeAutomationRunbookExport,
   serializeDevelopmentBoardExport,
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
@@ -63,6 +65,7 @@ import {
   serializeWorkspace
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
+import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
@@ -75,6 +78,7 @@ import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
+  createAutomationRunbookViaGateway,
   createExecutorEvidenceViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
@@ -91,6 +95,7 @@ import type {
   AutomationAction,
   AutomationApprovalDecision,
   AutomationApprovalRecord,
+  AutomationRunbook,
   AuditEvent,
   CabinetRole,
   CabinetRun,
@@ -140,6 +145,7 @@ export function App() {
   }>({ status: "idle", message: "Gateway ready when local service is running." });
   const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [automationRunbookLink, setAutomationRunbookLink] = useState<{ href: string; fileName: string } | null>(null);
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -174,6 +180,34 @@ export function App() {
             createdAt: run.completedAt
           }).readyActions.length
         : 0,
+    [approvalRecords, run]
+  );
+  const automationRunbook = useMemo<AutomationRunbook>(
+    () =>
+      run
+        ? buildAutomationRunbook({
+            run,
+            approvalRecords,
+            generatedAt: run.completedAt
+          })
+        : {
+            schema: "naikaku.automation-runbook.v1",
+            generatedAt: "",
+            runId: "",
+            handoffId: "",
+            steps: [],
+            heldActions: [],
+            summary: {
+              ready: 0,
+              held: 0,
+              approvalGated: 0,
+              shell: 0,
+              browser: 0,
+              desktop: 0,
+              mcp: 0,
+              human: 0
+            }
+          },
     [approvalRecords, run]
   );
   const teamHandoff = useMemo(
@@ -231,6 +265,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (automationRunbookLink) {
+        URL.revokeObjectURL(automationRunbookLink.href);
+      }
+    };
+  }, [automationRunbookLink]);
+
+  useEffect(() => {
+    return () => {
       if (teamHandoffLink) {
         URL.revokeObjectURL(teamHandoffLink.href);
       }
@@ -280,6 +322,7 @@ export function App() {
   useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
+    setAutomationRunbookLink(null);
     setExecutorRun(null);
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
@@ -635,6 +678,7 @@ export function App() {
       });
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
+    setAutomationRunbookLink(null);
     setExecutorRun(null);
     setExecutorEvidenceLink(null);
     recordAudit({
@@ -728,6 +772,63 @@ export function App() {
         readyActions: buildExecutorHandoff({ run, approvalRecords }).readyActions.length
       }
     });
+  }
+
+  function createAutomationRunbookDownload(runbook: AutomationRunbook) {
+    const blob = new Blob([serializeAutomationRunbookExport(runbook)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = runbook.runId ? runbook.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-automation-runbook-${runSlug}.json`;
+
+    if (automationRunbookLink) {
+      URL.revokeObjectURL(automationRunbookLink.href);
+    }
+
+    setAutomationRunbookLink({ href: url, fileName });
+  }
+
+  async function exportAutomationRunbook() {
+    if (!run) return;
+
+    try {
+      const gatewayRunbook = await createAutomationRunbookViaGateway(run, approvalRecords);
+      createAutomationRunbookDownload(gatewayRunbook);
+      setRunState({
+        status: "gateway",
+        message: "Automation runbook exported through the local gateway."
+      });
+      recordAudit({
+        type: "automation.runbook.exported",
+        severity: "info",
+        summary: "Automation runbook exported through gateway.",
+        runId: gatewayRunbook.runId,
+        metadata: {
+          ready: gatewayRunbook.summary.ready,
+          held: gatewayRunbook.summary.held,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createAutomationRunbookDownload(automationRunbook);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway automation runbook unavailable; used local export. ${error.message}`
+          : "Gateway automation runbook unavailable; used local export."
+      });
+      recordAudit({
+        type: "automation.runbook.exported",
+        severity: "warning",
+        summary: "Automation runbook exported locally.",
+        runId: automationRunbook.runId,
+        metadata: {
+          ready: automationRunbook.summary.ready,
+          held: automationRunbook.summary.held,
+          source: "local",
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
   }
 
   async function runExecutorDryRun() {
@@ -1160,6 +1261,12 @@ export function App() {
             onExportHandoff={exportExecutorHandoff}
             onExportEvidence={exportExecutorEvidence}
             onRunExecutor={runExecutorDryRun}
+          />
+
+          <AutomationRunbookPanel
+            runbook={automationRunbook}
+            exportLink={automationRunbookLink}
+            onExport={exportAutomationRunbook}
           />
 
           <ServerLedgerPanel

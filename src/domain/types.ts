@@ -224,6 +224,46 @@ export interface ExecutorHandoff {
   approvalRecords: AutomationApprovalRecord[];
 }
 
+export interface AutomationRunbookStep {
+  id: string;
+  runId: string;
+  actionId: string;
+  stageId: CabinetStageId;
+  roleId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  runnerId: string;
+  command: string;
+  target: string;
+  riskLevel: RiskLevel;
+  approvalRecordId?: string;
+  preflight: string[];
+  execution: string[];
+  evidenceRequired: string[];
+  verification: string[];
+  rollback: string[];
+  auditTags: string[];
+}
+
+export interface AutomationRunbook {
+  schema: "naikaku.automation-runbook.v1";
+  generatedAt: string;
+  runId: string;
+  handoffId: string;
+  steps: AutomationRunbookStep[];
+  heldActions: AutomationAction[];
+  summary: {
+    ready: number;
+    held: number;
+    approvalGated: number;
+    shell: number;
+    browser: number;
+    desktop: number;
+    mcp: number;
+    human: number;
+  };
+}
+
 export type ExecutorRunMode = "dry-run";
 export type ExecutorRunStepStatus = "simulated" | "skipped";
 export type ExecutorEvidenceKind =
@@ -395,6 +435,7 @@ export type AuditEventType =
   | "role.deleted"
   | "cabinet.run.completed"
   | "automation.decision.recorded"
+  | "automation.runbook.exported"
   | "executor.handoff.exported"
   | "executor.run.dry.completed"
   | "executor.evidence.exported"
