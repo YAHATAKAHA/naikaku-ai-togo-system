@@ -12,6 +12,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Custom role creation, role duplication, and editable ministry/stage/risk settings for parallel feature teams.
 - A local automation pipeline for planning, execution, critique, supervision, scoring, and iteration.
 - A sandbox-first computer-use model with Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate executor profiles.
+- Sandbox Capability matrix that maps each executor profile to representative actions, approval gates, runner contracts, and required evidence before real computer-use runners are attached.
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
 - Browser-to-gateway run path with local fallback when the gateway is offline.
 - Automation queue proposals, persisted approval records, executor handoff export, and a safe executor dry-run before any real runner consumes work.
@@ -45,7 +46,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, executor handoff, executor dry-run, team package, and sandbox policy-check endpoints.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, executor handoff, executor dry-run, team package, sandbox capability, and sandbox policy-check endpoints.
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 

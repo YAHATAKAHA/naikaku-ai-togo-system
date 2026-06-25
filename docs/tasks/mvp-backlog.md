@@ -62,6 +62,7 @@ Acceptance:
 - Persist per-action approvals.
 - Add executor handoff export.
 - Add safe executor dry-run runner.
+- Add Sandbox Capability registry with runner contracts, evidence requirements, and policy-evaluated representative actions.
 - Convert next-loop and automation work into status-trackable development items.
 - Move approval records to durable backend storage.
 - Replace dry-run runner with authenticated Shell/Browser/Desktop executors.

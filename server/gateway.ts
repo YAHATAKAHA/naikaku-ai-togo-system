@@ -1,7 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
+import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { runExecutorHandoff } from "../src/domain/executorRunner";
+import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type {
   AutomationApprovalRecord,
@@ -42,6 +43,7 @@ const server = createServer(async (request, response) => {
           "executor-handoff",
           "executor-run-dry",
           "team-packages",
+          "sandbox-capabilities",
           "sandbox-policy-check"
         ],
         timestamp: new Date().toISOString()
@@ -140,6 +142,20 @@ const server = createServer(async (request, response) => {
         body.sandboxPolicy || defaultSandboxPolicy
       );
       sendJson(response, decision.allowed ? 200 : 403, decision);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/v1/sandbox/capabilities") {
+      const body = await readJson<{
+        roles?: CabinetRole[];
+        sandboxPolicy?: SandboxPolicy;
+      }>(request);
+      const registry = buildSandboxCapabilityRegistry({
+        profiles: executorProfiles,
+        roles: body.roles || defaultRoles,
+        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
+      });
+      sendJson(response, 200, registry);
       return;
     }
 

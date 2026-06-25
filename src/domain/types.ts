@@ -113,6 +113,52 @@ export interface ExecutorProfile {
   controls: string[];
 }
 
+export type SandboxCapabilityStatus = "dry-run-ready" | "needs-approval" | "blocked";
+
+export interface SandboxCapabilityAction {
+  action: string;
+  label: string;
+  target: string;
+  riskLevel: RiskLevel;
+  status: AutomationActionStatus;
+  approvalRequired: boolean;
+  reason: string;
+  auditTags: string[];
+}
+
+export interface SandboxCapabilityCard {
+  profileId: ExecutorProfileId;
+  label: string;
+  purpose: string;
+  isolation: string;
+  controls: string[];
+  runnerContract: string;
+  evidenceRequired: string[];
+  rolesUsingProfile: Array<{
+    roleId: string;
+    roleName: string;
+  }>;
+  actions: SandboxCapabilityAction[];
+  status: SandboxCapabilityStatus;
+  riskNotes: string[];
+}
+
+export interface SandboxCapabilityRegistry {
+  schema: "naikaku.sandbox-capabilities.v1";
+  generatedAt: string;
+  cards: SandboxCapabilityCard[];
+  summary: {
+    profiles: number;
+    rolesCovered: number;
+    dryRunReady: number;
+    needsApproval: number;
+    blocked: number;
+    approvalActions: number;
+    blockedActions: number;
+    killSwitchArmed: boolean;
+  };
+}
+
 export interface CabinetStageDefinition {
   id: CabinetStageId;
   label: string;

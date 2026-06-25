@@ -96,6 +96,12 @@ The workbench can export this handoff JSON for executor development. The gateway
 
 The current `/v1/executor/run` runner is deliberately dry-run only. It simulates what each executor profile would receive and records audit output, but it does not run commands, browse sites, control desktops, write files, send network requests, or call MCP tools.
 
+## Sandbox Capability Registry
+
+The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
+
+The registry is a preflight and implementation contract. It does not grant runtime permission by itself. Real runners must still consume `ExecutorHandoff.readyActions`, enforce server-side allowlists, emit the required evidence, and stop when the kill switch or approval gate blocks an action.
+
 Team package exports use provider aliases and role configuration only. They are intended for parallel development handoff and must not contain raw session secrets.
 
 ## Audit Trail
@@ -128,6 +134,7 @@ Before real computer control is enabled:
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.
 6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.
-7. Add replayable screenshots or terminal logs.
-8. Add red-team tests for prompt injection and localhost/control-plane attacks.
-9. Move reviewed memory entries to durable storage with retention and deletion controls.
+7. Make runner services emit the evidence required by the Sandbox Capability registry.
+8. Add replayable screenshots or terminal logs.
+9. Add red-team tests for prompt injection and localhost/control-plane attacks.
+10. Move reviewed memory entries to durable storage with retention and deletion controls.

@@ -27,6 +27,7 @@ import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
+import { SandboxCapabilityPanel } from "./components/SandboxCapabilityPanel";
 import { SandboxPanel } from "./components/SandboxPanel";
 import { TeamHandoffPanel } from "./components/TeamHandoffPanel";
 import {
@@ -61,12 +62,14 @@ import {
 } from "./domain/storage";
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { createAuditEvent } from "./domain/auditLog";
+import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { runExecutorHandoff } from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
+import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
@@ -162,6 +165,15 @@ export function App() {
         savedRows: providerReadinessRows
       }),
     [providerReadinessRows, sessionSecrets, workspace.roles]
+  );
+  const sandboxCapabilityRegistry = useMemo(
+    () =>
+      buildSandboxCapabilityRegistry({
+        profiles: executorProfiles,
+        roles: workspace.roles,
+        sandboxPolicy: workspace.sandboxPolicy
+      }),
+    [workspace.roles, workspace.sandboxPolicy]
   );
   const developmentBoard = useMemo(
     () =>
@@ -1005,6 +1017,8 @@ export function App() {
             onExport={exportMemoryLog}
           />
 
+          <SandboxCapabilityPanel registry={sandboxCapabilityRegistry} />
+
           <SandboxPanel
             policy={workspace.sandboxPolicy}
             onChange={(sandboxPolicy) => setWorkspace((current) => ({ ...current, sandboxPolicy }))}
@@ -1035,7 +1049,7 @@ export function App() {
             <strong>{workspace.sandboxPolicy.killSwitchArmed ? "armed" : "open"}</strong>
           </div>
           <div className="metric-strip">
-            <Metric icon={<Cpu size={16} />} label="Executors" value="5 profiles" />
+            <Metric icon={<Cpu size={16} />} label="Executors" value={`${sandboxCapabilityRegistry.summary.profiles} profiles`} />
             <Metric icon={<SlidersHorizontal size={16} />} label="Allowlist" value={`${workspace.sandboxPolicy.networkAllowlist.length} domains`} />
             <Metric icon={<CircleStop size={16} />} label="Blocked" value={`${workspace.sandboxPolicy.blockedActions.length} actions`} />
             <Metric icon={<Sparkles size={16} />} label="Next loop" value={run ? `${run.nextIteration.length} tasks` : "pending"} />

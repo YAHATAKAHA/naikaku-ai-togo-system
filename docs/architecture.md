@@ -28,6 +28,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.
 - Sandbox policy editing.
+- Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
 - Local audit trail with export for operator actions and automation milestones.
@@ -44,6 +45,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `ProviderReadinessRow`
 - `SandboxPolicy`
 - `ExecutorProfile`
+- `SandboxCapabilityRegistry`
+- `SandboxCapabilityCard`
 - `CabinetRun`
 - `CabinetArtifact`
 - `CabinetScore`
@@ -99,6 +102,8 @@ Executor profiles model the runtime that can perform actions:
 
 Executors should be implemented as independent services. The frontend should never directly run host commands.
 
+`SandboxCapabilityRegistry` is the bridge between product policy and future runner implementation. It evaluates representative Browser, Desktop VM, Shell Container, MCP Proxy, and Human Approval actions against the current `SandboxPolicy`, then exposes the result as `naikaku.sandbox-capabilities.v1`. Runner teams can use this contract to see what evidence they must emit before real computer-use backends are connected.
+
 Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
 ## Team Handoffs
@@ -139,6 +144,7 @@ Production persistence should store:
 - Provider aliases, not raw keys.
 - Provider readiness rows with test status, source, alias, model, endpoint, and secret-ready flag.
 - Sandbox policy.
+- Sandbox capability registry snapshots for runner compatibility and preflight review.
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
 - Team handoff packages for parallel development.

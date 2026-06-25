@@ -200,6 +200,36 @@ Checks whether a proposed action is allowed inside the current sandbox policy.
 }
 ```
 
+### `POST /v1/sandbox/capabilities`
+
+Builds the executor capability registry for the current roles and sandbox policy. This endpoint does not execute actions. It evaluates representative actions for Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate, then returns runner contracts, evidence requirements, role coverage, and policy status.
+
+```json
+{
+  "roles": [],
+  "sandboxPolicy": {}
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.sandbox-capabilities.v1",
+  "summary": {
+    "profiles": 5,
+    "rolesCovered": 8,
+    "dryRunReady": 0,
+    "needsApproval": 5,
+    "blocked": 0,
+    "approvalActions": 7,
+    "blockedActions": 1,
+    "killSwitchArmed": true
+  },
+  "cards": []
+}
+```
+
 ## Production Notes
 
 The gateway is intentionally conservative:
