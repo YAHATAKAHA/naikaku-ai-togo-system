@@ -144,7 +144,45 @@ Response:
   "summary": {
     "ready": 2,
     "simulated": 2,
-    "held": 5
+    "held": 5,
+    "evidenceItems": 6,
+    "replayableSteps": 2
+  },
+  "steps": [
+    {
+      "runnerId": "naikaku.shell-container.dry-run",
+      "evidenceHash": "fnv1a-...",
+      "evidence": []
+    }
+  ]
+}
+```
+
+### `POST /v1/executor/evidence`
+
+Builds an exportable evidence bundle from an `ExecutorRun`. This endpoint does not execute anything. It normalizes per-step evidence, evidence hashes, runner ids, and replay flags into `naikaku.executor-evidence.v1` so future Browser, Shell, Desktop, and MCP runner services can satisfy the same audit contract.
+
+```json
+{
+  "executorRun": {
+    "id": "run-...-executor-run",
+    "handoffId": "run-...-executor-handoff",
+    "runId": "run-...",
+    "mode": "dry-run",
+    "steps": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.executor-evidence.v1",
+  "summary": {
+    "steps": 2,
+    "evidenceItems": 6,
+    "replayableSteps": 2
   },
   "steps": []
 }

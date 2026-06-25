@@ -2,6 +2,7 @@ import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defa
 import { buildExecutorHandoff } from "./automation";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeDevelopmentBoard } from "./developmentBoard";
+import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
 import { completeRole, isDefaultRoleId } from "./roles";
@@ -13,6 +14,7 @@ import type {
   CabinetWorkspace,
   DevelopmentBoard,
   DevelopmentWorkItem,
+  ExecutorEvidenceBundle,
   MemoryEntry,
   ProviderReadinessMatrix,
   ProviderReadinessRow,
@@ -419,6 +421,10 @@ export function clearProviderReadinessRows() {
 
 export function serializeProviderReadinessExport(matrix: ProviderReadinessMatrix) {
   return serializeProviderReadinessMatrix(matrix);
+}
+
+export function serializeExecutorEvidenceExport(bundle: ExecutorEvidenceBundle) {
+  return serializeExecutorEvidenceBundle(bundle);
 }
 
 export function serializeRunBundle(

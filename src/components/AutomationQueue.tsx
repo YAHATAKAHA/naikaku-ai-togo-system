@@ -11,10 +11,12 @@ interface AutomationQueueProps {
   approvalRecords: Record<string, AutomationApprovalRecord>;
   readyCount: number;
   handoffLink: { href: string; fileName: string } | null;
+  evidenceLink: { href: string; fileName: string } | null;
   executorRun: ExecutorRun | null;
   executorRunning: boolean;
   onDecision: (action: AutomationAction, decision: AutomationApprovalDecision) => void;
   onExportHandoff: () => void;
+  onExportEvidence: () => void;
   onRunExecutor: () => void;
 }
 
@@ -23,10 +25,12 @@ export function AutomationQueue({
   approvalRecords,
   readyCount,
   handoffLink,
+  evidenceLink,
   executorRun,
   executorRunning,
   onDecision,
   onExportHandoff,
+  onExportEvidence,
   onRunExecutor
 }: AutomationQueueProps) {
   const counts = actions.reduce(
@@ -74,14 +78,24 @@ export function AutomationQueue({
         <div className="executor-result">
           <div className="executor-result-heading">
             <strong>{executorRun.summary.simulated} simulated</strong>
-            <span>{executorRun.summary.held} held</span>
+            <span>{executorRun.summary.evidenceItems} evidence</span>
+            <button type="button" onClick={onExportEvidence}>
+              Export evidence
+            </button>
+            {evidenceLink ? (
+              <a href={evidenceLink.href} download={evidenceLink.fileName}>
+                Download JSON
+              </a>
+            ) : null}
           </div>
           <div className="executor-step-list">
             {executorRun.steps.map((step) => (
               <article key={step.id} className="executor-step">
                 <strong>{step.executorProfileId}</strong>
                 <p>{step.output}</p>
-                <small>{step.action} / {step.target}</small>
+                <small>
+                  {step.action} / {step.target} / {step.evidence.length} evidence / {step.evidenceHash}
+                </small>
               </article>
             ))}
           </div>

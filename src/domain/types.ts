@@ -226,6 +226,25 @@ export interface ExecutorHandoff {
 
 export type ExecutorRunMode = "dry-run";
 export type ExecutorRunStepStatus = "simulated" | "skipped";
+export type ExecutorEvidenceKind =
+  | "transcript"
+  | "screenshot"
+  | "artifact"
+  | "approval"
+  | "policy"
+  | "network";
+
+export interface ExecutorEvidenceItem {
+  id: string;
+  kind: ExecutorEvidenceKind;
+  label: string;
+  summary: string;
+  uri?: string;
+  checksum: string;
+  createdAt: string;
+  redacted: boolean;
+  replayable: boolean;
+}
 
 export interface ExecutorRunStep {
   id: string;
@@ -238,6 +257,10 @@ export interface ExecutorRunStep {
   startedAt: string;
   completedAt: string;
   output: string;
+  runnerId: string;
+  evidence: ExecutorEvidenceItem[];
+  evidenceHash: string;
+  replayable: boolean;
   auditTags: string[];
 }
 
@@ -253,6 +276,32 @@ export interface ExecutorRun {
     ready: number;
     simulated: number;
     held: number;
+    evidenceItems: number;
+    replayableSteps: number;
+  };
+}
+
+export interface ExecutorEvidenceBundle {
+  schema: "naikaku.executor-evidence.v1";
+  exportedAt: string;
+  executorRunId: string;
+  handoffId: string;
+  runId: string;
+  mode: ExecutorRunMode;
+  steps: Array<{
+    stepId: string;
+    actionId: string;
+    executorProfileId: ExecutorProfileId;
+    runnerId: string;
+    status: ExecutorRunStepStatus;
+    evidenceHash: string;
+    replayable: boolean;
+    evidence: ExecutorEvidenceItem[];
+  }>;
+  summary: {
+    steps: number;
+    evidenceItems: number;
+    replayableSteps: number;
   };
 }
 
@@ -348,6 +397,7 @@ export type AuditEventType =
   | "automation.decision.recorded"
   | "executor.handoff.exported"
   | "executor.run.dry.completed"
+  | "executor.evidence.exported"
   | "team.handoff.exported"
   | "memory.entry.accepted"
   | "memory.entry.rejected"

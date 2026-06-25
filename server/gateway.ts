@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
-import { runExecutorHandoff } from "../src/domain/executorRunner";
+import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type {
@@ -10,6 +10,7 @@ import type {
   CabinetRunMode,
   CabinetRole,
   CabinetWorkspace,
+  ExecutorRun,
   ExecutorHandoff,
   ProviderConfig,
   SandboxPolicy
@@ -42,6 +43,7 @@ const server = createServer(async (request, response) => {
           "automation-plan",
           "executor-handoff",
           "executor-run-dry",
+          "executor-evidence",
           "team-packages",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -111,6 +113,24 @@ const server = createServer(async (request, response) => {
         handoff: body.handoff
       });
       sendJson(response, 200, executorRun);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/v1/executor/evidence") {
+      const body = await readJson<{
+        executorRun: ExecutorRun;
+      }>(request);
+      if (!body.executorRun?.id) {
+        sendJson(response, 422, {
+          ok: false,
+          message: "executorRun is required."
+        });
+        return;
+      }
+      const bundle = buildExecutorEvidenceBundle({
+        executorRun: body.executorRun
+      });
+      sendJson(response, 200, bundle);
       return;
     }
 

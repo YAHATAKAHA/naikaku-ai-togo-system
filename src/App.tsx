@@ -55,6 +55,7 @@ import {
   saveWorkspace,
   serializeAuditLog,
   serializeDevelopmentBoardExport,
+  serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
   serializeRunBundle,
@@ -64,7 +65,7 @@ import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord }
 import { createAuditEvent } from "./domain/auditLog";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
-import { runExecutorHandoff } from "./domain/executorRunner";
+import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
@@ -126,6 +127,7 @@ export function App() {
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -243,12 +245,21 @@ export function App() {
   }, [providerReadinessLink]);
 
   useEffect(() => {
+    return () => {
+      if (executorEvidenceLink) {
+        URL.revokeObjectURL(executorEvidenceLink.href);
+      }
+    };
+  }, [executorEvidenceLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
     setProviderReadinessLink(null);
+    setExecutorEvidenceLink(null);
   }, [run?.id]);
 
   useEffect(() => {
@@ -438,6 +449,7 @@ export function App() {
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setProviderReadinessLink(null);
+    setExecutorEvidenceLink(null);
     setSessionSecrets({});
     recordAudit({
       type: "workspace.reset",
@@ -491,6 +503,7 @@ export function App() {
       setTeamHandoffLink(null);
       setDevelopmentBoardLink(null);
       setProviderReadinessLink(null);
+      setExecutorEvidenceLink(null);
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -526,6 +539,7 @@ export function App() {
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
     setExecutorRun(null);
+    setExecutorEvidenceLink(null);
     recordAudit({
       type: "automation.decision.recorded",
       severity: decision === "approved" ? "success" : "warning",
@@ -629,6 +643,7 @@ export function App() {
     setExecutorRunning(true);
     try {
       setExecutorRun(await runExecutorHandoffViaGateway(handoff));
+      setExecutorEvidenceLink(null);
       setRunState({
         status: "gateway",
         message: "Executor dry-run completed through the local gateway."
@@ -646,6 +661,7 @@ export function App() {
     } catch (error) {
       const localExecutorRun = runExecutorHandoff({ handoff });
       setExecutorRun(localExecutorRun);
+      setExecutorEvidenceLink(null);
       setRunState({
         status: "fallback",
         message: error instanceof Error
@@ -666,6 +682,33 @@ export function App() {
     } finally {
       setExecutorRunning(false);
     }
+  }
+
+  function exportExecutorEvidence() {
+    if (!executorRun) return;
+
+    const bundle = buildExecutorEvidenceBundle({ executorRun });
+    const blob = new Blob([serializeExecutorEvidenceExport(bundle)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-executor-evidence-${executorRun.id.replace(/[^a-z0-9-]/gi, "-")}.json`;
+
+    if (executorEvidenceLink) {
+      URL.revokeObjectURL(executorEvidenceLink.href);
+    }
+
+    setExecutorEvidenceLink({ href: url, fileName });
+    recordAudit({
+      type: "executor.evidence.exported",
+      severity: "info",
+      summary: "Executor evidence export prepared.",
+      runId: executorRun.runId,
+      metadata: {
+        executorRunId: executorRun.id,
+        steps: executorRun.steps.length,
+        evidenceItems: executorRun.summary.evidenceItems,
+        replayableSteps: executorRun.summary.replayableSteps
+      }
+    });
   }
 
   function exportAuditLog() {
@@ -989,10 +1032,12 @@ export function App() {
             approvalRecords={approvalRecordsByAction}
             readyCount={readyActionCount}
             handoffLink={handoffLink}
+            evidenceLink={executorEvidenceLink}
             executorRun={executorRun}
             executorRunning={executorRunning}
             onDecision={recordAutomationDecision}
             onExportHandoff={exportExecutorHandoff}
+            onExportEvidence={exportExecutorEvidence}
             onRunExecutor={runExecutorDryRun}
           />
 

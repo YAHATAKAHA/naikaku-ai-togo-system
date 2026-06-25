@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
-import { createApprovalRecord } from "./automation";
+import { buildExecutorHandoff, createApprovalRecord } from "./automation";
 import { createAuditEvent } from "./auditLog";
 import { runCabinetMission } from "./orchestrator";
 import { createCustomRole } from "./roles";
@@ -13,6 +13,7 @@ import {
   saveProviderReadinessRow,
   serializeAuditLog,
   serializeDevelopmentBoardExport,
+  serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
   serializeRunBundle,
@@ -20,6 +21,7 @@ import {
 } from "./storage";
 import { buildMemoryCandidates, createMemoryDecision } from "./memory";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./developmentBoard";
+import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./executorRunner";
 import { buildTeamHandoff } from "./teamPackages";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./providerReadiness";
 
@@ -236,5 +238,32 @@ describe("workspace import/export", () => {
     expect(parsed.schema).toBe("naikaku.provider-readiness.v1");
     expect(parsed.rows).toHaveLength(1);
     expect(exported).not.toContain("temporary-secret");
+  });
+
+  it("exports executor evidence through the storage envelope", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const action = run.automationActions?.find((candidate) => candidate.status === "needs-approval");
+    if (!action) {
+      throw new Error("Expected an approval-gated action.");
+    }
+
+    const approval = createApprovalRecord({ action, decision: "approved" });
+    const handoff = buildExecutorHandoff({ run, approvalRecords: [approval] });
+    const executorRun = runExecutorHandoff({ handoff });
+    const exported = serializeExecutorEvidenceExport(
+      buildExecutorEvidenceBundle({ executorRun })
+    );
+    const parsed = JSON.parse(exported) as {
+      schema: string;
+      summary: { evidenceItems: number };
+    };
+
+    expect(parsed.schema).toBe("naikaku.executor-evidence.v1");
+    expect(parsed.summary.evidenceItems).toBeGreaterThan(0);
+    expect(exported).not.toContain("sessionSecret");
   });
 });

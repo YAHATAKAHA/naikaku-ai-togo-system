@@ -63,15 +63,17 @@ Acceptance:
 - Add executor handoff export.
 - Add safe executor dry-run runner.
 - Add Sandbox Capability registry with runner contracts, evidence requirements, and policy-evaluated representative actions.
+- Add executor evidence bundle export with per-step hashes, runner ids, replay flags, and dry-run evidence placeholders.
 - Convert next-loop and automation work into status-trackable development items.
 - Move approval records to durable backend storage.
-- Replace dry-run runner with authenticated Shell/Browser/Desktop executors.
-- Add action replay logs.
+- Replace dry-run runner with authenticated Shell/Browser/Desktop executors that emit real evidence artifacts.
+- Add action replay logs backed by screenshots, terminal transcripts, artifact manifests, and MCP request logs.
 
 Acceptance:
 
 - No executor inherits host secrets by default.
 - Kill switch stops an active run.
+- Every executor-ready action produces an auditable evidence bundle before it can be considered complete.
 
 ## Track 5: Security and Governance
 

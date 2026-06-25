@@ -96,6 +96,8 @@ The workbench can export this handoff JSON for executor development. The gateway
 
 The current `/v1/executor/run` runner is deliberately dry-run only. It simulates what each executor profile would receive and records audit output, but it does not run commands, browse sites, control desktops, write files, send network requests, or call MCP tools.
 
+Each dry-run step emits `ExecutorEvidenceItem` records and an evidence hash. Browser actions receive screenshot and URL-log placeholders, shell actions receive command transcript and artifact-manifest placeholders, desktop actions receive frame and input-event placeholders, MCP actions receive schema and request-log placeholders, and approval-gate actions receive approval evidence. These are intentionally marked as dry-run evidence so production runners can replace them with real artifacts without changing the export contract.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
@@ -106,7 +108,7 @@ Team package exports use provider aliases and role configuration only. They are 
 
 ## Audit Trail
 
-The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, provider readiness checks/exports, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, team handoff export, memory review, and development board status/export events. Operators can inspect and export these events from the UI.
+The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, provider readiness checks/exports, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, executor evidence export, team handoff export, memory review, and development board status/export events. Operators can inspect and export these events from the UI.
 
 This is a local development ledger, not an immutable production ledger. Production should move audit events into authenticated append-only backend storage with server timestamps and operator identity.
 
@@ -134,7 +136,7 @@ Before real computer control is enabled:
 4. Add emergency kill switch enforcement server-side.
 5. Add domain/action allowlist enforcement server-side.
 6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.
-7. Make runner services emit the evidence required by the Sandbox Capability registry.
-8. Add replayable screenshots or terminal logs.
+7. Make runner services emit the evidence required by the Sandbox Capability registry and `naikaku.executor-evidence.v1`.
+8. Replace dry-run evidence placeholders with replayable screenshots, terminal logs, artifact manifests, and tool-call transcripts.
 9. Add red-team tests for prompt injection and localhost/control-plane attacks.
 10. Move reviewed memory entries to durable storage with retention and deletion controls.

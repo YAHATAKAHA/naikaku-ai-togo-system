@@ -49,6 +49,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `SandboxCapabilityCard`
 - `CabinetRun`
 - `CabinetArtifact`
+- `ExecutorEvidenceBundle`
+- `ExecutorEvidenceItem`
 - `CabinetScore`
 - `TeamHandoff`
 - `TeamWorkPackage`
@@ -106,6 +108,8 @@ Executors should be implemented as independent services. The frontend should nev
 
 Before an executor receives work, the run creates `AutomationAction` proposals. Each proposal contains the stage, role, executor profile, target, risk level, policy decision, and audit tags. Human decisions become `AutomationApprovalRecord` entries. Executors should only consume `ExecutorHandoff.readyActions`, never raw queue rows. The current runner is a dry-run simulator that produces `ExecutorRun` audit steps without performing external actions.
 
+Each executor step now carries `ExecutorEvidenceItem` records for policy decisions, simulated transcripts, screenshot placeholders, artifact manifests, approval records, or network logs depending on the executor profile. `ExecutorEvidenceBundle` exports those records as `naikaku.executor-evidence.v1` with runner ids, replay flags, and evidence hashes. Real runners should replace placeholders with actual screenshots, terminal transcripts, artifact manifests, and tool-call logs while preserving the same envelope.
+
 ## Team Handoffs
 
 Parallel development starts from `TeamHandoff`. A handoff turns the current workspace, and optionally the latest run, into one `TeamWorkPackage` per enabled role. Each package includes the role mandate, provider alias, executor boundary, permissions, stage tasks, dependencies, deliverables, acceptance criteria, security notes, automation action ids, and run linkage.
@@ -147,6 +151,7 @@ Production persistence should store:
 - Sandbox capability registry snapshots for runner compatibility and preflight review.
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.
+- Executor evidence bundles for replay, audit, and runner compatibility checks.
 - Team handoff packages for parallel development.
 - Development board items and status changes for separate implementation teams.
 - Custom role definitions beyond the default cabinet.

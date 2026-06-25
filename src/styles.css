@@ -780,12 +780,32 @@ meter {
   text-transform: uppercase;
 }
 
+.executor-result-heading button,
+.executor-result-heading a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
 .executor-result-heading strong {
   color: var(--green);
 }
 
 .executor-result-heading span {
   color: var(--muted);
+}
+
+.executor-result-heading a {
+  color: var(--green);
 }
 
 .executor-step-list {
