@@ -66,6 +66,7 @@ Acceptance:
 - Add executor evidence bundle export with per-step hashes, runner ids, replay flags, and dry-run evidence placeholders.
 - Add runner authentication gate for executor handoff, dry-run, and evidence endpoints.
 - Add local gateway ledger for approval records and executor evidence bundles.
+- Add Server Ledger panel for refreshing gateway-side approvals and evidence bundle status from the workbench.
 - Convert next-loop and automation work into status-trackable development items.
 - Replace local file ledger with durable backend storage.
 - Replace shared runner token with per-runner scoped credentials and rotation.

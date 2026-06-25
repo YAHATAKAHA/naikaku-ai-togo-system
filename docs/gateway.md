@@ -31,6 +31,8 @@ NAIKAKU_LEDGER_DIR=.naikaku-data
 
 `NAIKAKU_LEDGER_DIR` controls where the gateway stores local approval and evidence ledgers. The default is `.naikaku-data`, which is ignored by Git.
 
+The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by `NAIKAKU_RUNNER_TOKEN`, the panel surfaces the gateway authentication error and still shows approval/status data.
+
 Authenticated runner requests use either:
 
 ```http

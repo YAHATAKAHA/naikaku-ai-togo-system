@@ -29,6 +29,7 @@ import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
 import { SandboxCapabilityPanel } from "./components/SandboxCapabilityPanel";
 import { SandboxPanel } from "./components/SandboxPanel";
+import { ServerLedgerPanel } from "./components/ServerLedgerPanel";
 import { TeamHandoffPanel } from "./components/TeamHandoffPanel";
 import {
   addRunHistoryItem,
@@ -77,11 +78,15 @@ import {
   createExecutorEvidenceViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
+  getLedgerSummaryViaGateway,
+  listApprovalLedgerViaGateway,
+  listEvidenceLedgerViaGateway,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
   saveApprovalRecordViaGateway,
   testProviderViaGateway
 } from "./domain/gatewayClient";
+import type { LedgerSummary } from "./domain/gatewayClient";
 import type {
   AutomationAction,
   AutomationApprovalDecision,
@@ -91,6 +96,7 @@ import type {
   CabinetRun,
   DevelopmentWorkItem,
   DevelopmentWorkItemStatus,
+  ExecutorEvidenceBundle,
   ExecutorRun,
   MemoryEntry,
   ProviderReadinessRow,
@@ -100,6 +106,15 @@ import type {
 import type { CabinetRunMode } from "./domain/types";
 
 type AuditEventInput = Parameters<typeof createAuditEvent>[0];
+
+interface ServerLedgerState {
+  status: "idle" | "loading" | "ready" | "error";
+  message: string;
+  summary: LedgerSummary | null;
+  approvals: AutomationApprovalRecord[];
+  evidenceBundles: ExecutorEvidenceBundle[];
+  evidenceMessage?: string;
+}
 
 export function App() {
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
@@ -130,6 +145,13 @@ export function App() {
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [serverLedger, setServerLedger] = useState<ServerLedgerState>({
+    status: "idle",
+    message: "Refresh gateway ledger when the local service is running.",
+    summary: null,
+    approvals: [],
+    evidenceBundles: []
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -262,6 +284,16 @@ export function App() {
     setDevelopmentBoardLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
+    setServerLedger((current) => ({
+      ...current,
+      status: "idle",
+      message: run
+        ? "Refresh gateway ledger for the current run."
+        : "Refresh gateway ledger when the local service is running.",
+      approvals: [],
+      evidenceBundles: [],
+      evidenceMessage: undefined
+    }));
   }, [run?.id]);
 
   useEffect(() => {
@@ -306,6 +338,49 @@ export function App() {
   function recordAudit(input: AuditEventInput) {
     const event = createAuditEvent(input);
     setAuditEvents((current) => appendAuditEvent(event, current));
+  }
+
+  async function refreshServerLedger() {
+    setServerLedger((current) => ({
+      ...current,
+      status: "loading",
+      message: "Reading gateway approval and evidence ledgers..."
+    }));
+
+    try {
+      const [summary, approvalQuery] = await Promise.all([
+        getLedgerSummaryViaGateway(),
+        listApprovalLedgerViaGateway(run?.id)
+      ]);
+      let evidenceBundles: ExecutorEvidenceBundle[] = [];
+      let evidenceMessage: string | undefined;
+
+      try {
+        const evidenceQuery = await listEvidenceLedgerViaGateway(run?.id);
+        evidenceBundles = evidenceQuery.bundles;
+      } catch (error) {
+        evidenceMessage = error instanceof Error
+          ? `${error.message}. Evidence reads may require runner authentication.`
+          : "Gateway evidence ledger unavailable. Evidence reads may require runner authentication.";
+      }
+
+      setServerLedger({
+        status: "ready",
+        message: run
+          ? `Gateway ledger loaded for ${run.id}.`
+          : "Gateway ledger loaded for all runs.",
+        summary,
+        approvals: approvalQuery.records,
+        evidenceBundles,
+        evidenceMessage
+      });
+    } catch (error) {
+      setServerLedger((current) => ({
+        ...current,
+        status: "error",
+        message: error instanceof Error ? error.message : "Gateway ledger unavailable."
+      }));
+    }
   }
 
   function addRole(sourceRole?: CabinetRole) {
@@ -538,9 +613,13 @@ export function App() {
     const nextRecords = saveApprovalRecord(record).filter(
       (candidate) => candidate.runId === action.runId
     );
-    void saveApprovalRecordViaGateway(record).catch(() => {
-      // Local approval storage remains the source of truth when the gateway is offline.
-    });
+    void saveApprovalRecordViaGateway(record)
+      .then(() => {
+        void refreshServerLedger();
+      })
+      .catch(() => {
+        // Local approval storage remains the source of truth when the gateway is offline.
+      });
     setApprovalRecords(nextRecords);
     setHandoffLink(null);
     setExecutorRun(null);
@@ -731,6 +810,10 @@ export function App() {
         source
       }
     });
+
+    if (source === "gateway") {
+      void refreshServerLedger();
+    }
   }
 
   function exportAuditLog() {
@@ -1061,6 +1144,16 @@ export function App() {
             onExportHandoff={exportExecutorHandoff}
             onExportEvidence={exportExecutorEvidence}
             onRunExecutor={runExecutorDryRun}
+          />
+
+          <ServerLedgerPanel
+            status={serverLedger.status}
+            message={serverLedger.message}
+            summary={serverLedger.summary}
+            approvals={serverLedger.approvals}
+            evidenceBundles={serverLedger.evidenceBundles}
+            evidenceMessage={serverLedger.evidenceMessage}
+            onRefresh={refreshServerLedger}
           />
 
           <TeamHandoffPanel

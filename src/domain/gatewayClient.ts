@@ -27,6 +27,43 @@ export interface ProviderTestResult {
   message: string;
 }
 
+export interface GatewayHealth {
+  ok: boolean;
+  service: string;
+  capabilities: string[];
+  runnerAuth?: {
+    mode: "development-open" | "token-required";
+    configured: boolean;
+    acceptedHeaders: string[];
+    runnerIdRequired: boolean;
+    warning?: string;
+  };
+  timestamp: string;
+}
+
+export interface LedgerSummary {
+  schema: "naikaku.ledger-summary.v1";
+  ledgerDir: string;
+  approvals: number;
+  evidenceBundles: number;
+  updatedAt: string;
+}
+
+export interface ApprovalLedgerQuery {
+  schema: "naikaku.approval-ledger-query.v1";
+  runId: string | null;
+  records: AutomationApprovalRecord[];
+}
+
+export interface EvidenceLedgerQuery {
+  schema: "naikaku.evidence-ledger-query.v1";
+  runId: string | null;
+  executorRunId: string | null;
+  bundles: ExecutorEvidenceBundle[];
+  gatewayRunnerId?: string;
+  authMode?: string;
+}
+
 export function gatewayBaseUrl() {
   const fromEnv = import.meta.env.VITE_NAIKAKU_GATEWAY_URL as string | undefined;
   return (fromEnv || DEFAULT_GATEWAY_URL).replace(/\/$/, "");
@@ -197,6 +234,44 @@ export async function saveApprovalRecordViaGateway(
   }>;
 }
 
+export async function getLedgerSummaryViaGateway(signal?: AbortSignal) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/ledger/status`, { signal });
+
+  if (!response.ok) {
+    throw new Error(`Gateway ledger status failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as LedgerSummary;
+}
+
+export async function listApprovalLedgerViaGateway(
+  runId?: string,
+  signal?: AbortSignal
+) {
+  const query = runId ? `?runId=${encodeURIComponent(runId)}` : "";
+  const response = await fetch(`${gatewayBaseUrl()}/v1/ledger/approvals${query}`, { signal });
+
+  if (!response.ok) {
+    throw new Error(`Gateway approval ledger failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ApprovalLedgerQuery;
+}
+
+export async function listEvidenceLedgerViaGateway(
+  runId?: string,
+  signal?: AbortSignal
+) {
+  const query = runId ? `?runId=${encodeURIComponent(runId)}` : "";
+  const response = await fetch(`${gatewayBaseUrl()}/v1/ledger/evidence${query}`, { signal });
+
+  if (!response.ok) {
+    throw new Error(`Gateway evidence ledger failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as EvidenceLedgerQuery;
+}
+
 export async function createTeamHandoffViaGateway(
   workspace: CabinetWorkspace,
   run?: CabinetRun | null,
@@ -224,10 +299,5 @@ export async function checkGatewayHealth() {
     throw new Error(`Gateway health check failed with HTTP ${response.status}`);
   }
 
-  return response.json() as Promise<{
-    ok: boolean;
-    service: string;
-    capabilities: string[];
-    timestamp: string;
-  }>;
+  return response.json() as Promise<GatewayHealth>;
 }

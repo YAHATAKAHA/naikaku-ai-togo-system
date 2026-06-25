@@ -187,6 +187,7 @@ a.secondary-button {
 .automation-panel,
 .provider-panel,
 .capability-panel,
+.ledger-panel,
 .team-panel,
 .development-panel,
 .memory-panel,
@@ -402,6 +403,7 @@ a.secondary-button {
 .automation-panel,
 .provider-panel,
 .team-panel,
+.ledger-panel,
 .development-panel,
 .memory-panel,
 .sandbox-panel {
@@ -961,6 +963,194 @@ meter {
   background: var(--surface-soft);
   border-radius: 8px;
   padding: 10px;
+}
+
+.ledger-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.ledger-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ledger-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ledger-summary span[data-status="approval"],
+.ledger-summary span[data-status="loading"] {
+  color: var(--amber);
+}
+
+.ledger-summary span[data-status="evidence"],
+.ledger-summary span[data-status="ready"] {
+  color: var(--green);
+}
+
+.ledger-summary span[data-status="locked"],
+.ledger-summary span[data-status="error"] {
+  color: var(--red);
+}
+
+.ledger-refresh-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.ledger-refresh-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.ledger-refresh-row[data-status="error"] span {
+  color: var(--red);
+}
+
+.ledger-refresh-row button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.ledger-refresh-row button:disabled {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.ledger-auth-note,
+.ledger-empty {
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ledger-auth-note {
+  border: 1px solid #f3d19c;
+  background: #fffaf0;
+  color: var(--amber);
+  font-weight: 800;
+}
+
+.ledger-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ledger-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.ledger-list > strong {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.ledger-row {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 10px;
+  min-width: 0;
+}
+
+.ledger-row[data-status="approved"],
+.ledger-row[data-status="evidence"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.ledger-row[data-status="rejected"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.ledger-row div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ledger-row strong,
+.ledger-row span,
+.ledger-row p,
+.ledger-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.ledger-row strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.ledger-row span,
+.ledger-row p,
+.ledger-row small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ledger-row span {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ledger-row[data-status="approved"] span,
+.ledger-row[data-status="evidence"] span {
+  color: var(--green);
+}
+
+.ledger-row[data-status="rejected"] span {
+  color: var(--red);
+}
+
+.ledger-row p {
+  margin: 0;
 }
 
 .provider-panel {
@@ -2458,6 +2648,7 @@ meter {
   .artifact-grid,
   .provider-row-list,
   .capability-card-list,
+  .ledger-grid,
   .team-package-grid,
   .development-item-list,
   .memory-candidate-grid,
@@ -2467,6 +2658,7 @@ meter {
   .metric-strip,
   .provider-summary,
   .capability-summary,
+  .ledger-summary,
   .team-summary,
   .development-summary,
   .memory-summary,
@@ -2485,11 +2677,13 @@ meter {
   .queue-actions,
   .memory-actions,
   .handoff-strip,
+  .ledger-refresh-row,
   .provider-export-row,
   .team-export-row,
   .development-export-row,
   .memory-export-row,
   .executor-result-heading,
+  .ledger-row div,
   .queue-copy div {
     align-items: flex-start;
     flex-wrap: wrap;

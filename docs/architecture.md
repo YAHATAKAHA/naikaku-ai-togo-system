@@ -31,6 +31,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
+- Server Ledger panel for refreshing gateway-side approval records and executor evidence bundles without exposing runner credentials to the browser.
 - Local audit trail with export for operator actions and automation milestones.
 - Development Board for role-owned implementation items, next-loop tasks, accepted memory, status tracking, and JSON export.
 - Memory Inbox review for candidate lessons, decisions, skill proposals, risks, and next-cycle follow-ups.
@@ -161,7 +162,7 @@ Production persistence should store:
 - Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
 - Reviewed memory entries with accepted and rejected decisions, retention labels, and consent tags.
 
-The current audit trail is local and exportable, not tamper-proof. The gateway now adds a local file ledger for approval records and executor evidence bundles under `NAIKAKU_LEDGER_DIR`, but production should replace that with an authenticated append-only server-side store.
+The current audit trail is local and exportable, not tamper-proof. The gateway now adds a local file ledger for approval records and executor evidence bundles under `NAIKAKU_LEDGER_DIR`, and the workbench can refresh that server ledger for operator review. Production should replace the local files with an authenticated append-only server-side store.
 
 ## Parallel Development Boundaries
 
