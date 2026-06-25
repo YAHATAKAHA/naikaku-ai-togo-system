@@ -3,6 +3,7 @@ import { buildExecutorHandoff } from "./automation";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeMemoryEntries } from "./memory";
+import { serializeProviderReadinessMatrix } from "./providerReadiness";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
@@ -13,6 +14,8 @@ import type {
   DevelopmentBoard,
   DevelopmentWorkItem,
   MemoryEntry,
+  ProviderReadinessMatrix,
+  ProviderReadinessRow,
   RunHistoryItem
 } from "./types";
 
@@ -23,6 +26,7 @@ const APPROVAL_RECORDS_KEY = "naikaku.approval-records.v1";
 const AUDIT_EVENTS_KEY = "naikaku.audit-events.v1";
 const MEMORY_ENTRIES_KEY = "naikaku.memory-entries.v1";
 const DEVELOPMENT_ITEMS_KEY = "naikaku.development-items.v1";
+const PROVIDER_READINESS_KEY = "naikaku.provider-readiness.v1";
 const MAX_HISTORY_ITEMS = 12;
 
 export function createDefaultWorkspace(): CabinetWorkspace {
@@ -370,6 +374,51 @@ export function clearDevelopmentItems() {
 
 export function serializeDevelopmentBoardExport(board: DevelopmentBoard) {
   return serializeDevelopmentBoard(board);
+}
+
+export function loadProviderReadinessRows(): ProviderReadinessRow[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  const raw = localStorage.getItem(PROVIDER_READINESS_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as ProviderReadinessRow[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveProviderReadinessRow(
+  row: ProviderReadinessRow,
+  currentRows = loadProviderReadinessRows()
+) {
+  const nextRows = [
+    row,
+    ...currentRows.filter((candidate) => candidate.roleId !== row.roleId)
+  ];
+
+  if (canUseLocalStorage()) {
+    localStorage.setItem(PROVIDER_READINESS_KEY, JSON.stringify(nextRows));
+  }
+
+  return nextRows;
+}
+
+export function clearProviderReadinessRows() {
+  if (canUseLocalStorage()) {
+    localStorage.removeItem(PROVIDER_READINESS_KEY);
+  }
+  return [];
+}
+
+export function serializeProviderReadinessExport(matrix: ProviderReadinessMatrix) {
+  return serializeProviderReadinessMatrix(matrix);
 }
 
 export function serializeRunBundle(

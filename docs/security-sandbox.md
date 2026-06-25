@@ -100,7 +100,7 @@ Team package exports use provider aliases and role configuration only. They are 
 
 ## Audit Trail
 
-The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, team handoff export, memory review, and development board status/export events. Operators can inspect and export these events from the UI.
+The workbench records local `AuditEvent` entries for workspace save/import/export/reset, custom role create/duplicate/delete, provider readiness checks/exports, cabinet run completion, approval decisions, executor handoff export, executor dry-run completion, team handoff export, memory review, and development board status/export events. Operators can inspect and export these events from the UI.
 
 This is a local development ledger, not an immutable production ledger. Production should move audit events into authenticated append-only backend storage with server timestamps and operator identity.
 
@@ -109,6 +109,10 @@ This is a local development ledger, not an immutable production ledger. Producti
 Memory candidates are treated as privileged project knowledge. The Memory Inbox only persists a candidate after an operator accepts or rejects it. Entries carry retention labels and consent tags so production storage can enforce project policy instead of silently accumulating raw run context.
 
 Memory exports should not include raw provider secrets. Production memory storage should add search, deletion workflows, operator identity, and retention enforcement before long-term use.
+
+## Provider Secret Handling
+
+Provider readiness exports include provider, model, endpoint, alias, status, source, and whether a secret was available. They do not include raw session secrets. Alias values must be environment-variable names; raw-looking key strings are treated as missing secret configuration.
 
 ## Prompt-Injection Handling
 

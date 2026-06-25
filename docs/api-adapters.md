@@ -17,6 +17,16 @@ interface ProviderConfig {
 
 The frontend accepts a session secret for testing but does not persist it. Production code should resolve `apiKeyAlias` server-side or through a local encrypted vault.
 
+## Provider Readiness
+
+The workbench includes a Provider Readiness matrix so each cabinet role can be checked before a run:
+
+- Static checks verify endpoint, model, and API key alias shape.
+- Session-only secrets can be used for a one-off test and are not persisted.
+- `/v1/provider/test` validates provider configuration through the local gateway.
+- If the gateway is offline, local fallback validates endpoint/model shape and marks the source as `local-fallback`.
+- Exports use `naikaku.provider-readiness.v1` and contain status metadata, not raw secrets.
+
 ## Adapter Contract
 
 ```ts

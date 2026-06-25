@@ -10,15 +10,18 @@ import {
   saveApprovalRecord,
   saveDevelopmentWorkItem,
   saveMemoryEntry,
+  saveProviderReadinessRow,
   serializeAuditLog,
   serializeDevelopmentBoardExport,
   serializeMemoryLog,
+  serializeProviderReadinessExport,
   serializeRunBundle,
   serializeWorkspace
 } from "./storage";
 import { buildMemoryCandidates, createMemoryDecision } from "./memory";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./developmentBoard";
 import { buildTeamHandoff } from "./teamPackages";
+import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./providerReadiness";
 
 describe("workspace import/export", () => {
   it("round-trips a workspace export without raw session secrets", () => {
@@ -197,5 +200,41 @@ describe("workspace import/export", () => {
 
     expect(parsed.schema).toBe("naikaku.development-board.v1");
     expect(parsed.items.length).toBe(defaultRoles.length);
+  });
+
+  it("keeps one provider readiness result per role", () => {
+    const matrix = buildProviderReadinessMatrix({ roles: [defaultRoles[0]] });
+    const failed = createProviderReadinessCheck({
+      row: matrix.rows[0],
+      ok: false,
+      source: "gateway",
+      message: "Missing secret."
+    });
+    const ready = createProviderReadinessCheck({
+      row: matrix.rows[0],
+      ok: true,
+      source: "gateway",
+      secretReady: true,
+      message: "Ready."
+    });
+    const rows = saveProviderReadinessRow(ready, saveProviderReadinessRow(failed, []));
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe("ready");
+  });
+
+  it("exports provider readiness without session secrets", () => {
+    const matrix = buildProviderReadinessMatrix({
+      roles: [defaultRoles[0]],
+      sessionSecrets: {
+        [defaultRoles[0].id]: "temporary-secret"
+      }
+    });
+    const exported = serializeProviderReadinessExport(matrix);
+    const parsed = JSON.parse(exported) as { schema: string; rows: unknown[] };
+
+    expect(parsed.schema).toBe("naikaku.provider-readiness.v1");
+    expect(parsed.rows).toHaveLength(1);
+    expect(exported).not.toContain("temporary-secret");
   });
 });

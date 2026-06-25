@@ -23,6 +23,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Role configuration.
 - Custom role creation, duplication, deletion, and workspace persistence.
 - Per-role provider settings.
+- Provider Readiness matrix with one row per role, session-only secret checks, gateway/local fallback test results, audit events, and export.
 - Per-role executor and permission settings.
 - Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.
@@ -39,6 +40,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 
 - `CabinetRole`
 - `ProviderConfig`
+- `ProviderReadinessMatrix`
+- `ProviderReadinessRow`
 - `SandboxPolicy`
 - `ExecutorProfile`
 - `CabinetRun`
@@ -81,6 +84,8 @@ The current gateway already supports this in two modes:
 ## Provider Adapters
 
 `src/domain/adapters.ts` defines the adapter shape. Real adapters should live behind a backend or local gateway so browser clients do not expose raw API keys.
+
+Provider Readiness is the operator-facing preflight for those adapters. The frontend derives static readiness from each role's endpoint, model, alias, and session-only secret state. Operators can test one role or all roles through `/v1/provider/test`; if the gateway is offline, the local fallback validates endpoint/model shape without persisting secrets. Results are stored locally as status metadata only and can be exported as `naikaku.provider-readiness.v1`.
 
 ## Sandbox Executors
 
@@ -132,6 +137,7 @@ Production persistence should store:
 
 - Role definitions.
 - Provider aliases, not raw keys.
+- Provider readiness rows with test status, source, alias, model, endpoint, and secret-ready flag.
 - Sandbox policy.
 - Runs, artifacts, logs, approvals, and score history.
 - Executor handoff bundles for replay and runner development.

@@ -8,6 +8,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 
 - A React/Vite TypeScript workbench.
 - Cabinet roles with independent provider, endpoint, model, API key alias, system prompt, and permission settings.
+- Provider Readiness matrix for checking every role API configuration, gateway/local fallback test status, secret readiness, and exportable results.
 - Custom role creation, role duplication, and editable ministry/stage/risk settings for parallel feature teams.
 - A local automation pipeline for planning, execution, critique, supervision, scoring, and iteration.
 - A sandbox-first computer-use model with Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate executor profiles.

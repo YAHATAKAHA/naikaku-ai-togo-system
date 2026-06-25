@@ -23,6 +23,7 @@ import { AutomationQueue } from "./components/AutomationQueue";
 import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
+import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
@@ -41,6 +42,7 @@ import {
   loadMemoryEntries,
   loadApprovalRecords,
   loadCurrentRun,
+  loadProviderReadinessRows,
   loadRunHistory,
   loadWorkspace,
   parseWorkspaceExport,
@@ -48,10 +50,12 @@ import {
   saveCurrentRun,
   saveDevelopmentWorkItem,
   saveMemoryEntry,
+  saveProviderReadinessRow,
   saveWorkspace,
   serializeAuditLog,
   serializeDevelopmentBoardExport,
   serializeMemoryLog,
+  serializeProviderReadinessExport,
   serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
@@ -59,15 +63,18 @@ import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord }
 import { createAuditEvent } from "./domain/auditLog";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { runExecutorHandoff } from "./domain/executorRunner";
+import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
+import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
   runCabinetViaGateway,
-  runExecutorHandoffViaGateway
+  runExecutorHandoffViaGateway,
+  testProviderViaGateway
 } from "./domain/gatewayClient";
 import type {
   AutomationAction,
@@ -80,6 +87,7 @@ import type {
   DevelopmentWorkItemStatus,
   ExecutorRun,
   MemoryEntry,
+  ProviderReadinessRow,
   RunHistoryItem,
   TeamHandoff
 } from "./domain/types";
@@ -100,6 +108,9 @@ export function App() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => loadAuditEvents());
   const [memoryEntries, setMemoryEntries] = useState<MemoryEntry[]>(() => loadMemoryEntries());
   const [developmentItems, setDevelopmentItems] = useState<DevelopmentWorkItem[]>(() => loadDevelopmentItems());
+  const [providerReadinessRows, setProviderReadinessRows] = useState<ProviderReadinessRow[]>(() => loadProviderReadinessRows());
+  const [testingProviderRoleIds, setTestingProviderRoleIds] = useState<string[]>([]);
+  const [isTestingAllProviders, setIsTestingAllProviders] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
@@ -111,6 +122,7 @@ export function App() {
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedRole = useMemo(
@@ -141,6 +153,15 @@ export function App() {
   const memoryCandidates = useMemo(
     () => (run ? buildMemoryCandidates({ run }) : []),
     [run]
+  );
+  const providerReadinessMatrix = useMemo(
+    () =>
+      buildProviderReadinessMatrix({
+        roles: workspace.roles,
+        sessionSecrets,
+        savedRows: providerReadinessRows
+      }),
+    [providerReadinessRows, sessionSecrets, workspace.roles]
   );
   const developmentBoard = useMemo(
     () =>
@@ -202,11 +223,20 @@ export function App() {
   }, [developmentBoardLink]);
 
   useEffect(() => {
+    return () => {
+      if (providerReadinessLink) {
+        URL.revokeObjectURL(providerReadinessLink.href);
+      }
+    };
+  }, [providerReadinessLink]);
+
+  useEffect(() => {
     setApprovalRecords(run ? loadApprovalRecords(run.id) : []);
     setHandoffLink(null);
     setExecutorRun(null);
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
+    setProviderReadinessLink(null);
   }, [run?.id]);
 
   useEffect(() => {
@@ -395,6 +425,7 @@ export function App() {
     setTeamHandoffLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
+    setProviderReadinessLink(null);
     setSessionSecrets({});
     recordAudit({
       type: "workspace.reset",
@@ -447,6 +478,7 @@ export function App() {
       setHandoffLink(null);
       setTeamHandoffLink(null);
       setDevelopmentBoardLink(null);
+      setProviderReadinessLink(null);
       setRunState({
         status: "idle",
         message: `Imported workspace from ${file.name}.`
@@ -742,6 +774,98 @@ export function App() {
     });
   }
 
+  async function testProviderReadiness(row: ProviderReadinessRow) {
+    const role = workspace.roles.find((candidate) => candidate.id === row.roleId);
+    if (!role) return;
+
+    setTestingProviderRoleIds((current) => Array.from(new Set([...current, row.roleId])));
+    try {
+      const result = await testProviderViaGateway(role.provider, sessionSecrets[role.id]);
+      const checked = createProviderReadinessCheck({
+        row,
+        ok: result.ok,
+        secretReady: Boolean(result.secretReady),
+        source: "gateway",
+        message: result.message
+      });
+      const nextRows = saveProviderReadinessRow(checked);
+      setProviderReadinessRows(nextRows);
+      recordProviderReadinessAudit(checked);
+    } catch {
+      const adapter = findAdapter(role.provider);
+      const ok = await adapter.testConnection(role.provider, sessionSecrets[role.id]);
+      const checked = createProviderReadinessCheck({
+        row,
+        ok,
+        secretReady: Boolean(sessionSecrets[role.id]) || row.secretReady,
+        source: "local-fallback",
+        message: ok
+          ? `${adapter.id}: local fallback accepted endpoint and model shape.`
+          : "Gateway unavailable and local fallback found missing endpoint or model."
+      });
+      const nextRows = saveProviderReadinessRow(checked);
+      setProviderReadinessRows(nextRows);
+      recordProviderReadinessAudit(checked);
+    } finally {
+      setTestingProviderRoleIds((current) => current.filter((roleId) => roleId !== row.roleId));
+    }
+  }
+
+  async function testAllProviders() {
+    setIsTestingAllProviders(true);
+    try {
+      for (const row of providerReadinessMatrix.rows.filter((candidate) => candidate.enabled)) {
+        await testProviderReadiness(row);
+      }
+    } finally {
+      setIsTestingAllProviders(false);
+    }
+  }
+
+  function recordProviderReadinessAudit(row: ProviderReadinessRow) {
+    if (providerReadinessLink) {
+      URL.revokeObjectURL(providerReadinessLink.href);
+      setProviderReadinessLink(null);
+    }
+    recordAudit({
+      type: "provider.readiness.checked",
+      severity: row.status === "ready" ? "success" : row.status === "failed" ? "error" : "warning",
+      summary: `Provider readiness for ${row.roleName}: ${row.status}.`,
+      roleId: row.roleId,
+      metadata: {
+        provider: row.provider,
+        model: row.model,
+        status: row.status,
+        source: row.source,
+        secretReady: row.secretReady
+      }
+    });
+  }
+
+  function exportProviderReadiness() {
+    const blob = new Blob([serializeProviderReadinessExport(providerReadinessMatrix)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-provider-readiness-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (providerReadinessLink) {
+      URL.revokeObjectURL(providerReadinessLink.href);
+    }
+
+    setProviderReadinessLink({ href: url, fileName });
+    recordAudit({
+      type: "provider.readiness.exported",
+      severity: "info",
+      summary: "Provider readiness export prepared.",
+      metadata: {
+        roles: providerReadinessMatrix.summary.roles,
+        ready: providerReadinessMatrix.summary.ready,
+        missingConfig: providerReadinessMatrix.summary.missingConfig,
+        missingSecret: providerReadinessMatrix.summary.missingSecret,
+        failed: providerReadinessMatrix.summary.failed
+      }
+    });
+  }
+
   function clearAuditLog() {
     setAuditEvents(clearAuditEvents());
     if (auditLink) {
@@ -836,6 +960,16 @@ export function App() {
             runStatus={runState}
             runMode={runMode}
             onRunModeChange={setRunMode}
+          />
+
+          <ProviderReadinessPanel
+            matrix={providerReadinessMatrix}
+            testingRoleIds={testingProviderRoleIds}
+            isTestingAll={isTestingAllProviders}
+            exportLink={providerReadinessLink}
+            onTestRole={testProviderReadiness}
+            onTestAll={testAllProviders}
+            onExport={exportProviderReadiness}
           />
 
           <AutomationQueue

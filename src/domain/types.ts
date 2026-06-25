@@ -41,6 +41,46 @@ export interface ProviderConfig {
   maxTokens: number;
 }
 
+export type ProviderReadinessStatus =
+  | "unchecked"
+  | "ready"
+  | "missing-config"
+  | "missing-secret"
+  | "failed";
+export type ProviderReadinessSource = "static" | "gateway" | "local-fallback";
+
+export interface ProviderReadinessRow {
+  id: string;
+  roleId: string;
+  roleName: string;
+  ministry: string;
+  enabled: boolean;
+  provider: ProviderKind;
+  endpoint: string;
+  model: string;
+  apiKeyAlias: string;
+  secretReady: boolean;
+  status: ProviderReadinessStatus;
+  source: ProviderReadinessSource;
+  message: string;
+  checkedAt?: string;
+}
+
+export interface ProviderReadinessMatrix {
+  schema: "naikaku.provider-readiness.v1";
+  generatedAt: string;
+  rows: ProviderReadinessRow[];
+  summary: {
+    roles: number;
+    ready: number;
+    unchecked: number;
+    missingConfig: number;
+    missingSecret: number;
+    failed: number;
+    enabled: number;
+  };
+}
+
 export interface CabinetRole {
   id: string;
   name: string;
@@ -267,7 +307,9 @@ export type AuditEventType =
   | "memory.entry.rejected"
   | "memory.log.exported"
   | "development.item.status.changed"
-  | "development.board.exported";
+  | "development.board.exported"
+  | "provider.readiness.checked"
+  | "provider.readiness.exported";
 
 export type AuditEventSeverity = "info" | "success" | "warning" | "error";
 

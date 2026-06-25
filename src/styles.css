@@ -185,6 +185,7 @@ a.secondary-button {
 .inspector,
 .footer-panel,
 .automation-panel,
+.provider-panel,
 .team-panel,
 .development-panel,
 .memory-panel,
@@ -398,6 +399,7 @@ a.secondary-button {
 
 .mission-panel,
 .automation-panel,
+.provider-panel,
 .team-panel,
 .development-panel,
 .memory-panel,
@@ -938,6 +940,213 @@ meter {
   background: var(--surface-soft);
   border-radius: 8px;
   padding: 10px;
+}
+
+.provider-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.provider-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.provider-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.provider-summary span[data-status="ready"] {
+  color: var(--green);
+}
+
+.provider-summary span[data-status="unchecked"] {
+  color: var(--accent);
+}
+
+.provider-summary span[data-status="missing"] {
+  color: var(--amber);
+}
+
+.provider-summary span[data-status="failed"] {
+  color: var(--red);
+}
+
+.provider-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.provider-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.provider-export-row button,
+.provider-export-row a,
+.provider-row-actions button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.provider-export-row a {
+  color: var(--green);
+}
+
+.provider-row-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 440px;
+  overflow: auto;
+}
+
+.provider-row {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.provider-row[data-status="ready"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.provider-row[data-status="missing-config"],
+.provider-row[data-status="missing-secret"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.provider-row[data-status="failed"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.provider-row-heading,
+.provider-row-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.provider-row-heading strong,
+.provider-row-heading span,
+.provider-row-actions small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.provider-row-heading strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.provider-row-heading span,
+.provider-row p,
+.provider-row-meta span,
+.provider-row-actions small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.provider-status-chip {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.provider-status-chip[data-status="ready"] {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.provider-status-chip[data-status="unchecked"] {
+  color: var(--accent);
+  background: #edf2ff;
+}
+
+.provider-status-chip[data-status="missing-config"],
+.provider-status-chip[data-status="missing-secret"] {
+  color: var(--amber);
+  background: #fff0d0;
+}
+
+.provider-status-chip[data-status="failed"] {
+  color: var(--red);
+  background: #ffe3df;
+}
+
+.provider-row-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.provider-row-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-row p {
+  margin: 0;
+}
+
+.provider-row-actions {
+  align-items: center;
+}
+
+.provider-row-actions small {
+  min-width: 0;
 }
 
 .team-panel {
@@ -2056,6 +2265,7 @@ meter {
 
   .stage-track,
   .artifact-grid,
+  .provider-row-list,
   .team-package-grid,
   .development-item-list,
   .memory-candidate-grid,
@@ -2063,11 +2273,13 @@ meter {
   .executor-list,
   .score-grid,
   .metric-strip,
+  .provider-summary,
   .team-summary,
   .development-summary,
   .memory-summary,
   .queue-summary,
   .queue-row,
+  .provider-row-meta,
   .development-item-heading,
   .development-item-meta,
   .memory-ledger-row,
@@ -2079,6 +2291,7 @@ meter {
   .queue-actions,
   .memory-actions,
   .handoff-strip,
+  .provider-export-row,
   .team-export-row,
   .development-export-row,
   .memory-export-row,

@@ -30,11 +30,13 @@ Acceptance:
 - Add OpenRouter adapter.
 - Add custom local endpoint adapter.
 - Add connection test with normalized errors.
+- Add Provider Readiness matrix with bulk role checks and readiness export.
 
 Acceptance:
 
 - Frontend uses aliases only.
 - Provider errors are normalized into role-readable messages.
+- Readiness exports never contain raw session secrets.
 
 ## Track 3: Orchestration Engine
 
