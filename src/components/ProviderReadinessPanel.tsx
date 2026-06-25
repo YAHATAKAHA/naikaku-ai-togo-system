@@ -1,24 +1,41 @@
 import { Download, PlugZap, RefreshCw } from "lucide-react";
 import type {
+  ProviderConfig,
+  ProviderKind,
   ProviderReadinessMatrix,
   ProviderReadinessRow
 } from "../domain/types";
 
 interface ProviderReadinessPanelProps {
   matrix: ProviderReadinessMatrix;
+  sessionSecrets: Record<string, string>;
   testingRoleIds: string[];
   isTestingAll: boolean;
   exportLink: { href: string; fileName: string } | null;
+  onProviderConfigChange: (roleId: string, patch: Partial<ProviderConfig>) => void;
+  onSecretChange: (roleId: string, value: string) => void;
   onTestRole: (row: ProviderReadinessRow) => void;
   onTestAll: () => void;
   onExport: () => void;
 }
 
+const providerOptions: ProviderKind[] = [
+  "openai",
+  "anthropic",
+  "openrouter",
+  "google",
+  "local",
+  "custom"
+];
+
 export function ProviderReadinessPanel({
   matrix,
+  sessionSecrets,
   testingRoleIds,
   isTestingAll,
   exportLink,
+  onProviderConfigChange,
+  onSecretChange,
   onTestRole,
   onTestAll,
   onExport
@@ -71,6 +88,59 @@ export function ProviderReadinessPanel({
                 <span>{row.apiKeyAlias || "no alias"}</span>
                 <span>{row.secretReady ? "secret ready" : "secret pending"}</span>
                 <span>{row.source}</span>
+              </div>
+              <div className="provider-config-grid">
+                <label>
+                  <span>Provider</span>
+                  <select
+                    value={row.provider}
+                    onChange={(event) =>
+                      onProviderConfigChange(row.roleId, { provider: event.target.value as ProviderKind })
+                    }
+                  >
+                    {providerOptions.map((provider) => (
+                      <option key={provider} value={provider}>
+                        {provider}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Model</span>
+                  <input
+                    value={row.model}
+                    onChange={(event) =>
+                      onProviderConfigChange(row.roleId, { model: event.target.value })
+                    }
+                  />
+                </label>
+                <label className="provider-config-wide">
+                  <span>Endpoint</span>
+                  <input
+                    value={row.endpoint}
+                    onChange={(event) =>
+                      onProviderConfigChange(row.roleId, { endpoint: event.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>API alias</span>
+                  <input
+                    value={row.apiKeyAlias}
+                    onChange={(event) =>
+                      onProviderConfigChange(row.roleId, { apiKeyAlias: event.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Session secret</span>
+                  <input
+                    autoComplete="off"
+                    type="password"
+                    value={sessionSecrets[row.roleId] || ""}
+                    onChange={(event) => onSecretChange(row.roleId, event.target.value)}
+                  />
+                </label>
               </div>
               <p>{row.message}</p>
               <div className="provider-row-actions">

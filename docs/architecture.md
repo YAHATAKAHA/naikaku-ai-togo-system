@@ -23,7 +23,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Role configuration.
 - Custom role creation, duplication, deletion, and workspace persistence.
 - Per-role provider settings.
-- Provider Readiness matrix with one row per role, session-only secret checks, gateway/local fallback test results, audit events, and export.
+- Editable Provider Readiness matrix with one row per role, provider/endpoint/model/API alias inputs, session-only secret checks, gateway/local fallback test results, audit events, and export.
 - Per-role executor and permission settings.
 - Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.

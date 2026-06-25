@@ -99,6 +99,7 @@ import type {
   ExecutorEvidenceBundle,
   ExecutorRun,
   MemoryEntry,
+  ProviderConfig,
   ProviderReadinessRow,
   RunHistoryItem,
   TeamHandoff
@@ -333,6 +334,18 @@ export function App() {
       ...current,
       [roleId]: value
     }));
+  }
+
+  function updateRoleProvider(roleId: string, patch: Partial<ProviderConfig>) {
+    const role = workspace.roles.find((candidate) => candidate.id === roleId);
+    if (!role) return;
+
+    updateRole(roleId, {
+      provider: {
+        ...role.provider,
+        ...patch
+      }
+    });
   }
 
   function recordAudit(input: AuditEventInput) {
@@ -1124,9 +1137,12 @@ export function App() {
 
           <ProviderReadinessPanel
             matrix={providerReadinessMatrix}
+            sessionSecrets={sessionSecrets}
             testingRoleIds={testingProviderRoleIds}
             isTestingAll={isTestingAllProviders}
             exportLink={providerReadinessLink}
+            onProviderConfigChange={updateRoleProvider}
+            onSecretChange={updateSecret}
             onTestRole={testProviderReadiness}
             onTestAll={testAllProviders}
             onExport={exportProviderReadiness}

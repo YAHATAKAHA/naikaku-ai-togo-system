@@ -19,8 +19,9 @@ The frontend accepts a session secret for testing but does not persist it. Produ
 
 ## Provider Readiness
 
-The workbench includes a Provider Readiness matrix so each cabinet role can be checked before a run:
+The workbench includes an editable Provider Readiness matrix so each cabinet role can be configured and checked before a run:
 
+- Operators can edit provider, endpoint, model, API key alias, and session-only secret for each role in one table.
 - Static checks verify endpoint, model, and API key alias shape.
 - Session-only secrets can be used for a one-off test and are not persisted.
 - `/v1/provider/test` validates provider configuration through the local gateway.

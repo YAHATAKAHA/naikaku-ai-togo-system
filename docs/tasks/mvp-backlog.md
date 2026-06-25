@@ -31,10 +31,12 @@ Acceptance:
 - Add custom local endpoint adapter.
 - Add connection test with normalized errors.
 - Add Provider Readiness matrix with bulk role checks and readiness export.
+- Add editable per-role API matrix for provider, endpoint, model, alias, and session-only test secrets.
 
 Acceptance:
 
 - Frontend uses aliases only.
+- Role API edits can be made from the readiness matrix without persisting raw session secrets.
 - Provider errors are normalized into role-readable messages.
 - Readiness exports never contain raw session secrets.
 
