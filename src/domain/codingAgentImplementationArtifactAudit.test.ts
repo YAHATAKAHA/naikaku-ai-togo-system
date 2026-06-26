@@ -70,6 +70,87 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.totalBytes).toBe(0);
     expect(audit.summary.uniqueFingerprintedPaths).toBe(0);
     expect(audit.summary.uniqueFingerprintBytes).toBe(0);
+    expect(audit.summary.transcriptContentChecked).toBe(0);
+    expect(audit.summary.transcriptContentMismatches).toBe(0);
+  });
+
+  it("verifies transcript content when command and exit code markers are present", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "e".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log") ? transcriptTextFor(relativePath, 0) : undefined
+      })
+    });
+
+    const transcriptPath = audit.items[0].paths.find((path) => path.kind === "command-transcript");
+
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.transcriptContentChecked).toBe(16);
+    expect(audit.summary.transcriptContentMismatches).toBe(0);
+    expect(transcriptPath).toMatchObject({
+      transcriptCommandMatched: true,
+      transcriptExitCodeMatched: true
+    });
+  });
+
+  it("rejects transcripts that do not mention the expected command", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "f".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log") ? "command=npm run lint\nexitCode=0\nresult=passed" : undefined
+      })
+    });
+
+    const transcriptPath = audit.items[0].paths.find((path) => path.kind === "command-transcript");
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.summary.transcriptContentChecked).toBe(16);
+    expect(audit.summary.transcriptContentMismatches).toBe(16);
+    expect(transcriptPath).toMatchObject({
+      status: "missing",
+      reason: "Command transcript does not mention the expected command.",
+      transcriptCommandMatched: false,
+      transcriptExitCodeMatched: true
+    });
+  });
+
+  it("rejects transcripts that do not mention the expected exit code", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "f".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log") ? transcriptTextFor(relativePath, 1) : undefined
+      })
+    });
+
+    const transcriptPath = audit.items[0].paths.find((path) => path.kind === "command-transcript");
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.summary.transcriptContentChecked).toBe(16);
+    expect(audit.summary.transcriptContentMismatches).toBe(16);
+    expect(transcriptPath).toMatchObject({
+      status: "missing",
+      reason: "Command transcript does not mention the expected exit code.",
+      transcriptCommandMatched: true,
+      transcriptExitCodeMatched: false
+    });
   });
 
   it("allows shared changed files when each command has its own transcript", () => {
@@ -230,4 +311,9 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
 
 function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function transcriptTextFor(relativePath: string, exitCode: number) {
+  const command = relativePath.includes("npm-run-test") ? "npm run test" : "npm run build";
+  return `command=${command}\nexitCode=${exitCode}\nresult=passed`;
 }

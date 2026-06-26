@@ -1029,6 +1029,8 @@ export interface CodingAgentImplementationArtifactPath {
   bytes?: number;
   sha256?: string;
   modifiedAt?: string;
+  transcriptCommandMatched?: boolean;
+  transcriptExitCodeMatched?: boolean;
 }
 
 export interface CodingAgentImplementationArtifactAuditItem {
@@ -1066,6 +1068,8 @@ export interface CodingAgentImplementationArtifactAudit {
     uniqueFingerprintBytes: number;
     reusedTranscriptPaths: number;
     reusedTranscriptRefs: number;
+    transcriptContentChecked: number;
+    transcriptContentMismatches: number;
   };
   honestyClaim: {
     claim: string;

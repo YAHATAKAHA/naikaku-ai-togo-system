@@ -827,7 +827,8 @@ function localArtifactProbe(relativePath: string) {
     exists: true,
     bytes: stats.size,
     sha256: createHash("sha256").update(content).digest("hex"),
-    modifiedAt: stats.mtime.toISOString()
+    modifiedAt: stats.mtime.toISOString(),
+    text: content.length <= 1024 * 1024 ? content.toString("utf8") : undefined
   };
 }
 

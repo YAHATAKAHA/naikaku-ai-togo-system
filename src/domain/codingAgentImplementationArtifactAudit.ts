@@ -21,6 +21,12 @@ export interface CodingAgentArtifactProbeResult {
   bytes?: number;
   sha256?: string;
   modifiedAt?: string;
+  text?: string;
+}
+
+interface CommandTranscriptExpectation {
+  command: string;
+  exitCode: number | null;
 }
 
 export function auditCodingAgentImplementationArtifacts({
@@ -93,7 +99,10 @@ function auditItem(
       );
     }
 
-    paths.push(checkPath("command-transcript", result.transcriptRef, artifactProbe));
+    paths.push(checkPath("command-transcript", result.transcriptRef, artifactProbe, {
+      command: result.command,
+      exitCode: result.exitCode
+    }));
   });
 
   return {
@@ -109,7 +118,8 @@ function auditItem(
 function checkPath(
   kind: CodingAgentImplementationArtifactPathKind,
   path: string,
-  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
+  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult,
+  transcriptExpectation?: CommandTranscriptExpectation
 ): CodingAgentImplementationArtifactPath {
   if (!path.trim()) {
     return {
@@ -171,6 +181,24 @@ function checkPath(
     };
   }
 
+  const transcriptContentCheck = kind === "command-transcript" && transcriptExpectation
+    ? checkTranscriptContent(probeResult.text, transcriptExpectation)
+    : null;
+
+  if (transcriptContentCheck && !transcriptContentCheck.ok) {
+    return {
+      kind,
+      path,
+      status: "missing",
+      reason: transcriptContentCheck.reason,
+      bytes: probeResult.bytes,
+      sha256: probeResult.sha256,
+      modifiedAt: probeResult.modifiedAt,
+      transcriptCommandMatched: transcriptContentCheck.commandMatched,
+      transcriptExitCodeMatched: transcriptContentCheck.exitCodeMatched
+    };
+  }
+
   return {
     kind,
     path,
@@ -178,7 +206,9 @@ function checkPath(
     reason: "Artifact path exists in the local sandbox workspace.",
     bytes: probeResult.bytes,
     sha256: probeResult.sha256,
-    modifiedAt: probeResult.modifiedAt
+    modifiedAt: probeResult.modifiedAt,
+    transcriptCommandMatched: transcriptContentCheck?.commandMatched,
+    transcriptExitCodeMatched: transcriptContentCheck?.exitCodeMatched
   };
 }
 
@@ -199,6 +229,9 @@ function summarizeAudit(
   );
   const transcriptRefCounts = countTranscriptRefs(paths);
   const reusedTranscriptCounts = [...transcriptRefCounts.values()].filter((count) => count > 1);
+  const transcriptContentChecked = paths.filter((path) =>
+    typeof path.transcriptCommandMatched === "boolean" || typeof path.transcriptExitCodeMatched === "boolean"
+  );
 
   return {
     total: items.length,
@@ -217,8 +250,62 @@ function summarizeAudit(
     uniqueFingerprintedPaths: uniqueFingerprintedPathKeys.size,
     uniqueFingerprintBytes: uniqueFingerprintBytes(paths),
     reusedTranscriptPaths: reusedTranscriptCounts.length,
-    reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0)
+    reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0),
+    transcriptContentChecked: transcriptContentChecked.length,
+    transcriptContentMismatches: transcriptContentChecked.filter((path) =>
+      path.transcriptCommandMatched === false || path.transcriptExitCodeMatched === false
+    ).length
   };
+}
+
+function checkTranscriptContent(
+  text: string | undefined,
+  expectation: CommandTranscriptExpectation
+) {
+  if (typeof text !== "string") return null;
+
+  const commandMatched = normalizedIncludes(text, expectation.command);
+  const exitCodeMatched = typeof expectation.exitCode === "number"
+    ? transcriptMentionsExitCode(text, expectation.exitCode)
+    : undefined;
+
+  if (!commandMatched) {
+    return {
+      ok: false,
+      reason: "Command transcript does not mention the expected command.",
+      commandMatched,
+      exitCodeMatched
+    };
+  }
+
+  if (exitCodeMatched === false) {
+    return {
+      ok: false,
+      reason: "Command transcript does not mention the expected exit code.",
+      commandMatched,
+      exitCodeMatched
+    };
+  }
+
+  return {
+    ok: true,
+    reason: "Command transcript mentions the expected command and exit code.",
+    commandMatched,
+    exitCodeMatched
+  };
+}
+
+function normalizedIncludes(text: string, expected: string) {
+  return normalizeWhitespace(text).includes(normalizeWhitespace(expected));
+}
+
+function normalizeWhitespace(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function transcriptMentionsExitCode(text: string, exitCode: number) {
+  const escapedExitCode = String(exitCode).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:exit\\s*code|exitCode)\\s*[:=]?\\s*${escapedExitCode}\\b`, "i").test(text);
 }
 
 function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
