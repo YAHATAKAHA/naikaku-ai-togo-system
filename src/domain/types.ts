@@ -1013,6 +1013,7 @@ export type CodingAgentImplementationArtifactAuditDecision =
 
 export type CodingAgentImplementationArtifactPathKind =
   | "changed-file"
+  | "evidence-artifact"
   | "command-transcript";
 
 export type CodingAgentImplementationArtifactPathStatus =
@@ -1066,6 +1067,8 @@ export interface CodingAgentImplementationArtifactAudit {
     duplicatePathRefs: number;
     uniqueFingerprintedPaths: number;
     uniqueFingerprintBytes: number;
+    evidenceArtifactRefs: number;
+    evidenceArtifactPaths: number;
     reusedTranscriptPaths: number;
     reusedTranscriptRefs: number;
     reusedChangedFilePaths: number;

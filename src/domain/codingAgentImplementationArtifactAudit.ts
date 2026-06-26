@@ -92,6 +92,27 @@ function auditItem(
     paths.push(checkPath("changed-file", path, artifactProbe));
   });
 
+  if (!item.evidence.length) {
+    missing.push("At least one evidence artifact reference is required.");
+  }
+
+  item.evidence.forEach((entry) => {
+    const artifactPath = evidenceArtifactPathFrom(entry);
+    if (!artifactPath) {
+      missing.push(
+        `Evidence artifact must include a local artifact path, not only a claim: ${entry || "(empty)"}.`
+      );
+      paths.push({
+        kind: "evidence-artifact",
+        path: entry,
+        status: "missing",
+        reason: "Evidence artifact entry did not include a path-like local artifact reference."
+      });
+      return;
+    }
+    paths.push(checkPath("evidence-artifact", artifactPath, artifactProbe));
+  });
+
   item.commandResults.forEach((result) => {
     if (typeof result.exitCode === "number" && result.exitCode !== 0) {
       missing.push(`Command failed and cannot support completion: ${result.command}.`);
@@ -241,6 +262,8 @@ function summarizeAudit(
   const reusedTranscriptCounts = [...transcriptRefCounts.values()].filter((count) => count > 1);
   const changedFileRefCounts = countChangedFileRefs(paths);
   const reusedChangedFileCounts = [...changedFileRefCounts.values()].filter((count) => count > 1);
+  const evidenceArtifactRefs = paths.filter((path) => path.kind === "evidence-artifact");
+  const uniqueEvidenceArtifactRefs = new Set(evidenceArtifactRefs.map((path) => path.path));
   const transcriptContentChecked = paths.filter((path) =>
     typeof path.transcriptCommandMatched === "boolean" || typeof path.transcriptExitCodeMatched === "boolean"
   );
@@ -261,6 +284,8 @@ function summarizeAudit(
     duplicatePathRefs: paths.length - uniquePathKeys.size,
     uniqueFingerprintedPaths: uniqueFingerprintedPathKeys.size,
     uniqueFingerprintBytes: uniqueFingerprintBytes(paths),
+    evidenceArtifactRefs: evidenceArtifactRefs.length,
+    evidenceArtifactPaths: uniqueEvidenceArtifactRefs.size,
     reusedTranscriptPaths: reusedTranscriptCounts.length,
     reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0),
     reusedChangedFilePaths: reusedChangedFileCounts.length,
@@ -320,6 +345,30 @@ function normalizeWhitespace(value: string) {
 function transcriptMentionsExitCode(text: string, exitCode: number) {
   const escapedExitCode = String(exitCode).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(?:exit\\s*code|exitCode)\\s*[:=]?\\s*${escapedExitCode}\\b`, "i").test(text);
+}
+
+function evidenceArtifactPathFrom(entry: string) {
+  const trimmed = entry.trim();
+  if (!trimmed) return null;
+
+  const markdownLink = trimmed.match(/\[[^\]]+\]\(([^)]+)\)/);
+  const separatorSuffix = trimmed.match(/(?:=>|->|:)\s*([^:]+)$/);
+  const candidates = [
+    markdownLink?.[1],
+    separatorSuffix?.[1],
+    trimmed
+  ]
+    .filter((candidate): candidate is string => Boolean(candidate))
+    .map((candidate) => candidate.trim());
+
+  return candidates.find((candidate) => looksLikeArtifactPath(candidate)) ?? null;
+}
+
+function looksLikeArtifactPath(path: string) {
+  const trimmed = path.trim();
+  if (/^(attached|pending|none|n\/a|not applicable)$/i.test(trimmed)) return false;
+  if (/\s/.test(trimmed)) return false;
+  return /[/.\\]/.test(path) || path.startsWith("~") || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path);
 }
 
 function changedFileUsageFor(evidence: CodingAgentImplementationEvidence) {

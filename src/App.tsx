@@ -2400,6 +2400,8 @@ export function App() {
         duplicatePathRefs: artifactAudit.summary.duplicatePathRefs,
         uniqueFingerprintedPaths: artifactAudit.summary.uniqueFingerprintedPaths,
         uniqueFingerprintBytes: artifactAudit.summary.uniqueFingerprintBytes,
+        evidenceArtifactRefs: artifactAudit.summary.evidenceArtifactRefs,
+        evidenceArtifactPaths: artifactAudit.summary.evidenceArtifactPaths,
         reusedTranscriptPaths: artifactAudit.summary.reusedTranscriptPaths,
         reusedTranscriptRefs: artifactAudit.summary.reusedTranscriptRefs,
         reusedChangedFilePaths: artifactAudit.summary.reusedChangedFilePaths,

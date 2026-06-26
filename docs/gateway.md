@@ -953,7 +953,7 @@ Implementation evidence decisions are:
 
 ### `POST /v1/development/coding-briefs/implementation-artifact-audit`
 
-Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, prove command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints. Repeated references are reported separately from unique files. Changed files reused across multiple sessions, empty command transcripts, transcript files reused by multiple command results, and transcripts that do not mention the expected command plus exit code are treated as missing proof for automatic board updates. Transcript text is inspected locally for this structural check but is not returned in the audit response.
+Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, prove command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file, evidence-artifact, and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints. Repeated references are reported separately from unique files. Evidence entries that only claim an artifact is "attached" without a local artifact path, changed files reused across multiple sessions, empty command transcripts, transcript files reused by multiple command results, and transcripts that do not mention the expected command plus exit code are treated as missing proof for automatic board updates. Transcript text is inspected locally for this structural check but is not returned in the audit response.
 
 ```json
 {
@@ -972,15 +972,17 @@ Response:
   "decision": "verified",
   "summary": {
     "verified": 8,
-    "verifiedPaths": 24,
+    "verifiedPaths": 56,
     "missingPaths": 0,
     "unsafePaths": 0,
-    "fingerprintedPaths": 24,
-    "totalBytes": 48192,
-    "uniquePaths": 9,
+    "fingerprintedPaths": 56,
+    "totalBytes": 112000,
+    "uniquePaths": 41,
     "duplicatePathRefs": 15,
-    "uniqueFingerprintedPaths": 9,
-    "uniqueFingerprintBytes": 18048,
+    "uniqueFingerprintedPaths": 41,
+    "uniqueFingerprintBytes": 81920,
+    "evidenceArtifactRefs": 32,
+    "evidenceArtifactPaths": 32,
     "reusedTranscriptPaths": 0,
     "reusedTranscriptRefs": 0,
     "reusedChangedFilePaths": 0,
@@ -991,6 +993,13 @@ Response:
   "items": [
     {
       "paths": [
+        {
+          "kind": "evidence-artifact",
+          "path": "output/coding-agent/session-1/evidence-1.txt",
+          "status": "verified",
+          "bytes": 2048,
+          "sha256": "..."
+        },
         {
           "kind": "changed-file",
           "path": "src/App.tsx",
@@ -1006,8 +1015,8 @@ Response:
 
 Artifact audit decisions are:
 
-- `verified`: every accepted item has safe, existing local changed-file and transcript references; gateway-backed checks include local file fingerprints.
-- `needs-artifacts`: required references are missing, absent, reused as changed files across multiple sessions, empty for command transcripts, reused across command results, structurally mismatched against the command result, or could not be checked without gateway filesystem access.
+- `verified`: every accepted item has safe, existing local changed-file, evidence-artifact, and transcript references; gateway-backed checks include local file fingerprints.
+- `needs-artifacts`: required references are missing, non-path evidence claims, absent, reused as changed files across multiple sessions, empty for command transcripts, reused across command results, structurally mismatched against the command result, or could not be checked without gateway filesystem access.
 - `blocked`: a referenced path is unsafe or implementation evidence is blocked.
 
 ### `POST /v1/sandbox/check`

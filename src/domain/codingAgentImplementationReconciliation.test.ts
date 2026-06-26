@@ -126,7 +126,9 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
           outputSummary: `${command} passed in sandbox workspace.`,
           transcriptRef: `output/coding-agent/${session.id}/${slug(command)}.log`
         })),
-        evidence: session.evidenceRequired.map((evidence) => `${evidence}: attached`),
+        evidence: session.evidenceRequired.map((evidence, index) =>
+          `${evidence}: output/coding-agent/${session.id}/evidence-${index + 1}.txt`
+        ),
         risks: ["No known remaining risks after local verification."]
       };
     })

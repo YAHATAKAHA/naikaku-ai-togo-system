@@ -46,6 +46,8 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.duplicatePathRefs).toBe(0);
     expect(audit.summary.uniqueFingerprintedPaths).toBe(audit.summary.fingerprintedPaths);
     expect(audit.summary.uniqueFingerprintBytes).toBe(audit.summary.totalBytes);
+    expect(audit.summary.evidenceArtifactRefs).toBe(evidence.items.flatMap((item) => item.evidence).length);
+    expect(audit.summary.evidenceArtifactPaths).toBe(audit.summary.evidenceArtifactRefs);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
     expect(audit.summary.reusedChangedFilePaths).toBe(0);
@@ -173,9 +175,11 @@ describe("coding agent implementation artifact audit", () => {
     });
 
     expect(audit.decision).toBe("needs-artifacts");
-    expect(audit.summary.paths).toBe(24);
-    expect(audit.summary.uniquePaths).toBe(17);
+    expect(audit.summary.paths).toBe(56);
+    expect(audit.summary.uniquePaths).toBe(49);
     expect(audit.summary.duplicatePathRefs).toBe(7);
+    expect(audit.summary.evidenceArtifactRefs).toBe(32);
+    expect(audit.summary.evidenceArtifactPaths).toBe(32);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
     expect(audit.summary.reusedChangedFilePaths).toBe(1);
@@ -205,16 +209,38 @@ describe("coding agent implementation artifact audit", () => {
     });
 
     expect(audit.decision).toBe("needs-artifacts");
-    expect(audit.summary.paths).toBe(24);
-    expect(audit.summary.fingerprintedPaths).toBe(24);
-    expect(audit.summary.uniquePaths).toBe(2);
+    expect(audit.summary.paths).toBe(56);
+    expect(audit.summary.fingerprintedPaths).toBe(56);
+    expect(audit.summary.uniquePaths).toBe(34);
     expect(audit.summary.duplicatePathRefs).toBe(22);
-    expect(audit.summary.uniqueFingerprintedPaths).toBe(2);
+    expect(audit.summary.uniqueFingerprintedPaths).toBe(34);
     expect(audit.summary.totalBytes).toBeGreaterThan(audit.summary.uniqueFingerprintBytes);
-    expect(audit.summary.uniqueFingerprintBytes).toBe(579);
+    expect(audit.summary.uniqueFingerprintBytes).toBe(4515);
+    expect(audit.summary.evidenceArtifactRefs).toBe(32);
+    expect(audit.summary.evidenceArtifactPaths).toBe(32);
     expect(audit.summary.reusedTranscriptPaths).toBe(1);
     expect(audit.summary.reusedTranscriptRefs).toBe(15);
     expect(audit.items[0].missing.join(" ")).toContain("Transcript reference is reused by 16 command results");
+  });
+
+  it("rejects evidence claims that are not local artifact references", () => {
+    const evidence = acceptedEvidenceFixture();
+    evidence.items[0].evidence = ["Browser screenshot evidence: attached"];
+
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      pathExists: () => true
+    });
+
+    const evidencePath = audit.items[0].paths.find((path) => path.kind === "evidence-artifact");
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.items[0].missing.join(" ")).toContain("Evidence artifact must include a local artifact path");
+    expect(evidencePath).toMatchObject({
+      status: "missing",
+      reason: "Evidence artifact entry did not include a path-like local artifact reference."
+    });
   });
 
   it("rejects empty command transcript artifacts", () => {
@@ -266,6 +292,25 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.decision).toBe("blocked");
     expect(audit.items[0].paths[0].status).toBe("unsafe");
   });
+
+  it("blocks unsafe evidence artifact paths", () => {
+    const evidence = acceptedEvidenceFixture();
+    evidence.items[0].evidence = ["screenshot: ../private-frame.png"];
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      pathExists: () => true
+    });
+
+    const evidencePath = audit.items[0].paths.find((path) => path.kind === "evidence-artifact");
+
+    expect(audit.decision).toBe("blocked");
+    expect(evidencePath).toMatchObject({
+      kind: "evidence-artifact",
+      path: "../private-frame.png",
+      status: "unsafe"
+    });
+  });
 });
 
 function acceptedEvidenceFixture() {
@@ -307,7 +352,9 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
           outputSummary: `${command} passed in sandbox workspace.`,
           transcriptRef: `output/coding-agent/${session.id}/${slug(command)}.log`
         })),
-        evidence: session.evidenceRequired.map((evidence) => `${evidence}: attached`),
+        evidence: session.evidenceRequired.map((evidence, index) =>
+          `${evidence}: output/coding-agent/${session.id}/evidence-${index + 1}.txt`
+        ),
         risks: ["No known remaining risks after local verification."]
       };
     })

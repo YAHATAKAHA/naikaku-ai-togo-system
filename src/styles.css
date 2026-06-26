@@ -205,6 +205,7 @@ a.secondary-button {
   grid-template-columns: 286px minmax(0, 1fr) 356px;
   gap: 16px;
   padding: 16px;
+  min-width: 0;
 }
 
 .role-rail,
@@ -236,6 +237,7 @@ a.secondary-button {
   align-self: start;
   position: sticky;
   top: 88px;
+  min-width: 0;
 }
 
 .role-rail {
@@ -367,6 +369,7 @@ a.secondary-button {
   background: transparent;
   border: 0;
   box-shadow: none;
+  min-width: 0;
 }
 
 .mission-header {
@@ -2812,6 +2815,7 @@ meter {
 .coding-briefs-export-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -2820,7 +2824,7 @@ meter {
 }
 
 .coding-briefs-export-row span {
-  margin-right: auto;
+  flex: 1 1 190px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 900;
@@ -2829,6 +2833,7 @@ meter {
 
 .coding-briefs-export-row button,
 .coding-briefs-export-row a {
+  flex: 0 1 auto;
   min-height: 30px;
   display: inline-flex;
   align-items: center;
