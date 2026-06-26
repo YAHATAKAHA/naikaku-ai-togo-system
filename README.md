@@ -16,7 +16,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
 - Browser-to-gateway run path with local fallback when the gateway is offline.
 - Product Readiness gate that scores role APIs, automation, sandbox safety, parallel development artifacts, evidence, and memory review before handoff.
-- Product Release Bundle export that packages workspace, run, readiness, automation, team handoffs, issue drafts, audit, and memory into one safe handoff artifact.
+- Product Release Bundle export that packages workspace, run, readiness, automation, team handoffs, issue drafts, audit, and memory into one safe handoff artifact, with paired Markdown release notes for operator review.
 - Automation queue proposals, persisted approval records, executor handoff export, and a safe executor dry-run before any real runner consumes work.
 - Automation Runbook export that turns executor-ready actions into runner commands, evidence gates, verification gates, and rollback notes for parallel runner teams.
 - Executor evidence bundles with per-step simulated transcripts, screenshot/artifact placeholders, evidence hashes, replay flags, and JSON export for future runner audit.

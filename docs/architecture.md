@@ -135,7 +135,7 @@ The workbench can export these packages as JSON. The local gateway also exposes 
 
 The report gives a score, decision, and gate list. Gates are grouped into role API, automation, sandbox, parallel development, evidence, and memory. Each gate includes status, evidence, and next action so an operator can see whether the current state is ship-ready, needs review, or blocked. The local gateway exposes the same report through `/v1/product/readiness`.
 
-`ProductReleaseBundle` packages the same state into `naikaku.product-release-bundle.v1`. It includes the workspace, optional run, provider readiness, product readiness report, automation runbook, team handoff, role workspace scaffolds, development board, issue drafts, approvals, audit events, reviewed memory, and a release manifest. The manifest marks included, missing, and review-required artifacts, then adds operator commands, handoff checklist items, and security notes for delivery.
+`ProductReleaseBundle` packages the same state into `naikaku.product-release-bundle.v1`. It includes the workspace, optional run, provider readiness, product readiness report, automation runbook, team handoff, role workspace scaffolds, development board, issue drafts, approvals, audit events, reviewed memory, and a release manifest. The manifest marks included, missing, and review-required artifacts, then adds operator commands, handoff checklist items, and security notes for delivery. The workbench also derives Markdown release notes from the bundle so operators can review blockers, warnings, handoff steps, and commands without opening the JSON artifact.
 
 ## Development Board
 

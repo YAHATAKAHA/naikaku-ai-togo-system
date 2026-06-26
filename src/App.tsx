@@ -67,6 +67,7 @@ import {
   serializeProviderReadinessExport,
   serializeProductReadinessExport,
   serializeProductReleaseBundleExport,
+  serializeProductReleaseNotesExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
@@ -169,6 +170,7 @@ export function App() {
   const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [productReadinessLink, setProductReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [productReleaseLink, setProductReleaseLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -403,6 +405,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (productReleaseNotesLink) {
+        URL.revokeObjectURL(productReleaseNotesLink.href);
+      }
+    };
+  }, [productReleaseNotesLink]);
+
+  useEffect(() => {
+    return () => {
       if (auditLink) {
         URL.revokeObjectURL(auditLink.href);
       }
@@ -469,6 +479,7 @@ export function App() {
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
     setProductReleaseLink(null);
+    setProductReleaseNotesLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -488,6 +499,7 @@ export function App() {
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
     setProductReleaseLink(null);
+    setProductReleaseNotesLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -556,6 +568,10 @@ export function App() {
     if (productReleaseLink) {
       URL.revokeObjectURL(productReleaseLink.href);
       setProductReleaseLink(null);
+    }
+    if (productReleaseNotesLink) {
+      URL.revokeObjectURL(productReleaseNotesLink.href);
+      setProductReleaseNotesLink(null);
     }
   }
 
@@ -745,6 +761,7 @@ export function App() {
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
     setProductReleaseLink(null);
+    setProductReleaseNotesLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -805,6 +822,7 @@ export function App() {
       setRoleWorkspaceLink(null);
       setProductReadinessLink(null);
       setProductReleaseLink(null);
+      setProductReleaseNotesLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -1049,12 +1067,19 @@ export function App() {
     const url = URL.createObjectURL(blob);
     const runSlug = bundle.runId ? bundle.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
     const fileName = `naikaku-product-release-bundle-${runSlug}.json`;
+    const notesBlob = new Blob([serializeProductReleaseNotesExport(bundle)], { type: "text/markdown" });
+    const notesUrl = URL.createObjectURL(notesBlob);
+    const notesFileName = `naikaku-release-notes-${runSlug}.md`;
 
     if (productReleaseLink) {
       URL.revokeObjectURL(productReleaseLink.href);
     }
+    if (productReleaseNotesLink) {
+      URL.revokeObjectURL(productReleaseNotesLink.href);
+    }
 
     setProductReleaseLink({ href: url, fileName });
+    setProductReleaseNotesLink({ href: notesUrl, fileName: notesFileName });
   }
 
   async function exportProductReleaseBundle() {
@@ -1716,6 +1741,7 @@ export function App() {
             report={productReadinessReport}
             exportLink={productReadinessLink}
             releaseLink={productReleaseLink}
+            releaseNotesLink={productReleaseNotesLink}
             onExport={exportProductReadiness}
             onExportRelease={exportProductReleaseBundle}
           />

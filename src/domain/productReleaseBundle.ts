@@ -110,6 +110,50 @@ export function serializeProductReleaseBundle(bundle: ProductReleaseBundle) {
   return JSON.stringify(bundle, null, 2);
 }
 
+export function serializeProductReleaseNotes(bundle: ProductReleaseBundle) {
+  const blockerItems = bundle.contents.productReadiness.gates.filter((gate) => gate.status === "block");
+  const warningItems = bundle.contents.productReadiness.gates.filter((gate) => gate.status === "warn");
+  const includedItems = bundle.manifest.items.filter((item) => item.status === "included");
+  const missingItems = bundle.manifest.items.filter((item) => item.status === "missing");
+  const reviewItems = bundle.manifest.items.filter((item) => item.status === "review-required");
+
+  return [
+    `# Naikaku Release Notes`,
+    "",
+    `Mission: ${bundle.mission}`,
+    bundle.runId ? `Run: ${bundle.runId}` : "Run: workspace template",
+    `Generated: ${bundle.generatedAt}`,
+    "",
+    "## Readiness",
+    `- Decision: ${bundle.readiness.decision}`,
+    `- Score: ${bundle.readiness.score}/100`,
+    `- Blockers: ${bundle.readiness.blockers}`,
+    `- Warnings: ${bundle.readiness.warnings}`,
+    "",
+    "## Release Manifest",
+    ...manifestLines("Included", includedItems),
+    ...manifestLines("Review Required", reviewItems),
+    ...manifestLines("Missing", missingItems),
+    "",
+    "## Blockers",
+    ...gateLines(blockerItems),
+    "",
+    "## Warnings",
+    ...gateLines(warningItems),
+    "",
+    "## Handoff Checklist",
+    ...bundle.manifest.handoffChecklist.map((item) => `- [ ] ${item}`),
+    "",
+    "## Operator Commands",
+    "```bash",
+    ...bundle.manifest.operatorCommands,
+    "```",
+    "",
+    "## Security Notes",
+    ...bundle.manifest.securityNotes.map((note) => `- ${note}`)
+  ].join("\n");
+}
+
 function manifestItems({
   workspace,
   run,
@@ -151,6 +195,24 @@ function manifestItems({
     item("audit-events", "Audit events", "naikaku.audit-log.v1", auditEvents.length ? "included" : "review-required", auditEvents.length, "Export audit logs for external review."),
     item("memory-entries", "Reviewed memory", "naikaku.memory-log.v1", memoryEntries.length ? "included" : "review-required", memoryEntries.length, "Review memory candidates before the next release cycle.")
   ];
+}
+
+function manifestLines(title: string, items: ProductReleaseBundleItem[]) {
+  const lines = [`### ${title}`];
+  if (!items.length) {
+    return [...lines, "- None"];
+  }
+  return [
+    ...lines,
+    ...items.map((item) => `- ${item.label}: ${item.count} (${item.schema})`)
+  ];
+}
+
+function gateLines(gates: ProductReleaseBundle["contents"]["productReadiness"]["gates"]) {
+  if (!gates.length) {
+    return ["- None"];
+  }
+  return gates.map((gate) => `- ${gate.label}: ${gate.summary} Next: ${gate.nextAction}`);
 }
 
 function item(

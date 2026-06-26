@@ -458,7 +458,7 @@ Response:
 
 ### `POST /v1/product/release-bundle`
 
-Builds a single release handoff artifact from the same state used by Product Readiness. This endpoint does not execute providers, runners, shell scripts, or GitHub calls. It packages the current workspace evidence into `naikaku.product-release-bundle.v1` with a manifest of included, missing, and review-required artifacts.
+Builds a single release handoff artifact from the same state used by Product Readiness. This endpoint does not execute providers, runners, shell scripts, or GitHub calls. It packages the current workspace evidence into `naikaku.product-release-bundle.v1` with a manifest of included, missing, and review-required artifacts. The gateway returns JSON only; the workbench can derive paired Markdown release notes locally from the returned bundle.
 
 ```json
 {

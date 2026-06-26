@@ -6,7 +6,11 @@ import { buildDevelopmentBoard } from "./developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./developmentIssues";
 import { runCabinetMission } from "./orchestrator";
 import { buildProductReadinessReport } from "./productReadiness";
-import { buildProductReleaseBundle, serializeProductReleaseBundle } from "./productReleaseBundle";
+import {
+  buildProductReleaseBundle,
+  serializeProductReleaseBundle,
+  serializeProductReleaseNotes
+} from "./productReleaseBundle";
 import { buildProviderReadinessMatrix } from "./providerReadiness";
 import { buildRoleWorkspaceScaffolds } from "./roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./sandboxCapabilities";
@@ -79,6 +83,9 @@ describe("product release bundle", () => {
     expect(bundle.manifest.items.map((item) => item.id)).toContain("role-workspaces");
     expect(bundle.manifest.operatorCommands).toContain("npm run build");
     expect(serializeProductReleaseBundle(bundle)).not.toContain("sessionSecret");
+    expect(serializeProductReleaseNotes(bundle)).toContain("# Naikaku Release Notes");
+    expect(serializeProductReleaseNotes(bundle)).toContain("## Handoff Checklist");
+    expect(serializeProductReleaseNotes(bundle)).not.toContain("sessionSecret");
   });
 
   it("marks missing run and automation artifacts for review", () => {

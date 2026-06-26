@@ -5,6 +5,7 @@ interface ProductReadinessPanelProps {
   report: ProductReadinessReport;
   exportLink: { href: string; fileName: string } | null;
   releaseLink: { href: string; fileName: string } | null;
+  releaseNotesLink: { href: string; fileName: string } | null;
   onExport: () => void;
   onExportRelease: () => void;
 }
@@ -13,6 +14,7 @@ export function ProductReadinessPanel({
   report,
   exportLink,
   releaseLink,
+  releaseNotesLink,
   onExport,
   onExportRelease
 }: ProductReadinessPanelProps) {
@@ -48,6 +50,11 @@ export function ProductReadinessPanel({
         {releaseLink ? (
           <a href={releaseLink.href} download={releaseLink.fileName}>
             <Download size={15} /> Download bundle
+          </a>
+        ) : null}
+        {releaseNotesLink ? (
+          <a href={releaseNotesLink.href} download={releaseNotesLink.fileName}>
+            <Download size={15} /> Download notes
           </a>
         ) : null}
       </div>
