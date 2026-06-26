@@ -48,6 +48,8 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.uniqueFingerprintBytes).toBe(audit.summary.totalBytes);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
+    expect(audit.summary.reusedChangedFilePaths).toBe(0);
+    expect(audit.summary.reusedChangedFileRefs).toBe(0);
     expect(audit.items[0].paths[0]).toMatchObject({
       status: "verified",
       sha256,
@@ -153,7 +155,7 @@ describe("coding agent implementation artifact audit", () => {
     });
   });
 
-  it("allows shared changed files when each command has its own transcript", () => {
+  it("holds shared changed files for manual review even when transcripts are unique", () => {
     const evidence = acceptedEvidenceFixture();
     evidence.items.forEach((item) => {
       item.changedFiles = ["src/shared-artifact.ts"];
@@ -170,12 +172,15 @@ describe("coding agent implementation artifact audit", () => {
       })
     });
 
-    expect(audit.decision).toBe("verified");
+    expect(audit.decision).toBe("needs-artifacts");
     expect(audit.summary.paths).toBe(24);
     expect(audit.summary.uniquePaths).toBe(17);
     expect(audit.summary.duplicatePathRefs).toBe(7);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
+    expect(audit.summary.reusedChangedFilePaths).toBe(1);
+    expect(audit.summary.reusedChangedFileRefs).toBe(7);
+    expect(audit.items[0].missing.join(" ")).toContain("Changed file reference is reused by 8 sessions");
   });
 
   it("rejects reused transcript references across command results", () => {

@@ -37,7 +37,10 @@ export function auditCodingAgentImplementationArtifacts({
 }: AuditCodingAgentImplementationArtifactsInput): CodingAgentImplementationArtifactAudit {
   const probe = artifactProbe ?? pathExistsProbe(pathExists);
   const transcriptUsage = transcriptUsageFor(evidence);
-  const items = evidence.items.map((item) => auditItem(item, evidence, transcriptUsage, probe));
+  const changedFileUsage = changedFileUsageFor(evidence);
+  const items = evidence.items.map((item) =>
+    auditItem(item, evidence, transcriptUsage, changedFileUsage, probe)
+  );
   const paths = items.flatMap((item) => item.paths);
   const summary = summarizeAudit(items, paths);
 
@@ -65,6 +68,7 @@ function auditItem(
   item: CodingAgentImplementationEvidenceItem,
   evidence: CodingAgentImplementationEvidence,
   transcriptUsage: Map<string, number>,
+  changedFileUsage: Map<string, number>,
   artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
 ): CodingAgentImplementationArtifactAuditItem {
   const paths: CodingAgentImplementationArtifactPath[] = [];
@@ -79,6 +83,12 @@ function auditItem(
   }
 
   item.changedFiles.forEach((path) => {
+    const usageCount = changedFileUsage.get(path) ?? 0;
+    if (usageCount > 1) {
+      missing.push(
+        `Changed file reference is reused by ${usageCount} sessions: ${path}. Provide session-specific changed-file evidence or keep this item for manual review.`
+      );
+    }
     paths.push(checkPath("changed-file", path, artifactProbe));
   });
 
@@ -229,6 +239,8 @@ function summarizeAudit(
   );
   const transcriptRefCounts = countTranscriptRefs(paths);
   const reusedTranscriptCounts = [...transcriptRefCounts.values()].filter((count) => count > 1);
+  const changedFileRefCounts = countChangedFileRefs(paths);
+  const reusedChangedFileCounts = [...changedFileRefCounts.values()].filter((count) => count > 1);
   const transcriptContentChecked = paths.filter((path) =>
     typeof path.transcriptCommandMatched === "boolean" || typeof path.transcriptExitCodeMatched === "boolean"
   );
@@ -251,6 +263,8 @@ function summarizeAudit(
     uniqueFingerprintBytes: uniqueFingerprintBytes(paths),
     reusedTranscriptPaths: reusedTranscriptCounts.length,
     reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0),
+    reusedChangedFilePaths: reusedChangedFileCounts.length,
+    reusedChangedFileRefs: reusedChangedFileCounts.reduce((total, count) => total + count - 1, 0),
     transcriptContentChecked: transcriptContentChecked.length,
     transcriptContentMismatches: transcriptContentChecked.filter((path) =>
       path.transcriptCommandMatched === false || path.transcriptExitCodeMatched === false
@@ -308,6 +322,18 @@ function transcriptMentionsExitCode(text: string, exitCode: number) {
   return new RegExp(`(?:exit\\s*code|exitCode)\\s*[:=]?\\s*${escapedExitCode}\\b`, "i").test(text);
 }
 
+function changedFileUsageFor(evidence: CodingAgentImplementationEvidence) {
+  const usage = new Map<string, Set<string>>();
+  evidence.items.forEach((item) => {
+    item.changedFiles.forEach((path) => {
+      const sessions = usage.get(path) ?? new Set<string>();
+      sessions.add(item.sessionId);
+      usage.set(path, sessions);
+    });
+  });
+  return new Map([...usage.entries()].map(([path, sessions]) => [path, sessions.size]));
+}
+
 function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
   const usage = new Map<string, number>();
   evidence.items.forEach((item) => {
@@ -317,6 +343,16 @@ function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
     });
   });
   return usage;
+}
+
+function countChangedFileRefs(paths: CodingAgentImplementationArtifactPath[]) {
+  const counts = new Map<string, number>();
+  paths
+    .filter((path) => path.kind === "changed-file")
+    .forEach((path) => {
+      counts.set(path.path, (counts.get(path.path) ?? 0) + 1);
+    });
+  return counts;
 }
 
 function countTranscriptRefs(paths: CodingAgentImplementationArtifactPath[]) {

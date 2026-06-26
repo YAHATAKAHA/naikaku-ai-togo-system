@@ -2402,6 +2402,8 @@ export function App() {
         uniqueFingerprintBytes: artifactAudit.summary.uniqueFingerprintBytes,
         reusedTranscriptPaths: artifactAudit.summary.reusedTranscriptPaths,
         reusedTranscriptRefs: artifactAudit.summary.reusedTranscriptRefs,
+        reusedChangedFilePaths: artifactAudit.summary.reusedChangedFilePaths,
+        reusedChangedFileRefs: artifactAudit.summary.reusedChangedFileRefs,
         transcriptContentChecked: artifactAudit.summary.transcriptContentChecked,
         transcriptContentMismatches: artifactAudit.summary.transcriptContentMismatches,
         source: artifactAuditSource,
@@ -2558,6 +2560,7 @@ export function App() {
           implementationResult.reconciliation.summary.applied,
           implementationResult.reconciliation.summary.skipped,
           implementationResult.artifactAudit.summary.reusedTranscriptRefs,
+          implementationResult.artifactAudit.summary.reusedChangedFileRefs,
           implementationResult.artifactAudit.summary.transcriptContentMismatches
         )
       });
