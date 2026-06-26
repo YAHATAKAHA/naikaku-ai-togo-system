@@ -15,6 +15,7 @@ import type {
   ProviderReadinessMatrix,
   ProductReadinessReport,
   ProductReleaseBundle,
+  ReleaseRehearsalReport,
   RoleWorkspaceScaffolds,
   TeamHandoff
 } from "./types";
@@ -412,6 +413,40 @@ export async function createProductReleaseBundleViaGateway(
   }
 
   return (await response.json()) as ProductReleaseBundle;
+}
+
+export async function createReleaseRehearsalViaGateway(
+  workspace: CabinetWorkspace,
+  providerReadiness: ProviderReadinessMatrix,
+  run?: CabinetRun | null,
+  approvalRecords: AutomationApprovalRecord[] = [],
+  memoryEntries: MemoryEntry[] = [],
+  savedItems: DevelopmentWorkItem[] = [],
+  auditEvents: unknown[] = [],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/product/rehearsal`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      workspace,
+      providerReadiness,
+      run,
+      approvalRecords,
+      memoryEntries,
+      savedItems,
+      auditEvents
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway release rehearsal failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ReleaseRehearsalReport;
 }
 
 export async function createDevelopmentIssuesViaGateway(

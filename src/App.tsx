@@ -27,6 +27,7 @@ import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
 import { ProductReadinessPanel } from "./components/ProductReadinessPanel";
+import { ReleaseRehearsalPanel } from "./components/ReleaseRehearsalPanel";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
@@ -68,6 +69,7 @@ import {
   serializeProductReadinessExport,
   serializeProductReleaseBundleExport,
   serializeProductReleaseNotesExport,
+  serializeReleaseRehearsalExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
@@ -85,6 +87,7 @@ import { runCabinetMission } from "./domain/orchestrator";
 import { buildProductReadinessReport } from "./domain/productReadiness";
 import { buildProductReleaseBundle } from "./domain/productReleaseBundle";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
+import { buildReleaseRehearsalReport } from "./domain/releaseRehearsal";
 import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
@@ -125,6 +128,7 @@ import type {
   ProviderReadinessRow,
   ProductReadinessReport,
   ProductReleaseBundle,
+  ReleaseRehearsalReport,
   RoleWorkspaceScaffolds,
   RunHistoryItem,
   TeamHandoff
@@ -171,6 +175,8 @@ export function App() {
   const [productReadinessLink, setProductReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [productReleaseLink, setProductReleaseLink] = useState<{ href: string; fileName: string } | null>(null);
   const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [releaseRehearsal, setReleaseRehearsal] = useState<ReleaseRehearsalReport | null>(null);
+  const [releaseRehearsalLink, setReleaseRehearsalLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -413,6 +419,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (releaseRehearsalLink) {
+        URL.revokeObjectURL(releaseRehearsalLink.href);
+      }
+    };
+  }, [releaseRehearsalLink]);
+
+  useEffect(() => {
+    return () => {
       if (auditLink) {
         URL.revokeObjectURL(auditLink.href);
       }
@@ -480,6 +494,8 @@ export function App() {
     setProductReadinessLink(null);
     setProductReleaseLink(null);
     setProductReleaseNotesLink(null);
+    setReleaseRehearsal(null);
+    setReleaseRehearsalLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -500,6 +516,8 @@ export function App() {
     setProductReadinessLink(null);
     setProductReleaseLink(null);
     setProductReleaseNotesLink(null);
+    setReleaseRehearsal(null);
+    setReleaseRehearsalLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -562,6 +580,7 @@ export function App() {
       setProductReadinessLink(null);
     }
     clearProductReleaseDownload();
+    clearReleaseRehearsal();
   }
 
   function clearProductReleaseDownload() {
@@ -572,6 +591,14 @@ export function App() {
     if (productReleaseNotesLink) {
       URL.revokeObjectURL(productReleaseNotesLink.href);
       setProductReleaseNotesLink(null);
+    }
+  }
+
+  function clearReleaseRehearsal() {
+    setReleaseRehearsal(null);
+    if (releaseRehearsalLink) {
+      URL.revokeObjectURL(releaseRehearsalLink.href);
+      setReleaseRehearsalLink(null);
     }
   }
 
@@ -762,6 +789,8 @@ export function App() {
     setProductReadinessLink(null);
     setProductReleaseLink(null);
     setProductReleaseNotesLink(null);
+    setReleaseRehearsal(null);
+    setReleaseRehearsalLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -823,6 +852,8 @@ export function App() {
       setProductReadinessLink(null);
       setProductReleaseLink(null);
       setProductReleaseNotesLink(null);
+      setReleaseRehearsal(null);
+      setReleaseRehearsalLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -1134,6 +1165,70 @@ export function App() {
         }
       });
     }
+  }
+
+  function runReleaseRehearsal() {
+    const report = buildReleaseRehearsalReport({
+      workspace,
+      providerReadiness: providerReadinessMatrix,
+      run,
+      approvalRecords,
+      auditEvents,
+      memoryEntries,
+      savedItems: developmentItems,
+      secretProbeValues: Object.values(sessionSecrets)
+    });
+    setReleaseRehearsal(report);
+
+    if (releaseRehearsalLink) {
+      URL.revokeObjectURL(releaseRehearsalLink.href);
+      setReleaseRehearsalLink(null);
+    }
+
+    setRunState({
+      status: "local",
+      message: `Release rehearsal ${report.decision}: ${report.summary.blockers} blockers, ${report.summary.warnings} warnings.`
+    });
+    recordAudit({
+      type: "release.rehearsal.completed",
+      severity: report.decision === "blocked" ? "error" : report.decision === "needs-review" ? "warning" : "success",
+      summary: `Release rehearsal completed: ${report.decision}.`,
+      runId: report.runId,
+      metadata: {
+        score: report.score,
+        blockers: report.summary.blockers,
+        warnings: report.summary.warnings,
+        evidenceItems: report.summary.evidenceItems,
+        sourceRun: report.sourceRun,
+        secretLeakDetected: report.summary.secretLeakDetected
+      }
+    });
+  }
+
+  function exportReleaseRehearsal() {
+    if (!releaseRehearsal) return;
+
+    const blob = new Blob([serializeReleaseRehearsalExport(releaseRehearsal)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-release-rehearsal-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.json`;
+
+    if (releaseRehearsalLink) {
+      URL.revokeObjectURL(releaseRehearsalLink.href);
+    }
+
+    setReleaseRehearsalLink({ href: url, fileName });
+    recordAudit({
+      type: "release.rehearsal.exported",
+      severity: releaseRehearsal.decision === "blocked" ? "error" : releaseRehearsal.decision === "needs-review" ? "warning" : "info",
+      summary: `Release rehearsal export prepared: ${releaseRehearsal.decision}.`,
+      runId: releaseRehearsal.runId,
+      metadata: {
+        score: releaseRehearsal.score,
+        blockers: releaseRehearsal.summary.blockers,
+        warnings: releaseRehearsal.summary.warnings,
+        evidenceItems: releaseRehearsal.summary.evidenceItems
+      }
+    });
   }
 
   function exportExecutorHandoff() {
@@ -1744,6 +1839,13 @@ export function App() {
             releaseNotesLink={productReleaseNotesLink}
             onExport={exportProductReadiness}
             onExportRelease={exportProductReleaseBundle}
+          />
+
+          <ReleaseRehearsalPanel
+            report={releaseRehearsal}
+            exportLink={releaseRehearsalLink}
+            onRun={runReleaseRehearsal}
+            onExport={exportReleaseRehearsal}
           />
 
           <ProviderReadinessPanel

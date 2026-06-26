@@ -8,6 +8,7 @@ import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/e
 import { buildProductReadinessReport } from "../src/domain/productReadiness";
 import { buildProductReleaseBundle } from "../src/domain/productReleaseBundle";
 import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
+import { buildReleaseRehearsalReport } from "../src/domain/releaseRehearsal";
 import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -71,6 +72,7 @@ const server = createServer(async (request, response) => {
           "role-workspace-scaffolds",
           "product-readiness",
           "product-release-bundle",
+          "release-rehearsal",
           "development-issues",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -456,6 +458,38 @@ const server = createServer(async (request, response) => {
         auditEvents: body.auditEvents || []
       });
       sendJson(response, 200, bundle);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/product/rehearsal") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+        providerReadiness?: ProviderReadinessMatrix;
+        approvalRecords?: AutomationApprovalRecord[];
+        memoryEntries?: MemoryEntry[];
+        savedItems?: DevelopmentWorkItem[];
+        auditEvents?: AuditEvent[];
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const run = Array.isArray(body.run?.artifacts) ? body.run : undefined;
+      const providerReadiness = body.providerReadiness?.schema === "naikaku.provider-readiness.v1"
+        ? body.providerReadiness
+        : buildProviderReadinessMatrix({ roles: workspace.roles });
+      const report = buildReleaseRehearsalReport({
+        workspace,
+        run,
+        providerReadiness,
+        approvalRecords: body.approvalRecords || [],
+        memoryEntries: body.memoryEntries || [],
+        savedItems: body.savedItems || [],
+        auditEvents: body.auditEvents || []
+      });
+      sendJson(response, 200, report);
       return;
     }
 

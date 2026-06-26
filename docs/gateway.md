@@ -509,6 +509,56 @@ Response:
 }
 ```
 
+### `POST /v1/product/rehearsal`
+
+Builds an end-to-end release rehearsal report from the same delivery state. This endpoint does not execute providers, runners, shell scripts, or GitHub calls. If no run is provided, it creates a deterministic dry-run cabinet simulation, then derives automation runbook data, executor evidence, release bundle data, and release notes checks into `naikaku.release-rehearsal.v1`. Browser session secrets should stay local; the workbench performs raw secret probe scans locally instead of sending secret values to this endpoint.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "providerReadiness": {
+    "schema": "naikaku.provider-readiness.v1",
+    "rows": []
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  },
+  "approvalRecords": [],
+  "memoryEntries": [],
+  "savedItems": [],
+  "auditEvents": []
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.release-rehearsal.v1",
+  "decision": "needs-review",
+  "score": 72,
+  "summary": {
+    "passed": 5,
+    "warnings": 3,
+    "blockers": 0,
+    "secretLeakDetected": false,
+    "evidenceItems": 3
+  },
+  "artifacts": {
+    "releaseBundleSchema": "naikaku.product-release-bundle.v1",
+    "evidenceSchema": "naikaku.executor-evidence.v1",
+    "runnerSteps": 1,
+    "heldActions": 6
+  }
+}
+```
+
 ### `POST /v1/development/issues`
 
 Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication. The workbench can also derive a reviewable `gh issue create` shell script from this response, but the gateway still does not hold GitHub credentials or create issues directly.

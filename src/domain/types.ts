@@ -521,6 +521,63 @@ export interface ProductReleaseBundle {
   };
 }
 
+export type ReleaseRehearsalStatus = "pass" | "warn" | "block";
+export type ReleaseRehearsalDecision = "release-ready" | "needs-review" | "blocked";
+export type ReleaseRehearsalCategory =
+  | "cabinet-run"
+  | "role-api"
+  | "automation"
+  | "evidence"
+  | "release"
+  | "security"
+  | "parallel-development";
+
+export interface ReleaseRehearsalCheck {
+  id: string;
+  category: ReleaseRehearsalCategory;
+  label: string;
+  status: ReleaseRehearsalStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface ReleaseRehearsalReport {
+  schema: "naikaku.release-rehearsal.v1";
+  generatedAt: string;
+  mission: string;
+  runId: string;
+  sourceRun: "provided" | "simulated";
+  decision: ReleaseRehearsalDecision;
+  score: number;
+  checks: ReleaseRehearsalCheck[];
+  artifacts: {
+    runId: string;
+    releaseBundleSchema: ProductReleaseBundle["schema"];
+    evidenceSchema: ExecutorEvidenceBundle["schema"];
+    bundleBytes: number;
+    notesBytes: number;
+    roles: number;
+    runnerSteps: number;
+    heldActions: number;
+    evidenceItems: number;
+    issueDrafts: number;
+    workspaceFiles: number;
+  };
+  summary: {
+    total: number;
+    passed: number;
+    warnings: number;
+    blockers: number;
+    simulatedRun: boolean;
+    secretLeakDetected: boolean;
+    readyActions: number;
+    heldActions: number;
+    evidenceItems: number;
+    releaseArtifacts: number;
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
@@ -620,6 +677,8 @@ export type AuditEventType =
   | "development.issues.exported"
   | "product.readiness.exported"
   | "product.release.exported"
+  | "release.rehearsal.completed"
+  | "release.rehearsal.exported"
   | "provider.readiness.checked"
   | "provider.readiness.exported";
 
