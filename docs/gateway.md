@@ -775,6 +775,55 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs/session-bundle`
+
+Builds a handoff bundle for sandboxed coding-agent sessions from generated briefs and an optional review report. This endpoint does not execute code, run tests, browse, deploy, send external messages, or push Git. If `requireProductionEvidence` is true, the gateway rebuilds the embedded review in production mode so a stale dry-run review cannot be reused for production handoff.
+
+The `briefs` payload should be the full object returned by `/v1/development/coding-briefs`; the example below is abbreviated for readability.
+
+```json
+{
+  "briefs": {
+    "schema": "naikaku.coding-agent-briefs.v1",
+    "briefs": []
+  },
+  "review": {
+    "schema": "naikaku.coding-agent-brief-review.v1",
+    "decision": "ready"
+  },
+  "releaseVerification": {
+    "schema": "naikaku.release-verification.v1",
+    "decision": "verified",
+    "scope": "dry-run"
+  },
+  "requireProductionEvidence": false
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-session-bundle.v1",
+  "mode": "dry-run",
+  "decision": "ready",
+  "summary": {
+    "total": 8,
+    "ready": 8,
+    "held": 0,
+    "productionHeld": 0
+  },
+  "sessions": [
+    {
+      "status": "ready-for-agent",
+      "promptFileName": "01-team-execution-minister-implementation.md",
+      "verificationCommands": ["npm run test", "npm run build"],
+      "nextAction": "Assign to a sandboxed coding agent and require changed files, command output, and remaining risk notes."
+    }
+  ]
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

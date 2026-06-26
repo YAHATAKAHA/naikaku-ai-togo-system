@@ -7,6 +7,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentSessionBundle,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
@@ -560,6 +561,34 @@ export async function reviewCodingAgentBriefsViaGateway(
   }
 
   return (await response.json()) as CodingAgentBriefReviewReport;
+}
+
+export async function createCodingAgentSessionBundleViaGateway(
+  briefs: CodingAgentBriefs,
+  review?: CodingAgentBriefReviewReport | null,
+  releaseVerification?: ReleaseVerificationReport | null,
+  requireProductionEvidence = false,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/session-bundle`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      briefs,
+      review,
+      releaseVerification,
+      requireProductionEvidence
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent session bundle failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentSessionBundle;
 }
 
 export async function checkGatewayHealth() {

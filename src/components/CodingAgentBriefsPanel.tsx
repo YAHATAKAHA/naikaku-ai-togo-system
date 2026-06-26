@@ -1,36 +1,48 @@
-import { AlertTriangle, Bot, Download, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Bot, Download, PackageCheck, ShieldCheck } from "lucide-react";
 import type {
   CodingAgentBrief,
   CodingAgentBriefReviewCheck,
   CodingAgentBriefReviewReport,
-  CodingAgentBriefs
+  CodingAgentBriefs,
+  CodingAgentSession,
+  CodingAgentSessionBundle
 } from "../domain/types";
 import type { CodingAgentBriefsCopy } from "../i18n";
 
 interface CodingAgentBriefsPanelProps {
   briefs: CodingAgentBriefs;
   review: CodingAgentBriefReviewReport | null;
+  sessionBundle: CodingAgentSessionBundle | null;
   exportLink: { href: string; fileName: string } | null;
   markdownLink: { href: string; fileName: string } | null;
   reviewLink: { href: string; fileName: string } | null;
+  sessionLink: { href: string; fileName: string } | null;
+  sessionMarkdownLink: { href: string; fileName: string } | null;
   copy: CodingAgentBriefsCopy;
   onExport: () => void;
   onExportMarkdown: () => void;
   onReview: () => void;
   onProductionReview: () => void;
+  onExportSession: () => void;
+  onExportProductionSession: () => void;
 }
 
 export function CodingAgentBriefsPanel({
   briefs,
   review,
+  sessionBundle,
   exportLink,
   markdownLink,
   reviewLink,
+  sessionLink,
+  sessionMarkdownLink,
   copy,
   onExport,
   onExportMarkdown,
   onReview,
-  onProductionReview
+  onProductionReview,
+  onExportSession,
+  onExportProductionSession
 }: CodingAgentBriefsPanelProps) {
   return (
     <section className="coding-briefs-panel">
@@ -62,6 +74,12 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onProductionReview} disabled={!briefs.briefs.length}>
           <AlertTriangle size={15} /> {copy.productionReview}
         </button>
+        <button type="button" onClick={onExportSession} disabled={!briefs.briefs.length}>
+          <PackageCheck size={15} /> {copy.sessionPack}
+        </button>
+        <button type="button" onClick={onExportProductionSession} disabled={!briefs.briefs.length}>
+          <AlertTriangle size={15} /> {copy.productionSession}
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> {copy.downloadJson}
@@ -77,10 +95,24 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadReview}
           </a>
         ) : null}
+        {sessionLink ? (
+          <a href={sessionLink.href} download={sessionLink.fileName}>
+            <Download size={15} /> {copy.downloadSessionJson}
+          </a>
+        ) : null}
+        {sessionMarkdownLink ? (
+          <a href={sessionMarkdownLink.href} download={sessionMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadSessionMarkdown}
+          </a>
+        ) : null}
       </div>
 
       {review ? (
         <CodingBriefReviewReport review={review} copy={copy} />
+      ) : null}
+
+      {sessionBundle ? (
+        <CodingAgentSessionBundleReport bundle={sessionBundle} copy={copy} />
       ) : null}
 
       {briefs.briefs.length ? (
@@ -126,6 +158,36 @@ function CodingBriefReviewReport({
   );
 }
 
+function CodingAgentSessionBundleReport({
+  bundle,
+  copy
+}: {
+  bundle: CodingAgentSessionBundle;
+  copy: CodingAgentBriefsCopy;
+}) {
+  const heldSession = firstHeldSession(bundle.sessions);
+
+  return (
+    <div className="coding-session-bundle" data-decision={bundle.decision}>
+      <div>
+        <strong>{copy.sessionDecision}: {copy.sessionDecisionLabel(bundle.decision)}</strong>
+        <span>{copy.sessionSummary(bundle.summary.ready, bundle.summary.held)}</span>
+      </div>
+      {heldSession ? (
+        <p>
+          <b>{heldSession.title}</b>
+          <span>{copy.sessionHeld(heldSession.status)}</span>
+          <small>{copy.sessionNextAction}: {heldSession.nextAction}</small>
+        </p>
+      ) : (
+        <p>
+          <span>{copy.sessionReady}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 function CodingBriefCard({
   brief,
   copy
@@ -157,4 +219,8 @@ function firstActionableCheck(checks: CodingAgentBriefReviewCheck[]) {
   return checks.find((check) => check.status === "block")
     || checks.find((check) => check.status === "warn")
     || null;
+}
+
+function firstHeldSession(sessions: CodingAgentSession[]) {
+  return sessions.find((session) => session.status !== "ready-for-agent") || null;
 }

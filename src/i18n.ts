@@ -68,11 +68,21 @@ export interface CodingAgentBriefsCopy {
   review: string;
   productionReview: string;
   downloadReview: string;
+  sessionPack: string;
+  productionSession: string;
+  downloadSessionJson: string;
+  downloadSessionMarkdown: string;
   reviewDecision: string;
   reviewNextAction: string;
   reviewReady: string;
   reviewDecisionLabel: (decision: string) => string;
   reviewSummary: (passed: number, warnings: number, blockers: number) => string;
+  sessionDecision: string;
+  sessionNextAction: string;
+  sessionReady: string;
+  sessionHeld: (status: string) => string;
+  sessionDecisionLabel: (decision: string) => string;
+  sessionSummary: (ready: number, held: number) => string;
   mode: string;
   executor: string;
   releaseGate: string;
@@ -86,6 +96,8 @@ export interface CodingAgentBriefsCopy {
   statusMarkdown: string;
   statusReviewGateway: (decision: string, blockers: number, warnings: number) => string;
   statusReviewLocal: (decision: string, blockers: number, warnings: number, errorMessage?: string) => string;
+  statusSessionGateway: (decision: string, ready: number, held: number) => string;
+  statusSessionLocal: (decision: string, ready: number, held: number, errorMessage?: string) => string;
 }
 
 export interface AppCopy {
@@ -190,11 +202,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       review: "Review",
       productionReview: "本番Review",
       downloadReview: "Review取得",
+      sessionPack: "Session pack",
+      productionSession: "本番Session",
+      downloadSessionJson: "Session JSON",
+      downloadSessionMarkdown: "Session MD",
       reviewDecision: "Review判定",
       reviewNextAction: "次の対応",
       reviewReady: "全てのブリーフは代理への引き渡し前チェックを通過しました。",
       reviewDecisionLabel: jaBriefReviewDecision,
       reviewSummary: (passed, warnings, blockers) => `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
+      sessionDecision: "Session判定",
+      sessionNextAction: "次の対応",
+      sessionReady: "全ての session は sandboxed coding agent への引き渡し準備ができています。",
+      sessionHeld: (status) => `保留: ${jaCodingSessionStatus(status)}`,
+      sessionDecisionLabel: jaBriefReviewDecision,
+      sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
       mode: "モード",
       executor: "Executor",
       releaseGate: "リリースゲート",
@@ -207,7 +229,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusFallback: (errorMessage) => `ゲートウェイ brief を利用できないため、ローカル出力を使用しました。${errorMessage || ""}`,
       statusMarkdown: "コーディング代理 Markdown prompt pack をローカルで準備しました。",
       statusReviewGateway: (decision, blockers, warnings) => `ブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) => `Session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "リリース演習",
@@ -292,11 +316,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       review: "Review",
       productionReview: "Prod review",
       downloadReview: "Download review",
+      sessionPack: "Session pack",
+      productionSession: "Prod session",
+      downloadSessionJson: "Session JSON",
+      downloadSessionMarkdown: "Session MD",
       reviewDecision: "Review decision",
       reviewNextAction: "Next action",
       reviewReady: "All briefs passed pre-handoff checks for coding agents.",
       reviewDecisionLabel: (decision) => decision,
       reviewSummary: (passed, warnings, blockers) => `${passed} pass / ${warnings} warnings / ${blockers} blockers`,
+      sessionDecision: "Session decision",
+      sessionNextAction: "Next action",
+      sessionReady: "All sessions are ready for sandboxed coding agent handoff.",
+      sessionHeld: (status) => `Held: ${status}`,
+      sessionDecisionLabel: (decision) => decision,
+      sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
       mode: "Mode",
       executor: "Executor",
       releaseGate: "Release gate",
@@ -309,7 +343,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusFallback: (errorMessage) => `Gateway coding agent briefs unavailable; used local export.${errorMessage ? ` ${errorMessage}` : ""}`,
       statusMarkdown: "Coding agent Markdown prompt pack prepared locally.",
       statusReviewGateway: (decision, blockers, warnings) => `Coding brief review ${decision}: ${blockers} blockers, ${warnings} warnings.`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) => `Coding session bundle ${decision}: ${ready} ready, ${held} held.`,
+      statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "Release rehearsal",
@@ -394,11 +430,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       review: "审查",
       productionReview: "生产审查",
       downloadReview: "下载审查",
+      sessionPack: "Session 包",
+      productionSession: "生产 Session",
+      downloadSessionJson: "Session JSON",
+      downloadSessionMarkdown: "Session MD",
       reviewDecision: "审查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通过交付给编程代理前的检查。",
       reviewDecisionLabel: zhHansBriefReviewDecision,
       reviewSummary: (passed, warnings, blockers) => `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
+      sessionDecision: "Session 判定",
+      sessionNextAction: "下一步",
+      sessionReady: "所有 session 都已准备好交付给沙箱编程代理。",
+      sessionHeld: (status) => `保留：${zhHansCodingSessionStatus(status)}`,
+      sessionDecisionLabel: zhHansBriefReviewDecision,
+      sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "发布门",
@@ -411,7 +457,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusFallback: (errorMessage) => `网关 brief 不可用，已使用本地导出。${errorMessage || ""}`,
       statusMarkdown: "编程代理 Markdown prompt pack 已在本地准备。",
       statusReviewGateway: (decision, blockers, warnings) => `编程代理 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) => `编程代理 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "发布演练",
@@ -496,11 +544,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       review: "審查",
       productionReview: "生產審查",
       downloadReview: "下載審查",
+      sessionPack: "Session 包",
+      productionSession: "生產 Session",
+      downloadSessionJson: "Session JSON",
+      downloadSessionMarkdown: "Session MD",
       reviewDecision: "審查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通過交付給編程代理前的檢查。",
       reviewDecisionLabel: zhHantBriefReviewDecision,
       reviewSummary: (passed, warnings, blockers) => `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
+      sessionDecision: "Session 判定",
+      sessionNextAction: "下一步",
+      sessionReady: "所有 session 都已準備好交付給沙箱編程代理。",
+      sessionHeld: (status) => `保留：${zhHantCodingSessionStatus(status)}`,
+      sessionDecisionLabel: zhHantBriefReviewDecision,
+      sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "發布門",
@@ -513,7 +571,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusFallback: (errorMessage) => `閘道 brief 不可用，已使用本地匯出。${errorMessage || ""}`,
       statusMarkdown: "編程代理 Markdown prompt pack 已在本地準備。",
       statusReviewGateway: (decision, blockers, warnings) => `編程代理 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) => `編程代理 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "發布演練",
@@ -598,11 +658,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       review: "검토",
       productionReview: "운영 검토",
       downloadReview: "검토 다운로드",
+      sessionPack: "Session pack",
+      productionSession: "운영 Session",
+      downloadSessionJson: "Session JSON",
+      downloadSessionMarkdown: "Session MD",
       reviewDecision: "검토 판정",
       reviewNextAction: "다음 조치",
       reviewReady: "모든 브리프가 코딩 에이전트 인계 전 검사를 통과했습니다.",
       reviewDecisionLabel: koBriefReviewDecision,
       reviewSummary: (passed, warnings, blockers) => `${passed} 통과 / ${warnings} 경고 / ${blockers} 차단`,
+      sessionDecision: "Session 판정",
+      sessionNextAction: "다음 조치",
+      sessionReady: "모든 session이 샌드박스 코딩 에이전트 인계 준비를 마쳤습니다.",
+      sessionHeld: (status) => `보류: ${koCodingSessionStatus(status)}`,
+      sessionDecisionLabel: koBriefReviewDecision,
+      sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
       mode: "모드",
       executor: "Executor",
       releaseGate: "릴리스 게이트",
@@ -615,7 +685,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusFallback: (errorMessage) => `게이트웨이 브리프를 사용할 수 없어 로컬 내보내기를 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
       statusMarkdown: "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다.",
       statusReviewGateway: (decision, blockers, warnings) => `코딩 에이전트 브리프 검토 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) => `코딩 에이전트 session bundle ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.`,
+      statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "릴리스 리허설",
@@ -687,6 +759,13 @@ function jaBriefReviewDecision(decision: string) {
   return decision;
 }
 
+function jaCodingSessionStatus(status: string) {
+  if (status === "ready-for-agent") return "代理に引き渡し可";
+  if (status === "held-for-review") return "レビュー待ち";
+  if (status === "held-for-production-evidence") return "本番証拠待ち";
+  return status;
+}
+
 function zhHansRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "可发布";
   if (decision === "needs-review") return "需审查";
@@ -706,6 +785,13 @@ function zhHansBriefReviewDecision(decision: string) {
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
+}
+
+function zhHansCodingSessionStatus(status: string) {
+  if (status === "ready-for-agent") return "可交付给代理";
+  if (status === "held-for-review") return "等待审查";
+  if (status === "held-for-production-evidence") return "等待生产证据";
+  return status;
 }
 
 function zhHantRehearsalDecision(decision: string) {
@@ -729,6 +815,13 @@ function zhHantBriefReviewDecision(decision: string) {
   return decision;
 }
 
+function zhHantCodingSessionStatus(status: string) {
+  if (status === "ready-for-agent") return "可交付給代理";
+  if (status === "held-for-review") return "等待審查";
+  if (status === "held-for-production-evidence") return "等待生產證據";
+  return status;
+}
+
 function koRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "릴리스 가능";
   if (decision === "needs-review") return "검토 필요";
@@ -748,4 +841,11 @@ function koBriefReviewDecision(decision: string) {
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;
+}
+
+function koCodingSessionStatus(status: string) {
+  if (status === "ready-for-agent") return "에이전트 인계 가능";
+  if (status === "held-for-review") return "검토 대기";
+  if (status === "held-for-production-evidence") return "운영 증거 대기";
+  return status;
 }

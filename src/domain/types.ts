@@ -805,6 +805,53 @@ export interface CodingAgentBriefReviewReport {
   };
 }
 
+export type CodingAgentSessionStatus =
+  | "ready-for-agent"
+  | "held-for-review"
+  | "held-for-production-evidence";
+export type CodingAgentSessionBundleDecision = "ready" | "needs-review" | "blocked";
+
+export interface CodingAgentSession {
+  id: string;
+  briefId: string;
+  title: string;
+  roleId?: string;
+  roleName?: string;
+  mode: CodingAgentMode;
+  priority: DevelopmentWorkItemPriority;
+  executorProfileId: ExecutorProfileId;
+  status: CodingAgentSessionStatus;
+  promptFileName: string;
+  handoffMarkdown: string;
+  verificationCommands: string[];
+  evidenceRequired: string[];
+  safetyStops: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentSessionBundle {
+  schema: "naikaku.coding-agent-session-bundle.v1";
+  generatedAt: string;
+  mode: "dry-run";
+  mission: string;
+  runId?: string;
+  operatorLocale: string;
+  sourceSchema: CodingAgentBriefs["schema"];
+  requireProductionEvidence: boolean;
+  review: CodingAgentBriefReviewReport;
+  decision: CodingAgentSessionBundleDecision;
+  sessions: CodingAgentSession[];
+  summary: {
+    total: number;
+    ready: number;
+    held: number;
+    humanApproval: number;
+    productionHeld: number;
+    verificationCommands: number;
+    evidenceItems: number;
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -829,6 +876,7 @@ export type AuditEventType =
   | "development.issues.exported"
   | "development.coding_briefs.exported"
   | "development.coding_briefs.reviewed"
+  | "development.coding_sessions.exported"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

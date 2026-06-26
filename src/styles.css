@@ -2858,12 +2858,32 @@ meter {
   min-width: 0;
 }
 
+.coding-session-bundle {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #b9dfd1;
+  border-radius: 8px;
+  background: #f3fbf7;
+  padding: 10px;
+  min-width: 0;
+}
+
 .coding-brief-review[data-decision="needs-review"] {
   border-color: #f3d19c;
   background: #fffaf0;
 }
 
+.coding-session-bundle[data-decision="needs-review"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
 .coding-brief-review[data-decision="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.coding-session-bundle[data-decision="blocked"] {
   border-color: #f2b8b2;
   background: #fff6f5;
 }
@@ -2876,14 +2896,27 @@ meter {
   min-width: 0;
 }
 
+.coding-session-bundle div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .coding-brief-review strong,
 .coding-brief-review span,
 .coding-brief-review small,
-.coding-brief-review b {
+.coding-brief-review b,
+.coding-session-bundle strong,
+.coding-session-bundle span,
+.coding-session-bundle small,
+.coding-session-bundle b {
   overflow-wrap: anywhere;
 }
 
-.coding-brief-review strong {
+.coding-brief-review strong,
+.coding-session-bundle strong {
   color: var(--ink);
   font-size: 13px;
   font-weight: 900;
@@ -2891,19 +2924,24 @@ meter {
 
 .coding-brief-review div span,
 .coding-brief-review p span,
-.coding-brief-review small {
+.coding-brief-review small,
+.coding-session-bundle div span,
+.coding-session-bundle p span,
+.coding-session-bundle small {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
 }
 
-.coding-brief-review p {
+.coding-brief-review p,
+.coding-session-bundle p {
   display: grid;
   gap: 5px;
   margin: 0;
 }
 
-.coding-brief-review b {
+.coding-brief-review b,
+.coding-session-bundle b {
   color: var(--ink);
   font-size: 12px;
 }
@@ -4034,6 +4072,7 @@ meter {
   .rehearsal-check-heading,
   .rehearsal-subheading,
   .coding-brief-review div,
+  .coding-session-bundle div,
   .coding-brief-heading,
   .issues-draft-heading,
   .ledger-row div,

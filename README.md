@@ -29,6 +29,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Development Board that converts role packages, next-loop tasks, and accepted memory into status-trackable work items for separate teams.
 - Coding Agent Briefs export that turns development work items into sandboxed Codex-like implementation prompts with verification commands, prohibited actions, and release-gate evidence requirements.
 - Coding Agent Brief Review gate that checks generated implementation prompts for schema completeness, sandbox prohibitions, required verification commands, and dry-run versus production evidence truthfulness before handoff.
+- Coding Agent Session Bundle export that packages reviewed briefs into ready/held coding-agent sessions with prompt files, verification commands, evidence checklists, safety stops, and explicit no-execution boundaries.
 - GitHub Issue Drafts export that turns development work items into labeled, Markdown-ready issue payloads plus a reviewable `gh issue create` script for parallel implementation.
 - Memory Inbox for reviewable lessons, decisions, skill proposals, risks, and follow-up items before local persistence.
 - Workspace JSON import/export and recent run history for operator handoff.
@@ -57,7 +58,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, set:
 

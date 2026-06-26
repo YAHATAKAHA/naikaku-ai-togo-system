@@ -4,6 +4,7 @@ import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
+import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
@@ -24,6 +25,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentSessionBundle,
   DevelopmentBoard,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
@@ -414,6 +416,14 @@ export function serializeCodingAgentBriefsMarkdownExport(briefs: CodingAgentBrie
 
 export function serializeCodingAgentBriefReviewExport(report: CodingAgentBriefReviewReport) {
   return serializeCodingAgentBriefReview(report);
+}
+
+export function serializeCodingAgentSessionBundleExport(bundle: CodingAgentSessionBundle) {
+  return serializeCodingAgentSessionBundle(bundle);
+}
+
+export function serializeCodingAgentSessionBundleMarkdownExport(bundle: CodingAgentSessionBundle) {
+  return serializeCodingAgentSessionBundleMarkdown(bundle);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {

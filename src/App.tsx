@@ -65,6 +65,8 @@ import {
   serializeAutomationRunbookExport,
   serializeCodingAgentBriefsExport,
   serializeCodingAgentBriefsMarkdownExport,
+  serializeCodingAgentSessionBundleExport,
+  serializeCodingAgentSessionBundleMarkdownExport,
   serializeDevelopmentBoardExport,
   serializeDevelopmentIssueDraftsExport,
   serializeDevelopmentIssueGhScriptExport,
@@ -85,6 +87,7 @@ import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
+import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
@@ -106,6 +109,7 @@ import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type
 import {
   createAutomationRunbookViaGateway,
   createCodingAgentBriefsViaGateway,
+  createCodingAgentSessionBundleViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createProductReadinessViaGateway,
@@ -134,6 +138,7 @@ import type {
   CabinetRun,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentSessionBundle,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   DevelopmentWorkItemStatus,
@@ -207,6 +212,9 @@ export function App() {
   const [codingAgentBriefsMarkdownLink, setCodingAgentBriefsMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentBriefReview, setCodingAgentBriefReview] = useState<CodingAgentBriefReviewReport | null>(null);
   const [codingAgentBriefReviewLink, setCodingAgentBriefReviewLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionBundle, setCodingAgentSessionBundle] = useState<CodingAgentSessionBundle | null>(null);
+  const [codingAgentSessionBundleLink, setCodingAgentSessionBundleLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionBundleMarkdownLink, setCodingAgentSessionBundleMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -538,6 +546,22 @@ export function App() {
   }, [codingAgentBriefReviewLink]);
 
   useEffect(() => {
+    return () => {
+      if (codingAgentSessionBundleLink) {
+        URL.revokeObjectURL(codingAgentSessionBundleLink.href);
+      }
+    };
+  }, [codingAgentSessionBundleLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentSessionBundleMarkdownLink) {
+        URL.revokeObjectURL(codingAgentSessionBundleMarkdownLink.href);
+      }
+    };
+  }, [codingAgentSessionBundleMarkdownLink]);
+
+  useEffect(() => {
     clearCodingAgentBriefReview();
   }, [codingAgentBriefs]);
 
@@ -584,6 +608,9 @@ export function App() {
     setCodingAgentBriefsMarkdownLink(null);
     setCodingAgentBriefReview(null);
     setCodingAgentBriefReviewLink(null);
+    setCodingAgentSessionBundle(null);
+    setCodingAgentSessionBundleLink(null);
+    setCodingAgentSessionBundleMarkdownLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
@@ -741,6 +768,19 @@ export function App() {
     if (codingAgentBriefReviewLink) {
       URL.revokeObjectURL(codingAgentBriefReviewLink.href);
       setCodingAgentBriefReviewLink(null);
+    }
+    clearCodingAgentSessionBundle();
+  }
+
+  function clearCodingAgentSessionBundle() {
+    setCodingAgentSessionBundle(null);
+    if (codingAgentSessionBundleLink) {
+      URL.revokeObjectURL(codingAgentSessionBundleLink.href);
+      setCodingAgentSessionBundleLink(null);
+    }
+    if (codingAgentSessionBundleMarkdownLink) {
+      URL.revokeObjectURL(codingAgentSessionBundleMarkdownLink.href);
+      setCodingAgentSessionBundleMarkdownLink(null);
     }
   }
 
@@ -2001,6 +2041,83 @@ export function App() {
     });
   }
 
+  function createCodingAgentSessionBundleDownload(
+    bundle: CodingAgentSessionBundle,
+    requireProductionEvidence: boolean
+  ) {
+    const blob = new Blob([serializeCodingAgentSessionBundleExport(bundle)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentSessionBundleMarkdownExport(bundle)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = bundle.runId ? bundle.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const mode = requireProductionEvidence ? "production" : "dry-run";
+    const fileName = `naikaku-coding-agent-session-bundle-${mode}-${runSlug}-${bundle.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-session-bundle-${mode}-${runSlug}-${bundle.operatorLocale}.md`;
+
+    if (codingAgentSessionBundleLink) {
+      URL.revokeObjectURL(codingAgentSessionBundleLink.href);
+    }
+    if (codingAgentSessionBundleMarkdownLink) {
+      URL.revokeObjectURL(codingAgentSessionBundleMarkdownLink.href);
+    }
+
+    setCodingAgentSessionBundleLink({ href: url, fileName });
+    setCodingAgentSessionBundleMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
+  async function exportCodingAgentSessionBundle(requireProductionEvidence = false) {
+    let bundle = buildCodingAgentSessionBundle({
+      briefs: codingAgentBriefs,
+      review: codingAgentBriefReview,
+      releaseVerification,
+      requireProductionEvidence
+    });
+    let source: "gateway" | "local" = "local";
+    let gatewayError: string | null = null;
+
+    try {
+      bundle = await createCodingAgentSessionBundleViaGateway(
+        codingAgentBriefs,
+        codingAgentBriefReview,
+        releaseVerification,
+        requireProductionEvidence
+      );
+      source = "gateway";
+    } catch (error) {
+      gatewayError = error instanceof Error ? error.message : "unknown";
+    }
+
+    setCodingAgentBriefReview(bundle.review);
+    setCodingAgentSessionBundle(bundle);
+    createCodingAgentSessionBundleDownload(bundle, requireProductionEvidence);
+    setRunState({
+      status: source === "gateway" ? "gateway" : "local",
+      message: source === "gateway"
+        ? copy.codingBriefs.statusSessionGateway(bundle.decision, bundle.summary.ready, bundle.summary.held)
+        : copy.codingBriefs.statusSessionLocal(
+          bundle.decision,
+          bundle.summary.ready,
+          bundle.summary.held,
+          gatewayError || undefined
+        )
+    });
+    recordAudit({
+      type: "development.coding_sessions.exported",
+      severity: bundle.decision === "ready" ? "success" : bundle.decision === "needs-review" ? "warning" : "error",
+      summary: `Coding agent session bundle exported: ${bundle.decision}.`,
+      runId: bundle.runId,
+      metadata: {
+        sessions: bundle.summary.total,
+        ready: bundle.summary.ready,
+        held: bundle.summary.held,
+        productionHeld: bundle.summary.productionHeld,
+        source,
+        requireProductionEvidence,
+        gatewayError
+      }
+    });
+  }
+
   function createDevelopmentIssuesDownload(drafts: DevelopmentIssueDrafts) {
     const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2385,14 +2502,19 @@ export function App() {
           <CodingAgentBriefsPanel
             briefs={codingAgentBriefs}
             review={codingAgentBriefReview}
+            sessionBundle={codingAgentSessionBundle}
             exportLink={codingAgentBriefsLink}
             markdownLink={codingAgentBriefsMarkdownLink}
             reviewLink={codingAgentBriefReviewLink}
+            sessionLink={codingAgentSessionBundleLink}
+            sessionMarkdownLink={codingAgentSessionBundleMarkdownLink}
             copy={copy.codingBriefs}
             onExport={() => void exportCodingAgentBriefs()}
             onExportMarkdown={exportCodingAgentBriefsMarkdown}
             onReview={() => void runCodingAgentBriefReview(false)}
             onProductionReview={() => void runCodingAgentBriefReview(true)}
+            onExportSession={() => void exportCodingAgentSessionBundle(false)}
+            onExportProductionSession={() => void exportCodingAgentSessionBundle(true)}
           />
 
           <DevelopmentIssuesPanel

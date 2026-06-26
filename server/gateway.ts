@@ -4,6 +4,7 @@ import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automat
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
+import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
@@ -22,6 +23,7 @@ import type {
   CabinetRunMode,
   CabinetRole,
   CabinetWorkspace,
+  CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
@@ -83,6 +85,7 @@ const server = createServer(async (request, response) => {
           "development-issues",
           "coding-agent-briefs",
           "coding-agent-brief-review",
+          "coding-agent-session-bundle",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -607,6 +610,32 @@ const server = createServer(async (request, response) => {
         requireProductionEvidence: Boolean(body.requireProductionEvidence)
       });
       sendJson(response, 200, review);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/session-bundle") {
+      const body = await readJson<{
+        briefs?: CodingAgentBriefs;
+        review?: CodingAgentBriefReviewReport;
+        releaseVerification?: ReleaseVerificationReport;
+        requireProductionEvidence?: boolean;
+      }>(request);
+      if (body.briefs?.schema !== "naikaku.coding-agent-briefs.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "briefs with schema naikaku.coding-agent-briefs.v1 are required."
+        });
+        return;
+      }
+      const bundle = buildCodingAgentSessionBundle({
+        briefs: body.briefs,
+        review: body.review?.schema === "naikaku.coding-agent-brief-review.v1" ? body.review : null,
+        releaseVerification: body.releaseVerification?.schema === "naikaku.release-verification.v1"
+          ? body.releaseVerification
+          : null,
+        requireProductionEvidence: Boolean(body.requireProductionEvidence)
+      });
+      sendJson(response, 200, bundle);
       return;
     }
 

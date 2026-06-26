@@ -110,6 +110,8 @@ Coding Agent Briefs extend the same boundary to programming agents. They convert
 
 The Coding Agent Brief Review gate checks that every generated prompt still carries those prohibitions, core build/test commands, release verification commands when required, human approval flags for blocked or critical work, and honest dry-run versus production wording. If production evidence is required but the attached release verification is missing or only dry-run scoped, the review decision is `blocked`.
 
+Coding Agent Session Bundles package only the reviewed handoff state. They separate `ready-for-agent` sessions from held sessions, preserve safety stops and next actions, and explicitly state that no implementation, command execution, browser control, deploy, external message, or Git push has happened. Production session exports force a production-mode review before any session can be marked ready.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
