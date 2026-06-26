@@ -104,6 +104,8 @@ Generated evidence bundles are also upserted into the local evidence ledger and 
 
 Release rehearsal reports include an `evidenceClaim` object so a passing sandbox drill cannot be mistaken for production runner proof. In the current implementation the claim level is `dry-run`; it explicitly states that no shell, browser, desktop, or MCP action was actually executed, then lists the runner identity, real artifact, append-only ledger, and server-side provider-readiness requirements needed for production handoff.
 
+The release verifier makes that boundary executable. `npm run release:verify` accepts a clean dry-run drill as sandbox evidence, while `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. This gives CI and operators a hard stop between "the drill works" and "real computer-control backends are safe to release."
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.

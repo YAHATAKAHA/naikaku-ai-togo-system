@@ -613,6 +613,33 @@ export interface ReleaseRehearsalReport {
   };
 }
 
+export type ReleaseVerificationStatus = "pass" | "fail";
+export type ReleaseVerificationDecision = "verified" | "not-production-ready" | "invalid";
+export type ReleaseVerificationScope = "dry-run" | "production";
+
+export interface ReleaseVerificationCheck {
+  id: string;
+  status: ReleaseVerificationStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface ReleaseVerificationReport {
+  schema: "naikaku.release-verification.v1";
+  generatedAt: string;
+  sourceRunId: string;
+  scope: ReleaseVerificationScope;
+  requireProductionEvidence: boolean;
+  decision: ReleaseVerificationDecision;
+  checks: ReleaseVerificationCheck[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource =
