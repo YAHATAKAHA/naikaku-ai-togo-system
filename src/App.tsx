@@ -65,6 +65,8 @@ import {
   serializeAutomationRunbookExport,
   serializeCodingAgentBriefsExport,
   serializeCodingAgentBriefsMarkdownExport,
+  serializeCodingAgentDispatchArchiveExport,
+  serializeCodingAgentDispatchArchiveMarkdownExport,
   serializeCodingAgentDispatchManifestExport,
   serializeCodingAgentDispatchManifestMarkdownExport,
   serializeCodingAgentSessionBundleExport,
@@ -95,6 +97,7 @@ import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
+import { buildCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArchive";
 import { buildCodingAgentDispatchManifest } from "./domain/codingAgentDispatchManifest";
 import { auditCodingAgentImplementationArtifacts } from "./domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
@@ -156,6 +159,7 @@ import type {
   AuditEvent,
   CabinetRole,
   CabinetRun,
+  CodingAgentDispatchArchive,
   CodingAgentDispatchManifest,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
@@ -244,6 +248,9 @@ export function App() {
   const [codingAgentDispatchManifest, setCodingAgentDispatchManifest] = useState<CodingAgentDispatchManifest | null>(null);
   const [codingAgentDispatchManifestLink, setCodingAgentDispatchManifestLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentDispatchManifestMarkdownLink, setCodingAgentDispatchManifestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchArchive, setCodingAgentDispatchArchive] = useState<CodingAgentDispatchArchive | null>(null);
+  const [codingAgentDispatchArchiveLink, setCodingAgentDispatchArchiveLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchArchiveMarkdownLink, setCodingAgentDispatchArchiveMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrill, setCodingAgentSessionDrill] = useState<CodingAgentSessionDrillReport | null>(null);
   const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrillMarkdownLink, setCodingAgentSessionDrillMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -618,6 +625,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentDispatchArchiveLink) {
+        URL.revokeObjectURL(codingAgentDispatchArchiveLink.href);
+      }
+    };
+  }, [codingAgentDispatchArchiveLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentDispatchArchiveMarkdownLink) {
+        URL.revokeObjectURL(codingAgentDispatchArchiveMarkdownLink.href);
+      }
+    };
+  }, [codingAgentDispatchArchiveMarkdownLink]);
+
+  useEffect(() => {
+    return () => {
       if (codingAgentSessionDrillLink) {
         URL.revokeObjectURL(codingAgentSessionDrillLink.href);
       }
@@ -922,6 +945,7 @@ export function App() {
 
   function clearCodingAgentDispatchManifest() {
     setCodingAgentDispatchManifest(null);
+    setCodingAgentDispatchArchive(null);
     if (codingAgentDispatchManifestLink) {
       URL.revokeObjectURL(codingAgentDispatchManifestLink.href);
       setCodingAgentDispatchManifestLink(null);
@@ -929,6 +953,14 @@ export function App() {
     if (codingAgentDispatchManifestMarkdownLink) {
       URL.revokeObjectURL(codingAgentDispatchManifestMarkdownLink.href);
       setCodingAgentDispatchManifestMarkdownLink(null);
+    }
+    if (codingAgentDispatchArchiveLink) {
+      URL.revokeObjectURL(codingAgentDispatchArchiveLink.href);
+      setCodingAgentDispatchArchiveLink(null);
+    }
+    if (codingAgentDispatchArchiveMarkdownLink) {
+      URL.revokeObjectURL(codingAgentDispatchArchiveMarkdownLink.href);
+      setCodingAgentDispatchArchiveMarkdownLink(null);
     }
   }
 
@@ -2312,6 +2344,26 @@ export function App() {
     setCodingAgentDispatchManifestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  function createCodingAgentDispatchArchiveDownload(archive: CodingAgentDispatchArchive) {
+    const blob = new Blob([serializeCodingAgentDispatchArchiveExport(archive)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentDispatchArchiveMarkdownExport(archive)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = archive.runId ? archive.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-dispatch-archive-${runSlug}-${archive.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-dispatch-archive-${runSlug}-${archive.operatorLocale}.md`;
+
+    if (codingAgentDispatchArchiveLink) {
+      URL.revokeObjectURL(codingAgentDispatchArchiveLink.href);
+    }
+    if (codingAgentDispatchArchiveMarkdownLink) {
+      URL.revokeObjectURL(codingAgentDispatchArchiveMarkdownLink.href);
+    }
+
+    setCodingAgentDispatchArchiveLink({ href: url, fileName });
+    setCodingAgentDispatchArchiveMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
   async function exportCodingAgentDispatchManifest() {
     const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
@@ -2329,12 +2381,18 @@ export function App() {
     } catch (error) {
       gatewayError = error instanceof Error ? error.message : "unknown";
     }
+    const archive = buildCodingAgentDispatchArchive({
+      bundle,
+      manifest,
+      generatedAt: manifest.generatedAt
+    });
 
     setCodingAgentBriefReview(bundle.review);
     setCodingAgentSessionBundle(bundle);
     clearCodingAgentDispatchManifest();
     setCodingAgentSessionDrill(drill);
     setCodingAgentDispatchManifest(manifest);
+    setCodingAgentDispatchArchive(archive);
     if (!codingAgentSessionBundle) {
       createCodingAgentSessionBundleDownload(bundle, false);
     }
@@ -2342,6 +2400,7 @@ export function App() {
       createCodingAgentSessionDrillDownload(drill);
     }
     createCodingAgentDispatchManifestDownload(manifest);
+    createCodingAgentDispatchArchiveDownload(archive);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -2371,6 +2430,8 @@ export function App() {
         productionHeld: manifest.summary.productionHeld,
         promptFiles: manifest.summary.promptFiles,
         receiptTemplates: manifest.summary.receiptTemplates,
+        archiveFiles: archive.summary.files,
+        archiveBytes: archive.summary.totalBytes,
         unsafePaths: manifest.summary.unsafePaths,
         source,
         gatewayError
@@ -3184,6 +3245,7 @@ export function App() {
             review={codingAgentBriefReview}
             sessionBundle={codingAgentSessionBundle}
             dispatchManifest={codingAgentDispatchManifest}
+            dispatchArchive={codingAgentDispatchArchive}
             sessionDrill={codingAgentSessionDrill}
             sessionReceipt={codingAgentSessionReceipt}
             exportLink={codingAgentBriefsLink}
@@ -3193,6 +3255,8 @@ export function App() {
             sessionMarkdownLink={codingAgentSessionBundleMarkdownLink}
             dispatchLink={codingAgentDispatchManifestLink}
             dispatchMarkdownLink={codingAgentDispatchManifestMarkdownLink}
+            dispatchArchiveLink={codingAgentDispatchArchiveLink}
+            dispatchArchiveMarkdownLink={codingAgentDispatchArchiveMarkdownLink}
             drillLink={codingAgentSessionDrillLink}
             drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
             receiptLink={codingAgentSessionReceiptLink}

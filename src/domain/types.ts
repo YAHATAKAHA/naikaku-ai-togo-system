@@ -709,6 +709,9 @@ export interface CodingAgentDispatchDrillSummary {
     promptFiles: number;
     promptFilesWritten: number;
     receiptTemplateWritten: boolean;
+    archiveFilesWritten: number;
+    archiveBytes: number;
+    archiveUnsafePaths: number;
     uniqueEvidencePrefixes: number;
     unsafePaths: number;
   };
@@ -721,6 +724,9 @@ export interface CodingAgentDispatchDrillSummary {
     promptFiles: number;
     promptFilesWritten: number;
     receiptTemplateWritten: boolean;
+    archiveFilesWritten: number;
+    archiveBytes: number;
+    archiveUnsafePaths: number;
     unsafePaths: number;
   };
   checks: Record<string, boolean>;
@@ -1221,6 +1227,52 @@ export interface CodingAgentDispatchManifest {
     uniqueEvidencePrefixes: number;
     unsafePaths: number;
     humanApprovalRequired: number;
+  };
+  honestyClaim: {
+    level: "dry-run-dispatch";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type CodingAgentDispatchArchiveFileRole =
+  | "readme"
+  | "manifest-json"
+  | "manifest-markdown"
+  | "prompt"
+  | "receipt-template";
+
+export interface CodingAgentDispatchArchiveFile {
+  path: string;
+  role: CodingAgentDispatchArchiveFileRole;
+  contentType: "application/json" | "text/markdown";
+  byteLength: number;
+  sessionId?: string;
+  dispatchStatus?: CodingAgentDispatchItemStatus;
+  content: string;
+}
+
+export interface CodingAgentDispatchArchive {
+  schema: "naikaku.coding-agent-dispatch-archive.v1";
+  generatedAt: string;
+  mode: "dry-run-dispatch";
+  sourceSchema: CodingAgentDispatchManifest["schema"];
+  bundleSchema: CodingAgentSessionBundle["schema"];
+  decision: CodingAgentDispatchDecision;
+  mission: string;
+  runId?: string;
+  operatorLocale: string;
+  files: CodingAgentDispatchArchiveFile[];
+  summary: {
+    files: number;
+    totalBytes: number;
+    promptFiles: number;
+    receiptTemplates: number;
+    readyItems: number;
+    heldItems: number;
+    unassignedHeldItems: number;
+    unsafePaths: number;
   };
   honestyClaim: {
     level: "dry-run-dispatch";

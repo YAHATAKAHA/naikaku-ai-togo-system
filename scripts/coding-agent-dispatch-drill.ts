@@ -3,16 +3,13 @@ import path from "node:path";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import {
-  buildCodingAgentDispatchManifest,
-  serializeCodingAgentDispatchManifest,
-  serializeCodingAgentDispatchManifestMarkdown
-} from "../src/domain/codingAgentDispatchManifest";
+  buildCodingAgentDispatchArchive,
+  serializeCodingAgentDispatchArchive,
+  serializeCodingAgentDispatchArchiveMarkdown
+} from "../src/domain/codingAgentDispatchArchive";
+import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
-import {
-  buildCodingAgentSessionReceiptTemplate,
-  serializeCodingAgentSessionReceipt
-} from "../src/domain/codingAgentSessionReceipt";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { createDefaultWorkspace } from "../src/domain/storage";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -32,6 +29,9 @@ interface DispatchDrillOptions {
 interface DispatchPackageWriteResult {
   promptFilesWritten: number;
   receiptTemplateWritten: boolean;
+  archiveFilesWritten: number;
+  archiveUnsafePaths: number;
+  archiveBytes: number;
 }
 
 interface DispatchCaseResult {
@@ -208,46 +208,44 @@ async function writeDispatchPackage({
 }): Promise<DispatchPackageWriteResult> {
   await rm(packageDir, { recursive: true, force: true });
   await mkdir(packageDir, { recursive: true });
+  const archive = buildCodingAgentDispatchArchive({
+    bundle,
+    manifest,
+    generatedAt
+  });
   await writeFile(
-    path.join(packageDir, "dispatch-manifest.json"),
-    `${serializeCodingAgentDispatchManifest(manifest)}\n`,
+    path.join(packageDir, "dispatch-archive.json"),
+    `${serializeCodingAgentDispatchArchive(archive)}\n`,
     "utf8"
   );
   await writeFile(
-    path.join(packageDir, "dispatch-manifest.md"),
-    serializeCodingAgentDispatchManifestMarkdown(manifest),
+    path.join(packageDir, "dispatch-archive.md"),
+    serializeCodingAgentDispatchArchiveMarkdown(archive),
     "utf8"
   );
-  await writeFile(path.join(packageDir, "README.md"), packageReadme(manifest), "utf8");
 
   let promptFilesWritten = 0;
-  for (const item of manifest.items) {
-    if (!item.promptPath) continue;
-    const session = bundle.sessions.find((candidate) => candidate.id === item.sessionId);
-    if (!session) continue;
-    const promptPath = path.join(packageDir, item.promptPath);
-    await mkdir(path.dirname(promptPath), { recursive: true });
-    await writeFile(promptPath, session.handoffMarkdown, "utf8");
-    promptFilesWritten += 1;
-  }
-
   let receiptTemplateWritten = false;
-  if (manifest.receiptTemplatePath) {
-    const receiptTemplate = buildCodingAgentSessionReceiptTemplate({
-      bundle,
-      generatedAt
-    });
-    await writeFile(
-      path.join(packageDir, manifest.receiptTemplatePath),
-      `${serializeCodingAgentSessionReceipt(receiptTemplate)}\n`,
-      "utf8"
-    );
-    receiptTemplateWritten = true;
+  let archiveFilesWritten = 0;
+  for (const file of archive.files) {
+    const filePath = path.join(packageDir, file.path);
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, file.content, "utf8");
+    archiveFilesWritten += 1;
+    if (file.role === "prompt") {
+      promptFilesWritten += 1;
+    }
+    if (file.role === "receipt-template") {
+      receiptTemplateWritten = true;
+    }
   }
 
   return {
     promptFilesWritten,
-    receiptTemplateWritten
+    receiptTemplateWritten,
+    archiveFilesWritten,
+    archiveUnsafePaths: archive.summary.unsafePaths,
+    archiveBytes: archive.summary.totalBytes
   };
 }
 
@@ -256,6 +254,8 @@ function checksFor(valid: DispatchCaseResult, productionHeld: DispatchCaseResult
     validDispatchable: valid.manifest.decision === "dispatchable" && valid.manifest.summary.ready > 0,
     validPromptFilesWritten: valid.writeResult.promptFilesWritten === valid.manifest.summary.promptFiles,
     validReceiptTemplateWritten: valid.writeResult.receiptTemplateWritten,
+    validArchiveFilesWritten: valid.writeResult.archiveFilesWritten >= valid.manifest.summary.promptFiles + 3,
+    validArchivePathsSafe: valid.writeResult.archiveUnsafePaths === 0,
     evidencePrefixesUnique:
       valid.manifest.summary.uniqueEvidencePrefixes === valid.manifest.summary.total &&
       productionHeld.manifest.summary.uniqueEvidencePrefixes === productionHeld.manifest.summary.total,
@@ -279,6 +279,9 @@ function caseSummary(result: DispatchCaseResult): CodingAgentDispatchDrillSummar
     promptFiles: result.manifest.summary.promptFiles,
     promptFilesWritten: result.writeResult.promptFilesWritten,
     receiptTemplateWritten: result.writeResult.receiptTemplateWritten,
+    archiveFilesWritten: result.writeResult.archiveFilesWritten,
+    archiveBytes: result.writeResult.archiveBytes,
+    archiveUnsafePaths: result.writeResult.archiveUnsafePaths,
     uniqueEvidencePrefixes: result.manifest.summary.uniqueEvidencePrefixes,
     unsafePaths: result.manifest.summary.unsafePaths
   };
@@ -294,24 +297,11 @@ function productionHeldSummary(result: DispatchCaseResult): CodingAgentDispatchD
     promptFiles: result.manifest.summary.promptFiles,
     promptFilesWritten: result.writeResult.promptFilesWritten,
     receiptTemplateWritten: result.writeResult.receiptTemplateWritten,
+    archiveFilesWritten: result.writeResult.archiveFilesWritten,
+    archiveBytes: result.writeResult.archiveBytes,
+    archiveUnsafePaths: result.writeResult.archiveUnsafePaths,
     unsafePaths: result.manifest.summary.unsafePaths
   };
-}
-
-function packageReadme(manifest: CodingAgentDispatchManifest) {
-  return [
-    "# Coding Agent Dispatch Package",
-    "",
-    `Decision: ${manifest.decision}`,
-    `Locale: ${manifest.operatorLocale}`,
-    `Receipt template: ${manifest.receiptTemplatePath || "not written"}`,
-    "",
-    "This package is a reviewed handoff surface for governed coding-agent work. It does not prove implementation.",
-    "",
-    "Only items marked `ready-to-dispatch` have prompt files. Held items must stay with the operator until their next action is resolved.",
-    "",
-    "Expected evidence must return under the session evidence prefixes listed in `dispatch-manifest.json`."
-  ].join("\n");
 }
 
 function summaryMarkdown(summary: CodingAgentDispatchDrillSummary) {
@@ -328,6 +318,8 @@ function summaryMarkdown(summary: CodingAgentDispatchDrillSummary) {
     `- Ready items: ${summary.valid.readyItems}/${summary.valid.totalItems}`,
     `- Prompt files written: ${summary.valid.promptFilesWritten}/${summary.valid.promptFiles}`,
     `- Receipt template written: ${summary.valid.receiptTemplateWritten ? "yes" : "no"}`,
+    `- Archive files written: ${summary.valid.archiveFilesWritten}`,
+    `- Archive bytes: ${summary.valid.archiveBytes}`,
     `- Unsafe paths: ${summary.valid.unsafePaths}`,
     "",
     "## Production-Held Package",
@@ -337,6 +329,8 @@ function summaryMarkdown(summary: CodingAgentDispatchDrillSummary) {
     `- Production-held items: ${summary.productionHeld.productionHeldItems}`,
     `- Prompt files written: ${summary.productionHeld.promptFilesWritten}`,
     `- Receipt template written: ${summary.productionHeld.receiptTemplateWritten ? "yes" : "no"}`,
+    `- Archive files written: ${summary.productionHeld.archiveFilesWritten}`,
+    `- Archive bytes: ${summary.productionHeld.archiveBytes}`,
     "",
     "## Checks",
     "",

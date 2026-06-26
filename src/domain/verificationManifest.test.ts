@@ -257,6 +257,9 @@ function codingAgentDispatchFixture(): CodingAgentDispatchDrillSummary {
       promptFiles: 8,
       promptFilesWritten: 8,
       receiptTemplateWritten: true,
+      archiveFilesWritten: 12,
+      archiveBytes: 10000,
+      archiveUnsafePaths: 0,
       uniqueEvidencePrefixes: 8,
       unsafePaths: 0
     },
@@ -269,6 +272,9 @@ function codingAgentDispatchFixture(): CodingAgentDispatchDrillSummary {
       promptFiles: 0,
       promptFilesWritten: 0,
       receiptTemplateWritten: false,
+      archiveFilesWritten: 3,
+      archiveBytes: 2500,
+      archiveUnsafePaths: 0,
       unsafePaths: 0
     },
     checks: {

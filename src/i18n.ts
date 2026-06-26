@@ -76,6 +76,8 @@ export interface CodingAgentBriefsCopy {
   downloadSessionMarkdown: string;
   downloadDispatchJson: string;
   downloadDispatchMarkdown: string;
+  downloadDispatchArchiveJson: string;
+  downloadDispatchArchiveMarkdown: string;
   downloadDrillJson: string;
   downloadDrillMarkdown: string;
   receiptTemplate: string;
@@ -102,6 +104,9 @@ export interface CodingAgentBriefsCopy {
   dispatchDecisionLabel: (decision: string) => string;
   dispatchSummary: (ready: number, held: number, promptFiles: number) => string;
   dispatchReceiptTemplate: (receiptTemplates: number) => string;
+  dispatchArchive: string;
+  dispatchArchiveSummary: (files: number, promptFiles: number, totalBytes: number) => string;
+  dispatchUnassignedHeld: (count: number) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -265,6 +270,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadSessionMarkdown: "Session MD",
       downloadDispatchJson: "Dispatch JSON",
       downloadDispatchMarkdown: "Dispatch MD",
+      downloadDispatchArchiveJson: "Archive JSON",
+      downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDrillJson: "演習JSON",
       downloadDrillMarkdown: "演習MD",
       receiptTemplate: "証拠雛形",
@@ -291,6 +298,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchDecisionLabel: jaCodingDispatchDecision,
       dispatchSummary: (ready, held, promptFiles) => `引き渡し可 ${ready} / 保留 ${held} / prompt ${promptFiles}件`,
       dispatchReceiptTemplate: (receiptTemplates) => `証拠雛形 ${receiptTemplates}件`,
+      dispatchArchive: "Dispatch Archive",
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files}ファイル / prompt ${promptFiles}件 / ${totalBytes} bytes`,
+      dispatchUnassignedHeld: (count) => `未割当の保留 ${count}件`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
       drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
@@ -424,6 +434,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadSessionMarkdown: "Session MD",
       downloadDispatchJson: "Dispatch JSON",
       downloadDispatchMarkdown: "Dispatch MD",
+      downloadDispatchArchiveJson: "Archive JSON",
+      downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDrillJson: "Drill JSON",
       downloadDrillMarkdown: "Drill MD",
       receiptTemplate: "Receipt template",
@@ -450,6 +462,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchDecisionLabel: enCodingDispatchDecision,
       dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompts`,
       dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} receipt template`,
+      dispatchArchive: "Dispatch archive",
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} files / ${promptFiles} prompts / ${totalBytes} bytes`,
+      dispatchUnassignedHeld: (count) => `${count} held unassigned`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
       drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
@@ -583,6 +598,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadSessionMarkdown: "Session MD",
       downloadDispatchJson: "Dispatch JSON",
       downloadDispatchMarkdown: "Dispatch MD",
+      downloadDispatchArchiveJson: "归档 JSON",
+      downloadDispatchArchiveMarkdown: "归档 MD",
       downloadDrillJson: "演练 JSON",
       downloadDrillMarkdown: "演练 MD",
       receiptTemplate: "证据模板",
@@ -609,6 +626,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchDecisionLabel: zhHansCodingDispatchDecision,
       dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompt`,
       dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} 个 receipt template`,
+      dispatchArchive: "Dispatch 归档",
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} 个文件 / ${promptFiles} 个 prompt / ${totalBytes} bytes`,
+      dispatchUnassignedHeld: (count) => `${count} 个 held 未分配`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
@@ -742,6 +762,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadSessionMarkdown: "Session MD",
       downloadDispatchJson: "Dispatch JSON",
       downloadDispatchMarkdown: "Dispatch MD",
+      downloadDispatchArchiveJson: "歸檔 JSON",
+      downloadDispatchArchiveMarkdown: "歸檔 MD",
       downloadDrillJson: "演練 JSON",
       downloadDrillMarkdown: "演練 MD",
       receiptTemplate: "證據範本",
@@ -768,6 +790,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchDecisionLabel: zhHantCodingDispatchDecision,
       dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompt`,
       dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} 個 receipt template`,
+      dispatchArchive: "Dispatch 歸檔",
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} 個檔案 / ${promptFiles} 個 prompt / ${totalBytes} bytes`,
+      dispatchUnassignedHeld: (count) => `${count} 個 held 未分配`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
@@ -901,6 +926,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadSessionMarkdown: "Session MD",
       downloadDispatchJson: "Dispatch JSON",
       downloadDispatchMarkdown: "Dispatch MD",
+      downloadDispatchArchiveJson: "Archive JSON",
+      downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDrillJson: "모의실행 JSON",
       downloadDrillMarkdown: "모의실행 MD",
       receiptTemplate: "증거 템플릿",
@@ -927,6 +954,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchDecisionLabel: koCodingDispatchDecision,
       dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / prompt ${promptFiles}개`,
       dispatchReceiptTemplate: (receiptTemplates) => `receipt template ${receiptTemplates}개`,
+      dispatchArchive: "Dispatch archive",
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `파일 ${files}개 / prompt ${promptFiles}개 / ${totalBytes} bytes`,
+      dispatchUnassignedHeld: (count) => `미할당 보류 ${count}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
       drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",

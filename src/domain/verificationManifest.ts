@@ -113,6 +113,8 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
     && report.valid.promptFiles === report.valid.readyItems
     && report.valid.promptFilesWritten === report.valid.promptFiles
     && report.valid.receiptTemplateWritten
+    && report.valid.archiveFilesWritten >= report.valid.promptFiles + 3
+    && report.valid.archiveUnsafePaths === 0
     && report.valid.uniqueEvidencePrefixes === report.valid.totalItems
     && report.valid.unsafePaths === 0
     && report.productionHeld.dispatchDecision === "blocked"
@@ -120,6 +122,7 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
     && report.productionHeld.productionHeldItems > 0
     && report.productionHeld.promptFilesWritten === 0
     && !report.productionHeld.receiptTemplateWritten
+    && report.productionHeld.archiveUnsafePaths === 0
     && report.productionHeld.unsafePaths === 0
     && checksPassed;
 
@@ -134,10 +137,13 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
       `Valid decision: ${report.valid.dispatchDecision}`,
       `Valid prompts written: ${report.valid.promptFilesWritten}/${report.valid.promptFiles}`,
       `Receipt template written: ${report.valid.receiptTemplateWritten}`,
+      `Valid archive files written: ${report.valid.archiveFilesWritten}`,
+      `Valid archive unsafe paths: ${report.valid.archiveUnsafePaths}`,
       `Valid unsafe paths: ${report.valid.unsafePaths}`,
       `Production-held decision: ${report.productionHeld.dispatchDecision}`,
       `Production-held ready items: ${report.productionHeld.readyItems}`,
       `Production-held prompts written: ${report.productionHeld.promptFilesWritten}`,
+      `Production-held archive unsafe paths: ${report.productionHeld.archiveUnsafePaths}`,
       `Production-held receipt template written: ${report.productionHeld.receiptTemplateWritten}`
     ],
     nextAction: ok

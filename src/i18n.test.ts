@@ -40,11 +40,14 @@ describe("i18n", () => {
       expect(copy.codingBriefs.title).toBeTruthy();
       expect(copy.codingBriefs.dispatchManifest).toBeTruthy();
       expect(copy.codingBriefs.downloadDispatchJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadDispatchArchiveJson).toBeTruthy();
       expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).toBeTruthy();
       if (locale !== "en") {
         expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).not.toBe("dispatchable");
       }
       expect(copy.codingBriefs.dispatchSummary(2, 1, 2)).toBeTruthy();
+      expect(copy.codingBriefs.dispatchArchiveSummary(4, 2, 512)).toBeTruthy();
+      expect(copy.codingBriefs.dispatchUnassignedHeld(1)).toBeTruthy();
       expect(copy.codingBriefs.receiptTemplate).toBeTruthy();
       expect(copy.codingBriefs.drillReady).toBeTruthy();
     }
