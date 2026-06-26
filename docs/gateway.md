@@ -897,7 +897,7 @@ Response:
 
 ### `POST /v1/development/coding-briefs/session-receipt-review`
 
-Reviews a filled receipt against the original session bundle. The workbench uses the same contract when an operator imports a completed receipt JSON. A verified review means the submitted evidence is structurally complete; it still does not prove Naikaku independently reran commands or inspected files.
+Reviews a filled receipt against the original session bundle. The workbench uses the same contract when an operator imports a completed receipt JSON. A verified review means the submitted evidence is structurally complete and includes safe relative changed-file, command-transcript, and evidence-artifact references; it still does not prove Naikaku independently reran commands or inspected files.
 
 ```json
 {
@@ -913,8 +913,8 @@ Reviews a filled receipt against the original session bundle. The workbench uses
 
 Receipt review decisions are:
 
-- `verified`: every ready session includes changed files, passing command exit codes, evidence artifacts, and risk notes.
-- `needs-evidence`: no command failed, but required implementation evidence is still missing.
+- `verified`: every ready session includes safe relative changed files, passing command exit codes with transcript references, evidence artifact references, and risk notes.
+- `needs-evidence`: no command failed, but required implementation evidence is still missing, unsafe, or only a claim without a local artifact reference.
 - `blocked`: a command failed, a session is held, or production evidence is required before acceptance.
 
 ### `POST /v1/development/coding-briefs/implementation-evidence`

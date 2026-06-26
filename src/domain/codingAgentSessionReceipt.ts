@@ -7,6 +7,10 @@ import type {
   CodingAgentSessionReceiptItem,
   CodingAgentSessionReceiptStatus
 } from "./types";
+import {
+  evidenceArtifactPathFrom,
+  isSafeRelativeArtifactPath
+} from "./codingAgentArtifactReferences";
 
 export interface BuildCodingAgentSessionReceiptTemplateInput {
   bundle: CodingAgentSessionBundle;
@@ -239,6 +243,11 @@ function missingEvidenceFor({
   if (!changedFiles.length) {
     missing.push("Changed files summary is required.");
   }
+  changedFiles.forEach((path) => {
+    if (!isSafeRelativeArtifactPath(path)) {
+      missing.push(`Changed file path must be a safe relative artifact path: ${path || "(empty)"}`);
+    }
+  });
 
   const byCommand = new Map(commandResults.map((result) => [result.command, result]));
   for (const command of session.verificationCommands) {
@@ -247,12 +256,26 @@ function missingEvidenceFor({
       missing.push(`Command result is required: ${command}`);
     } else if (!result.outputSummary.trim()) {
       missing.push(`Command output summary is required: ${command}`);
+    } else if (!result.transcriptRef?.trim()) {
+      missing.push(`Command transcript artifact reference is required: ${command}`);
+    } else if (!isSafeRelativeArtifactPath(result.transcriptRef)) {
+      missing.push(`Command transcript path must be a safe relative artifact path: ${command}`);
     }
   }
 
   if (evidence.length < session.evidenceRequired.length) {
     missing.push("Evidence artifacts are required for every session evidence item.");
   }
+  evidence.forEach((entry) => {
+    const artifactPath = evidenceArtifactPathFrom(entry);
+    if (!artifactPath) {
+      missing.push(`Evidence artifact must include a local artifact path, not only a claim: ${entry || "(empty)"}`);
+      return;
+    }
+    if (!isSafeRelativeArtifactPath(artifactPath)) {
+      missing.push(`Evidence artifact path must be a safe relative artifact path: ${artifactPath}`);
+    }
+  });
 
   if (!risks.length) {
     missing.push("Remaining risk note is required, even when no risks remain.");

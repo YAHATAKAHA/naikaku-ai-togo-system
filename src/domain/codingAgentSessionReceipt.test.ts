@@ -69,6 +69,60 @@ describe("coding agent session receipt", () => {
     expect(markdown).toContain("No command was run");
   });
 
+  it("keeps receipts pending when command transcript references are missing", () => {
+    const bundle = defaultBundle();
+    const submitted = completedReceiptFor(bundle);
+    submitted.items[0].commandResults = submitted.items[0].commandResults.map((result) => ({
+      command: result.command,
+      exitCode: result.exitCode,
+      outputSummary: result.outputSummary
+    }));
+
+    const reviewed = reviewCodingAgentSessionReceipt({
+      bundle,
+      receipt: submitted
+    });
+
+    expect(reviewed.decision).toBe("needs-evidence");
+    expect(reviewed.summary.pendingEvidence).toBe(1);
+    expect(reviewed.items[0].receiptStatus).toBe("pending-evidence");
+    expect(reviewed.items[0].missing.join(" ")).toContain("Command transcript artifact reference is required");
+  });
+
+  it("keeps receipts pending when evidence items are only attached claims", () => {
+    const bundle = defaultBundle();
+    const submitted = completedReceiptFor(bundle);
+    submitted.items[0].evidence = bundle.sessions[0].evidenceRequired.map((evidence) => `${evidence}: attached`);
+
+    const reviewed = reviewCodingAgentSessionReceipt({
+      bundle,
+      receipt: submitted
+    });
+
+    expect(reviewed.decision).toBe("needs-evidence");
+    expect(reviewed.summary.pendingEvidence).toBe(1);
+    expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact must include a local artifact path");
+  });
+
+  it("keeps receipts pending when submitted artifact paths escape the sandbox", () => {
+    const bundle = defaultBundle();
+    const submitted = completedReceiptFor(bundle);
+    submitted.items[0].changedFiles = ["../secrets.env"];
+    submitted.items[0].commandResults[0].transcriptRef = "../logs/test.log";
+    submitted.items[0].evidence[0] = "Browser screenshot: ../screens/private.png";
+
+    const reviewed = reviewCodingAgentSessionReceipt({
+      bundle,
+      receipt: submitted
+    });
+
+    expect(reviewed.decision).toBe("needs-evidence");
+    expect(reviewed.summary.pendingEvidence).toBe(1);
+    expect(reviewed.items[0].missing.join(" ")).toContain("Changed file path must be a safe relative artifact path");
+    expect(reviewed.items[0].missing.join(" ")).toContain("Command transcript path must be a safe relative artifact path");
+    expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact path must be a safe relative artifact path");
+  });
+
   it("blocks a submitted receipt when a verification command failed", () => {
     const bundle = defaultBundle();
     const submitted = completedReceiptFor(bundle);
