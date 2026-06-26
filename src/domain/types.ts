@@ -745,6 +745,8 @@ export type AuditEventType =
   | "product.release.exported"
   | "release.rehearsal.completed"
   | "release.rehearsal.exported"
+  | "release.verification.completed"
+  | "release.verification.exported"
   | "provider.readiness.checked"
   | "provider.readiness.exported";
 

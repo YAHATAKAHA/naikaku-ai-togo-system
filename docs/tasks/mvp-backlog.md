@@ -21,6 +21,7 @@ This backlog is written so different contributors can work in parallel.
 - Add release drill fixtures and evidence-file inputs for strict rehearsal replay.
 - Add release rehearsal evidence claims so dry-run proof cannot be confused with production runner proof.
 - Add release verification gate with a production-evidence mode that blocks dry-run handoff.
+- Add Japanese-first localization with English, Simplified Chinese, Traditional Chinese, and Korean locale support.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
@@ -39,6 +40,7 @@ Acceptance:
 - Operators can inspect the rehearsal evidence level, limitations, and production requirements in JSON, CLI output, and the UI panel.
 - Operators can replay strict rehearsal with reviewed fixture evidence while keeping raw provider keys and real runner credentials out of the repo.
 - Operators and CI can verify a rehearsal report for sandbox scope, and separately fail production verification while evidence remains dry-run.
+- Operators can switch supported UI languages without resetting workspace state, session-only secrets, or release verification evidence.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 

@@ -10,6 +10,7 @@ import {
   Cpu,
   FileKey2,
   GitBranch,
+  Languages,
   Play,
   RefreshCcw,
   Save,
@@ -70,6 +71,7 @@ import {
   serializeProductReleaseBundleExport,
   serializeProductReleaseNotesExport,
   serializeReleaseRehearsalExport,
+  serializeReleaseVerificationExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
@@ -89,16 +91,19 @@ import { buildProductReleaseBundle } from "./domain/productReleaseBundle";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
 import { buildReleaseRehearsalReport } from "./domain/releaseRehearsal";
 import { buildReleaseRemediationIssueDrafts } from "./domain/releaseRemediationIssues";
+import { buildReleaseVerification } from "./domain/releaseVerification";
 import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
+import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type SupportedLocale } from "./i18n";
 import {
   createAutomationRunbookViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createProductReadinessViaGateway,
   createProductReleaseBundleViaGateway,
+  createReleaseVerificationViaGateway,
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
@@ -130,6 +135,7 @@ import type {
   ProductReadinessReport,
   ProductReleaseBundle,
   ReleaseRehearsalReport,
+  ReleaseVerificationReport,
   RoleWorkspaceScaffolds,
   RunHistoryItem,
   TeamHandoff
@@ -148,6 +154,8 @@ interface ServerLedgerState {
 }
 
 export function App() {
+  const [locale, setLocale] = useState<SupportedLocale>(() => getInitialLocale());
+  const copy = useMemo(() => getCopy(locale), [locale]);
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
   const [selectedRoleId, setSelectedRoleId] = useState(workspace.roles[0]?.id || "");
   const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
@@ -167,7 +175,7 @@ export function App() {
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
     message: string;
-  }>({ status: "idle", message: "Gateway ready when local service is running." });
+  }>({ status: "idle", message: getCopy(locale).gatewayReady });
   const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [automationRunbookLink, setAutomationRunbookLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -178,6 +186,8 @@ export function App() {
   const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [releaseRehearsal, setReleaseRehearsal] = useState<ReleaseRehearsalReport | null>(null);
   const [releaseRehearsalLink, setReleaseRehearsalLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [releaseVerification, setReleaseVerification] = useState<ReleaseVerificationReport | null>(null);
+  const [releaseVerificationLink, setReleaseVerificationLink] = useState<{ href: string; fileName: string } | null>(null);
   const [releaseRemediationIssuesLink, setReleaseRemediationIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [releaseRemediationScriptLink, setReleaseRemediationScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -195,6 +205,10 @@ export function App() {
     evidenceBundles: []
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    saveLocale(locale);
+  }, [locale]);
 
   const selectedRole = useMemo(
     () => workspace.roles.find((role) => role.id === selectedRoleId) || workspace.roles[0],
@@ -430,6 +444,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (releaseVerificationLink) {
+        URL.revokeObjectURL(releaseVerificationLink.href);
+      }
+    };
+  }, [releaseVerificationLink]);
+
+  useEffect(() => {
+    return () => {
       if (releaseRemediationIssuesLink) {
         URL.revokeObjectURL(releaseRemediationIssuesLink.href);
       }
@@ -515,6 +537,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseVerification(null);
+    setReleaseVerificationLink(null);
     setReleaseRemediationIssuesLink(null);
     setReleaseRemediationScriptLink(null);
     setProviderReadinessLink(null);
@@ -539,6 +563,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseVerification(null);
+    setReleaseVerificationLink(null);
     setReleaseRemediationIssuesLink(null);
     setReleaseRemediationScriptLink(null);
     setDevelopmentIssuesLink(null);
@@ -623,6 +649,7 @@ export function App() {
       URL.revokeObjectURL(releaseRehearsalLink.href);
       setReleaseRehearsalLink(null);
     }
+    clearReleaseVerification();
     if (releaseRemediationIssuesLink) {
       URL.revokeObjectURL(releaseRemediationIssuesLink.href);
       setReleaseRemediationIssuesLink(null);
@@ -630,6 +657,14 @@ export function App() {
     if (releaseRemediationScriptLink) {
       URL.revokeObjectURL(releaseRemediationScriptLink.href);
       setReleaseRemediationScriptLink(null);
+    }
+  }
+
+  function clearReleaseVerification() {
+    setReleaseVerification(null);
+    if (releaseVerificationLink) {
+      URL.revokeObjectURL(releaseVerificationLink.href);
+      setReleaseVerificationLink(null);
     }
   }
 
@@ -822,6 +857,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseVerification(null);
+    setReleaseVerificationLink(null);
     setReleaseRemediationIssuesLink(null);
     setReleaseRemediationScriptLink(null);
     setDevelopmentBoardLink(null);
@@ -887,6 +924,8 @@ export function App() {
       setProductReleaseNotesLink(null);
       setReleaseRehearsal(null);
       setReleaseRehearsalLink(null);
+      setReleaseVerification(null);
+      setReleaseVerificationLink(null);
       setReleaseRemediationIssuesLink(null);
       setReleaseRemediationScriptLink(null);
       setDevelopmentBoardLink(null);
@@ -1219,6 +1258,7 @@ export function App() {
       URL.revokeObjectURL(releaseRehearsalLink.href);
       setReleaseRehearsalLink(null);
     }
+    clearReleaseVerification();
     if (releaseRemediationIssuesLink) {
       URL.revokeObjectURL(releaseRemediationIssuesLink.href);
       setReleaseRemediationIssuesLink(null);
@@ -1230,7 +1270,7 @@ export function App() {
 
     setRunState({
       status: "local",
-      message: `Release rehearsal ${report.decision}: ${report.summary.blockers} blockers, ${report.summary.warnings} warnings.`
+      message: copy.releaseRehearsalStatus(report.decision, report.summary.blockers, report.summary.warnings)
     });
     recordAudit({
       type: "release.rehearsal.completed",
@@ -1270,6 +1310,69 @@ export function App() {
         blockers: releaseRehearsal.summary.blockers,
         warnings: releaseRehearsal.summary.warnings,
         evidenceItems: releaseRehearsal.summary.evidenceItems
+      }
+    });
+  }
+
+  function createReleaseVerificationDownload(report: ReleaseVerificationReport) {
+    const blob = new Blob([serializeReleaseVerificationExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const mode = report.requireProductionEvidence ? "production" : report.scope;
+    const fileName = `naikaku-release-verification-${mode}-${report.sourceRunId.replace(/[^a-z0-9-]/gi, "-")}.json`;
+
+    if (releaseVerificationLink) {
+      URL.revokeObjectURL(releaseVerificationLink.href);
+    }
+
+    setReleaseVerificationLink({ href: url, fileName });
+    recordAudit({
+      type: "release.verification.exported",
+      severity: report.decision === "verified" ? "success" : report.decision === "not-production-ready" ? "warning" : "error",
+      summary: `Release verification export prepared: ${report.decision}.`,
+      runId: report.sourceRunId,
+      metadata: {
+        scope: report.scope,
+        requireProductionEvidence: report.requireProductionEvidence,
+        failed: report.summary.failed
+      }
+    });
+  }
+
+  async function verifyRelease(requireProductionEvidence = false) {
+    if (!releaseRehearsal) return;
+
+    let verification = buildReleaseVerification({
+      report: releaseRehearsal,
+      requireProductionEvidence
+    });
+    let source: "gateway" | "local" = "local";
+
+    try {
+      verification = await createReleaseVerificationViaGateway(releaseRehearsal, requireProductionEvidence);
+      source = "gateway";
+    } catch (error) {
+      setRunState({
+        status: "fallback",
+        message: copy.releaseVerificationFallback(error instanceof Error ? error.message : undefined)
+      });
+    }
+
+    setReleaseVerification(verification);
+    createReleaseVerificationDownload(verification);
+    setRunState({
+      status: source === "gateway" ? "gateway" : "local",
+      message: copy.releaseVerificationStatus(verification.decision, verification.summary.failed)
+    });
+    recordAudit({
+      type: "release.verification.completed",
+      severity: verification.decision === "verified" ? "success" : verification.decision === "not-production-ready" ? "warning" : "error",
+      summary: `Release verification completed: ${verification.decision}.`,
+      runId: verification.sourceRunId,
+      metadata: {
+        scope: verification.scope,
+        requireProductionEvidence: verification.requireProductionEvidence,
+        failed: verification.summary.failed,
+        source
       }
     });
   }
@@ -1847,7 +1950,7 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" lang={htmlLang(locale)}>
       <header className="topbar">
         <div className="brand">
           <div className="brand-mark">
@@ -1855,28 +1958,43 @@ export function App() {
           </div>
           <div>
             <strong>Naikaku AI Togo</strong>
-            <span>Cabinet orchestration workbench</span>
+            <span>{copy.brandSubtitle}</span>
           </div>
         </div>
         <nav className="topbar-nav" aria-label="Workspace status">
           <span>
-            <Brain size={15} /> {activeRoles.length} roles active
+            <Brain size={15} /> {copy.rolesActive(activeRoles.length)}
           </span>
           <span>
-            <Shield size={15} /> sandbox first
+            <Shield size={15} /> {copy.sandboxFirst}
           </span>
           <span>
-            <FileKey2 size={15} /> secrets session-only
+            <FileKey2 size={15} /> {copy.secretsSessionOnly}
           </span>
         </nav>
         <div className="topbar-actions">
-          <button className="icon-button" type="button" onClick={resetWorkspace} aria-label="Reset workspace">
+          <label className="locale-select">
+            <Languages size={15} />
+            <span>{copy.language}</span>
+            <select
+              aria-label={copy.language}
+              value={locale}
+              onChange={(event) => setLocale(event.target.value as SupportedLocale)}
+            >
+              {supportedLocales.map((option) => (
+                <option value={option.code} key={option.code}>
+                  {option.nativeLabel}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="icon-button" type="button" onClick={resetWorkspace} aria-label={copy.resetWorkspace}>
             <RefreshCcw size={17} />
           </button>
-          <button className="icon-button" type="button" onClick={() => fileInputRef.current?.click()} aria-label="Import workspace">
+          <button className="icon-button" type="button" onClick={() => fileInputRef.current?.click()} aria-label={copy.importWorkspace}>
             <Upload size={17} />
           </button>
-          <button className="icon-button" type="button" onClick={exportWorkspace} aria-label="Export workspace">
+          <button className="icon-button" type="button" onClick={exportWorkspace} aria-label={copy.exportWorkspace}>
             <Download size={17} />
           </button>
           {exportLink ? (
@@ -1893,10 +2011,10 @@ export function App() {
           />
           <button className="secondary-button" type="button" onClick={persistWorkspace}>
             {saveState === "saved" ? <CheckCircle2 size={16} /> : <Save size={16} />}
-            {saveState === "saved" ? "Saved" : "Save"}
+            {saveState === "saved" ? copy.saved : copy.save}
           </button>
           <button className="primary-button" type="button" onClick={runCabinet} disabled={runState.status === "running"}>
-            <Play size={16} /> {runState.status === "running" ? "Running..." : "Run cabinet"}
+            <Play size={16} /> {runState.status === "running" ? copy.running : copy.runCabinet}
           </button>
         </div>
       </header>
@@ -1914,12 +2032,12 @@ export function App() {
         <section className="center-column">
           <section className="mission-header">
             <div>
-              <p className="section-kicker">Mission automation</p>
-              <h1>Plan, act, audit, score, and iterate inside a governed sandbox.</h1>
+              <p className="section-kicker">{copy.missionKicker}</p>
+              <h1>{copy.missionTitle}</h1>
             </div>
             <div className="decision-tile" data-decision={run?.score.decision || "idle"}>
-              <span>Decision</span>
-              <strong>{run?.score.decision || "not run"}</strong>
+              <span>{copy.decision}</span>
+              <strong>{run?.score.decision || copy.notRun}</strong>
             </div>
           </section>
 
@@ -1946,10 +2064,15 @@ export function App() {
           <ReleaseRehearsalPanel
             report={releaseRehearsal}
             exportLink={releaseRehearsalLink}
+            verification={releaseVerification}
+            verificationLink={releaseVerificationLink}
             issueDraftsLink={releaseRemediationIssuesLink}
             issueScriptLink={releaseRemediationScriptLink}
+            copy={copy.releaseRehearsal}
             onRun={runReleaseRehearsal}
             onExport={exportReleaseRehearsal}
+            onVerify={() => void verifyRelease(false)}
+            onVerifyProduction={() => void verifyRelease(true)}
             onExportIssueDrafts={exportReleaseRemediationIssues}
             onExportIssueScript={exportReleaseRemediationScript}
           />

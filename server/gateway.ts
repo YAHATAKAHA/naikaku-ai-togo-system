@@ -9,6 +9,7 @@ import { buildProductReadinessReport } from "../src/domain/productReadiness";
 import { buildProductReleaseBundle } from "../src/domain/productReleaseBundle";
 import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
 import { buildReleaseRehearsalReport } from "../src/domain/releaseRehearsal";
+import { buildReleaseVerification } from "../src/domain/releaseVerification";
 import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -26,6 +27,7 @@ import type {
   MemoryEntry,
   ProviderConfig,
   ProviderReadinessMatrix,
+  ReleaseRehearsalReport,
   SandboxPolicy
 } from "../src/domain/types";
 import {
@@ -73,6 +75,7 @@ const server = createServer(async (request, response) => {
           "product-readiness",
           "product-release-bundle",
           "release-rehearsal",
+          "release-verification",
           "development-issues",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -490,6 +493,26 @@ const server = createServer(async (request, response) => {
         auditEvents: body.auditEvents || []
       });
       sendJson(response, 200, report);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/product/release-verification") {
+      const body = await readJson<{
+        report?: ReleaseRehearsalReport;
+        requireProductionEvidence?: boolean;
+      }>(request);
+      if (body.report?.schema !== "naikaku.release-rehearsal.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "report with schema naikaku.release-rehearsal.v1 is required."
+        });
+        return;
+      }
+      const verification = buildReleaseVerification({
+        report: body.report,
+        requireProductionEvidence: Boolean(body.requireProductionEvidence)
+      });
+      sendJson(response, 200, verification);
       return;
     }
 

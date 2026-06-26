@@ -10,6 +10,7 @@ import { serializeProviderReadinessMatrix } from "./providerReadiness";
 import { serializeProductReadinessReport } from "./productReadiness";
 import { serializeProductReleaseBundle, serializeProductReleaseNotes } from "./productReleaseBundle";
 import { serializeReleaseRehearsalReport } from "./releaseRehearsal";
+import { serializeReleaseVerification } from "./releaseVerification";
 import { serializeRoleWorkspaceScaffoldScript, serializeRoleWorkspaceScaffolds } from "./roleWorkspaceScaffolds";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
@@ -29,6 +30,7 @@ import type {
   ProductReadinessReport,
   ProductReleaseBundle,
   ReleaseRehearsalReport,
+  ReleaseVerificationReport,
   RoleWorkspaceScaffolds,
   RunHistoryItem
 } from "./types";
@@ -420,6 +422,10 @@ export function serializeProductReleaseNotesExport(bundle: ProductReleaseBundle)
 
 export function serializeReleaseRehearsalExport(report: ReleaseRehearsalReport) {
   return serializeReleaseRehearsalReport(report);
+}
+
+export function serializeReleaseVerificationExport(report: ReleaseVerificationReport) {
+  return serializeReleaseVerification(report);
 }
 
 export function loadProviderReadinessRows(): ProviderReadinessRow[] {

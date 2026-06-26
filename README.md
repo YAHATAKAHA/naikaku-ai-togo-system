@@ -55,7 +55,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, development issue draft, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, set:
 
@@ -88,7 +88,7 @@ npm run preview   # preview the production build
 
 `npm run rehearsal:drill` first writes reviewed local fixtures under `output/release-drill`, then runs strict rehearsal with a provided run, provider-readiness export, approval records, audit events, reviewed memory, saved development items, and a secret probe. It is a reproducible sandbox drill for the release gate; it proves the evidence plumbing can close cleanly without claiming that real provider keys or production runners have been attached. Rehearsal JSON, CLI output, and the UI panel include an evidence claim that names this as `dry-run` evidence and lists the remaining production requirements.
 
-`npm run release:verify` turns the latest drill rehearsal into `naikaku.release-verification.v1` and fails if warnings, blockers, schema drift, or secret leakage are present. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
+`npm run release:verify` turns the latest drill rehearsal into `naikaku.release-verification.v1` and fails if warnings, blockers, schema drift, or secret leakage are present. The workbench panel and local gateway expose the same verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
 
 ## Repository Map
 
@@ -101,6 +101,7 @@ docs/
   architecture.md
   api-adapters.md
   gateway.md
+  localization.md
   security-sandbox.md
   reference/open-source-research.md
   tasks/mvp-backlog.md

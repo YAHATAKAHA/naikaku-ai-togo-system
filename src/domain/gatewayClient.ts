@@ -16,6 +16,7 @@ import type {
   ProductReadinessReport,
   ProductReleaseBundle,
   ReleaseRehearsalReport,
+  ReleaseVerificationReport,
   RoleWorkspaceScaffolds,
   TeamHandoff
 } from "./types";
@@ -447,6 +448,30 @@ export async function createReleaseRehearsalViaGateway(
   }
 
   return (await response.json()) as ReleaseRehearsalReport;
+}
+
+export async function createReleaseVerificationViaGateway(
+  report: ReleaseRehearsalReport,
+  requireProductionEvidence = false,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/product/release-verification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      report,
+      requireProductionEvidence
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway release verification failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ReleaseVerificationReport;
 }
 
 export async function createDevelopmentIssuesViaGateway(
