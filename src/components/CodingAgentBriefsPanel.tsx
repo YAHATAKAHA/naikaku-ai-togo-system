@@ -1,4 +1,5 @@
-import { AlertTriangle, Bot, ClipboardCheck, Download, PackageCheck, PlayCircle, ShieldCheck } from "lucide-react";
+import { useRef, type ChangeEvent } from "react";
+import { AlertTriangle, Bot, ClipboardCheck, Download, PackageCheck, PlayCircle, ShieldCheck, Upload } from "lucide-react";
 import type {
   CodingAgentBrief,
   CodingAgentBriefReviewCheck,
@@ -37,6 +38,7 @@ interface CodingAgentBriefsPanelProps {
   onExportProductionSession: () => void;
   onRunSessionDrill: () => void;
   onCreateSessionReceipt: () => void;
+  onImportSessionReceipt: (file: File) => void;
 }
 
 export function CodingAgentBriefsPanel({
@@ -62,8 +64,19 @@ export function CodingAgentBriefsPanel({
   onExportSession,
   onExportProductionSession,
   onRunSessionDrill,
-  onCreateSessionReceipt
+  onCreateSessionReceipt,
+  onImportSessionReceipt
 }: CodingAgentBriefsPanelProps) {
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+
+  function handleReceiptImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (file) {
+      onImportSessionReceipt(file);
+    }
+  }
+
   return (
     <section className="coding-briefs-panel">
       <div className="panel-heading">
@@ -106,6 +119,16 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onCreateSessionReceipt} disabled={!briefs.briefs.length}>
           <ClipboardCheck size={15} /> {copy.receiptTemplate}
         </button>
+        <button type="button" onClick={() => receiptInputRef.current?.click()} disabled={!briefs.briefs.length}>
+          <Upload size={15} /> {copy.importReceipt}
+        </button>
+        <input
+          ref={receiptInputRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={handleReceiptImport}
+        />
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> {copy.downloadJson}

@@ -28,7 +28,7 @@ This backlog is written so different contributors can work in parallel.
 - Add Coding Agent Brief Review gate that blocks incomplete prompts, missing sandbox prohibitions, missing verification commands, and production evidence overclaims before agent handoff.
 - Add Coding Agent Session Bundle export that separates ready and held coding-agent sessions with prompt files, verification commands, evidence requirements, and safety stops.
 - Add Coding Agent Session Drill that simulates assignable versus held coding-agent sessions without claiming code execution, provider calls, browser control, deploy, or Git changes.
-- Add Coding Agent Session Receipt template/review gate that requires changed files, command exit codes, evidence artifacts, and risk notes before accepting implementation claims.
+- Add Coding Agent Session Receipt template/import/review gate that requires changed files, command exit codes, evidence artifacts, and risk notes before accepting implementation claims.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
 
 Acceptance:
@@ -51,7 +51,7 @@ Acceptance:
 - Operators can review coding-agent briefs before handoff and receive a machine-readable `ready`, `needs-review`, or `blocked` decision with next actions.
 - Operators can export a coding-agent session bundle that never claims implementation happened and holds sessions when review or production evidence is incomplete.
 - Operators can run a coding-agent session drill that exports JSON/Markdown, separates `would-assign`, `needs-operator-review`, and `not-assigned`, and keeps dry-run limitations visible in every supported UI language.
-- Operators can export a receipt template and review a filled receipt without treating structural evidence as independent command execution.
+- Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 
 ## Track 2: Provider Adapters

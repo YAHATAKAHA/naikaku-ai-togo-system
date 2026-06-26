@@ -982,6 +982,7 @@ export type AuditEventType =
   | "development.coding_sessions.exported"
   | "development.coding_sessions.drilled"
   | "development.coding_sessions.receipt_prepared"
+  | "development.coding_sessions.receipt_reviewed"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

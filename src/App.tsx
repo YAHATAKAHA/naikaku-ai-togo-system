@@ -93,7 +93,7 @@ import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "./domain/codingAgentSessionDrill";
-import { buildCodingAgentSessionReceiptTemplate } from "./domain/codingAgentSessionReceipt";
+import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "./domain/codingAgentSessionReceipt";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
@@ -130,6 +130,7 @@ import {
   listApprovalLedgerViaGateway,
   listEvidenceLedgerViaGateway,
   reviewCodingAgentBriefsViaGateway,
+  reviewCodingAgentSessionReceiptViaGateway,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
   saveApprovalRecordViaGateway,
@@ -2278,6 +2279,86 @@ export function App() {
     });
   }
 
+  async function reviewImportedCodingAgentSessionReceipt(file: File) {
+    try {
+      const raw = JSON.parse(await file.text()) as CodingAgentSessionReceipt;
+      if (raw.schema !== "naikaku.coding-agent-session-receipt.v1") {
+        throw new Error("receipt with schema naikaku.coding-agent-session-receipt.v1 is required.");
+      }
+
+      const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
+        briefs: codingAgentBriefs,
+        review: codingAgentBriefReview,
+        releaseVerification
+      });
+      let receipt = reviewCodingAgentSessionReceipt({ bundle, receipt: raw });
+      let source: "gateway" | "local" = "local";
+      let gatewayError: string | null = null;
+
+      try {
+        receipt = await reviewCodingAgentSessionReceiptViaGateway(bundle, raw);
+        source = "gateway";
+      } catch (error) {
+        gatewayError = error instanceof Error ? error.message : "unknown";
+      }
+
+      setCodingAgentBriefReview(bundle.review);
+      setCodingAgentSessionBundle(bundle);
+      setCodingAgentSessionReceipt(receipt);
+      if (!codingAgentSessionBundle) {
+        createCodingAgentSessionBundleDownload(bundle, false);
+      }
+      createCodingAgentSessionReceiptDownload(receipt);
+      setRunState({
+        status: source === "gateway" ? "gateway" : "local",
+        message: source === "gateway"
+          ? copy.codingBriefs.statusReceiptReviewGateway(
+            receipt.decision,
+            receipt.summary.verified,
+            receipt.summary.pendingEvidence,
+            receipt.summary.failed
+          )
+          : copy.codingBriefs.statusReceiptReviewLocal(
+            receipt.decision,
+            receipt.summary.verified,
+            receipt.summary.pendingEvidence,
+            receipt.summary.failed,
+            gatewayError || undefined
+          )
+      });
+      recordAudit({
+        type: "development.coding_sessions.receipt_reviewed",
+        severity: receipt.decision === "verified" ? "success" : receipt.decision === "needs-evidence" ? "warning" : "error",
+        summary: `Coding agent session receipt reviewed: ${receipt.decision}.`,
+        runId: receipt.runId,
+        metadata: {
+          sessions: receipt.summary.total,
+          verified: receipt.summary.verified,
+          pendingEvidence: receipt.summary.pendingEvidence,
+          failed: receipt.summary.failed,
+          held: receipt.summary.held,
+          source,
+          gatewayError,
+          fileName: file.name
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      setRunState({
+        status: "error",
+        message: copy.codingBriefs.statusReceiptImportError(message)
+      });
+      recordAudit({
+        type: "development.coding_sessions.receipt_reviewed",
+        severity: "error",
+        summary: `Coding agent session receipt import failed: ${message}.`,
+        metadata: {
+          fileName: file.name
+        }
+      });
+    }
+  }
+
   function createCodingAgentSessionDrillDownload(report: CodingAgentSessionDrillReport) {
     const blob = new Blob([serializeCodingAgentSessionDrillExport(report)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2754,6 +2835,7 @@ export function App() {
             onExportProductionSession={() => void exportCodingAgentSessionBundle(true)}
             onRunSessionDrill={() => void runCodingAgentSessionDrill()}
             onCreateSessionReceipt={() => void createCodingAgentSessionReceiptTemplate()}
+            onImportSessionReceipt={(file) => void reviewImportedCodingAgentSessionReceipt(file)}
           />
 
           <DevelopmentIssuesPanel

@@ -897,7 +897,7 @@ Response:
 
 ### `POST /v1/development/coding-briefs/session-receipt-review`
 
-Reviews a filled receipt against the original session bundle. A verified review means the submitted evidence is structurally complete; it still does not prove Naikaku independently reran commands or inspected files.
+Reviews a filled receipt against the original session bundle. The workbench uses the same contract when an operator imports a completed receipt JSON. A verified review means the submitted evidence is structurally complete; it still does not prove Naikaku independently reran commands or inspected files.
 
 ```json
 {

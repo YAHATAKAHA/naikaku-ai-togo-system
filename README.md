@@ -31,7 +31,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Coding Agent Brief Review gate that checks generated implementation prompts for schema completeness, sandbox prohibitions, required verification commands, and dry-run versus production evidence truthfulness before handoff.
 - Coding Agent Session Bundle export that packages reviewed briefs into ready/held coding-agent sessions with prompt files, verification commands, evidence checklists, safety stops, and explicit no-execution boundaries.
 - Coding Agent Session Drill that simulates sandboxed coding-agent assignment decisions, exports JSON/Markdown, and explicitly states that no code, tests, providers, browser, deploy, or Git action ran.
-- Coding Agent Session Receipt template/review contract that requires changed files, command exit codes, evidence artifacts, and risk notes before implementation can be claimed.
+- Coding Agent Session Receipt template/import/review flow that requires changed files, command exit codes, evidence artifacts, and risk notes before implementation can be claimed.
 - GitHub Issue Drafts export that turns development work items into labeled, Markdown-ready issue payloads plus a reviewable `gh issue create` script for parallel implementation.
 - Memory Inbox for reviewable lessons, decisions, skill proposals, risks, and follow-up items before local persistence.
 - Workspace JSON import/export and recent run history for operator handoff.
