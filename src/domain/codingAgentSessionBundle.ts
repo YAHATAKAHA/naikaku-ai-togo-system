@@ -7,6 +7,7 @@ import type {
   CodingAgentSession,
   CodingAgentSessionBundle,
   CodingAgentSessionBundleDecision,
+  CodingAgentSessionSandboxContract,
   CodingAgentSessionStatus,
   ReleaseVerificationReport
 } from "./types";
@@ -143,11 +144,24 @@ function briefToSession({
     executorProfileId: brief.sandbox.executorProfileId,
     status,
     promptFileName: `${String(index + 1).padStart(2, "0")}-${slugify(brief.title)}.md`,
+    sandboxContract: sandboxContractFor(brief),
     handoffMarkdown: handoffMarkdown({ brief, status, nextAction }),
     verificationCommands: brief.verificationCommands,
     evidenceRequired: brief.evidenceRequired,
     safetyStops: safetyStopsFor(brief, review, requireProductionEvidence),
     nextAction
+  };
+}
+
+function sandboxContractFor(brief: CodingAgentBrief): CodingAgentSessionSandboxContract {
+  return {
+    boundary: "sandbox-only",
+    executorProfileId: brief.sandbox.executorProfileId,
+    allowedActions: brief.sandbox.allowedActions,
+    prohibitedActions: brief.sandbox.prohibitedActions,
+    requiresHumanApproval: brief.sandbox.requiresHumanApproval,
+    evidenceArtifactPrefix: `output/coding-agent/${brief.id}/`,
+    receiptSchema: "naikaku.coding-agent-session-receipt.v1"
   };
 }
 
@@ -252,6 +266,22 @@ function handoffMarkdown({
     "",
     ...brief.evidenceRequired.map((item) => `- ${item}`),
     "",
+    "## Sandbox Contract",
+    "",
+    `- Boundary: sandbox-only`,
+    `- Executor profile: ${brief.sandbox.executorProfileId}`,
+    `- Receipt schema: naikaku.coding-agent-session-receipt.v1`,
+    `- Evidence artifact prefix: output/coding-agent/${brief.id}/`,
+    `- Human approval required: ${brief.sandbox.requiresHumanApproval ? "yes" : "no"}`,
+    "",
+    "### Allowed Actions",
+    "",
+    ...brief.sandbox.allowedActions.map((action) => `- ${action}`),
+    "",
+    "### Prohibited Actions",
+    "",
+    ...brief.sandbox.prohibitedActions.map((action) => `- ${action}`),
+    "",
     "## Safety Stops",
     "",
     ...brief.sandbox.prohibitedActions.map((action) => `- Do not perform: ${action}`),
@@ -274,7 +304,18 @@ function sessionMarkdown(session: CodingAgentSession, index: number) {
     `- Source item: ${session.sourceItemId}`,
     `- Executor: ${session.executorProfileId}`,
     `- Prompt file: ${session.promptFileName}`,
+    `- Sandbox boundary: ${session.sandboxContract.boundary}`,
+    `- Receipt schema: ${session.sandboxContract.receiptSchema}`,
+    `- Evidence prefix: ${session.sandboxContract.evidenceArtifactPrefix}`,
     `- Next action: ${session.nextAction}`,
+    "",
+    "### Allowed Actions",
+    "",
+    ...session.sandboxContract.allowedActions.map((action) => `- ${action}`),
+    "",
+    "### Prohibited Actions",
+    "",
+    ...session.sandboxContract.prohibitedActions.map((action) => `- ${action}`),
     "",
     "### Verification Commands",
     "",

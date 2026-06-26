@@ -149,6 +149,7 @@ function verificationCommandCheck(briefs: CodingAgentBriefs): CodingAgentBriefRe
 
 function sandboxBoundaryCheck(briefs: CodingAgentBriefs): CodingAgentBriefReviewCheck {
   const missingExecutor = briefs.briefs.filter((brief) => !brief.sandbox.executorProfileId);
+  const missingAllowedActions = briefs.briefs.filter((brief) => !brief.sandbox.allowedActions.length);
   const missingProhibitions = briefs.briefs.filter((brief) =>
     requiredProhibitedActions.some((action) => !brief.sandbox.prohibitedActions.includes(action))
   );
@@ -156,17 +157,18 @@ function sandboxBoundaryCheck(briefs: CodingAgentBriefs): CodingAgentBriefReview
     (brief.priority === "critical" || brief.status === "blocked" || brief.sandbox.executorProfileId === "human-approval") &&
     !brief.sandbox.requiresHumanApproval
   );
-  const blockers = missingExecutor.length + missingProhibitions.length + missingApproval.length;
+  const blockers = missingExecutor.length + missingAllowedActions.length + missingProhibitions.length + missingApproval.length;
 
   return check({
     id: "coding-brief-sandbox-boundary",
     label: "Sandbox boundary",
     status: blockers ? "block" : "pass",
     summary: blockers
-      ? "Some briefs are missing executor identity, prohibited actions, or required human approval flags."
-      : "Every brief names an executor boundary, prohibited actions, and human approval requirements.",
+      ? "Some briefs are missing executor identity, allowed actions, prohibited actions, or required human approval flags."
+      : "Every brief names an executor boundary, allowed actions, prohibited actions, and human approval requirements.",
     evidence: [
       `Missing executor: ${missingExecutor.length}`,
+      `Missing allowed actions: ${missingAllowedActions.length}`,
       `Missing prohibited actions: ${missingProhibitions.length}`,
       `Missing human approval: ${missingApproval.length}`,
       `Required prohibited actions: ${requiredProhibitedActions.join(", ")}`

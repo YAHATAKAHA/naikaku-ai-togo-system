@@ -92,6 +92,7 @@ export interface CodingAgentBriefsCopy {
   sessionHeld: (status: string) => string;
   sessionDecisionLabel: (decision: string) => string;
   sessionSummary: (ready: number, held: number) => string;
+  sessionContractSummary: (contracts: number, humanApproval: number) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -106,6 +107,9 @@ export interface CodingAgentBriefsCopy {
   receiptSummary: (verified: number, pending: number, failed: number) => string;
   mode: string;
   executor: string;
+  sandboxBoundary: string;
+  evidencePrefix: string;
+  allowedActions: (count: number) => string;
   releaseGate: string;
   required: string;
   optional: string;
@@ -266,6 +270,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留: ${jaCodingSessionStatus(status)}`,
       sessionDecisionLabel: jaBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      sessionContractSummary: (contracts, humanApproval) => `${contracts}件契約 / ${humanApproval}件人間承認`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
       drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
@@ -280,6 +285,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       receiptSummary: (verified, pending, failed) => `${verified}確認 / ${pending}不足 / ${failed}失敗`,
       mode: "モード",
       executor: "Executor",
+      sandboxBoundary: "サンドボックス境界",
+      evidencePrefix: "証拠プレフィックス",
+      allowedActions: (count) => `${count}件許可アクション`,
       releaseGate: "リリースゲート",
       required: "必須",
       optional: "任意",
@@ -410,6 +418,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `Held: ${status}`,
       sessionDecisionLabel: (decision) => decision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      sessionContractSummary: (contracts, humanApproval) => `${contracts} contracts / ${humanApproval} human approvals`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
       drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
@@ -424,6 +433,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       receiptSummary: (verified, pending, failed) => `${verified} verified / ${pending} pending / ${failed} failed`,
       mode: "Mode",
       executor: "Executor",
+      sandboxBoundary: "Sandbox boundary",
+      evidencePrefix: "Evidence prefix",
+      allowedActions: (count) => `${count} allowed actions`,
       releaseGate: "Release gate",
       required: "required",
       optional: "optional",
@@ -554,6 +566,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留：${zhHansCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHansBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      sessionContractSummary: (contracts, humanApproval) => `${contracts} 个合约 / ${humanApproval} 个需人工批准`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
@@ -568,6 +581,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       receiptSummary: (verified, pending, failed) => `${verified} 已确认 / ${pending} 缺证据 / ${failed} 失败`,
       mode: "模式",
       executor: "Executor",
+      sandboxBoundary: "沙箱边界",
+      evidencePrefix: "证据前缀",
+      allowedActions: (count) => `${count} 个允许动作`,
       releaseGate: "发布门",
       required: "必需",
       optional: "可选",
@@ -698,6 +714,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留：${zhHantCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHantBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      sessionContractSummary: (contracts, humanApproval) => `${contracts} 個合約 / ${humanApproval} 個需人工批准`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
@@ -712,6 +729,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       receiptSummary: (verified, pending, failed) => `${verified} 已確認 / ${pending} 缺證據 / ${failed} 失敗`,
       mode: "模式",
       executor: "Executor",
+      sandboxBoundary: "沙箱邊界",
+      evidencePrefix: "證據前綴",
+      allowedActions: (count) => `${count} 個允許動作`,
       releaseGate: "發布門",
       required: "必需",
       optional: "可選",
@@ -842,6 +862,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `보류: ${koCodingSessionStatus(status)}`,
       sessionDecisionLabel: koBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      sessionContractSummary: (contracts, humanApproval) => `${contracts}개 계약 / 사람 승인 ${humanApproval}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
       drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
@@ -856,6 +877,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       receiptSummary: (verified, pending, failed) => `${verified} 확인 / ${pending} 증거 부족 / ${failed} 실패`,
       mode: "모드",
       executor: "Executor",
+      sandboxBoundary: "Sandbox 경계",
+      evidencePrefix: "증거 prefix",
+      allowedActions: (count) => `${count}개 허용 동작`,
       releaseGate: "릴리스 게이트",
       required: "필수",
       optional: "선택",

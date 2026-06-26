@@ -35,6 +35,7 @@ interface LocaleDrillResult {
     localeIsCarried: boolean;
     promptLanguageInstruction: boolean;
     machineContractStable: boolean;
+    sessionContractStable: boolean;
     copyReady: boolean;
     reviewReady: boolean;
     bundleReady: boolean;
@@ -203,9 +204,24 @@ async function runLocaleDrill({
       brief.prompt.includes("Keep commands, file paths, JSON schema keys, and evidence artifact paths unchanged.") &&
       brief.verificationCommands.includes("npm run test") &&
       brief.verificationCommands.includes("npm run build") &&
+      brief.sandbox.allowedActions.length > 0 &&
       brief.sandbox.prohibitedActions.includes("unreviewed-git-push") &&
       brief.evidenceRequired.some((item) => item.includes("Changed files"))
     ),
+    sessionContractStable:
+      bundle.sessions.every((session) =>
+        session.sandboxContract.boundary === "sandbox-only" &&
+        session.sandboxContract.executorProfileId === session.executorProfileId &&
+        session.sandboxContract.allowedActions.length > 0 &&
+        session.sandboxContract.prohibitedActions.includes("unreviewed-git-push") &&
+        session.sandboxContract.evidenceArtifactPrefix.startsWith("output/coding-agent/") &&
+        session.sandboxContract.receiptSchema === "naikaku.coding-agent-session-receipt.v1" &&
+        session.handoffMarkdown.includes("## Sandbox Contract")
+      ) &&
+      drill.items.every((item) =>
+        item.sandboxContract.executorProfileId === item.executorProfileId &&
+        item.sandboxContract.receiptSchema === "naikaku.coding-agent-session-receipt.v1"
+      ),
     copyReady: copyHasCoreStrings(locale),
     reviewReady: review.decision === "ready",
     bundleReady: bundle.decision === "ready" && bundle.summary.held === 0,

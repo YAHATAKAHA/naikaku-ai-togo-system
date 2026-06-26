@@ -47,6 +47,28 @@ describe("coding agent brief review", () => {
     expect(review.checks.find((check) => check.id === "coding-brief-sandbox-boundary")?.status).toBe("block");
   });
 
+  it("blocks briefs that omit allowed sandbox actions", () => {
+    const briefs = defaultBriefs();
+    const unsafeBriefs: CodingAgentBriefs = {
+      ...briefs,
+      briefs: briefs.briefs.map((brief, index) => index === 0
+        ? {
+            ...brief,
+            sandbox: {
+              ...brief.sandbox,
+              allowedActions: []
+            }
+          }
+        : brief)
+    };
+    const review = buildCodingAgentBriefReview({ briefs: unsafeBriefs });
+
+    expect(review.decision).toBe("blocked");
+    expect(review.checks.find((check) => check.id === "coding-brief-sandbox-boundary")?.evidence).toContain(
+      "Missing allowed actions: 1"
+    );
+  });
+
   it("blocks production handoff when attached verification is still dry-run", () => {
     const handoff = buildTeamHandoff({ workspace });
     const board = buildDevelopmentBoard({ handoff });

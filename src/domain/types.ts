@@ -1002,6 +1002,16 @@ export type CodingAgentSessionStatus =
   | "held-for-production-evidence";
 export type CodingAgentSessionBundleDecision = "ready" | "needs-review" | "blocked";
 
+export interface CodingAgentSessionSandboxContract {
+  boundary: "sandbox-only";
+  executorProfileId: ExecutorProfileId;
+  allowedActions: string[];
+  prohibitedActions: string[];
+  requiresHumanApproval: boolean;
+  evidenceArtifactPrefix: string;
+  receiptSchema: "naikaku.coding-agent-session-receipt.v1";
+}
+
 export interface CodingAgentSession {
   id: string;
   briefId: string;
@@ -1014,6 +1024,7 @@ export interface CodingAgentSession {
   executorProfileId: ExecutorProfileId;
   status: CodingAgentSessionStatus;
   promptFileName: string;
+  sandboxContract: CodingAgentSessionSandboxContract;
   handoffMarkdown: string;
   verificationCommands: string[];
   evidenceRequired: string[];
@@ -1056,6 +1067,7 @@ export interface CodingAgentSessionDrillItem {
   status: CodingAgentSessionStatus;
   action: CodingAgentSessionDrillAction;
   executorProfileId: ExecutorProfileId;
+  sandboxContract: CodingAgentSessionSandboxContract;
   reason: string;
   simulatedPromptBytes: number;
   requiredCommands: string[];
@@ -1086,6 +1098,8 @@ export interface CodingAgentSessionDrillReport {
     notAssigned: number;
     needsReview: number;
     blocked: number;
+    sandboxContracts: number;
+    humanApprovalRequired: number;
     requiredCommands: number;
     requiredEvidence: number;
   };

@@ -28,7 +28,12 @@ describe("coding agent session drill", () => {
     expect(drill.decision).toBe("assignable");
     expect(drill.summary.wouldAssign).toBe(bundle.sessions.length);
     expect(drill.summary.notAssigned).toBe(0);
+    expect(drill.summary.sandboxContracts).toBe(bundle.sessions.length);
+    expect(drill.summary.humanApprovalRequired).toBe(bundle.sessions.filter((session) =>
+      session.sandboxContract.requiresHumanApproval
+    ).length);
     expect(drill.items.every((item) => item.action === "would-assign")).toBe(true);
+    expect(drill.items[0].sandboxContract).toEqual(bundle.sessions[0].sandboxContract);
     expect(drill.honestyClaim.limitations.join(" ")).toContain("No code was edited");
   });
 
@@ -53,8 +58,11 @@ describe("coding agent session drill", () => {
     const markdown = serializeCodingAgentSessionDrillMarkdown(drill);
 
     expect(parsed.schema).toBe("naikaku.coding-agent-session-drill.v1");
+    expect(parsed.items[0].sandboxContract.receiptSchema).toBe("naikaku.coding-agent-session-receipt.v1");
     expect(markdown).toContain("No code was edited");
     expect(markdown).toContain("Would assign");
+    expect(markdown).toContain("Sandbox boundary: sandbox-only");
+    expect(markdown).toContain("Allowed Actions");
     expect(markdown).toContain("Required Evidence");
   });
 });

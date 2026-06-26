@@ -181,7 +181,8 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Failed: ${report.summary.failed}`,
       `Ready sessions: ${report.summary.readySessions}`,
       `Would assign: ${report.summary.wouldAssign}`,
-      `Pending receipt items: ${report.summary.pendingReceiptItems}`
+      `Pending receipt items: ${report.summary.pendingReceiptItems}`,
+      `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`
     ],
     nextAction: ok
       ? "Keep the localization drill summary attached to language release evidence."

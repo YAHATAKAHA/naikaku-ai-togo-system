@@ -37,7 +37,17 @@ describe("coding agent session bundle", () => {
     expect(bundle.summary.held).toBe(0);
     expect(bundle.sessions.every((session) => session.status === "ready-for-agent")).toBe(true);
     expect(bundle.sessions[0].sourceItemId).toBe(briefs.briefs[0].sourceItemId);
+    expect(bundle.sessions[0].sandboxContract).toMatchObject({
+      boundary: "sandbox-only",
+      executorProfileId: briefs.briefs[0].sandbox.executorProfileId,
+      allowedActions: briefs.briefs[0].sandbox.allowedActions,
+      prohibitedActions: briefs.briefs[0].sandbox.prohibitedActions,
+      receiptSchema: "naikaku.coding-agent-session-receipt.v1"
+    });
+    expect(bundle.sessions[0].sandboxContract.evidenceArtifactPrefix).toBe(`output/coding-agent/${briefs.briefs[0].id}/`);
     expect(bundle.sessions[0].handoffMarkdown).toContain("Do not perform: unreviewed-git-push");
+    expect(bundle.sessions[0].handoffMarkdown).toContain("## Sandbox Contract");
+    expect(bundle.sessions[0].handoffMarkdown).toContain("Receipt schema: naikaku.coding-agent-session-receipt.v1");
   });
 
   it("holds every session when production evidence is required but only dry-run proof exists", () => {
@@ -95,7 +105,10 @@ describe("coding agent session bundle", () => {
 
     expect(parsed.schema).toBe("naikaku.coding-agent-session-bundle.v1");
     expect(parsed.sessions[0].sourceItemId).toBe(briefs.briefs[0].sourceItemId);
+    expect(parsed.sessions[0].sandboxContract.boundary).toBe("sandbox-only");
     expect(markdown).toContain(`Source item: ${briefs.briefs[0].sourceItemId}`);
+    expect(markdown).toContain("Allowed Actions");
+    expect(markdown).toContain("Evidence prefix: output/coding-agent/");
     expect(markdown).toContain("This bundle does not execute code");
     expect(markdown).toContain("Held sessions must not be assigned");
   });

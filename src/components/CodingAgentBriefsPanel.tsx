@@ -227,12 +227,17 @@ function CodingAgentSessionDrillReportView({
   copy: CodingAgentBriefsCopy;
 }) {
   const blockedItem = firstBlockedDrillItem(report.items);
+  const visibleItem = blockedItem || report.items[0];
 
   return (
     <div className="coding-session-drill" data-decision={report.decision}>
       <div>
         <strong>{copy.drillDecision}: {copy.drillDecisionLabel(report.decision)}</strong>
         <span>{copy.drillSummary(report.summary.wouldAssign, report.summary.notAssigned)}</span>
+      </div>
+      <div>
+        <strong>{copy.sandboxBoundary}: {visibleItem?.sandboxContract.boundary || "sandbox-only"}</strong>
+        <span>{copy.sessionContractSummary(report.summary.sandboxContracts, report.summary.humanApprovalRequired)}</span>
       </div>
       {blockedItem ? (
         <p>
@@ -243,6 +248,12 @@ function CodingAgentSessionDrillReportView({
       ) : (
         <p>
           <span>{copy.drillReady}</span>
+          {visibleItem ? (
+            <small>
+              {copy.executor}: {visibleItem.executorProfileId} /{" "}
+              {copy.allowedActions(visibleItem.sandboxContract.allowedActions.length)}
+            </small>
+          ) : null}
         </p>
       )}
     </div>
@@ -319,6 +330,7 @@ function CodingAgentSessionBundleReport({
   copy: CodingAgentBriefsCopy;
 }) {
   const heldSession = firstHeldSession(bundle.sessions);
+  const visibleSession = heldSession || bundle.sessions[0];
 
   return (
     <div className="coding-session-bundle" data-decision={bundle.decision}>
@@ -326,15 +338,32 @@ function CodingAgentSessionBundleReport({
         <strong>{copy.sessionDecision}: {copy.sessionDecisionLabel(bundle.decision)}</strong>
         <span>{copy.sessionSummary(bundle.summary.ready, bundle.summary.held)}</span>
       </div>
+      {visibleSession ? (
+        <div>
+          <strong>{copy.sandboxBoundary}: {visibleSession.sandboxContract.boundary}</strong>
+          <span>{copy.sessionContractSummary(bundle.sessions.length, bundle.summary.humanApproval)}</span>
+        </div>
+      ) : null}
       {heldSession ? (
         <p>
           <b>{heldSession.title}</b>
           <span>{copy.sessionHeld(heldSession.status)}</span>
+          <small>
+            {copy.executor}: {heldSession.executorProfileId} / {copy.evidencePrefix}:{" "}
+            {heldSession.sandboxContract.evidenceArtifactPrefix}
+          </small>
           <small>{copy.sessionNextAction}: {heldSession.nextAction}</small>
         </p>
       ) : (
         <p>
           <span>{copy.sessionReady}</span>
+          {visibleSession ? (
+            <small>
+              {copy.executor}: {visibleSession.executorProfileId} /{" "}
+              {copy.allowedActions(visibleSession.sandboxContract.allowedActions.length)} / {copy.evidencePrefix}:{" "}
+              {visibleSession.sandboxContract.evidenceArtifactPrefix}
+            </small>
+          ) : null}
         </p>
       )}
     </div>
