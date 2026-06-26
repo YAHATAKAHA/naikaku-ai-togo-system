@@ -74,10 +74,14 @@ The workbench defaults to `dry-run`. Switch to `live providers` only when the ga
 ```bash
 npm run dev       # start the app
 npm run gateway   # start the local cabinet/sandbox gateway
+npm run rehearsal # run local release rehearsal and write output/rehearsal
+npm run rehearsal:strict # fail when warnings remain
 npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
 ```
+
+`npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, and redaction checks. It exits non-zero for blockers. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 
 ## Repository Map
 

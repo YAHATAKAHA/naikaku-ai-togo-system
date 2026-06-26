@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "gateway": "tsx server/gateway.ts",
+    "rehearsal": "tsx scripts/rehearsal.ts",
+    "rehearsal:strict": "tsx scripts/rehearsal.ts --strict",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "preview": "vite preview"

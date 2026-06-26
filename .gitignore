@@ -8,4 +8,5 @@ coverage
 *.tsbuildinfo
 .playwright-cli
 output/playwright
+output/rehearsal
 .naikaku-data
