@@ -21,7 +21,7 @@ const steps: CommandStep[] = [
     args: ["run", "build"]
   },
   {
-    label: "Dry-run release verification with localization, executor, coding-agent drills and manifest",
+    label: "Dry-run release verification with localization, executor, coding-agent dispatch/receipt drills and manifest",
     command: npmCommand,
     args: ["run", "release:verify"]
   },

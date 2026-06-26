@@ -687,6 +687,51 @@ export interface CodingAgentReceiptDrillSummary {
   };
 }
 
+export interface CodingAgentDispatchDrillSummary {
+  schema: "naikaku.coding-agent-dispatch-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    boardItems: number;
+    briefs: number;
+    reviewDecision: string;
+    bundleDecision: string;
+    drillDecision: string;
+    readySessions: number;
+    heldSessions: number;
+  };
+  valid: {
+    dispatchDecision: string;
+    totalItems: number;
+    readyItems: number;
+    heldItems: number;
+    promptFiles: number;
+    promptFilesWritten: number;
+    receiptTemplateWritten: boolean;
+    uniqueEvidencePrefixes: number;
+    unsafePaths: number;
+  };
+  productionHeld: {
+    dispatchDecision: string;
+    totalItems: number;
+    readyItems: number;
+    heldItems: number;
+    productionHeldItems: number;
+    promptFiles: number;
+    promptFilesWritten: number;
+    receiptTemplateWritten: boolean;
+    unsafePaths: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -701,10 +746,13 @@ export interface LocalizationDrillSummary {
     reviewDecision: string;
     bundleDecision: string;
     drillDecision: string;
+    dispatchDecision: string;
     receiptDecision: string;
     readySessions: number;
     heldSessions: number;
     wouldAssign: number;
+    dispatchReady: number;
+    dispatchPromptFiles: number;
     pendingReceiptItems: number;
     checks: Record<string, boolean>;
     failures: string[];
@@ -715,6 +763,7 @@ export interface LocalizationDrillSummary {
     failed: number;
     readySessions: number;
     wouldAssign: number;
+    dispatchReady: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {
@@ -809,6 +858,7 @@ export interface VerificationManifest {
   generatedAt: string;
   decision: VerificationManifestDecision;
   inputs: {
+    codingAgentDispatchDrill: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -816,6 +866,7 @@ export interface VerificationManifest {
     releaseVerification: string;
   };
   source: {
+    codingAgentDispatchGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
@@ -1111,6 +1162,71 @@ export interface CodingAgentSessionDrillReport {
     humanApprovalRequired: number;
     requiredCommands: number;
     requiredEvidence: number;
+  };
+}
+
+export type CodingAgentDispatchDecision = "dispatchable" | "held" | "blocked";
+export type CodingAgentDispatchItemStatus =
+  | "ready-to-dispatch"
+  | "held-for-review"
+  | "held-for-production-evidence"
+  | "not-dispatchable";
+
+export interface CodingAgentDispatchManifestItem {
+  sessionId: string;
+  briefId: string;
+  sourceItemId: string;
+  title: string;
+  sessionStatus: CodingAgentSessionStatus;
+  dispatchStatus: CodingAgentDispatchItemStatus;
+  executorProfileId: ExecutorProfileId;
+  promptPath: string | null;
+  receiptTemplatePath: string | null;
+  evidenceArtifactPrefix: string;
+  requiresHumanApproval: boolean;
+  expectedTranscriptRefs: string[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  verificationCommands: string[];
+  requiredEvidence: string[];
+  allowedActions: string[];
+  prohibitedActions: string[];
+  safetyStops: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentDispatchManifest {
+  schema: "naikaku.coding-agent-dispatch-manifest.v1";
+  generatedAt: string;
+  mode: "dry-run-dispatch";
+  sourceSchema: CodingAgentSessionBundle["schema"];
+  drillSchema?: CodingAgentSessionDrillReport["schema"];
+  bundleDecision: CodingAgentSessionBundleDecision;
+  drillDecision?: CodingAgentSessionDrillDecision;
+  decision: CodingAgentDispatchDecision;
+  mission: string;
+  runId?: string;
+  operatorLocale: string;
+  receiptTemplatePath: string | null;
+  items: CodingAgentDispatchManifestItem[];
+  summary: {
+    total: number;
+    ready: number;
+    held: number;
+    productionHeld: number;
+    promptFiles: number;
+    receiptTemplates: number;
+    uniqueEvidencePrefixes: number;
+    unsafePaths: number;
+    humanApprovalRequired: number;
+  };
+  honestyClaim: {
+    level: "dry-run-dispatch";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
   };
 }
 

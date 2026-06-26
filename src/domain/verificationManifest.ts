@@ -1,4 +1,5 @@
 import type {
+  CodingAgentDispatchDrillSummary,
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
@@ -19,6 +20,7 @@ const expectedExecutorProfiles: ExecutorProfileId[] = [
 ];
 
 export interface BuildVerificationManifestInput {
+  codingAgentDispatchDrill: CodingAgentDispatchDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -26,6 +28,7 @@ export interface BuildVerificationManifestInput {
   releaseVerification: ReleaseVerificationReport;
   generatedAt?: string;
   inputs: {
+    codingAgentDispatchDrill: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -35,6 +38,7 @@ export interface BuildVerificationManifestInput {
 }
 
 export function buildVerificationManifest({
+  codingAgentDispatchDrill,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -44,6 +48,7 @@ export function buildVerificationManifest({
   inputs
 }: BuildVerificationManifestInput): VerificationManifest {
   const checks = [
+    codingAgentDispatchCheck(codingAgentDispatchDrill),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -62,6 +67,7 @@ export function buildVerificationManifest({
     decision: failed === 0 ? "verified" : "invalid",
     inputs,
     source: {
+      codingAgentDispatchGeneratedAt: codingAgentDispatchDrill.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -84,7 +90,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -97,6 +103,47 @@ export function buildVerificationManifest({
 
 export function serializeVerificationManifest(manifest: VerificationManifest) {
   return JSON.stringify(manifest, null, 2);
+}
+
+function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-dispatch-drill.v1"
+    && report.valid.dispatchDecision === "dispatchable"
+    && report.valid.readyItems > 0
+    && report.valid.promptFiles === report.valid.readyItems
+    && report.valid.promptFilesWritten === report.valid.promptFiles
+    && report.valid.receiptTemplateWritten
+    && report.valid.uniqueEvidencePrefixes === report.valid.totalItems
+    && report.valid.unsafePaths === 0
+    && report.productionHeld.dispatchDecision === "blocked"
+    && report.productionHeld.readyItems === 0
+    && report.productionHeld.productionHeldItems > 0
+    && report.productionHeld.promptFilesWritten === 0
+    && !report.productionHeld.receiptTemplateWritten
+    && report.productionHeld.unsafePaths === 0
+    && checksPassed;
+
+  return {
+    id: "coding-agent-dispatch-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent dispatch package wrote ready prompts and kept production-held sessions unassigned."
+      : "Coding-agent dispatch package did not preserve ready versus held boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Valid decision: ${report.valid.dispatchDecision}`,
+      `Valid prompts written: ${report.valid.promptFilesWritten}/${report.valid.promptFiles}`,
+      `Receipt template written: ${report.valid.receiptTemplateWritten}`,
+      `Valid unsafe paths: ${report.valid.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.dispatchDecision}`,
+      `Production-held ready items: ${report.productionHeld.readyItems}`,
+      `Production-held prompts written: ${report.productionHeld.promptFilesWritten}`,
+      `Production-held receipt template written: ${report.productionHeld.receiptTemplateWritten}`
+    ],
+    nextAction: ok
+      ? "Keep the dispatch drill summary attached before handing prompts to coding agents."
+      : "Restore dispatch gating so held sessions cannot receive prompt files or receipt templates."
+  };
 }
 
 function codingAgentValidCheck(report: CodingAgentReceiptDrillSummary): VerificationManifestCheck {
@@ -211,6 +258,7 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Failed: ${report.summary.failed}`,
       `Ready sessions: ${report.summary.readySessions}`,
       `Would assign: ${report.summary.wouldAssign}`,
+      `Dispatch ready: ${report.summary.dispatchReady}`,
       `Pending receipt items: ${report.summary.pendingReceiptItems}`,
       `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`
     ],

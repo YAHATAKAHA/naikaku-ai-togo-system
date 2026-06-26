@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
+import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
 import { buildCodingAgentSessionReceiptTemplate } from "../src/domain/codingAgentSessionReceipt";
@@ -26,16 +27,20 @@ interface LocaleDrillResult {
   reviewDecision: string;
   bundleDecision: string;
   drillDecision: string;
+  dispatchDecision: string;
   receiptDecision: string;
   readySessions: number;
   heldSessions: number;
   wouldAssign: number;
+  dispatchReady: number;
+  dispatchPromptFiles: number;
   pendingReceiptItems: number;
   checks: {
     localeIsCarried: boolean;
     promptLanguageInstruction: boolean;
     machineContractStable: boolean;
     sessionContractStable: boolean;
+    dispatchContractStable: boolean;
     copyReady: boolean;
     reviewReady: boolean;
     bundleReady: boolean;
@@ -57,6 +62,7 @@ interface LocalizationDrillSummary {
     failed: number;
     readySessions: number;
     wouldAssign: number;
+    dispatchReady: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {
@@ -124,11 +130,12 @@ async function main() {
       failed: locales.filter((item) => item.failures.length > 0).length,
       readySessions: locales.reduce((total, item) => total + item.readySessions, 0),
       wouldAssign: locales.reduce((total, item) => total + item.wouldAssign, 0),
+      dispatchReady: locales.reduce((total, item) => total + item.dispatchReady, 0),
       pendingReceiptItems: locales.reduce((total, item) => total + item.pendingReceiptItems, 0)
     },
     honestyClaim: {
       level: "local-drill",
-      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, assignment drills, and receipt templates without changing machine contracts.",
+      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, dispatch manifests, assignment drills, and receipt templates without changing machine contracts.",
       limitations: [
         "It does not run a browser UI screenshot pass.",
         "It does not call model providers, external coding agents, runners, deploy targets, or Git remotes.",
@@ -183,6 +190,11 @@ async function runLocaleDrill({
     bundle,
     generatedAt
   });
+  const dispatch = buildCodingAgentDispatchManifest({
+    bundle,
+    drill,
+    generatedAt
+  });
   const receipt = buildCodingAgentSessionReceiptTemplate({
     bundle,
     generatedAt
@@ -222,6 +234,21 @@ async function runLocaleDrill({
         item.sandboxContract.executorProfileId === item.executorProfileId &&
         item.sandboxContract.receiptSchema === "naikaku.coding-agent-session-receipt.v1"
       ),
+    dispatchContractStable:
+      dispatch.operatorLocale === locale &&
+      dispatch.decision === "dispatchable" &&
+      dispatch.summary.ready === bundle.summary.ready &&
+      dispatch.summary.promptFiles === bundle.summary.ready &&
+      dispatch.summary.unsafePaths === 0 &&
+      dispatch.receiptTemplatePath === "receipt-template.json" &&
+      dispatch.items.every((item) =>
+        item.dispatchStatus === "ready-to-dispatch" &&
+        item.promptPath?.startsWith("prompts/") &&
+        item.receiptTemplatePath === "receipt-template.json" &&
+        item.evidenceArtifactPrefix.startsWith("output/coding-agent/") &&
+        item.expectedTranscriptRefs.every((ref) => ref.startsWith(item.evidenceArtifactPrefix)) &&
+        item.expectedEvidenceArtifacts.every((artifact) => artifact.path.startsWith(item.evidenceArtifactPrefix))
+      ),
     copyReady: copyHasCoreStrings(locale),
     reviewReady: review.decision === "ready",
     bundleReady: bundle.decision === "ready" && bundle.summary.held === 0,
@@ -244,10 +271,13 @@ async function runLocaleDrill({
     reviewDecision: review.decision,
     bundleDecision: bundle.decision,
     drillDecision: drill.decision,
+    dispatchDecision: dispatch.decision,
     receiptDecision: receipt.decision,
     readySessions: bundle.summary.ready,
     heldSessions: bundle.summary.held,
     wouldAssign: drill.summary.wouldAssign,
+    dispatchReady: dispatch.summary.ready,
+    dispatchPromptFiles: dispatch.summary.promptFiles,
     pendingReceiptItems: receipt.summary.pendingEvidence,
     checks,
     failures
@@ -258,6 +288,7 @@ async function runLocaleDrill({
   await writeJson(path.join(localeDir, "coding-briefs.json"), briefs);
   await writeJson(path.join(localeDir, "brief-review.json"), review);
   await writeJson(path.join(localeDir, "session-bundle.json"), bundle);
+  await writeJson(path.join(localeDir, "dispatch-manifest.json"), dispatch);
   await writeJson(path.join(localeDir, "session-drill.json"), drill);
   await writeJson(path.join(localeDir, "receipt-template.json"), receipt);
 
@@ -305,6 +336,7 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
     `- Failed: ${summary.summary.failed}`,
     `- Ready sessions: ${summary.summary.readySessions}`,
     `- Would assign: ${summary.summary.wouldAssign}`,
+    `- Dispatch ready: ${summary.summary.dispatchReady}`,
     `- Pending receipt items: ${summary.summary.pendingReceiptItems}`,
     "",
     "## Locale Results",
@@ -318,6 +350,7 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
       `- Review: ${item.reviewDecision}`,
       `- Bundle: ${item.bundleDecision} (${item.readySessions} ready, ${item.heldSessions} held)`,
       `- Drill: ${item.drillDecision} (${item.wouldAssign} would assign)`,
+      `- Dispatch: ${item.dispatchDecision} (${item.dispatchReady} ready, ${item.dispatchPromptFiles} prompt files)`,
       `- Receipt: ${item.receiptDecision} (${item.pendingReceiptItems} pending)`,
       `- Failures: ${item.failures.length ? item.failures.join(", ") : "none"}`,
       ""
@@ -382,7 +415,7 @@ Options:
   -h, --help              Show this help.
 
 The drill verifies Japanese-first locale order and runs the coding-agent handoff
-chain for ja, en, zh-Hans, zh-Hant, and ko without executing real agents.`);
+and dispatch chain for ja, en, zh-Hans, zh-Hant, and ko without executing real agents.`);
 }
 
 function printSummary(summary: LocalizationDrillSummary) {
@@ -393,7 +426,7 @@ function printSummary(summary: LocalizationDrillSummary) {
     const status = item.failures.length ? "fail" : "pass";
     console.log(
       `[${status}] ${item.locale}: ${item.briefs} briefs, ${item.readySessions} ready sessions, ` +
-      `${item.wouldAssign} would assign, receipt ${item.receiptDecision}` +
+      `${item.wouldAssign} would assign, ${item.dispatchReady} dispatch ready, receipt ${item.receiptDecision}` +
       (item.failures.length ? `, failures: ${item.failures.join(", ")}` : "")
     );
   }

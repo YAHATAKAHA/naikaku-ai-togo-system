@@ -9,6 +9,7 @@ coverage
 .playwright-cli
 output/playwright
 output/coding-agent
+output/coding-agent-dispatch-drill
 output/rehearsal
 output/rehearsal-drill
 output/release-drill

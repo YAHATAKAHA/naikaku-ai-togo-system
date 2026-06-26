@@ -824,6 +824,56 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs/dispatch-manifest`
+
+Builds a dispatch manifest from a reviewed coding-agent session bundle and an optional session drill report. This endpoint does not execute code, call providers, run shell commands, write files, browse, deploy, send external messages, or push Git. It only decides which sessions should receive prompt paths and receipt-template instructions inside a governed dispatch package.
+
+```json
+{
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1",
+    "decision": "ready",
+    "sessions": []
+  },
+  "drill": {
+    "schema": "naikaku.coding-agent-session-drill.v1",
+    "decision": "assignable",
+    "items": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-dispatch-manifest.v1",
+  "mode": "dry-run-dispatch",
+  "decision": "dispatchable",
+  "receiptTemplatePath": "receipt-template.json",
+  "summary": {
+    "total": 8,
+    "ready": 8,
+    "held": 0,
+    "promptFiles": 8,
+    "unsafePaths": 0
+  },
+  "items": [
+    {
+      "dispatchStatus": "ready-to-dispatch",
+      "promptPath": "prompts/01-team-execution-minister-implementation.md",
+      "receiptTemplatePath": "receipt-template.json",
+      "evidenceArtifactPrefix": "output/coding-agent/coding-brief-example/",
+      "expectedTranscriptRefs": [
+        "output/coding-agent/coding-brief-example/transcript-1.log"
+      ]
+    }
+  ]
+}
+```
+
+If the bundle is held for review or production evidence, the manifest stays `held` or `blocked`; held items do not receive prompt paths or receipt-template paths. This prevents dry-run packages from becoming accidental implementation assignments.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

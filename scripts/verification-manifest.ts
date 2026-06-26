@@ -5,6 +5,7 @@ import {
   serializeVerificationManifest
 } from "../src/domain/verificationManifest";
 import type {
+  CodingAgentDispatchDrillSummary,
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
@@ -14,6 +15,7 @@ import type {
 } from "../src/domain/types";
 
 interface VerificationManifestOptions {
+  codingAgentDispatchPath: string;
   codingAgentReportPath: string;
   localizationDrillPath: string;
   executorContractDrillPath: string;
@@ -32,12 +34,14 @@ async function main() {
     return;
   }
 
+  const codingAgentDispatchDrill = await loadCodingAgentDispatchDrill(options.codingAgentDispatchPath);
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
   const productionBoundaryDrill = await loadProductionBoundaryDrill(options.productionBoundaryDrillPath);
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
+    codingAgentDispatchDrill,
     codingAgentReport,
     localizationDrill,
     executorContractDrill,
@@ -45,6 +49,7 @@ async function main() {
     releaseVerification,
     generatedAt: options.generatedAt,
     inputs: {
+      codingAgentDispatchDrill: options.codingAgentDispatchPath,
       codingAgentReceiptDrill: options.codingAgentReportPath,
       localizationDrill: options.localizationDrillPath,
       executorContractDrill: options.executorContractDrillPath,
@@ -65,6 +70,14 @@ async function loadCodingAgentReport(reportPath: string): Promise<CodingAgentRec
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentReceiptDrillSummary;
   if (parsed.schema !== "naikaku.coding-agent-receipt-drill.v1") {
     throw new Error("Coding-agent report must use schema naikaku.coding-agent-receipt-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadCodingAgentDispatchDrill(reportPath: string): Promise<CodingAgentDispatchDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentDispatchDrillSummary;
+  if (parsed.schema !== "naikaku.coding-agent-dispatch-drill.v1") {
+    throw new Error("Coding-agent dispatch drill must use schema naikaku.coding-agent-dispatch-drill.v1.");
   }
   return parsed;
 }
@@ -121,6 +134,7 @@ function printSummary(manifest: VerificationManifest, outputPath: string) {
 
 function parseArgs(args: string[]): VerificationManifestOptions {
   const options: VerificationManifestOptions = {
+    codingAgentDispatchPath: "output/coding-agent-dispatch-drill/summary.json",
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
     localizationDrillPath: "output/localization-drill/summary.json",
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
@@ -140,6 +154,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-report") {
       options.codingAgentReportPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--coding-agent-dispatch") {
+      options.codingAgentDispatchPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -201,6 +221,8 @@ Usage:
   npm run verification:manifest -- [options]
 
 Options:
+  --coding-agent-dispatch <path>
+                                  Read coding-agent dispatch drill summary.
   --coding-agent-report <path>   Read coding-agent receipt drill summary.
   --localization-drill <path>    Read localization drill summary.
   --executor-contract-drill <path>

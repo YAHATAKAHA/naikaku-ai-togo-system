@@ -7,6 +7,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentDispatchManifest,
   CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -613,6 +614,27 @@ export async function createCodingAgentSessionDrillViaGateway(
   }
 
   return (await response.json()) as CodingAgentSessionDrillReport;
+}
+
+export async function createCodingAgentDispatchManifestViaGateway(
+  bundle: CodingAgentSessionBundle,
+  drill?: CodingAgentSessionDrillReport | null,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/dispatch-manifest`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ bundle, drill }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent dispatch manifest failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentDispatchManifest;
 }
 
 export async function createCodingAgentSessionReceiptTemplateViaGateway(
