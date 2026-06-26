@@ -182,6 +182,33 @@ describe("verification manifest", () => {
     expect(localizationCheck?.summary).toContain("did not prove");
   });
 
+  it("invalidates the manifest when localization drill does not preserve dispatch simulation contracts", () => {
+    const localizationDrill = localizationDrillFixture();
+    localizationDrill.locales[0].simulationReceiptDrafts = 0;
+    localizationDrill.locales[0].checks.simulationContractStable = false;
+    localizationDrill.locales[0].failures = ["simulationContractStable"];
+    localizationDrill.summary.failed = 1;
+    localizationDrill.summary.passed = 4;
+    localizationDrill.summary.simulationReceiptDrafts -= 8;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill,
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const localizationCheck = manifest.checks.find((check) => check.id === "localization-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(localizationCheck?.status).toBe("fail");
+    expect(localizationCheck?.evidence.join(" ")).toContain("Simulation contract stable: no");
+  });
+
   it("invalidates the manifest when executor drill executes a blocked action", () => {
     const executorDrill = executorContractDrillFixture();
     executorDrill.blockedAction.executed = true;
@@ -465,18 +492,24 @@ function localizationDrillFixture(): LocalizationDrillSummary {
     bundleDecision: "ready",
     drillDecision: "assignable",
     dispatchDecision: "dispatchable",
+    archiveAuditDecision: "verified",
+    simulationDecision: "ready-for-real-agent",
     receiptDecision: "needs-evidence",
     readySessions: 8,
     heldSessions: 0,
     wouldAssign: 8,
     dispatchReady: 8,
     dispatchPromptFiles: 8,
+    simulationReadyForAgent: 8,
+    simulationReceiptDrafts: 8,
     pendingReceiptItems: 8,
     checks: {
       localeIsCarried: true,
       promptLanguageInstruction: true,
       machineContractStable: true,
       dispatchContractStable: true,
+      archiveAuditVerified: true,
+      simulationContractStable: true,
       copyReady: true,
       reviewReady: true,
       bundleReady: true,
@@ -500,6 +533,8 @@ function localizationDrillFixture(): LocalizationDrillSummary {
       readySessions: 40,
       wouldAssign: 40,
       dispatchReady: 40,
+      simulationReadyForAgent: 40,
+      simulationReceiptDrafts: 40,
       pendingReceiptItems: 40
     },
     honestyClaim: {

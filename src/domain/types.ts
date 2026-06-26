@@ -805,12 +805,16 @@ export interface LocalizationDrillSummary {
     bundleDecision: string;
     drillDecision: string;
     dispatchDecision: string;
+    archiveAuditDecision: string;
+    simulationDecision: string;
     receiptDecision: string;
     readySessions: number;
     heldSessions: number;
     wouldAssign: number;
     dispatchReady: number;
     dispatchPromptFiles: number;
+    simulationReadyForAgent: number;
+    simulationReceiptDrafts: number;
     pendingReceiptItems: number;
     checks: Record<string, boolean>;
     failures: string[];
@@ -822,6 +826,8 @@ export interface LocalizationDrillSummary {
     readySessions: number;
     wouldAssign: number;
     dispatchReady: number;
+    simulationReadyForAgent: number;
+    simulationReceiptDrafts: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {

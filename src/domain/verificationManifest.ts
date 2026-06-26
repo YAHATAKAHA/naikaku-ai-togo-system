@@ -308,11 +308,23 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
   const checksPassed = report.locales.every((locale) =>
     Object.values(locale.checks).every(Boolean) && locale.failures.length === 0
   );
+  const simulationContractsPassed = report.locales.every((locale) =>
+    locale.archiveAuditDecision === "verified" &&
+    locale.simulationDecision === "ready-for-real-agent" &&
+    locale.simulationReadyForAgent === locale.dispatchReady &&
+    locale.simulationReceiptDrafts === locale.dispatchReady &&
+    Boolean(locale.checks.archiveAuditVerified) &&
+    Boolean(locale.checks.simulationContractStable)
+  );
   const ok = report.schema === "naikaku.localization-drill.v1"
     && report.defaultLocale === "ja"
     && report.summary.failed === 0
     && report.summary.total === expectedLocales.length
     && expectedLocales.every((locale, index) => locales[index] === locale)
+    && report.summary.simulationReadyForAgent === report.summary.dispatchReady
+    && report.summary.simulationReceiptDrafts === report.summary.dispatchReady
+    && report.summary.simulationReadyForAgent > 0
+    && simulationContractsPassed
     && checksPassed;
 
   return {
@@ -330,8 +342,11 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Ready sessions: ${report.summary.readySessions}`,
       `Would assign: ${report.summary.wouldAssign}`,
       `Dispatch ready: ${report.summary.dispatchReady}`,
+      `Simulation ready: ${report.summary.simulationReadyForAgent}`,
+      `Simulation receipt drafts: ${report.summary.simulationReceiptDrafts}`,
       `Pending receipt items: ${report.summary.pendingReceiptItems}`,
-      `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`
+      `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`,
+      `Simulation contract stable: ${simulationContractsPassed ? "yes" : "no"}`
     ],
     nextAction: ok
       ? "Keep the localization drill summary attached to language release evidence."
