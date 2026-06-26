@@ -26,6 +26,11 @@ const steps: CommandStep[] = [
     args: ["run", "localization:drill"]
   },
   {
+    label: "Sandbox executor contract drill",
+    command: npmCommand,
+    args: ["run", "executor:drill"]
+  },
+  {
     label: "Dry-run release verification with coding-agent receipt drill and manifest",
     command: npmCommand,
     args: ["run", "release:verify"]

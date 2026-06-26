@@ -106,6 +106,7 @@ Acceptance:
 - Add safe executor dry-run runner.
 - Add Sandbox Capability registry with runner contracts, evidence requirements, and policy-evaluated representative actions.
 - Add executor evidence bundle export with per-step hashes, runner ids, replay flags, and dry-run evidence placeholders.
+- Add executor contract drill that self-simulates every sandbox executor profile and blocks production deploy execution.
 - Add runner authentication gate for executor handoff, dry-run, and evidence endpoints.
 - Add local gateway ledger for approval records and executor evidence bundles.
 - Add Server Ledger panel for refreshing gateway-side approvals and evidence bundle status from the workbench.
@@ -121,6 +122,7 @@ Acceptance:
 - Kill switch stops an active run.
 - Every executor-ready action produces an auditable evidence bundle before it can be considered complete.
 - Runner teams can consume a runbook before implementing real Shell, Browser, Desktop, or MCP executors.
+- Operators and CI can run an executor contract drill that proves every executor profile produces scoped dry-run handoff, runbook, and evidence records while blocked production actions remain held.
 
 ## Track 5: Security and Governance
 

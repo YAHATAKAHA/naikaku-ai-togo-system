@@ -94,6 +94,7 @@ npm run rehearsal:strict # fail when warnings remain
 npm run rehearsal:drill # generate reviewed drill fixtures, then run strict rehearsal against them
 npm run coding-agent:drill # self-simulate valid and mismatched coding-agent receipt evidence
 npm run localization:drill # self-simulate coding-agent handoff in every supported operator language
+npm run executor:drill # self-simulate every sandbox executor profile and evidence contract
 npm run verification:manifest # aggregate receipt drill and release verification evidence
 npm run release:verify # run coding-agent and release drills, then verify dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
@@ -111,11 +112,13 @@ npm run preview   # preview the production build
 
 `npm run localization:drill` writes `naikaku.localization-drill.v1` under `output/localization-drill`. It verifies Japanese-first locale order, then runs the coding-agent brief, review, session bundle, assignment drill, and receipt-template chain for Japanese, English, Simplified Chinese, Traditional Chinese, and Korean. It fails if a locale drops the operator-language instruction, changes machine contracts such as commands or evidence paths, cannot produce assignable sandbox sessions, or lets a receipt template claim implementation without evidence.
 
+`npm run executor:drill` writes `naikaku.executor-contract-drill.v1` under `output/executor-contract-drill`. It self-simulates Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate handoff actions through the same handoff, runbook, dry-run executor, and evidence bundle builders. It also includes a deliberately blocked production deployment and fails if that blocked action reaches execution evidence.
+
 `npm run verification:manifest` reads the latest coding-agent receipt drill summary and release verification report, then writes `naikaku.verification-manifest.v1` to `output/verification/verification-manifest-latest.json`. The manifest fails if the valid coding-agent receipt does not apply all board items, if the mismatched receipt updates any board item, if release verification fails, or if the dry-run versus production boundary is unclear.
 
 `npm run release:verify` first runs the coding-agent receipt drill, then the release rehearsal drill, then turns the latest drill rehearsal into `naikaku.release-verification.v1`, and finally writes the verification manifest. It fails if coding-agent evidence gates accept mismatched evidence, if warnings, blockers, schema drift, or secret leakage are present, if the release verification cannot pass for dry-run scope, or if the manifest cannot prove both local gates. The workbench panel and local gateway expose the same release verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
 
-`npm run verify:all` is the recommended local and CI gate. It runs unit/domain tests, the production build, `npm run localization:drill`, `npm run release:verify`, confirms `npm run release:verify:production` returns code 4, and finishes with `git diff --check`. CI should reuse the same command so local and remote verification share one contract.
+`npm run verify:all` is the recommended local and CI gate. It runs unit/domain tests, the production build, `npm run localization:drill`, `npm run executor:drill`, `npm run release:verify`, confirms `npm run release:verify:production` returns code 4, and finishes with `git diff --check`. CI should reuse the same command so local and remote verification share one contract.
 
 ## Repository Map
 

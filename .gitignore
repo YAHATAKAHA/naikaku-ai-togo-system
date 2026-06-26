@@ -13,5 +13,6 @@ output/rehearsal-drill
 output/release-drill
 output/coding-agent-receipt-drill
 output/localization-drill
+output/executor-contract-drill
 output/verification
 .naikaku-data
