@@ -22,6 +22,7 @@ This backlog is written so different contributors can work in parallel.
 - Add release rehearsal evidence claims so dry-run proof cannot be confused with production runner proof.
 - Add release verification gate with a production-evidence mode that blocks dry-run handoff.
 - Add Japanese-first localization with English, Simplified Chinese, Traditional Chinese, and Korean locale support.
+- Add localization drill that self-simulates the coding-agent handoff path across every supported operator locale.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
 - Add Coding Agent Briefs export that turns Development Board work into sandboxed implementation prompts and verification checklists.
@@ -49,6 +50,7 @@ Acceptance:
 - Operators can replay strict rehearsal with reviewed fixture evidence while keeping raw provider keys and real runner credentials out of the repo.
 - Operators and CI can verify a rehearsal report for sandbox scope, and separately fail production verification while evidence remains dry-run.
 - Operators can switch supported UI languages without resetting workspace state, session-only secrets, or release verification evidence.
+- Operators and CI can run a localization drill that proves every supported locale preserves coding-agent handoff, sandbox, verification, receipt, and evidence contracts.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become coding-agent briefs with explicit sandbox, verification, release-gate, and prohibited-action guidance before an implementation agent starts work.
 - Operators can review coding-agent briefs before handoff and receive a machine-readable `ready`, `needs-review`, or `blocked` decision with next actions.

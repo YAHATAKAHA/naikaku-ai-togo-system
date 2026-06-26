@@ -147,7 +147,9 @@ The report gives a score, decision, and gate list. Gates are grouped into role A
 
 `VerificationManifest` is the CLI-level aggregation gate for local self-simulation. It reads the coding-agent receipt drill summary and the release verification report, then writes `naikaku.verification-manifest.v1`. The manifest checks that the valid coding-agent receipt applied all Development Board items, the mismatched receipt applied none, release verification passed, and the dry-run versus production boundary remains explicit. It does not replace the underlying drill or verification reports; it points to them so operators and CI can review one summary without losing source evidence.
 
-`VerifyAll` is the combined local and CI verification entrypoint. It runs unit/domain tests, production build, dry-run release verification with the coding-agent receipt drill and verification manifest, then confirms production verification still returns code 4 for dry-run evidence. This keeps the "good drill passes, production claim still blocked" invariant visible in one command.
+`LocalizationDrill` is the language-contract self-simulation for the coding-agent path. It runs the default Development Board through coding-agent briefs, brief review, session bundle, assignment drill, and receipt template for Japanese, English, Simplified Chinese, Traditional Chinese, and Korean. The drill fails if Japanese is not first, if operator-language instructions are missing, if commands, paths, JSON schema keys, prohibited actions, or evidence requirements stop being stable machine contracts, or if receipt templates claim implementation without evidence.
+
+`VerifyAll` is the combined local and CI verification entrypoint. It runs unit/domain tests, production build, the localization drill, dry-run release verification with the coding-agent receipt drill and verification manifest, then confirms production verification still returns code 4 for dry-run evidence. This keeps the "good drill passes, production claim still blocked" invariant visible in one command.
 
 ## Localization
 
