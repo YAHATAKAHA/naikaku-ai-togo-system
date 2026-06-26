@@ -32,7 +32,7 @@ This is the same direction as a coding agent workbench: the system should help u
 - Security and release-gate terms must stay precise across languages: `dry-run`, production evidence, session-only secrets, approval, blocker, warning, and verifier decisions cannot be softened.
 - Exported JSON schemas remain language-neutral. Locale affects UI labels and operator-facing summaries, not machine contract keys.
 - CLI output may stay English until the UI locale foundation is complete; release evidence files must remain stable for automation.
-- `npm run localization:drill` must pass before release verification is treated as complete. It proves every supported locale can generate coding-agent briefs, review reports, session bundles, assignment drills, and receipt templates while preserving machine contracts.
+- `npm run localization:drill` must pass before release verification is treated as complete. It proves every supported locale can generate coding-agent briefs, review reports, session bundles, assignment drills, and receipt templates while preserving machine contracts. The verification manifest now records this drill alongside executor, receipt, and release gates.
 
 ## Current Coverage
 

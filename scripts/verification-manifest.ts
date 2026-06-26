@@ -6,12 +6,16 @@ import {
 } from "../src/domain/verificationManifest";
 import type {
   CodingAgentReceiptDrillSummary,
+  ExecutorContractDrillSummary,
+  LocalizationDrillSummary,
   ReleaseVerificationReport,
   VerificationManifest
 } from "../src/domain/types";
 
 interface VerificationManifestOptions {
   codingAgentReportPath: string;
+  localizationDrillPath: string;
+  executorContractDrillPath: string;
   releaseVerificationPath: string;
   outputPath: string;
   generatedAt?: string;
@@ -27,13 +31,19 @@ async function main() {
   }
 
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
+  const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
+  const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
     codingAgentReport,
+    localizationDrill,
+    executorContractDrill,
     releaseVerification,
     generatedAt: options.generatedAt,
     inputs: {
       codingAgentReceiptDrill: options.codingAgentReportPath,
+      localizationDrill: options.localizationDrillPath,
+      executorContractDrill: options.executorContractDrillPath,
       releaseVerification: options.releaseVerificationPath
     }
   });
@@ -50,6 +60,22 @@ async function loadCodingAgentReport(reportPath: string): Promise<CodingAgentRec
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentReceiptDrillSummary;
   if (parsed.schema !== "naikaku.coding-agent-receipt-drill.v1") {
     throw new Error("Coding-agent report must use schema naikaku.coding-agent-receipt-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadLocalizationDrill(reportPath: string): Promise<LocalizationDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as LocalizationDrillSummary;
+  if (parsed.schema !== "naikaku.localization-drill.v1") {
+    throw new Error("Localization drill must use schema naikaku.localization-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadExecutorContractDrill(reportPath: string): Promise<ExecutorContractDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as ExecutorContractDrillSummary;
+  if (parsed.schema !== "naikaku.executor-contract-drill.v1") {
+    throw new Error("Executor contract drill must use schema naikaku.executor-contract-drill.v1.");
   }
   return parsed;
 }
@@ -83,6 +109,8 @@ function printSummary(manifest: VerificationManifest, outputPath: string) {
 function parseArgs(args: string[]): VerificationManifestOptions {
   const options: VerificationManifestOptions = {
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
+    localizationDrillPath: "output/localization-drill/summary.json",
+    executorContractDrillPath: "output/executor-contract-drill/summary.json",
     releaseVerificationPath: "output/rehearsal-drill/release-verification-latest.json",
     outputPath: "output/verification/verification-manifest-latest.json",
     help: false
@@ -98,6 +126,18 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-report") {
       options.codingAgentReportPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--localization-drill") {
+      options.localizationDrillPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--executor-contract-drill") {
+      options.executorContractDrillPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -142,13 +182,16 @@ Usage:
 
 Options:
   --coding-agent-report <path>   Read coding-agent receipt drill summary.
+  --localization-drill <path>    Read localization drill summary.
+  --executor-contract-drill <path>
+                                  Read executor contract drill summary.
   --release-verification <path>  Read release verification JSON.
   --out <path>                   Write naikaku.verification-manifest.v1 JSON.
   --generated-at <iso>           Use a stable timestamp.
   --help                         Show this help.
 
 Exit codes:
-  0  Both local verification gates are proven by the referenced reports.
+  0  All local verification gates are proven by the referenced reports.
   2  One or more manifest checks failed.
 `);
 }

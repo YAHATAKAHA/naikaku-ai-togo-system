@@ -5,18 +5,24 @@ import {
 } from "./verificationManifest";
 import type {
   CodingAgentReceiptDrillSummary,
+  ExecutorContractDrillSummary,
+  LocalizationDrillSummary,
   ReleaseVerificationReport
 } from "./types";
 
 const inputs = {
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
+  localizationDrill: "output/localization-drill/summary.json",
+  executorContractDrill: "output/executor-contract-drill/summary.json",
   releaseVerification: "output/rehearsal-drill/release-verification-latest.json"
 };
 
 describe("verification manifest", () => {
-  it("aggregates passing coding-agent and release verification gates", () => {
+  it("aggregates passing local drill and release verification gates", () => {
     const manifest = buildVerificationManifest({
       codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -25,16 +31,20 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 4,
-      passed: 4,
+      total: 6,
+      passed: 6,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
+      "localization-drill",
+      "executor-contract-drill",
       "release-verification",
       "dry-run-boundary"
     ]);
+    expect(manifest.source.localizationLocales).toEqual(["ja", "en", "zh-Hans", "zh-Hant", "ko"]);
+    expect(manifest.source.executorProfiles).toContain("desktop-vm");
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
   });
 
@@ -44,6 +54,8 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentReport,
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -54,6 +66,47 @@ describe("verification manifest", () => {
     expect(manifest.summary.failed).toBe(1);
     expect(mismatchCheck?.status).toBe("fail");
     expect(mismatchCheck?.summary).toContain("not blocked correctly");
+  });
+
+  it("invalidates the manifest when localization drill breaks locale contract", () => {
+    const localizationDrill = localizationDrillFixture();
+    localizationDrill.locales = localizationDrill.locales.filter((locale) => locale.locale !== "ko");
+    localizationDrill.summary.total = 4;
+    localizationDrill.summary.passed = 4;
+
+    const manifest = buildVerificationManifest({
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill,
+      executorContractDrill: executorContractDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const localizationCheck = manifest.checks.find((check) => check.id === "localization-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(localizationCheck?.status).toBe("fail");
+    expect(localizationCheck?.summary).toContain("did not prove");
+  });
+
+  it("invalidates the manifest when executor drill executes a blocked action", () => {
+    const executorDrill = executorContractDrillFixture();
+    executorDrill.blockedAction.executed = true;
+    executorDrill.checks.blockedActionHeld = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorDrill,
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const executorCheck = manifest.checks.find((check) => check.id === "executor-contract-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(executorCheck?.status).toBe("fail");
+    expect(executorCheck?.evidence.join(" ")).toContain("executed=true");
   });
 
   it("invalidates the manifest when release verification is not dry-run verified", () => {
@@ -81,6 +134,8 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
       releaseVerification,
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -128,6 +183,130 @@ function codingAgentReportFixture(): CodingAgentReceiptDrillSummary {
       level: "local-drill",
       claim: "Local drill.",
       limitations: ["No production runner evidence."],
+      productionRequirements: ["Attach production runner evidence."]
+    }
+  };
+}
+
+function localizationDrillFixture(): LocalizationDrillSummary {
+  const locales = [
+    ["ja", "日本語", "Japanese"],
+    ["en", "English", "English"],
+    ["zh-Hans", "简体中文", "Simplified Chinese"],
+    ["zh-Hant", "繁體中文", "Traditional Chinese"],
+    ["ko", "한국어", "Korean"]
+  ].map(([locale, nativeLabel, expectedLanguage]) => ({
+    locale,
+    nativeLabel,
+    htmlLang: locale,
+    expectedLanguage,
+    briefs: 8,
+    reviewDecision: "ready",
+    bundleDecision: "ready",
+    drillDecision: "assignable",
+    receiptDecision: "needs-evidence",
+    readySessions: 8,
+    heldSessions: 0,
+    wouldAssign: 8,
+    pendingReceiptItems: 8,
+    checks: {
+      localeIsCarried: true,
+      promptLanguageInstruction: true,
+      machineContractStable: true,
+      copyReady: true,
+      reviewReady: true,
+      bundleReady: true,
+      drillAssignable: true,
+      receiptNeedsEvidence: true
+    },
+    failures: []
+  }));
+
+  return {
+    schema: "naikaku.localization-drill.v1",
+    generatedAt: "2026-06-27T00:02:00.000Z",
+    outputDir: "output/localization-drill",
+    defaultLocale: "ja",
+    locales,
+    summary: {
+      total: 5,
+      passed: 5,
+      failed: 0,
+      readySessions: 40,
+      wouldAssign: 40,
+      pendingReceiptItems: 40
+    },
+    honestyClaim: {
+      level: "local-drill",
+      claim: "Local localization drill.",
+      limitations: ["No browser screenshot pass."],
+      productionRequirements: ["Review production copy."]
+    }
+  };
+}
+
+function executorContractDrillFixture(): ExecutorContractDrillSummary {
+  const profiles = [
+    "browser-sandbox",
+    "desktop-vm",
+    "shell-container",
+    "mcp-proxy",
+    "human-approval"
+  ] as const;
+
+  return {
+    schema: "naikaku.executor-contract-drill.v1",
+    generatedAt: "2026-06-27T00:03:00.000Z",
+    outputDir: "output/executor-contract-drill",
+    runId: "run-executor-contract-test",
+    mode: "dry-run",
+    profiles: profiles.map((profileId) => ({
+      profileId,
+      readyActionId: `action-${profileId}`,
+      runbookCommand: profileId === "human-approval"
+        ? "approval.await --action test"
+        : `sandbox.${profileId}.dry-run`,
+      runnerId: `naikaku.${profileId}.dry-run`,
+      evidenceKinds: profileId === "human-approval" ? ["policy", "approval"] : ["policy", "artifact", "transcript"],
+      evidenceItems: profileId === "human-approval" ? 2 : 3,
+      replayable: true,
+      output: "Dry-run output.",
+      failures: []
+    })),
+    blockedAction: {
+      actionId: "blocked-deploy",
+      action: "deploy_production",
+      status: "blocked",
+      held: true,
+      executed: false,
+      reason: "Action is blocked by sandbox policy."
+    },
+    summary: {
+      profiles: 5,
+      passed: 5,
+      failed: 0,
+      readyActions: 5,
+      heldActions: 1,
+      runbookSteps: 5,
+      executorSteps: 5,
+      evidenceItems: 14,
+      replayableSteps: 5,
+      approvalRecords: 3,
+      capabilityCards: 5
+    },
+    checks: {
+      allProfilesCovered: true,
+      allReadyProfilesExecuted: true,
+      blockedActionHeld: true,
+      noProductionExecution: true,
+      dryRunOnly: true,
+      evidenceReplayable: true,
+      noSecretLeakage: true
+    },
+    honestyClaim: {
+      level: "local-drill",
+      claim: "Local executor drill.",
+      limitations: ["No real executor controlled."],
       productionRequirements: ["Attach production runner evidence."]
     }
   };

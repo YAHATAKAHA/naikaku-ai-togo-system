@@ -678,6 +678,91 @@ export interface CodingAgentReceiptDrillSummary {
   };
 }
 
+export interface LocalizationDrillSummary {
+  schema: "naikaku.localization-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  defaultLocale: string;
+  locales: Array<{
+    locale: string;
+    nativeLabel: string;
+    htmlLang: string;
+    expectedLanguage: string;
+    briefs: number;
+    reviewDecision: string;
+    bundleDecision: string;
+    drillDecision: string;
+    receiptDecision: string;
+    readySessions: number;
+    heldSessions: number;
+    wouldAssign: number;
+    pendingReceiptItems: number;
+    checks: Record<string, boolean>;
+    failures: string[];
+  }>;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    readySessions: number;
+    wouldAssign: number;
+    pendingReceiptItems: number;
+  };
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export interface ExecutorContractDrillSummary {
+  schema: "naikaku.executor-contract-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  runId: string;
+  mode: "dry-run";
+  profiles: Array<{
+    profileId: ExecutorProfileId;
+    readyActionId: string;
+    runbookCommand: string;
+    runnerId: string;
+    evidenceKinds: string[];
+    evidenceItems: number;
+    replayable: boolean;
+    output: string;
+    failures: string[];
+  }>;
+  blockedAction: {
+    actionId: string;
+    action: string;
+    status: AutomationActionStatus;
+    held: boolean;
+    executed: boolean;
+    reason: string;
+  };
+  summary: {
+    profiles: number;
+    passed: number;
+    failed: number;
+    readyActions: number;
+    heldActions: number;
+    runbookSteps: number;
+    executorSteps: number;
+    evidenceItems: number;
+    replayableSteps: number;
+    approvalRecords: number;
+    capabilityCards: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type VerificationManifestDecision = "verified" | "invalid";
 export type VerificationManifestStatus = "pass" | "fail";
 
@@ -695,11 +780,17 @@ export interface VerificationManifest {
   decision: VerificationManifestDecision;
   inputs: {
     codingAgentReceiptDrill: string;
+    localizationDrill: string;
+    executorContractDrill: string;
     releaseVerification: string;
   };
   source: {
     codingAgentGeneratedAt: string;
+    localizationGeneratedAt: string;
+    executorContractGeneratedAt: string;
     releaseVerificationGeneratedAt: string;
+    localizationLocales: string[];
+    executorProfiles: ExecutorProfileId[];
     releaseRunId: string;
     releaseScope: string;
   };

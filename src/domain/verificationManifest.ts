@@ -1,22 +1,40 @@
 import type {
   CodingAgentReceiptDrillSummary,
+  ExecutorContractDrillSummary,
+  ExecutorProfileId,
+  LocalizationDrillSummary,
   ReleaseVerificationReport,
   VerificationManifest,
   VerificationManifestCheck
 } from "./types";
 
+const expectedLocales = ["ja", "en", "zh-Hans", "zh-Hant", "ko"];
+const expectedExecutorProfiles: ExecutorProfileId[] = [
+  "browser-sandbox",
+  "desktop-vm",
+  "shell-container",
+  "mcp-proxy",
+  "human-approval"
+];
+
 export interface BuildVerificationManifestInput {
   codingAgentReport: CodingAgentReceiptDrillSummary;
+  localizationDrill: LocalizationDrillSummary;
+  executorContractDrill: ExecutorContractDrillSummary;
   releaseVerification: ReleaseVerificationReport;
   generatedAt?: string;
   inputs: {
     codingAgentReceiptDrill: string;
+    localizationDrill: string;
+    executorContractDrill: string;
     releaseVerification: string;
   };
 }
 
 export function buildVerificationManifest({
   codingAgentReport,
+  localizationDrill,
+  executorContractDrill,
   releaseVerification,
   generatedAt = new Date().toISOString(),
   inputs
@@ -24,6 +42,8 @@ export function buildVerificationManifest({
   const checks = [
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
+    localizationDrillCheck(localizationDrill),
+    executorContractDrillCheck(executorContractDrill),
     releaseVerificationCheck(releaseVerification),
     dryRunBoundaryCheck(releaseVerification)
   ];
@@ -37,7 +57,11 @@ export function buildVerificationManifest({
     inputs,
     source: {
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
+      localizationGeneratedAt: localizationDrill.generatedAt,
+      executorContractGeneratedAt: executorContractDrill.generatedAt,
       releaseVerificationGeneratedAt: releaseVerification.generatedAt,
+      localizationLocales: localizationDrill.locales.map((locale) => locale.locale),
+      executorProfiles: executorContractDrill.profiles.map((profile) => profile.profileId),
       releaseRunId: releaseVerification.sourceRunId,
       releaseScope: releaseVerification.scope
     },
@@ -52,12 +76,12 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced source reports attached."
+        "It is valid only with the referenced localization, executor, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
         "Run production-mode release verification before claiming production readiness.",
-        "Keep the referenced receipt drill and release verification reports with this manifest."
+        "Keep the referenced drill and release verification reports with this manifest."
       ]
     }
   };
@@ -121,6 +145,77 @@ function codingAgentMismatchCheck(report: CodingAgentReceiptDrillSummary): Verif
     nextAction: ok
       ? "Keep this anti-fake drill in the release verification path."
       : "Restore evidence coverage checks so unrelated artifacts cannot satisfy receipt requirements."
+  };
+}
+
+function localizationDrillCheck(report: LocalizationDrillSummary): VerificationManifestCheck {
+  const locales = report.locales.map((locale) => locale.locale);
+  const checksPassed = report.locales.every((locale) =>
+    Object.values(locale.checks).every(Boolean) && locale.failures.length === 0
+  );
+  const ok = report.schema === "naikaku.localization-drill.v1"
+    && report.defaultLocale === "ja"
+    && report.summary.failed === 0
+    && report.summary.total === expectedLocales.length
+    && expectedLocales.every((locale, index) => locales[index] === locale)
+    && checksPassed;
+
+  return {
+    id: "localization-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Japanese-first localization drill preserved coding-agent handoff contracts in every supported locale."
+      : "Localization drill did not prove every supported locale and machine contract.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Default locale: ${report.defaultLocale}`,
+      `Locales: ${locales.join(", ")}`,
+      `Passed: ${report.summary.passed}/${report.summary.total}`,
+      `Failed: ${report.summary.failed}`,
+      `Ready sessions: ${report.summary.readySessions}`,
+      `Would assign: ${report.summary.wouldAssign}`,
+      `Pending receipt items: ${report.summary.pendingReceiptItems}`
+    ],
+    nextAction: ok
+      ? "Keep the localization drill summary attached to language release evidence."
+      : "Rerun localization drill and fix locale order, prompt language instructions, or stable machine contracts."
+  };
+}
+
+function executorContractDrillCheck(report: ExecutorContractDrillSummary): VerificationManifestCheck {
+  const profiles = report.profiles.map((profile) => profile.profileId);
+  const checksPassed = Object.values(report.checks).every(Boolean)
+    && report.profiles.every((profile) => profile.failures.length === 0);
+  const ok = report.schema === "naikaku.executor-contract-drill.v1"
+    && report.mode === "dry-run"
+    && report.summary.failed === 0
+    && report.summary.profiles === expectedExecutorProfiles.length
+    && expectedExecutorProfiles.every((profile) => profiles.includes(profile))
+    && report.blockedAction.status === "blocked"
+    && report.blockedAction.held
+    && !report.blockedAction.executed
+    && checksPassed;
+
+  return {
+    id: "executor-contract-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Executor contract drill covered every sandbox profile and kept blocked production actions held."
+      : "Executor contract drill did not prove every profile or blocked-action boundary.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Mode: ${report.mode}`,
+      `Profiles: ${profiles.join(", ")}`,
+      `Passed: ${report.summary.passed}/${report.summary.profiles}`,
+      `Failed: ${report.summary.failed}`,
+      `Ready actions: ${report.summary.readyActions}`,
+      `Held actions: ${report.summary.heldActions}`,
+      `Evidence items: ${report.summary.evidenceItems}`,
+      `Blocked action: ${report.blockedAction.action} / held=${report.blockedAction.held} / executed=${report.blockedAction.executed}`
+    ],
+    nextAction: ok
+      ? "Keep the executor contract drill summary attached to runner handoff evidence."
+      : "Rerun executor drill and restore scoped commands, replayable evidence, dry-run identity, or blocked-action handling."
   };
 }
 
