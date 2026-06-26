@@ -363,6 +363,49 @@ Response:
 }
 ```
 
+### `POST /v1/development/issues`
+
+Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  },
+  "memoryEntries": [],
+  "savedItems": []
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.github-issue-drafts.v1",
+  "summary": {
+    "total": 12,
+    "ready": 10,
+    "blocked": 2,
+    "highPriority": 6,
+    "teams": 8
+  },
+  "drafts": [
+    {
+      "title": "[Team] Execution Minister: Implementation",
+      "labels": ["naikaku", "mvp", "source:team-package"],
+      "body": "Mission: ...\n\n## Work\n..."
+    }
+  ]
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

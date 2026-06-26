@@ -2,6 +2,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
+import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
+import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -11,9 +13,11 @@ import type {
   CabinetRunMode,
   CabinetRole,
   CabinetWorkspace,
+  DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorRun,
   ExecutorHandoff,
+  MemoryEntry,
   ProviderConfig,
   SandboxPolicy
 } from "../src/domain/types";
@@ -58,6 +62,7 @@ const server = createServer(async (request, response) => {
           "executor-evidence",
           "ledger-store",
           "team-packages",
+          "development-issues",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -288,6 +293,34 @@ const server = createServer(async (request, response) => {
         run: Array.isArray(body.run?.artifacts) ? body.run : undefined
       });
       sendJson(response, 200, teamHandoff);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/issues") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+        memoryEntries?: MemoryEntry[];
+        savedItems?: DevelopmentWorkItem[];
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const run = Array.isArray(body.run?.artifacts) ? body.run : undefined;
+      const handoff = buildTeamHandoff({
+        workspace,
+        run
+      });
+      const board = buildDevelopmentBoard({
+        handoff,
+        run,
+        memoryEntries: body.memoryEntries || [],
+        savedItems: body.savedItems || []
+      });
+      const drafts = buildDevelopmentIssueDrafts({ board });
+      sendJson(response, 200, drafts);
       return;
     }
 

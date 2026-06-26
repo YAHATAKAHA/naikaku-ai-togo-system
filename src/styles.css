@@ -191,6 +191,7 @@ a.secondary-button {
 .ledger-panel,
 .team-panel,
 .development-panel,
+.issues-panel,
 .memory-panel,
 .sandbox-panel,
 .mission-panel {
@@ -407,6 +408,7 @@ a.secondary-button {
 .team-panel,
 .ledger-panel,
 .development-panel,
+.issues-panel,
 .memory-panel,
 .sandbox-panel {
   padding: 16px;
@@ -2155,6 +2157,229 @@ meter {
   text-overflow: ellipsis;
 }
 
+.issues-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.issues-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.issues-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.issues-summary span[data-status="ready"],
+.issues-summary span[data-status="team"] {
+  color: var(--green);
+}
+
+.issues-summary span[data-status="blocked"] {
+  color: var(--red);
+}
+
+.issues-summary span[data-status="priority"] {
+  color: var(--amber);
+}
+
+.issues-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.issues-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.issues-export-row button,
+.issues-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.issues-export-row a {
+  color: var(--green);
+}
+
+.issues-export-row button:disabled {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.issues-draft-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 620px;
+  overflow: auto;
+}
+
+.issues-draft-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.issues-draft-card[data-status="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.issues-draft-card[data-status="in-progress"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.issues-draft-card[data-status="done"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.issues-draft-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.issues-draft-heading strong,
+.issues-draft-heading span,
+.issues-draft-heading small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.issues-draft-heading strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.issues-draft-heading span,
+.issues-draft-heading small,
+.issues-draft-card p,
+.issues-draft-meta span,
+.issues-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.issues-draft-heading small {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.issues-draft-card[data-status="blocked"] .issues-draft-heading small {
+  color: var(--red);
+  background: #ffe3df;
+}
+
+.issues-draft-card[data-status="in-progress"] .issues-draft-heading small {
+  color: var(--amber);
+  background: #fff0d0;
+}
+
+.issues-draft-card[data-status="done"] .issues-draft-heading small {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.issues-draft-card p {
+  margin: 0;
+  max-height: 92px;
+  overflow: auto;
+}
+
+.issues-draft-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.issues-draft-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.issues-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.issues-labels span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 850;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.issues-empty {
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px;
+}
+
 .memory-panel {
   display: grid;
   gap: 12px;
@@ -2899,6 +3124,7 @@ meter {
   .ledger-grid,
   .team-package-grid,
   .development-item-list,
+  .issues-draft-list,
   .memory-candidate-grid,
   .sandbox-grid,
   .executor-list,
@@ -2910,6 +3136,7 @@ meter {
   .ledger-summary,
   .team-summary,
   .development-summary,
+  .issues-summary,
   .memory-summary,
   .queue-summary,
   .queue-row,
@@ -2918,6 +3145,7 @@ meter {
   .capability-meta,
   .development-item-heading,
   .development-item-meta,
+  .issues-draft-meta,
   .memory-ledger-row,
   .mode-row,
   .history-row {
@@ -2932,9 +3160,11 @@ meter {
   .provider-export-row,
   .team-export-row,
   .development-export-row,
+  .issues-export-row,
   .memory-export-row,
   .executor-result-heading,
   .runbook-step-heading,
+  .issues-draft-heading,
   .ledger-row div,
   .queue-copy div {
     align-items: flex-start;

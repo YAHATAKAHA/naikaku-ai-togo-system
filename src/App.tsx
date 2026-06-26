@@ -22,6 +22,7 @@ import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
 import { AutomationRunbookPanel } from "./components/AutomationRunbookPanel";
 import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
+import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
@@ -58,6 +59,7 @@ import {
   serializeAuditLog,
   serializeAutomationRunbookExport,
   serializeDevelopmentBoardExport,
+  serializeDevelopmentIssueDraftsExport,
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
@@ -69,6 +71,7 @@ import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
+import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
@@ -79,6 +82,7 @@ import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import {
   createAutomationRunbookViaGateway,
+  createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
@@ -99,6 +103,7 @@ import type {
   AuditEvent,
   CabinetRole,
   CabinetRun,
+  DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   DevelopmentWorkItemStatus,
   ExecutorEvidenceBundle,
@@ -150,6 +155,7 @@ export function App() {
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [serverLedger, setServerLedger] = useState<ServerLedgerState>({
@@ -246,6 +252,14 @@ export function App() {
       }),
     [developmentItems, memoryEntries, run, teamHandoff]
   );
+  const developmentIssueDrafts = useMemo<DevelopmentIssueDrafts>(
+    () =>
+      buildDevelopmentIssueDrafts({
+        board: developmentBoard,
+        generatedAt: developmentBoard.generatedAt
+      }),
+    [developmentBoard]
+  );
 
   useEffect(() => {
     return () => {
@@ -305,6 +319,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (developmentIssuesLink) {
+        URL.revokeObjectURL(developmentIssuesLink.href);
+      }
+    };
+  }, [developmentIssuesLink]);
+
+  useEffect(() => {
+    return () => {
       if (providerReadinessLink) {
         URL.revokeObjectURL(providerReadinessLink.href);
       }
@@ -326,6 +348,7 @@ export function App() {
     setExecutorRun(null);
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
+    setDevelopmentIssuesLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -342,6 +365,7 @@ export function App() {
 
   useEffect(() => {
     setTeamHandoffLink(null);
+    setDevelopmentIssuesLink(null);
   }, [run?.id, workspace]);
 
   useEffect(() => {
@@ -581,6 +605,7 @@ export function App() {
     setTeamHandoffLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
+    setDevelopmentIssuesLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setSessionSecrets({});
@@ -635,6 +660,7 @@ export function App() {
       setHandoffLink(null);
       setTeamHandoffLink(null);
       setDevelopmentBoardLink(null);
+      setDevelopmentIssuesLink(null);
       setProviderReadinessLink(null);
       setExecutorEvidenceLink(null);
       setRunState({
@@ -956,6 +982,10 @@ export function App() {
       URL.revokeObjectURL(memoryLink.href);
       setMemoryLink(null);
     }
+    if (developmentIssuesLink) {
+      URL.revokeObjectURL(developmentIssuesLink.href);
+      setDevelopmentIssuesLink(null);
+    }
     recordAudit({
       type: decision === "accepted" ? "memory.entry.accepted" : "memory.entry.rejected",
       severity: decision === "accepted" ? "success" : "warning",
@@ -1007,6 +1037,10 @@ export function App() {
       URL.revokeObjectURL(developmentBoardLink.href);
       setDevelopmentBoardLink(null);
     }
+    if (developmentIssuesLink) {
+      URL.revokeObjectURL(developmentIssuesLink.href);
+      setDevelopmentIssuesLink(null);
+    }
     recordAudit({
       type: "development.item.status.changed",
       severity: status === "blocked" ? "warning" : status === "done" ? "success" : "info",
@@ -1046,6 +1080,66 @@ export function App() {
         highPriority: developmentBoard.summary.highPriority
       }
     });
+  }
+
+  function createDevelopmentIssuesDownload(drafts: DevelopmentIssueDrafts) {
+    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = drafts.runId ? drafts.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-github-issue-drafts-${runSlug}.json`;
+
+    if (developmentIssuesLink) {
+      URL.revokeObjectURL(developmentIssuesLink.href);
+    }
+
+    setDevelopmentIssuesLink({ href: url, fileName });
+  }
+
+  async function exportDevelopmentIssues() {
+    try {
+      const gatewayDrafts = await createDevelopmentIssuesViaGateway(
+        workspace,
+        run,
+        memoryEntries,
+        developmentItems
+      );
+      createDevelopmentIssuesDownload(gatewayDrafts);
+      setRunState({
+        status: "gateway",
+        message: "GitHub issue drafts exported through the local gateway."
+      });
+      recordAudit({
+        type: "development.issues.exported",
+        severity: "info",
+        summary: "GitHub issue drafts exported through gateway.",
+        runId: gatewayDrafts.runId,
+        metadata: {
+          drafts: gatewayDrafts.summary.total,
+          blocked: gatewayDrafts.summary.blocked,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createDevelopmentIssuesDownload(developmentIssueDrafts);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway issue drafts unavailable; used local export. ${error.message}`
+          : "Gateway issue drafts unavailable; used local export."
+      });
+      recordAudit({
+        type: "development.issues.exported",
+        severity: "warning",
+        summary: "GitHub issue drafts exported locally.",
+        runId: developmentIssueDrafts.runId,
+        metadata: {
+          drafts: developmentIssueDrafts.summary.total,
+          blocked: developmentIssueDrafts.summary.blocked,
+          source: "local",
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
   }
 
   async function testProviderReadiness(row: ProviderReadinessRow) {
@@ -1290,6 +1384,12 @@ export function App() {
             exportLink={developmentBoardLink}
             onStatusChange={changeDevelopmentItemStatus}
             onExport={exportDevelopmentBoard}
+          />
+
+          <DevelopmentIssuesPanel
+            drafts={developmentIssueDrafts}
+            exportLink={developmentIssuesLink}
+            onExport={exportDevelopmentIssues}
           />
 
           <MemoryInboxPanel

@@ -3,6 +3,7 @@ import { buildExecutorHandoff } from "./automation";
 import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeDevelopmentBoard } from "./developmentBoard";
+import { serializeDevelopmentIssueDrafts } from "./developmentIssues";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
@@ -15,6 +16,7 @@ import type {
   CabinetRun,
   CabinetWorkspace,
   DevelopmentBoard,
+  DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   MemoryEntry,
@@ -378,6 +380,10 @@ export function clearDevelopmentItems() {
 
 export function serializeDevelopmentBoardExport(board: DevelopmentBoard) {
   return serializeDevelopmentBoard(board);
+}
+
+export function serializeDevelopmentIssueDraftsExport(drafts: DevelopmentIssueDrafts) {
+  return serializeDevelopmentIssueDrafts(drafts);
 }
 
 export function loadProviderReadinessRows(): ProviderReadinessRow[] {

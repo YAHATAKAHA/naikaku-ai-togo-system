@@ -425,6 +425,41 @@ export interface DevelopmentBoard {
   };
 }
 
+export interface DevelopmentIssueDraft {
+  id: string;
+  sourceItemId: string;
+  title: string;
+  body: string;
+  labels: string[];
+  assigneeHint?: string;
+  milestoneHint?: string;
+  priority: DevelopmentWorkItemPriority;
+  status: DevelopmentWorkItemStatus;
+  source: DevelopmentWorkItemSource;
+  roleId?: string;
+  roleName?: string;
+  stageId?: CabinetStageId;
+  runId?: string;
+  acceptanceCriteria: string[];
+  deliverables: string[];
+}
+
+export interface DevelopmentIssueDrafts {
+  schema: "naikaku.github-issue-drafts.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  drafts: DevelopmentIssueDraft[];
+  summary: {
+    total: number;
+    ready: number;
+    blocked: number;
+    highPriority: number;
+    teams: number;
+    labels: string[];
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -445,6 +480,7 @@ export type AuditEventType =
   | "memory.log.exported"
   | "development.item.status.changed"
   | "development.board.exported"
+  | "development.issues.exported"
   | "provider.readiness.checked"
   | "provider.readiness.exported";
 

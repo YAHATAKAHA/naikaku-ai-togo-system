@@ -14,6 +14,7 @@ This backlog is written so different contributors can work in parallel.
 - Add gateway endpoint for team work packages.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
+- Add GitHub Issue Drafts export from Development Board items for parallel implementation handoff.
 
 Acceptance:
 
@@ -21,6 +22,7 @@ Acceptance:
 - No raw API keys appear in exported JSON.
 - Each enabled role can receive a standalone package with provider alias, executor boundary, tasks, and acceptance criteria.
 - Role packages can become status-trackable work items for parallel teams.
+- Development items can become labeled, Markdown-ready issue drafts without requiring GitHub credentials in the browser.
 
 ## Track 2: Provider Adapters
 

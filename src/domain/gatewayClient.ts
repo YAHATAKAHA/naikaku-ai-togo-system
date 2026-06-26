@@ -5,9 +5,12 @@ import type {
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
+  DevelopmentIssueDrafts,
+  DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorHandoff,
   ExecutorRun,
+  MemoryEntry,
   ProviderConfig,
   TeamHandoff
 } from "./types";
@@ -316,6 +319,34 @@ export async function createTeamHandoffViaGateway(
   }
 
   return (await response.json()) as TeamHandoff;
+}
+
+export async function createDevelopmentIssuesViaGateway(
+  workspace: CabinetWorkspace,
+  run?: CabinetRun | null,
+  memoryEntries: MemoryEntry[] = [],
+  savedItems: DevelopmentWorkItem[] = [],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/issues`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      workspace,
+      run,
+      memoryEntries,
+      savedItems
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway development issue drafts failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as DevelopmentIssueDrafts;
 }
 
 export async function checkGatewayHealth() {
