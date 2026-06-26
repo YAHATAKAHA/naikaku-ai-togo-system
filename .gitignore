@@ -13,6 +13,7 @@ output/coding-agent-dispatch-drill
 output/coding-agent-dispatch-simulation
 output/coding-agent-runner-manifest
 output/coding-agent-runner-self-test
+output/coding-agent-sandbox-runner
 output/rehearsal
 output/rehearsal-drill
 output/release-drill

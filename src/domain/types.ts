@@ -876,6 +876,58 @@ export interface CodingAgentRunnerSelfTestDrillSummary {
   };
 }
 
+export interface CodingAgentSandboxRunnerDrillSummary {
+  schema: "naikaku.coding-agent-sandbox-runner-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    runnerSelfTestDecision: string;
+    wouldRun: number;
+    pendingCommands: number;
+    notExecutedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftPaths: number;
+  };
+  valid: {
+    decision: string;
+    executedTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    commandResults: number;
+    processExecutions: number;
+    failedCommands: number;
+    blockedCommands: number;
+    transcriptFilesWritten: number;
+    changedFileSummaries: number;
+    evidenceArtifacts: number;
+    receiptReviewDecision: string;
+    evidenceDecision: string;
+    artifactAuditDecision: string;
+    verifiedArtifactPaths: number;
+    transcriptContentMismatches: number;
+    reusedTranscriptRefs: number;
+    unsafePaths: number;
+  };
+  productionHeld: {
+    decision: string;
+    executedTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    commandResults: number;
+    processExecutions: number;
+    receiptReviewDecision: string;
+    artifactAuditDecision: string;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -1022,6 +1074,7 @@ export interface VerificationManifest {
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
     codingAgentRunnerSelfTest: string;
+    codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -1033,6 +1086,7 @@ export interface VerificationManifest {
     codingAgentDispatchSimulationGeneratedAt: string;
     codingAgentRunnerManifestGeneratedAt: string;
     codingAgentRunnerSelfTestGeneratedAt: string;
+    codingAgentSandboxRunnerGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;

@@ -4,6 +4,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
+  CodingAgentSandboxRunnerDrillSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
   LocalizationDrillSummary,
@@ -27,6 +28,7 @@ export interface BuildVerificationManifestInput {
   codingAgentDispatchSimulation: CodingAgentDispatchSimulationSummary;
   codingAgentRunnerManifest: CodingAgentRunnerManifestDrillSummary;
   codingAgentRunnerSelfTest: CodingAgentRunnerSelfTestDrillSummary;
+  codingAgentSandboxRunner: CodingAgentSandboxRunnerDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -38,6 +40,7 @@ export interface BuildVerificationManifestInput {
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
     codingAgentRunnerSelfTest: string;
+    codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -51,6 +54,7 @@ export function buildVerificationManifest({
   codingAgentDispatchSimulation,
   codingAgentRunnerManifest,
   codingAgentRunnerSelfTest,
+  codingAgentSandboxRunner,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -64,6 +68,7 @@ export function buildVerificationManifest({
     codingAgentSimulationCheck(codingAgentDispatchSimulation),
     codingAgentRunnerManifestCheck(codingAgentRunnerManifest),
     codingAgentRunnerSelfTestCheck(codingAgentRunnerSelfTest),
+    codingAgentSandboxRunnerCheck(codingAgentSandboxRunner),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -86,6 +91,7 @@ export function buildVerificationManifest({
       codingAgentDispatchSimulationGeneratedAt: codingAgentDispatchSimulation.generatedAt,
       codingAgentRunnerManifestGeneratedAt: codingAgentRunnerManifest.generatedAt,
       codingAgentRunnerSelfTestGeneratedAt: codingAgentRunnerSelfTest.generatedAt,
+      codingAgentSandboxRunnerGeneratedAt: codingAgentSandboxRunner.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -108,7 +114,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner self-test, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner self-test, sandbox runner, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -271,6 +277,76 @@ function codingAgentRunnerSelfTestCheck(report: CodingAgentRunnerSelfTestDrillSu
     nextAction: ok
       ? "Keep the runner self-test summary attached before handing manifests to governed coding-agent runners."
       : "Restore runner self-test so it only preflights contracts and never claims completed execution."
+  };
+}
+
+function codingAgentSandboxRunnerCheck(report: CodingAgentSandboxRunnerDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-sandbox-runner-drill.v1"
+    && report.source.runnerSelfTestDecision === "self-test-ready"
+    && report.source.wouldRun > 0
+    && report.source.pendingCommands > 0
+    && report.source.notExecutedCommands === report.source.pendingCommands
+    && report.source.expectedEvidenceArtifacts > 0
+    && report.source.receiptDraftPaths === report.source.wouldRun
+    && report.valid.decision === "sandbox-runner-verified"
+    && report.valid.executedTasks === report.source.wouldRun
+    && report.valid.commandResults === report.source.notExecutedCommands
+    && report.valid.processExecutions > 0
+    && report.valid.failedCommands === 0
+    && report.valid.blockedCommands === 0
+    && report.valid.transcriptFilesWritten === report.valid.commandResults
+    && report.valid.changedFileSummaries === report.valid.executedTasks
+    && report.valid.evidenceArtifacts === report.source.expectedEvidenceArtifacts
+    && report.valid.receiptReviewDecision === "verified"
+    && report.valid.evidenceDecision === "accepted-for-handoff"
+    && report.valid.artifactAuditDecision === "verified"
+    && report.valid.verifiedArtifactPaths > report.valid.commandResults
+    && report.valid.transcriptContentMismatches === 0
+    && report.valid.reusedTranscriptRefs === 0
+    && report.valid.unsafePaths === 0
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.executedTasks === 0
+    && report.productionHeld.commandResults === 0
+    && report.productionHeld.processExecutions === 0
+    && report.productionHeld.receiptReviewDecision === "blocked"
+    && report.productionHeld.artifactAuditDecision === "blocked"
+    && checksPassed;
+
+  return {
+    id: "coding-agent-sandbox-runner",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent sandbox runner executed allowlisted local verification commands and produced auditable drill receipts without bypassing production-held tasks."
+      : "Coding-agent sandbox runner did not preserve allowlist execution, receipt, artifact, or production-held boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Runner self-test decision: ${report.source.runnerSelfTestDecision}`,
+      `Source would-run: ${report.source.wouldRun}`,
+      `Source not-executed commands: ${report.source.notExecutedCommands}`,
+      `Sandbox runner decision: ${report.valid.decision}`,
+      `Executed tasks: ${report.valid.executedTasks}`,
+      `Process executions: ${report.valid.processExecutions}`,
+      `Command results: ${report.valid.commandResults}`,
+      `Failed commands: ${report.valid.failedCommands}`,
+      `Blocked commands: ${report.valid.blockedCommands}`,
+      `Transcript files: ${report.valid.transcriptFilesWritten}`,
+      `Changed-file summaries: ${report.valid.changedFileSummaries}`,
+      `Evidence artifacts: ${report.valid.evidenceArtifacts}`,
+      `Receipt review: ${report.valid.receiptReviewDecision}`,
+      `Implementation evidence: ${report.valid.evidenceDecision}`,
+      `Artifact audit: ${report.valid.artifactAuditDecision}`,
+      `Verified artifact paths: ${report.valid.verifiedArtifactPaths}`,
+      `Transcript mismatches: ${report.valid.transcriptContentMismatches}`,
+      `Reused transcript refs: ${report.valid.reusedTranscriptRefs}`,
+      `Unsafe paths: ${report.valid.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held executions: ${report.productionHeld.processExecutions}`,
+      `Production-held receipt review: ${report.productionHeld.receiptReviewDecision}`
+    ],
+    nextAction: ok
+      ? "Keep the sandbox runner drill summary attached as local runner plumbing evidence; replace it with real task receipts before Development Board reconciliation."
+      : "Restore the sandbox runner so only allowlisted local commands execute and production-held tasks remain unrun."
   };
 }
 

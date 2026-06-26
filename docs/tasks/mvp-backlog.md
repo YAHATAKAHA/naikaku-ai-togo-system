@@ -58,6 +58,7 @@ Acceptance:
 - Operators can export a coding-agent session bundle that never claims implementation happened and holds sessions when review or production evidence is incomplete.
 - Operators can run a coding-agent session drill that exports JSON/Markdown, separates `would-assign`, `needs-operator-review`, and `not-assigned`, and keeps dry-run limitations visible in every supported UI language.
 - Operators can write and audit a local coding-agent dispatch package with prompt files and receipt templates only for ready sessions; production-held sessions remain visible but unassigned.
+- Operators can run a coding-agent sandbox runner drill that executes only allowlisted local verification commands, writes transcripts/evidence/receipt/audit artifacts, and keeps the result separate from Development Board completion.
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.
 - Operators can have accepted and locally artifact-audited coding-agent implementation evidence mark matched Development Board items done while blocked, incomplete, artifact-unverified, and unmatched items remain held for review.
