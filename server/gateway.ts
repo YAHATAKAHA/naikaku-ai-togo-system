@@ -9,6 +9,7 @@ import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefRevie
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
@@ -37,6 +38,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerManifest,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -104,6 +106,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-session-bundle",
           "coding-agent-dispatch-manifest",
           "coding-agent-dispatch-simulation",
+          "coding-agent-runner-manifest",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
@@ -730,6 +733,26 @@ const server = createServer(async (request, response) => {
           : null
       });
       sendJson(response, 200, simulation);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-manifest") {
+      const body = await readJson<{
+        simulation?: CodingAgentDispatchSimulation;
+        receiptDraftPaths?: Record<string, string>;
+      }>(request);
+      if (body.simulation?.schema !== "naikaku.coding-agent-dispatch-simulation.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "simulation with schema naikaku.coding-agent-dispatch-simulation.v1 is required."
+        });
+        return;
+      }
+      const manifest: CodingAgentRunnerManifest = buildCodingAgentRunnerManifest({
+        simulation: body.simulation,
+        receiptDraftPaths: body.receiptDraftPaths || {}
+      });
+      sendJson(response, 200, manifest);
       return;
     }
 

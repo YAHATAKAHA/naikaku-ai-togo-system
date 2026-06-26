@@ -10,6 +10,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerManifest,
   CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -658,6 +659,27 @@ export async function createCodingAgentDispatchSimulationViaGateway(
   }
 
   return (await response.json()) as CodingAgentDispatchSimulation;
+}
+
+export async function createCodingAgentRunnerManifestViaGateway(
+  simulation: CodingAgentDispatchSimulation,
+  receiptDraftPaths: Record<string, string>,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-manifest`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ simulation, receiptDraftPaths }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent runner manifest failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentRunnerManifest;
 }
 
 export async function createCodingAgentSessionReceiptTemplateViaGateway(

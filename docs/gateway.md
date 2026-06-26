@@ -918,6 +918,45 @@ Response:
 
 If the archive audit is blocked, ready sessions stay blocked. If a session is held for review or production evidence, the simulation must not create a receipt draft for it. A ready simulation still means only that the handoff is prepared; a completed receipt and artifact audit are required before implementation can be claimed.
 
+### `POST /v1/development/coding-briefs/runner-manifest`
+
+Converts a dispatch simulation and pending receipt draft paths into a runner-facing coding-agent task manifest. This endpoint does not execute the runner, run commands, open a browser, control a desktop, call MCP tools, edit files, commit, push, deploy, or claim implementation evidence. It only prepares the queue contract future Codex/OpenClaw-style executors can consume inside governed workspaces.
+
+```json
+{
+  "simulation": {
+    "schema": "naikaku.coding-agent-dispatch-simulation.v1",
+    "decision": "ready-for-real-agent",
+    "items": []
+  },
+  "receiptDraftPaths": {
+    "coding-session-example": "receipt-drafts/01-coding-session-example.json"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-runner-manifest.v1",
+  "mode": "runner-handoff-planning",
+  "decision": "runner-ready",
+  "summary": {
+    "readyTasks": 8,
+    "runnerTasks": 8,
+    "receiptDraftPaths": 8,
+    "unsafePaths": 0
+  },
+  "honestyClaim": {
+    "level": "runner-handoff-planning",
+    "claim": "This manifest prepares runner-facing coding-agent handoff tasks without executing implementation work."
+  }
+}
+```
+
+Ready tasks require safe prompt paths, safe receipt draft paths, pending command results, expected evidence paths, and stop conditions. Held or production-evidence-held sessions must remain out of the runner task queue.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

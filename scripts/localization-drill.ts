@@ -425,9 +425,13 @@ function copyHasCoreStrings(locale: SupportedLocale) {
     copy.codingBriefs.receiptTemplate,
     copy.codingBriefs.drillReady,
     copy.codingBriefs.dispatchSimulation,
+    copy.codingBriefs.runnerManifest,
     copy.codingBriefs.downloadDispatchSimulationJson,
+    copy.codingBriefs.downloadRunnerManifestJson,
     copy.codingBriefs.dispatchSimulationDecisionLabel("ready-for-real-agent"),
-    copy.codingBriefs.dispatchSimulationSummary(1, 0, 0)
+    copy.codingBriefs.runnerManifestDecisionLabel("runner-ready"),
+    copy.codingBriefs.dispatchSimulationSummary(1, 0, 0),
+    copy.codingBriefs.runnerManifestSummary(1, 1, 0)
   ].every((value) => value.trim().length > 0);
 }
 

@@ -1840,6 +1840,7 @@ export type AuditEventType =
   | "development.coding_sessions.dispatch_prepared"
   | "development.coding_sessions.dispatch_audited"
   | "development.coding_sessions.dispatch_simulated"
+  | "development.coding_sessions.runner_manifest_prepared"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"
