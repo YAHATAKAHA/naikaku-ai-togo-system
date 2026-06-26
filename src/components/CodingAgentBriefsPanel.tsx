@@ -5,6 +5,8 @@ import type {
   CodingAgentBriefReviewCheck,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentDispatchManifest,
+  CodingAgentDispatchManifestItem,
   CodingAgentSession,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillItem,
@@ -18,6 +20,7 @@ interface CodingAgentBriefsPanelProps {
   briefs: CodingAgentBriefs;
   review: CodingAgentBriefReviewReport | null;
   sessionBundle: CodingAgentSessionBundle | null;
+  dispatchManifest: CodingAgentDispatchManifest | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
   sessionReceipt: CodingAgentSessionReceipt | null;
   exportLink: { href: string; fileName: string } | null;
@@ -25,6 +28,8 @@ interface CodingAgentBriefsPanelProps {
   reviewLink: { href: string; fileName: string } | null;
   sessionLink: { href: string; fileName: string } | null;
   sessionMarkdownLink: { href: string; fileName: string } | null;
+  dispatchLink: { href: string; fileName: string } | null;
+  dispatchMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
   drillMarkdownLink: { href: string; fileName: string } | null;
   receiptLink: { href: string; fileName: string } | null;
@@ -38,6 +43,7 @@ interface CodingAgentBriefsPanelProps {
   onProductionReview: () => void;
   onExportSession: () => void;
   onExportProductionSession: () => void;
+  onExportDispatchManifest: () => void;
   onRunSessionDrill: () => void;
   onCreateSessionReceipt: () => void;
   onImportSessionReceipt: (file: File) => void;
@@ -47,6 +53,7 @@ export function CodingAgentBriefsPanel({
   briefs,
   review,
   sessionBundle,
+  dispatchManifest,
   sessionDrill,
   sessionReceipt,
   exportLink,
@@ -54,6 +61,8 @@ export function CodingAgentBriefsPanel({
   reviewLink,
   sessionLink,
   sessionMarkdownLink,
+  dispatchLink,
+  dispatchMarkdownLink,
   drillLink,
   drillMarkdownLink,
   receiptLink,
@@ -67,6 +76,7 @@ export function CodingAgentBriefsPanel({
   onProductionReview,
   onExportSession,
   onExportProductionSession,
+  onExportDispatchManifest,
   onRunSessionDrill,
   onCreateSessionReceipt,
   onImportSessionReceipt
@@ -120,6 +130,9 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onRunSessionDrill} disabled={!briefs.briefs.length}>
           <PlayCircle size={15} /> {copy.sessionDrill}
         </button>
+        <button type="button" onClick={onExportDispatchManifest} disabled={!briefs.briefs.length}>
+          <PackageCheck size={15} /> {copy.dispatchManifest}
+        </button>
         <button type="button" onClick={onCreateSessionReceipt} disabled={!briefs.briefs.length}>
           <ClipboardCheck size={15} /> {copy.receiptTemplate}
         </button>
@@ -168,6 +181,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadDrillMarkdown}
           </a>
         ) : null}
+        {dispatchLink ? (
+          <a href={dispatchLink.href} download={dispatchLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchJson}
+          </a>
+        ) : null}
+        {dispatchMarkdownLink ? (
+          <a href={dispatchMarkdownLink.href} download={dispatchMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchMarkdown}
+          </a>
+        ) : null}
         {receiptLink ? (
           <a href={receiptLink.href} download={receiptLink.fileName}>
             <Download size={15} /> {copy.downloadReceiptJson}
@@ -200,6 +223,10 @@ export function CodingAgentBriefsPanel({
 
       {sessionDrill ? (
         <CodingAgentSessionDrillReportView report={sessionDrill} copy={copy} />
+      ) : null}
+
+      {dispatchManifest ? (
+        <CodingAgentDispatchManifestReport manifest={dispatchManifest} copy={copy} />
       ) : null}
 
       {sessionReceipt ? (
@@ -286,6 +313,48 @@ function CodingAgentSessionReceiptReportView({
       ) : (
         <p>
           <span>{copy.receiptReady}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CodingAgentDispatchManifestReport({
+  manifest,
+  copy
+}: {
+  manifest: CodingAgentDispatchManifest;
+  copy: CodingAgentBriefsCopy;
+}) {
+  const heldItem = firstHeldDispatchItem(manifest.items);
+  const visibleItem = heldItem || manifest.items[0];
+
+  return (
+    <div className="coding-dispatch-manifest" data-decision={manifest.decision}>
+      <div>
+        <strong>{copy.dispatchDecision}: {copy.dispatchDecisionLabel(manifest.decision)}</strong>
+        <span>
+          {copy.dispatchSummary(manifest.summary.ready, manifest.summary.held, manifest.summary.promptFiles)}
+        </span>
+      </div>
+      <div>
+        <strong>{copy.receiptTemplate}: {copy.dispatchReceiptTemplate(manifest.summary.receiptTemplates)}</strong>
+        <span>{copy.evidencePrefix}: {visibleItem?.evidenceArtifactPrefix || "output/coding-agent/"}</span>
+      </div>
+      {heldItem ? (
+        <p>
+          <b>{heldItem.title}</b>
+          <span>{heldItem.dispatchStatus}</span>
+          <small>{copy.dispatchNextAction}: {heldItem.nextAction}</small>
+        </p>
+      ) : (
+        <p>
+          <span>{copy.dispatchReady}</span>
+          {visibleItem ? (
+            <small>
+              {copy.executor}: {visibleItem.executorProfileId} / {copy.allowedActions(visibleItem.allowedActions.length)}
+            </small>
+          ) : null}
         </p>
       )}
     </div>
@@ -413,4 +482,8 @@ function firstBlockedDrillItem(items: CodingAgentSessionDrillItem[]) {
 
 function firstActionableReceiptItem(items: CodingAgentSessionReceiptItem[]) {
   return items.find((item) => item.receiptStatus !== "verified") || null;
+}
+
+function firstHeldDispatchItem(items: CodingAgentDispatchManifestItem[]) {
+  return items.find((item) => item.dispatchStatus !== "ready-to-dispatch") || null;
 }

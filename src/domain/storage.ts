@@ -4,6 +4,7 @@ import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
+import { serializeCodingAgentDispatchManifest, serializeCodingAgentDispatchManifestMarkdown } from "./codingAgentDispatchManifest";
 import { serializeCodingAgentImplementationEvidence, serializeCodingAgentImplementationEvidenceMarkdown } from "./codingAgentImplementationEvidence";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
@@ -28,6 +29,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentDispatchManifest,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -430,6 +432,14 @@ export function serializeCodingAgentSessionBundleExport(bundle: CodingAgentSessi
 
 export function serializeCodingAgentSessionBundleMarkdownExport(bundle: CodingAgentSessionBundle) {
   return serializeCodingAgentSessionBundleMarkdown(bundle);
+}
+
+export function serializeCodingAgentDispatchManifestExport(manifest: CodingAgentDispatchManifest) {
+  return serializeCodingAgentDispatchManifest(manifest);
+}
+
+export function serializeCodingAgentDispatchManifestMarkdownExport(manifest: CodingAgentDispatchManifest) {
+  return serializeCodingAgentDispatchManifestMarkdown(manifest);
 }
 
 export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessionDrillReport) {

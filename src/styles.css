@@ -2883,6 +2883,16 @@ meter {
   min-width: 0;
 }
 
+.coding-dispatch-manifest {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #b9dfd1;
+  border-radius: 8px;
+  background: #f3fbf7;
+  padding: 10px;
+  min-width: 0;
+}
+
 .coding-session-receipt {
   display: grid;
   gap: 8px;
@@ -2908,6 +2918,11 @@ meter {
   background: #fffaf0;
 }
 
+.coding-dispatch-manifest[data-decision="held"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
 .coding-session-receipt[data-decision="needs-evidence"] {
   border-color: #f3d19c;
   background: #fffaf0;
@@ -2924,6 +2939,11 @@ meter {
 }
 
 .coding-session-drill[data-decision="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.coding-dispatch-manifest[data-decision="blocked"] {
   border-color: #f2b8b2;
   background: #fff6f5;
 }
@@ -2957,6 +2977,14 @@ meter {
   min-width: 0;
 }
 
+.coding-dispatch-manifest div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .coding-session-receipt div {
   display: flex;
   align-items: center;
@@ -2977,6 +3005,10 @@ meter {
 .coding-session-drill span,
 .coding-session-drill small,
 .coding-session-drill b,
+.coding-dispatch-manifest strong,
+.coding-dispatch-manifest span,
+.coding-dispatch-manifest small,
+.coding-dispatch-manifest b,
 .coding-session-receipt strong,
 .coding-session-receipt span,
 .coding-session-receipt small,
@@ -2987,6 +3019,7 @@ meter {
 .coding-brief-review strong,
 .coding-session-bundle strong,
 .coding-session-drill strong,
+.coding-dispatch-manifest strong,
 .coding-session-receipt strong {
   color: var(--ink);
   font-size: 13px;
@@ -3002,6 +3035,9 @@ meter {
 .coding-session-drill div span,
 .coding-session-drill p span,
 .coding-session-drill small,
+.coding-dispatch-manifest div span,
+.coding-dispatch-manifest p span,
+.coding-dispatch-manifest small,
 .coding-session-receipt div span,
 .coding-session-receipt p span,
 .coding-session-receipt small {
@@ -3013,6 +3049,7 @@ meter {
 .coding-brief-review p,
 .coding-session-bundle p,
 .coding-session-drill p,
+.coding-dispatch-manifest p,
 .coding-session-receipt p {
   display: grid;
   gap: 5px;
@@ -3022,6 +3059,7 @@ meter {
 .coding-brief-review b,
 .coding-session-bundle b,
 .coding-session-drill b,
+.coding-dispatch-manifest b,
 .coding-session-receipt b {
   color: var(--ink);
   font-size: 12px;
@@ -4155,6 +4193,7 @@ meter {
   .coding-brief-review div,
   .coding-session-bundle div,
   .coding-session-drill div,
+  .coding-dispatch-manifest div,
   .coding-session-receipt div,
   .coding-brief-heading,
   .issues-draft-heading,
