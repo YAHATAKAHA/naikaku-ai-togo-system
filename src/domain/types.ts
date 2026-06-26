@@ -640,6 +640,82 @@ export interface ReleaseVerificationReport {
   };
 }
 
+export interface CodingAgentReceiptDrillSummary {
+  schema: "naikaku.coding-agent-receipt-drill.v1";
+  generatedAt: string;
+  operatorLocale: string;
+  outputDir: string;
+  source: {
+    boardItems: number;
+    briefs: number;
+    reviewDecision: string;
+    bundleDecision: string;
+    readySessions: number;
+    heldSessions: number;
+  };
+  valid: {
+    receiptDecision: string;
+    evidenceDecision: string;
+    artifactAuditDecision: string;
+    transcriptContentMismatches: number;
+    boardItemsApplied: number;
+    boardItemsSkipped: number;
+  };
+  mismatched: {
+    receiptDecision: string;
+    pendingEvidence: number;
+    evidenceDecision: string;
+    artifactAuditDecision: string;
+    boardItemsApplied: number;
+    boardItemsSkipped: number;
+    firstMissingEvidence: string | null;
+  };
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type VerificationManifestDecision = "verified" | "invalid";
+export type VerificationManifestStatus = "pass" | "fail";
+
+export interface VerificationManifestCheck {
+  id: string;
+  status: VerificationManifestStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface VerificationManifest {
+  schema: "naikaku.verification-manifest.v1";
+  generatedAt: string;
+  decision: VerificationManifestDecision;
+  inputs: {
+    codingAgentReceiptDrill: string;
+    releaseVerification: string;
+  };
+  source: {
+    codingAgentGeneratedAt: string;
+    releaseVerificationGeneratedAt: string;
+    releaseRunId: string;
+    releaseScope: string;
+  };
+  checks: VerificationManifestCheck[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+  };
+  honestyClaim: {
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource =
