@@ -22,6 +22,7 @@ import {
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
 import { AutomationRunbookPanel } from "./components/AutomationRunbookPanel";
+import { CodingAgentBriefsPanel } from "./components/CodingAgentBriefsPanel";
 import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
 import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
@@ -61,6 +62,8 @@ import {
   saveWorkspace,
   serializeAuditLog,
   serializeAutomationRunbookExport,
+  serializeCodingAgentBriefsExport,
+  serializeCodingAgentBriefsMarkdownExport,
   serializeDevelopmentBoardExport,
   serializeDevelopmentIssueDraftsExport,
   serializeDevelopmentIssueGhScriptExport,
@@ -79,6 +82,7 @@ import {
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
+import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
@@ -99,6 +103,7 @@ import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type SupportedLocale } from "./i18n";
 import {
   createAutomationRunbookViaGateway,
+  createCodingAgentBriefsViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createProductReadinessViaGateway,
@@ -124,6 +129,7 @@ import type {
   AuditEvent,
   CabinetRole,
   CabinetRun,
+  CodingAgentBriefs,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   DevelopmentWorkItemStatus,
@@ -193,6 +199,8 @@ export function App() {
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentBriefsLink, setCodingAgentBriefsLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentBriefsMarkdownLink, setCodingAgentBriefsMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -306,6 +314,15 @@ export function App() {
         generatedAt: developmentBoard.generatedAt
       }),
     [developmentBoard]
+  );
+  const codingAgentBriefs = useMemo<CodingAgentBriefs>(
+    () =>
+      buildCodingAgentBriefs({
+        board: developmentBoard,
+        operatorLocale: locale,
+        releaseVerification
+      }),
+    [developmentBoard, locale, releaseVerification]
   );
   const productReadinessReport = useMemo<ProductReadinessReport>(
     () =>
@@ -492,6 +509,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentBriefsLink) {
+        URL.revokeObjectURL(codingAgentBriefsLink.href);
+      }
+    };
+  }, [codingAgentBriefsLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentBriefsMarkdownLink) {
+        URL.revokeObjectURL(codingAgentBriefsMarkdownLink.href);
+      }
+    };
+  }, [codingAgentBriefsMarkdownLink]);
+
+  useEffect(() => {
+    return () => {
       if (developmentIssuesLink) {
         URL.revokeObjectURL(developmentIssuesLink.href);
       }
@@ -529,6 +562,8 @@ export function App() {
     setExecutorRun(null);
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
+    setCodingAgentBriefsLink(null);
+    setCodingAgentBriefsMarkdownLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
@@ -665,6 +700,17 @@ export function App() {
     if (releaseVerificationLink) {
       URL.revokeObjectURL(releaseVerificationLink.href);
       setReleaseVerificationLink(null);
+    }
+  }
+
+  function clearCodingAgentBriefDownloads() {
+    if (codingAgentBriefsLink) {
+      URL.revokeObjectURL(codingAgentBriefsLink.href);
+      setCodingAgentBriefsLink(null);
+    }
+    if (codingAgentBriefsMarkdownLink) {
+      URL.revokeObjectURL(codingAgentBriefsMarkdownLink.href);
+      setCodingAgentBriefsMarkdownLink(null);
     }
   }
 
@@ -862,6 +908,8 @@ export function App() {
     setReleaseRemediationIssuesLink(null);
     setReleaseRemediationScriptLink(null);
     setDevelopmentBoardLink(null);
+    setCodingAgentBriefsLink(null);
+    setCodingAgentBriefsMarkdownLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
@@ -929,6 +977,8 @@ export function App() {
       setReleaseRemediationIssuesLink(null);
       setReleaseRemediationScriptLink(null);
       setDevelopmentBoardLink(null);
+      setCodingAgentBriefsLink(null);
+      setCodingAgentBriefsMarkdownLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
       setProviderReadinessLink(null);
@@ -1704,6 +1754,7 @@ export function App() {
       URL.revokeObjectURL(developmentBoardLink.href);
       setDevelopmentBoardLink(null);
     }
+    clearCodingAgentBriefDownloads();
     if (developmentIssuesLink) {
       URL.revokeObjectURL(developmentIssuesLink.href);
       setDevelopmentIssuesLink(null);
@@ -1750,6 +1801,102 @@ export function App() {
         items: developmentBoard.summary.total,
         blocked: developmentBoard.summary.blocked,
         highPriority: developmentBoard.summary.highPriority
+      }
+    });
+  }
+
+  function createCodingAgentBriefsDownload(briefs: CodingAgentBriefs) {
+    const blob = new Blob([serializeCodingAgentBriefsExport(briefs)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = briefs.runId ? briefs.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-briefs-${runSlug}-${briefs.operatorLocale}.json`;
+
+    if (codingAgentBriefsLink) {
+      URL.revokeObjectURL(codingAgentBriefsLink.href);
+    }
+
+    setCodingAgentBriefsLink({ href: url, fileName });
+  }
+
+  function createCodingAgentBriefsMarkdownDownload(briefs: CodingAgentBriefs) {
+    const blob = new Blob([serializeCodingAgentBriefsMarkdownExport(briefs)], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = briefs.runId ? briefs.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-briefs-${runSlug}-${briefs.operatorLocale}.md`;
+
+    if (codingAgentBriefsMarkdownLink) {
+      URL.revokeObjectURL(codingAgentBriefsMarkdownLink.href);
+    }
+
+    setCodingAgentBriefsMarkdownLink({ href: url, fileName });
+  }
+
+  async function exportCodingAgentBriefs() {
+    try {
+      const gatewayBriefs = await createCodingAgentBriefsViaGateway(
+        workspace,
+        run,
+        memoryEntries,
+        developmentItems,
+        releaseVerification,
+        locale
+      );
+      createCodingAgentBriefsDownload(gatewayBriefs);
+      setRunState({
+        status: "gateway",
+        message: copy.codingBriefs.statusGateway
+      });
+      recordAudit({
+        type: "development.coding_briefs.exported",
+        severity: gatewayBriefs.summary.blocked ? "warning" : "info",
+        summary: "Coding agent briefs exported through gateway.",
+        runId: gatewayBriefs.runId,
+        metadata: {
+          briefs: gatewayBriefs.summary.total,
+          blocked: gatewayBriefs.summary.blocked,
+          humanReview: gatewayBriefs.summary.humanReview,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createCodingAgentBriefsDownload(codingAgentBriefs);
+      setRunState({
+        status: "fallback",
+        message: copy.codingBriefs.statusFallback(error instanceof Error ? error.message : undefined)
+      });
+      recordAudit({
+        type: "development.coding_briefs.exported",
+        severity: "warning",
+        summary: "Coding agent briefs exported locally.",
+        runId: codingAgentBriefs.runId,
+        metadata: {
+          briefs: codingAgentBriefs.summary.total,
+          blocked: codingAgentBriefs.summary.blocked,
+          humanReview: codingAgentBriefs.summary.humanReview,
+          source: "local",
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
+  }
+
+  function exportCodingAgentBriefsMarkdown() {
+    createCodingAgentBriefsMarkdownDownload(codingAgentBriefs);
+    setRunState({
+      status: "local",
+      message: copy.codingBriefs.statusMarkdown
+    });
+    recordAudit({
+      type: "development.coding_briefs.exported",
+      severity: codingAgentBriefs.summary.blocked ? "warning" : "info",
+      summary: "Coding agent Markdown prompt pack prepared.",
+      runId: codingAgentBriefs.runId,
+      metadata: {
+        briefs: codingAgentBriefs.summary.total,
+        blocked: codingAgentBriefs.summary.blocked,
+        humanReview: codingAgentBriefs.summary.humanReview,
+        format: "markdown",
+        source: "local"
       }
     });
   }
@@ -2133,6 +2280,15 @@ export function App() {
             exportLink={developmentBoardLink}
             onStatusChange={changeDevelopmentItemStatus}
             onExport={exportDevelopmentBoard}
+          />
+
+          <CodingAgentBriefsPanel
+            briefs={codingAgentBriefs}
+            exportLink={codingAgentBriefsLink}
+            markdownLink={codingAgentBriefsMarkdownLink}
+            copy={copy.codingBriefs}
+            onExport={() => void exportCodingAgentBriefs()}
+            onExportMarkdown={exportCodingAgentBriefsMarkdown}
           />
 
           <DevelopmentIssuesPanel

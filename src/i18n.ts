@@ -53,6 +53,31 @@ export interface ReleaseRehearsalCopy {
   };
 }
 
+export interface CodingAgentBriefsCopy {
+  title: string;
+  total: (count: number) => string;
+  implementable: (count: number) => string;
+  blocked: (count: number) => string;
+  humanReview: (count: number) => string;
+  highPriority: (count: number) => string;
+  sourceReady: string;
+  exportJson: string;
+  exportMarkdown: string;
+  downloadJson: string;
+  downloadMarkdown: string;
+  mode: string;
+  executor: string;
+  releaseGate: string;
+  required: string;
+  optional: string;
+  crossRole: string;
+  promptReady: string;
+  empty: string;
+  statusGateway: string;
+  statusFallback: (errorMessage?: string) => string;
+  statusMarkdown: string;
+}
+
 export interface AppCopy {
   brandSubtitle: string;
   language: string;
@@ -75,6 +100,7 @@ export interface AppCopy {
   releaseVerificationFallback: (errorMessage?: string) => string;
   releaseVerificationStatus: (decision: string, failed: number) => string;
   releaseRehearsal: ReleaseRehearsalCopy;
+  codingBriefs: CodingAgentBriefsCopy;
 }
 
 const STORAGE_KEY = "naikaku.locale";
@@ -139,6 +165,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `リリース演習 ${jaRehearsalDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
     releaseVerificationFallback: (errorMessage) => `ゲートウェイ検証を利用できないため、ローカル検証を使用しました。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `リリース検証 ${jaVerificationDecision(decision)}: 失敗 ${failed}件。`,
+    codingBriefs: {
+      title: "コーディング代理ブリーフ",
+      total: (count) => `${count}件`,
+      implementable: (count) => `${count}実装可`,
+      blocked: (count) => `${count}要確認`,
+      humanReview: (count) => `${count}人間確認`,
+      highPriority: (count) => `${count}高優先`,
+      sourceReady: "Development Board から生成",
+      exportJson: "JSON出力",
+      exportMarkdown: "Markdown出力",
+      downloadJson: "JSON取得",
+      downloadMarkdown: "Markdown取得",
+      mode: "モード",
+      executor: "Executor",
+      releaseGate: "リリースゲート",
+      required: "必須",
+      optional: "任意",
+      crossRole: "横断",
+      promptReady: "代理用 prompt 準備済み",
+      empty: "Development Board から coding agent brief を生成してください。",
+      statusGateway: "コーディング代理ブリーフをローカルゲートウェイ経由で出力しました。",
+      statusFallback: (errorMessage) => `ゲートウェイ brief を利用できないため、ローカル出力を使用しました。${errorMessage || ""}`,
+      statusMarkdown: "コーディング代理 Markdown prompt pack をローカルで準備しました。"
+    },
     releaseRehearsal: {
       title: "リリース演習",
       notRun: "未実行",
@@ -207,6 +257,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `Release rehearsal ${decision}: ${blockers} blockers, ${warnings} warnings.`,
     releaseVerificationFallback: (errorMessage) => `Gateway release verification unavailable; used local verifier.${errorMessage ? ` ${errorMessage}` : ""}`,
     releaseVerificationStatus: (decision, failed) => `Release verification ${decision}: ${failed} failed checks.`,
+    codingBriefs: {
+      title: "Coding agent briefs",
+      total: (count) => `${count} briefs`,
+      implementable: (count) => `${count} implementable`,
+      blocked: (count) => `${count} blocked`,
+      humanReview: (count) => `${count} human review`,
+      highPriority: (count) => `${count} high priority`,
+      sourceReady: "Generated from Development Board",
+      exportJson: "Export JSON",
+      exportMarkdown: "Export Markdown",
+      downloadJson: "Download JSON",
+      downloadMarkdown: "Download Markdown",
+      mode: "Mode",
+      executor: "Executor",
+      releaseGate: "Release gate",
+      required: "required",
+      optional: "optional",
+      crossRole: "cross-role",
+      promptReady: "Agent prompt ready",
+      empty: "Generate coding agent briefs from the Development Board.",
+      statusGateway: "Coding agent briefs exported through the local gateway.",
+      statusFallback: (errorMessage) => `Gateway coding agent briefs unavailable; used local export.${errorMessage ? ` ${errorMessage}` : ""}`,
+      statusMarkdown: "Coding agent Markdown prompt pack prepared locally."
+    },
     releaseRehearsal: {
       title: "Release rehearsal",
       notRun: "not run",
@@ -275,6 +349,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `发布演练 ${zhHansRehearsalDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
     releaseVerificationFallback: (errorMessage) => `网关验证不可用，已使用本地验证。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `发布验证 ${zhHansVerificationDecision(decision)}：${failed} 个失败检查。`,
+    codingBriefs: {
+      title: "编程代理 brief",
+      total: (count) => `${count} 个 brief`,
+      implementable: (count) => `${count} 可实现`,
+      blocked: (count) => `${count} 需确认`,
+      humanReview: (count) => `${count} 人工确认`,
+      highPriority: (count) => `${count} 高优先`,
+      sourceReady: "由 Development Board 生成",
+      exportJson: "导出 JSON",
+      exportMarkdown: "导出 Markdown",
+      downloadJson: "下载 JSON",
+      downloadMarkdown: "下载 Markdown",
+      mode: "模式",
+      executor: "Executor",
+      releaseGate: "发布门",
+      required: "必需",
+      optional: "可选",
+      crossRole: "跨角色",
+      promptReady: "代理 prompt 已准备",
+      empty: "请从 Development Board 生成编程代理 brief。",
+      statusGateway: "编程代理 brief 已通过本地网关导出。",
+      statusFallback: (errorMessage) => `网关 brief 不可用，已使用本地导出。${errorMessage || ""}`,
+      statusMarkdown: "编程代理 Markdown prompt pack 已在本地准备。"
+    },
     releaseRehearsal: {
       title: "发布演练",
       notRun: "未运行",
@@ -343,6 +441,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `發布演練 ${zhHantRehearsalDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
     releaseVerificationFallback: (errorMessage) => `閘道驗證不可用，已使用本地驗證。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `發布驗證 ${zhHantVerificationDecision(decision)}：${failed} 個失敗檢查。`,
+    codingBriefs: {
+      title: "編程代理 brief",
+      total: (count) => `${count} 個 brief`,
+      implementable: (count) => `${count} 可實現`,
+      blocked: (count) => `${count} 需確認`,
+      humanReview: (count) => `${count} 人工確認`,
+      highPriority: (count) => `${count} 高優先`,
+      sourceReady: "由 Development Board 生成",
+      exportJson: "匯出 JSON",
+      exportMarkdown: "匯出 Markdown",
+      downloadJson: "下載 JSON",
+      downloadMarkdown: "下載 Markdown",
+      mode: "模式",
+      executor: "Executor",
+      releaseGate: "發布門",
+      required: "必需",
+      optional: "可選",
+      crossRole: "跨角色",
+      promptReady: "代理 prompt 已準備",
+      empty: "請從 Development Board 生成編程代理 brief。",
+      statusGateway: "編程代理 brief 已透過本地閘道匯出。",
+      statusFallback: (errorMessage) => `閘道 brief 不可用，已使用本地匯出。${errorMessage || ""}`,
+      statusMarkdown: "編程代理 Markdown prompt pack 已在本地準備。"
+    },
     releaseRehearsal: {
       title: "發布演練",
       notRun: "未執行",
@@ -411,6 +533,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `릴리스 리허설 ${koRehearsalDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
     releaseVerificationFallback: (errorMessage) => `게이트웨이 검증을 사용할 수 없어 로컬 검증을 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
     releaseVerificationStatus: (decision, failed) => `릴리스 검증 ${koVerificationDecision(decision)}: 실패 ${failed}개.`,
+    codingBriefs: {
+      title: "코딩 에이전트 브리프",
+      total: (count) => `${count}개`,
+      implementable: (count) => `${count}개 구현 가능`,
+      blocked: (count) => `${count}개 확인 필요`,
+      humanReview: (count) => `${count}개 사람 검토`,
+      highPriority: (count) => `${count}개 높은 우선순위`,
+      sourceReady: "Development Board에서 생성",
+      exportJson: "JSON 내보내기",
+      exportMarkdown: "Markdown 내보내기",
+      downloadJson: "JSON 다운로드",
+      downloadMarkdown: "Markdown 다운로드",
+      mode: "모드",
+      executor: "Executor",
+      releaseGate: "릴리스 게이트",
+      required: "필수",
+      optional: "선택",
+      crossRole: "역할 공통",
+      promptReady: "에이전트 prompt 준비됨",
+      empty: "Development Board에서 코딩 에이전트 브리프를 생성하세요.",
+      statusGateway: "코딩 에이전트 브리프를 로컬 게이트웨이로 내보냈습니다.",
+      statusFallback: (errorMessage) => `게이트웨이 브리프를 사용할 수 없어 로컬 내보내기를 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
+      statusMarkdown: "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다."
+    },
     releaseRehearsal: {
       title: "릴리스 리허설",
       notRun: "미실행",

@@ -2767,6 +2767,190 @@ meter {
   text-overflow: ellipsis;
 }
 
+.coding-briefs-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.coding-briefs-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.coding-briefs-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.coding-briefs-summary span[data-status="implementable"] {
+  color: var(--green);
+}
+
+.coding-briefs-summary span[data-status="blocked"] {
+  color: var(--red);
+}
+
+.coding-briefs-summary span[data-status="human"] {
+  color: var(--accent);
+}
+
+.coding-briefs-summary span[data-status="priority"] {
+  color: var(--amber);
+}
+
+.coding-briefs-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.coding-briefs-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.coding-briefs-export-row button,
+.coding-briefs-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.coding-briefs-export-row a {
+  color: var(--green);
+}
+
+.coding-briefs-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.coding-brief-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.coding-brief-card[data-mode="blocked-review"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.coding-brief-card[data-mode="review"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.coding-brief-card[data-mode="verify"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.coding-brief-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coding-brief-heading strong,
+.coding-brief-heading span {
+  display: block;
+}
+
+.coding-brief-heading strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.coding-brief-heading span,
+.coding-brief-card p,
+.coding-brief-meta span,
+.coding-brief-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.coding-brief-heading small {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  padding: 3px 7px;
+  font-weight: 850;
+}
+
+.coding-brief-card p,
+.coding-brief-card small {
+  margin: 0;
+}
+
+.coding-brief-card p {
+  max-height: 78px;
+  overflow: auto;
+}
+
+.coding-brief-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.coding-brief-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coding-briefs-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .issues-panel {
   display: grid;
   gap: 12px;
@@ -3737,6 +3921,7 @@ meter {
   .ledger-grid,
   .team-package-grid,
   .development-item-list,
+  .coding-briefs-list,
   .issues-draft-list,
   .memory-candidate-grid,
   .sandbox-grid,
@@ -3752,6 +3937,7 @@ meter {
   .ledger-summary,
   .team-summary,
   .development-summary,
+  .coding-briefs-summary,
   .issues-summary,
   .memory-summary,
   .queue-summary,
@@ -3761,6 +3947,7 @@ meter {
   .capability-meta,
   .development-item-heading,
   .development-item-meta,
+  .coding-brief-meta,
   .issues-draft-meta,
   .memory-ledger-row,
   .mode-row,
@@ -3778,6 +3965,7 @@ meter {
   .provider-export-row,
   .team-export-row,
   .development-export-row,
+  .coding-briefs-export-row,
   .issues-export-row,
   .memory-export-row,
   .executor-result-heading,
@@ -3785,6 +3973,7 @@ meter {
   .readiness-gate-heading,
   .rehearsal-check-heading,
   .rehearsal-subheading,
+  .coding-brief-heading,
   .issues-draft-heading,
   .ledger-row div,
   .queue-copy div {

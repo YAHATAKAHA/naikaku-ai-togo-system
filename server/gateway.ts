@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
+import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
@@ -28,6 +29,7 @@ import type {
   ProviderConfig,
   ProviderReadinessMatrix,
   ReleaseRehearsalReport,
+  ReleaseVerificationReport,
   SandboxPolicy
 } from "../src/domain/types";
 import {
@@ -77,6 +79,7 @@ const server = createServer(async (request, response) => {
           "release-rehearsal",
           "release-verification",
           "development-issues",
+          "coding-agent-briefs",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -541,6 +544,42 @@ const server = createServer(async (request, response) => {
       });
       const drafts = buildDevelopmentIssueDrafts({ board });
       sendJson(response, 200, drafts);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+        memoryEntries?: MemoryEntry[];
+        savedItems?: DevelopmentWorkItem[];
+        releaseVerification?: ReleaseVerificationReport;
+        operatorLocale?: string;
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const run = Array.isArray(body.run?.artifacts) ? body.run : undefined;
+      const handoff = buildTeamHandoff({
+        workspace,
+        run
+      });
+      const board = buildDevelopmentBoard({
+        handoff,
+        run,
+        memoryEntries: body.memoryEntries || [],
+        savedItems: body.savedItems || []
+      });
+      const briefs = buildCodingAgentBriefs({
+        board,
+        operatorLocale: body.operatorLocale || "ja",
+        releaseVerification: body.releaseVerification?.schema === "naikaku.release-verification.v1"
+          ? body.releaseVerification
+          : null
+      });
+      sendJson(response, 200, briefs);
       return;
     }
 

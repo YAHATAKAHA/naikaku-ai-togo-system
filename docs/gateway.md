@@ -666,6 +666,63 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs`
+
+Builds Codex-like coding agent briefs from the current workspace, optional run, reviewed memory, saved development item statuses, optional release verification, and operator locale. This endpoint does not execute code, call providers, run shell commands, open browsers, push Git, or deploy. It returns reviewable implementation prompts with sandbox boundaries, prohibited actions, verification commands, and evidence requirements.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  },
+  "memoryEntries": [],
+  "savedItems": [],
+  "releaseVerification": {
+    "schema": "naikaku.release-verification.v1",
+    "decision": "not-production-ready"
+  },
+  "operatorLocale": "ja"
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-briefs.v1",
+  "operatorLocale": "ja",
+  "summary": {
+    "total": 12,
+    "implementable": 9,
+    "blocked": 2,
+    "humanReview": 3,
+    "highPriority": 5,
+    "productionEvidenceRequired": false
+  },
+  "briefs": [
+    {
+      "title": "Execution Minister: Implementation",
+      "mode": "implement",
+      "sandbox": {
+        "executorProfileId": "shell-container",
+        "prohibitedActions": ["raw-secret-export", "unreviewed-git-push"]
+      },
+      "verificationCommands": ["npm run test", "npm run build"],
+      "releaseGate": {
+        "required": true
+      }
+    }
+  ]
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

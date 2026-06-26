@@ -719,6 +719,61 @@ export interface DevelopmentIssueDrafts {
   };
 }
 
+export type CodingAgentMode = "implement" | "review" | "verify" | "blocked-review";
+
+export interface CodingAgentBrief {
+  id: string;
+  sourceItemId: string;
+  title: string;
+  roleId?: string;
+  roleName?: string;
+  stageId?: CabinetStageId;
+  priority: DevelopmentWorkItemPriority;
+  status: DevelopmentWorkItemStatus;
+  mode: CodingAgentMode;
+  operatorLocale: string;
+  objective: string;
+  prompt: string;
+  context: string[];
+  constraints: string[];
+  acceptanceCriteria: string[];
+  deliverables: string[];
+  verificationCommands: string[];
+  evidenceRequired: string[];
+  sandbox: {
+    executorProfileId: ExecutorProfileId;
+    allowedActions: string[];
+    prohibitedActions: string[];
+    requiresHumanApproval: boolean;
+  };
+  releaseGate: {
+    required: boolean;
+    verificationDecision?: ReleaseVerificationDecision;
+    productionEvidenceRequired: boolean;
+    nextAction: string;
+  };
+  generatedAt: string;
+}
+
+export interface CodingAgentBriefs {
+  schema: "naikaku.coding-agent-briefs.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  operatorLocale: string;
+  developmentBoardSchema: DevelopmentBoard["schema"];
+  releaseVerificationSchema?: ReleaseVerificationReport["schema"];
+  briefs: CodingAgentBrief[];
+  summary: {
+    total: number;
+    implementable: number;
+    blocked: number;
+    humanReview: number;
+    highPriority: number;
+    productionEvidenceRequired: boolean;
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -741,6 +796,7 @@ export type AuditEventType =
   | "development.item.status.changed"
   | "development.board.exported"
   | "development.issues.exported"
+  | "development.coding_briefs.exported"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

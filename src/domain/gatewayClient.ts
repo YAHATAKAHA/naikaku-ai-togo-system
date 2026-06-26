@@ -5,6 +5,7 @@ import type {
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
+  CodingAgentBriefs,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
@@ -500,6 +501,38 @@ export async function createDevelopmentIssuesViaGateway(
   }
 
   return (await response.json()) as DevelopmentIssueDrafts;
+}
+
+export async function createCodingAgentBriefsViaGateway(
+  workspace: CabinetWorkspace,
+  run?: CabinetRun | null,
+  memoryEntries: MemoryEntry[] = [],
+  savedItems: DevelopmentWorkItem[] = [],
+  releaseVerification?: ReleaseVerificationReport | null,
+  operatorLocale = "ja",
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      workspace,
+      run,
+      memoryEntries,
+      savedItems,
+      releaseVerification,
+      operatorLocale
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent briefs failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentBriefs;
 }
 
 export async function checkGatewayHealth() {

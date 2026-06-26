@@ -106,6 +106,8 @@ Release rehearsal reports include an `evidenceClaim` object so a passing sandbox
 
 The release verifier makes that boundary executable. The workbench panel, local gateway, and `npm run release:verify` accept a clean dry-run drill as sandbox evidence, while `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. This gives CI and operators a hard stop between "the drill works" and "real computer-control backends are safe to release."
 
+Coding Agent Briefs extend the same boundary to programming agents. They convert development work items into reviewable prompts that tell an implementation agent what to build, which verification commands to run, which executor boundary applies, and which actions are forbidden. The brief explicitly prohibits raw-secret export, unreviewed Git push, production deploys, remote deletes, purchases, and external message sends. It is a handoff artifact, not proof that implementation has happened.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
