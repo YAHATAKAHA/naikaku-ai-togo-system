@@ -792,6 +792,48 @@ export interface CodingAgentDispatchSimulationSummary {
   };
 }
 
+export interface CodingAgentRunnerManifestDrillSummary {
+  schema: "naikaku.coding-agent-runner-manifest-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    simulationDecision: string;
+    readyForAgent: number;
+    held: number;
+    blocked: number;
+    receiptDraftFilesWritten: number;
+  };
+  valid: {
+    decision: string;
+    readyTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    runnerTasks: number;
+    plannedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  productionHeld: {
+    decision: string;
+    readyTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    runnerTasks: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -817,6 +859,9 @@ export interface LocalizationDrillSummary {
     dispatchPromptFiles: number;
     simulationReadyForAgent: number;
     simulationReceiptDrafts: number;
+    runnerManifestDecision: string;
+    runnerReadyTasks: number;
+    runnerTasks: number;
     pendingReceiptItems: number;
     checks: Record<string, boolean>;
     failures: string[];
@@ -830,6 +875,8 @@ export interface LocalizationDrillSummary {
     dispatchReady: number;
     simulationReadyForAgent: number;
     simulationReceiptDrafts: number;
+    runnerReadyTasks: number;
+    runnerTasks: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {
@@ -926,6 +973,7 @@ export interface VerificationManifest {
   inputs: {
     codingAgentDispatchDrill: string;
     codingAgentDispatchSimulation: string;
+    codingAgentRunnerManifest: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -935,6 +983,7 @@ export interface VerificationManifest {
   source: {
     codingAgentDispatchGeneratedAt: string;
     codingAgentDispatchSimulationGeneratedAt: string;
+    codingAgentRunnerManifestGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
@@ -1461,6 +1510,79 @@ export interface CodingAgentDispatchSimulation {
   };
   honestyClaim: {
     level: "local-dispatch-simulation";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type CodingAgentRunnerManifestDecision =
+  | "runner-ready"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentRunnerTaskStatus =
+  | "ready-for-runner"
+  | "held"
+  | "blocked";
+
+export interface CodingAgentRunnerManifestCommand {
+  command: string;
+  transcriptRef: string | null;
+  status: "pending-real-execution";
+  exitCode: null;
+}
+
+export interface CodingAgentRunnerManifestTask {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  runnerId: string;
+  status: CodingAgentRunnerTaskStatus;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  receiptTemplatePath: string | null;
+  evidenceArtifactPrefix: string;
+  plannedSteps: string[];
+  commands: CodingAgentRunnerManifestCommand[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  stopConditions: string[];
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentRunnerManifest {
+  schema: "naikaku.coding-agent-runner-manifest.v1";
+  generatedAt: string;
+  mode: "runner-handoff-planning";
+  sourceSchema: CodingAgentDispatchSimulation["schema"];
+  simulationDecision: CodingAgentDispatchSimulationDecision;
+  decision: CodingAgentRunnerManifestDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentRunnerManifestTask[];
+  summary: {
+    total: number;
+    readyTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    runnerTasks: number;
+    plannedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  honestyClaim: {
+    level: "runner-handoff-planning";
     claim: string;
     limitations: string[];
     productionRequirements: string[];

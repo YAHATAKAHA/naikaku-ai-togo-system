@@ -6,6 +6,7 @@ import { buildCodingAgentDispatchArchive } from "../src/domain/codingAgentDispat
 import { auditCodingAgentDispatchArchive } from "../src/domain/codingAgentDispatchArchiveAudit";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
 import { buildCodingAgentSessionReceiptTemplate } from "../src/domain/codingAgentSessionReceipt";
@@ -33,6 +34,7 @@ interface LocaleDrillResult {
   dispatchDecision: string;
   archiveAuditDecision: string;
   simulationDecision: string;
+  runnerManifestDecision: string;
   receiptDecision: string;
   readySessions: number;
   heldSessions: number;
@@ -41,6 +43,8 @@ interface LocaleDrillResult {
   dispatchPromptFiles: number;
   simulationReadyForAgent: number;
   simulationReceiptDrafts: number;
+  runnerReadyTasks: number;
+  runnerTasks: number;
   pendingReceiptItems: number;
   checks: {
     localeIsCarried: boolean;
@@ -50,6 +54,7 @@ interface LocaleDrillResult {
     dispatchContractStable: boolean;
     archiveAuditVerified: boolean;
     simulationContractStable: boolean;
+    runnerManifestContractStable: boolean;
     copyReady: boolean;
     reviewReady: boolean;
     bundleReady: boolean;
@@ -74,6 +79,8 @@ interface LocalizationDrillSummary {
     dispatchReady: number;
     simulationReadyForAgent: number;
     simulationReceiptDrafts: number;
+    runnerReadyTasks: number;
+    runnerTasks: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {
@@ -144,11 +151,13 @@ async function main() {
       dispatchReady: locales.reduce((total, item) => total + item.dispatchReady, 0),
       simulationReadyForAgent: locales.reduce((total, item) => total + item.simulationReadyForAgent, 0),
       simulationReceiptDrafts: locales.reduce((total, item) => total + item.simulationReceiptDrafts, 0),
+      runnerReadyTasks: locales.reduce((total, item) => total + item.runnerReadyTasks, 0),
+      runnerTasks: locales.reduce((total, item) => total + item.runnerTasks, 0),
       pendingReceiptItems: locales.reduce((total, item) => total + item.pendingReceiptItems, 0)
     },
     honestyClaim: {
       level: "local-drill",
-      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, dispatch manifests, dispatch simulations, assignment drills, and receipt templates without changing machine contracts.",
+      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, dispatch manifests, dispatch simulations, runner manifests, assignment drills, and receipt templates without changing machine contracts.",
       limitations: [
         "It does not run a browser UI screenshot pass.",
         "It does not call model providers, external coding agents, runners, deploy targets, or Git remotes.",
@@ -220,6 +229,11 @@ async function runLocaleDrill({
   const simulation = buildCodingAgentDispatchSimulation({
     manifest: dispatch,
     archiveAudit,
+    generatedAt
+  });
+  const runnerManifest = buildCodingAgentRunnerManifest({
+    simulation,
+    receiptDraftPaths: receiptDraftPathsFor(simulation, locale),
     generatedAt
   });
   const receipt = buildCodingAgentSessionReceiptTemplate({
@@ -300,6 +314,24 @@ async function runLocaleDrill({
         ) &&
         item.receiptDraft?.evidence.every((path) => path.startsWith(item.evidenceArtifactPrefix))
       ),
+    runnerManifestContractStable:
+      runnerManifest.operatorLocale === locale &&
+      runnerManifest.simulationDecision === "ready-for-real-agent" &&
+      runnerManifest.decision === "runner-ready" &&
+      runnerManifest.summary.readyTasks === simulation.summary.readyForAgent &&
+      runnerManifest.summary.runnerTasks === runnerManifest.summary.readyTasks &&
+      runnerManifest.summary.receiptDraftPaths === simulation.summary.receiptDraftItems &&
+      runnerManifest.summary.unsafePaths === 0 &&
+      runnerManifest.items.every((item) =>
+        item.status === "ready-for-runner" &&
+        item.receiptDraftPath?.startsWith(`output/localization-drill/${locale}/receipt-drafts/`) &&
+        item.commands.every((command) =>
+          command.status === "pending-real-execution" &&
+          command.exitCode === null &&
+          Boolean(command.transcriptRef?.startsWith(item.evidenceArtifactPrefix))
+        ) &&
+        item.expectedEvidenceArtifacts.every((artifact) => artifact.path.startsWith(item.evidenceArtifactPrefix))
+      ),
     copyReady: copyHasCoreStrings(locale),
     reviewReady: review.decision === "ready",
     bundleReady: bundle.decision === "ready" && bundle.summary.held === 0,
@@ -325,6 +357,7 @@ async function runLocaleDrill({
     dispatchDecision: dispatch.decision,
     archiveAuditDecision: archiveAudit.decision,
     simulationDecision: simulation.decision,
+    runnerManifestDecision: runnerManifest.decision,
     receiptDecision: receipt.decision,
     readySessions: bundle.summary.ready,
     heldSessions: bundle.summary.held,
@@ -333,6 +366,8 @@ async function runLocaleDrill({
     dispatchPromptFiles: dispatch.summary.promptFiles,
     simulationReadyForAgent: simulation.summary.readyForAgent,
     simulationReceiptDrafts: simulation.summary.receiptDraftItems,
+    runnerReadyTasks: runnerManifest.summary.readyTasks,
+    runnerTasks: runnerManifest.summary.runnerTasks,
     pendingReceiptItems: receipt.summary.pendingEvidence,
     checks,
     failures
@@ -346,10 +381,28 @@ async function runLocaleDrill({
   await writeJson(path.join(localeDir, "dispatch-manifest.json"), dispatch);
   await writeJson(path.join(localeDir, "dispatch-archive-audit.json"), archiveAudit);
   await writeJson(path.join(localeDir, "dispatch-simulation.json"), simulation);
+  await writeJson(path.join(localeDir, "runner-manifest.json"), runnerManifest);
   await writeJson(path.join(localeDir, "session-drill.json"), drill);
   await writeJson(path.join(localeDir, "receipt-template.json"), receipt);
 
   return result;
+}
+
+function receiptDraftPathsFor(
+  simulation: ReturnType<typeof buildCodingAgentDispatchSimulation>,
+  locale: SupportedLocale
+) {
+  return Object.fromEntries(simulation.items
+    .filter((item) => item.receiptDraft)
+    .map((item, index) => [
+      item.sessionId,
+      `output/localization-drill/${locale}/receipt-drafts/${String(index + 1).padStart(2, "0")}-${safeFileStem(item.sessionId)}.json`
+    ]));
+}
+
+function safeFileStem(value: string) {
+  const stem = value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  return stem || "session";
 }
 
 function assertSupportedLocaleContract() {
@@ -400,6 +453,8 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
     `- Dispatch ready: ${summary.summary.dispatchReady}`,
     `- Simulation ready for agent: ${summary.summary.simulationReadyForAgent}`,
     `- Simulation receipt drafts: ${summary.summary.simulationReceiptDrafts}`,
+    `- Runner ready tasks: ${summary.summary.runnerReadyTasks}`,
+    `- Runner tasks: ${summary.summary.runnerTasks}`,
     `- Pending receipt items: ${summary.summary.pendingReceiptItems}`,
     "",
     "## Locale Results",
@@ -416,6 +471,7 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
       `- Dispatch: ${item.dispatchDecision} (${item.dispatchReady} ready, ${item.dispatchPromptFiles} prompt files)`,
       `- Archive audit: ${item.archiveAuditDecision}`,
       `- Simulation: ${item.simulationDecision} (${item.simulationReadyForAgent} ready, ${item.simulationReceiptDrafts} receipt drafts)`,
+      `- Runner manifest: ${item.runnerManifestDecision} (${item.runnerReadyTasks} ready, ${item.runnerTasks} runner tasks)`,
       `- Receipt: ${item.receiptDecision} (${item.pendingReceiptItems} pending)`,
       `- Failures: ${item.failures.length ? item.failures.join(", ") : "none"}`,
       ""
@@ -480,8 +536,8 @@ Options:
   -h, --help              Show this help.
 
 The drill verifies Japanese-first locale order and runs the coding-agent handoff,
-dispatch archive audit, and dispatch simulation chain for ja, en, zh-Hans,
-zh-Hant, and ko without executing real agents.`);
+dispatch archive audit, dispatch simulation, and runner manifest chain for ja,
+en, zh-Hans, zh-Hant, and ko without executing real agents.`);
 }
 
 function printSummary(summary: LocalizationDrillSummary) {
@@ -493,7 +549,7 @@ function printSummary(summary: LocalizationDrillSummary) {
     console.log(
       `[${status}] ${item.locale}: ${item.briefs} briefs, ${item.readySessions} ready sessions, ` +
       `${item.wouldAssign} would assign, ${item.dispatchReady} dispatch ready, ` +
-      `${item.simulationReadyForAgent} simulation ready, receipt ${item.receiptDecision}` +
+      `${item.simulationReadyForAgent} simulation ready, ${item.runnerTasks} runner tasks, receipt ${item.receiptDecision}` +
       (item.failures.length ? `, failures: ${item.failures.join(", ")}` : "")
     );
   }

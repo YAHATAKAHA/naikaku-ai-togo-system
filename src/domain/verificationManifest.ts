@@ -2,6 +2,7 @@ import type {
   CodingAgentDispatchDrillSummary,
   CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
+  CodingAgentRunnerManifestDrillSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
   LocalizationDrillSummary,
@@ -23,6 +24,7 @@ const expectedExecutorProfiles: ExecutorProfileId[] = [
 export interface BuildVerificationManifestInput {
   codingAgentDispatchDrill: CodingAgentDispatchDrillSummary;
   codingAgentDispatchSimulation: CodingAgentDispatchSimulationSummary;
+  codingAgentRunnerManifest: CodingAgentRunnerManifestDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -32,6 +34,7 @@ export interface BuildVerificationManifestInput {
   inputs: {
     codingAgentDispatchDrill: string;
     codingAgentDispatchSimulation: string;
+    codingAgentRunnerManifest: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -43,6 +46,7 @@ export interface BuildVerificationManifestInput {
 export function buildVerificationManifest({
   codingAgentDispatchDrill,
   codingAgentDispatchSimulation,
+  codingAgentRunnerManifest,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -54,6 +58,7 @@ export function buildVerificationManifest({
   const checks = [
     codingAgentDispatchCheck(codingAgentDispatchDrill),
     codingAgentSimulationCheck(codingAgentDispatchSimulation),
+    codingAgentRunnerManifestCheck(codingAgentRunnerManifest),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -74,6 +79,7 @@ export function buildVerificationManifest({
     source: {
       codingAgentDispatchGeneratedAt: codingAgentDispatchDrill.generatedAt,
       codingAgentDispatchSimulationGeneratedAt: codingAgentDispatchSimulation.generatedAt,
+      codingAgentRunnerManifestGeneratedAt: codingAgentRunnerManifest.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -96,7 +102,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -158,6 +164,57 @@ function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary
     nextAction: ok
       ? "Keep the dispatch simulation summary attached before handing prompts to real coding agents."
       : "Restore dispatch simulation so it creates pending receipt drafts only for verified ready sessions."
+  };
+}
+
+function codingAgentRunnerManifestCheck(report: CodingAgentRunnerManifestDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-runner-manifest-drill.v1"
+    && report.source.simulationDecision === "ready-for-real-agent"
+    && report.source.readyForAgent > 0
+    && report.source.receiptDraftFilesWritten === report.source.readyForAgent
+    && report.valid.decision === "runner-ready"
+    && report.valid.readyTasks === report.source.readyForAgent
+    && report.valid.runnerTasks === report.valid.readyTasks
+    && report.valid.blockedTasks === 0
+    && report.valid.receiptDraftPaths === report.valid.readyTasks
+    && report.valid.plannedCommands > 0
+    && report.valid.expectedEvidenceArtifacts > 0
+    && report.valid.stopConditions >= report.valid.readyTasks
+    && report.valid.unsafePaths === 0
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.readyTasks === 0
+    && report.productionHeld.runnerTasks === 0
+    && report.productionHeld.receiptDraftPaths === 0
+    && report.productionHeld.unsafePaths === 0
+    && checksPassed;
+
+  return {
+    id: "coding-agent-runner-manifest",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent runner manifest queued ready simulation drafts while keeping production-held sessions out of runner tasks."
+      : "Coding-agent runner manifest did not preserve ready, pending-draft, or production-held runner boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Simulation decision: ${report.source.simulationDecision}`,
+      `Source ready: ${report.source.readyForAgent}`,
+      `Source receipt draft files: ${report.source.receiptDraftFilesWritten}`,
+      `Runner decision: ${report.valid.decision}`,
+      `Ready runner tasks: ${report.valid.readyTasks}`,
+      `Runner tasks: ${report.valid.runnerTasks}`,
+      `Receipt draft paths: ${report.valid.receiptDraftPaths}`,
+      `Planned commands: ${report.valid.plannedCommands}`,
+      `Expected evidence artifacts: ${report.valid.expectedEvidenceArtifacts}`,
+      `Stop conditions: ${report.valid.stopConditions}`,
+      `Unsafe paths: ${report.valid.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held runner tasks: ${report.productionHeld.runnerTasks}`,
+      `Production-held receipt draft paths: ${report.productionHeld.receiptDraftPaths}`
+    ],
+    nextAction: ok
+      ? "Keep the runner manifest summary attached before releasing tasks to governed coding-agent runners."
+      : "Restore runner manifest gating so only verified-ready pending drafts become runner tasks."
   };
 }
 
@@ -317,8 +374,12 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     locale.simulationDecision === "ready-for-real-agent" &&
     locale.simulationReadyForAgent === locale.dispatchReady &&
     locale.simulationReceiptDrafts === locale.dispatchReady &&
+    locale.runnerManifestDecision === "runner-ready" &&
+    locale.runnerReadyTasks === locale.dispatchReady &&
+    locale.runnerTasks === locale.dispatchReady &&
     Boolean(locale.checks.archiveAuditVerified) &&
-    Boolean(locale.checks.simulationContractStable)
+    Boolean(locale.checks.simulationContractStable) &&
+    Boolean(locale.checks.runnerManifestContractStable)
   );
   const ok = report.schema === "naikaku.localization-drill.v1"
     && report.defaultLocale === "ja"
@@ -327,6 +388,8 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     && expectedLocales.every((locale, index) => locales[index] === locale)
     && report.summary.simulationReadyForAgent === report.summary.dispatchReady
     && report.summary.simulationReceiptDrafts === report.summary.dispatchReady
+    && report.summary.runnerReadyTasks === report.summary.dispatchReady
+    && report.summary.runnerTasks === report.summary.dispatchReady
     && report.summary.simulationReadyForAgent > 0
     && simulationContractsPassed
     && checksPassed;
@@ -348,9 +411,11 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Dispatch ready: ${report.summary.dispatchReady}`,
       `Simulation ready: ${report.summary.simulationReadyForAgent}`,
       `Simulation receipt drafts: ${report.summary.simulationReceiptDrafts}`,
+      `Runner ready tasks: ${report.summary.runnerReadyTasks}`,
+      `Runner tasks: ${report.summary.runnerTasks}`,
       `Pending receipt items: ${report.summary.pendingReceiptItems}`,
       `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`,
-      `Simulation contract stable: ${simulationContractsPassed ? "yes" : "no"}`
+      `Simulation and runner contract stable: ${simulationContractsPassed ? "yes" : "no"}`
     ],
     nextAction: ok
       ? "Keep the localization drill summary attached to language release evidence."
