@@ -118,6 +118,8 @@ Coding Agent Session Receipts are that return boundary. A receipt template tells
 
 Coding Agent Implementation Evidence is the handoff summary derived from a reviewed receipt. It makes the implementation claim easier to archive and share, but it inherits the same boundary: it summarizes submitted changed files, command results, evidence artifacts, and risks without independently executing or inspecting them.
 
+Implementation evidence can reconcile back into the local Development Board only through preserved source work-item ids. The workbench marks matched, unblocked items done from accepted evidence and writes an audit event, but it does not unblock blocked items, infer missing source links, inspect artifact paths, rerun tests, push Git, or deploy. This keeps the "coding agent completed work" signal useful while still requiring real runner evidence for production claims.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.

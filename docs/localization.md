@@ -34,7 +34,7 @@ This is the same direction as a coding agent workbench: the system should help u
 
 ## Current Coverage
 
-The current foundation covers the top operator shell, language selector, mission header, Release Rehearsal / Release Verification panel, Coding Agent Briefs panel, Coding Agent Brief Review controls/results, Coding Agent Session Bundle controls/results, Coding Agent Session Drill controls/results, Coding Agent Session Receipt template/import/review results, and Coding Agent Implementation Evidence downloads. Older panels still contain English strings and should be migrated incrementally without changing their data contracts.
+The current foundation covers the top operator shell, language selector, mission header, Release Rehearsal / Release Verification panel, Coding Agent Briefs panel, Coding Agent Brief Review controls/results, Coding Agent Session Bundle controls/results, Coding Agent Session Drill controls/results, Coding Agent Session Receipt template/import/review results, Coding Agent Implementation Evidence downloads, and Development Board reconciliation status after evidence import. Older panels still contain English strings and should be migrated incrementally without changing their data contracts.
 
 ## Completion Gate
 

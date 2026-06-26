@@ -919,7 +919,7 @@ Receipt review decisions are:
 
 ### `POST /v1/development/coding-briefs/implementation-evidence`
 
-Builds a handoff summary from a reviewed coding-agent receipt. This endpoint does not execute code, inspect changed files, rerun commands, call providers, browse, deploy, send external messages, or push Git. It only converts the receipt into `naikaku.coding-agent-implementation-evidence.v1` with accepted sessions, command results, evidence artifacts, missing proof, and risk notes.
+Builds a handoff summary from a reviewed coding-agent receipt. This endpoint does not execute code, inspect changed files, rerun commands, call providers, browse, deploy, send external messages, or push Git. It only converts the receipt into `naikaku.coding-agent-implementation-evidence.v1` with accepted sessions, source work-item ids when available, command results, evidence artifacts, missing proof, and risk notes.
 
 ```json
 {

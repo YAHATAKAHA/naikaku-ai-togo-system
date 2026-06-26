@@ -814,6 +814,7 @@ export type CodingAgentSessionBundleDecision = "ready" | "needs-review" | "block
 export interface CodingAgentSession {
   id: string;
   briefId: string;
+  sourceItemId: string;
   title: string;
   roleId?: string;
   roleName?: string;
@@ -915,6 +916,8 @@ export interface CodingAgentCommandResult {
 
 export interface CodingAgentSessionReceiptItem {
   sessionId: string;
+  briefId?: string;
+  sourceItemId?: string;
   title: string;
   sessionStatus: CodingAgentSessionStatus;
   receiptStatus: CodingAgentSessionReceiptStatus;
@@ -962,6 +965,8 @@ export type CodingAgentImplementationEvidenceDecision =
 
 export interface CodingAgentImplementationEvidenceItem {
   sessionId: string;
+  briefId?: string;
+  sourceItemId?: string;
   title: string;
   receiptStatus: CodingAgentSessionReceiptStatus;
   accepted: boolean;
@@ -1001,6 +1006,44 @@ export interface CodingAgentImplementationEvidence {
   };
 }
 
+export type CodingAgentImplementationReconciliationDecision =
+  | "applied"
+  | "partial"
+  | "blocked"
+  | "no-match";
+
+export interface CodingAgentImplementationReconciliationItem {
+  sessionId: string;
+  sourceItemId?: string;
+  title: string;
+  currentStatus?: DevelopmentWorkItemStatus;
+  nextStatus?: DevelopmentWorkItemStatus;
+  applied: boolean;
+  reason: string;
+}
+
+export interface CodingAgentImplementationReconciliation {
+  schema: "naikaku.coding-agent-implementation-reconciliation.v1";
+  generatedAt: string;
+  sourceSchema: CodingAgentImplementationEvidence["schema"];
+  sourceDecision: CodingAgentImplementationEvidenceDecision;
+  decision: CodingAgentImplementationReconciliationDecision;
+  runId?: string;
+  items: CodingAgentImplementationReconciliationItem[];
+  summary: {
+    total: number;
+    matched: number;
+    applied: number;
+    alreadyDone: number;
+    skipped: number;
+    blocked: number;
+  };
+  honestyClaim: {
+    claim: string;
+    limitations: string[];
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -1030,6 +1073,7 @@ export type AuditEventType =
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"
+  | "development.coding_sessions.implementation_evidence_applied"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

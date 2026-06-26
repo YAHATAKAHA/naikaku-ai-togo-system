@@ -79,6 +79,8 @@ function templateItemFor(session: CodingAgentSession): CodingAgentSessionReceipt
   if (session.status !== "ready-for-agent") {
     return {
       sessionId: session.id,
+      briefId: session.briefId,
+      sourceItemId: session.sourceItemId,
       title: session.title,
       sessionStatus: session.status,
       receiptStatus: "held",
@@ -101,6 +103,8 @@ function templateItemFor(session: CodingAgentSession): CodingAgentSessionReceipt
 
   return {
     sessionId: session.id,
+    briefId: session.briefId,
+    sourceItemId: session.sourceItemId,
     title: session.title,
     sessionStatus: session.status,
     receiptStatus: "pending-evidence",
@@ -120,6 +124,8 @@ function reviewItemFor(
   if (session.status !== "ready-for-agent") {
     return {
       sessionId: session.id,
+      briefId: session.briefId,
+      sourceItemId: session.sourceItemId,
       title: session.title,
       sessionStatus: session.status,
       receiptStatus: "held",
@@ -150,6 +156,8 @@ function reviewItemFor(
 
   return {
     sessionId: session.id,
+    briefId: session.briefId,
+    sourceItemId: session.sourceItemId,
     title: session.title,
     sessionStatus: session.status,
     receiptStatus,
@@ -318,6 +326,7 @@ function itemMarkdown(item: CodingAgentSessionReceiptItem, index: number) {
     `## ${index}. ${item.title}`,
     "",
     `- Session status: ${item.sessionStatus}`,
+    item.sourceItemId ? `- Source item: ${item.sourceItemId}` : "- Source item: unknown",
     `- Receipt status: ${item.receiptStatus}`,
     `- Next action: ${item.nextAction}`,
     "",

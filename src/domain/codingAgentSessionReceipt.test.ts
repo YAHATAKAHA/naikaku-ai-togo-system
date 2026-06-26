@@ -61,8 +61,11 @@ describe("coding agent session receipt", () => {
     expect(reviewed.decision).toBe("verified");
     expect(reviewed.summary.verified).toBe(bundle.sessions.length);
     expect(reviewed.summary.failed).toBe(0);
+    expect(reviewed.items[0].sourceItemId).toBe(bundle.sessions[0].sourceItemId);
     expect(parsed.schema).toBe("naikaku.coding-agent-session-receipt.v1");
+    expect(parsed.items[0].sourceItemId).toBe(bundle.sessions[0].sourceItemId);
     expect(markdown).toContain("Changed Files");
+    expect(markdown).toContain(`Source item: ${bundle.sessions[0].sourceItemId}`);
     expect(markdown).toContain("No command was run");
   });
 

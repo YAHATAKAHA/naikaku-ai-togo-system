@@ -33,6 +33,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Coding Agent Session Drill that simulates sandboxed coding-agent assignment decisions, exports JSON/Markdown, and explicitly states that no code, tests, providers, browser, deploy, or Git action ran.
 - Coding Agent Session Receipt template/import/review flow that requires changed files, command exit codes, evidence artifacts, and risk notes before implementation can be claimed.
 - Coding Agent Implementation Evidence export that turns reviewed receipts into JSON/Markdown handoff summaries without rerunning commands or inspecting files.
+- Coding Agent Implementation Evidence reconciliation that maps accepted evidence back to source Development Board items and marks only matched, unblocked work as done.
 - GitHub Issue Drafts export that turns development work items into labeled, Markdown-ready issue payloads plus a reviewable `gh issue create` script for parallel implementation.
 - Memory Inbox for reviewable lessons, decisions, skill proposals, risks, and follow-up items before local persistence.
 - Workspace JSON import/export and recent run history for operator handoff.
@@ -44,7 +45,8 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 2. Sandbox before power. Computer control belongs in bounded executors with allowlists, approvals, logs, and kill switches.
 3. Bring your own model. Every role can use a different provider, model, endpoint, and secret alias.
 4. Split work cleanly. UI, orchestration, providers, sandbox runners, memory, and audit can be developed in parallel.
-5. Craft matters. The system should feel deliberate, readable, inspectable, and calm under pressure.
+5. Japanese first, multilingual by design. Japanese is the default operator language, with English, Simplified Chinese, Traditional Chinese, and Korean as first-class UI locales.
+6. Craft matters. The system should feel deliberate, readable, inspectable, and calm under pressure.
 
 ## Quick Start
 

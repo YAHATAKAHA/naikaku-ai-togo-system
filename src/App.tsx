@@ -94,6 +94,7 @@ import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
+import { reconcileCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationReconciliation";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "./domain/codingAgentSessionDrill";
 import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "./domain/codingAgentSessionReceipt";
@@ -152,6 +153,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentImplementationEvidence,
+  CodingAgentImplementationReconciliation,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
   CodingAgentSessionReceipt,
@@ -251,6 +253,7 @@ export function App() {
     evidenceBundles: []
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const preserveCodingAgentBriefReviewRef = useRef(false);
 
   useEffect(() => {
     saveLocale(locale);
@@ -634,6 +637,10 @@ export function App() {
   }, [codingAgentImplementationEvidenceMarkdownLink]);
 
   useEffect(() => {
+    if (preserveCodingAgentBriefReviewRef.current) {
+      preserveCodingAgentBriefReviewRef.current = false;
+      return;
+    }
     clearCodingAgentBriefReview();
   }, [codingAgentBriefs]);
 
@@ -784,13 +791,15 @@ export function App() {
     setAuditEvents((current) => appendAuditEvent(event, current));
   }
 
-  function clearProductReadinessDownload() {
+  function clearProductReadinessDownload({
+    preserveCodingAgentBriefReview = false
+  }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     if (productReadinessLink) {
       URL.revokeObjectURL(productReadinessLink.href);
       setProductReadinessLink(null);
     }
     clearProductReleaseDownload();
-    clearReleaseRehearsal();
+    clearReleaseRehearsal({ preserveCodingAgentBriefReview });
   }
 
   function clearProductReleaseDownload() {
@@ -804,13 +813,15 @@ export function App() {
     }
   }
 
-  function clearReleaseRehearsal() {
+  function clearReleaseRehearsal({
+    preserveCodingAgentBriefReview = false
+  }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     setReleaseRehearsal(null);
     if (releaseRehearsalLink) {
       URL.revokeObjectURL(releaseRehearsalLink.href);
       setReleaseRehearsalLink(null);
     }
-    clearReleaseVerification();
+    clearReleaseVerification({ preserveCodingAgentBriefReview });
     if (releaseRemediationIssuesLink) {
       URL.revokeObjectURL(releaseRemediationIssuesLink.href);
       setReleaseRemediationIssuesLink(null);
@@ -821,13 +832,17 @@ export function App() {
     }
   }
 
-  function clearReleaseVerification() {
+  function clearReleaseVerification({
+    preserveCodingAgentBriefReview = false
+  }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     setReleaseVerification(null);
     if (releaseVerificationLink) {
       URL.revokeObjectURL(releaseVerificationLink.href);
       setReleaseVerificationLink(null);
     }
-    clearCodingAgentBriefReview();
+    if (!preserveCodingAgentBriefReview) {
+      clearCodingAgentBriefReview();
+    }
   }
 
   function clearCodingAgentBriefDownloads() {
@@ -2256,7 +2271,12 @@ export function App() {
     setCodingAgentSessionReceiptMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
-  async function createCodingAgentImplementationEvidenceDownload(receipt: CodingAgentSessionReceipt) {
+  async function createCodingAgentImplementationEvidenceDownload(receipt: CodingAgentSessionReceipt): Promise<{
+    evidence: CodingAgentImplementationEvidence;
+    reconciliation: CodingAgentImplementationReconciliation;
+    source: "gateway" | "local";
+    gatewayError: string | null;
+  }> {
     let evidence: CodingAgentImplementationEvidence = buildCodingAgentImplementationEvidence({ receipt });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -2285,6 +2305,39 @@ export function App() {
 
     setCodingAgentImplementationEvidenceLink({ href: url, fileName });
     setCodingAgentImplementationEvidenceMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    const { reconciliation, updatedItems } = reconcileCodingAgentImplementationEvidence({
+      evidence,
+      items: developmentBoard.items,
+      generatedAt: evidence.generatedAt
+    });
+    const appliedItems = reconciliation.items
+      .filter((item) => item.applied && item.sourceItemId)
+      .map((item) => updatedItems.find((candidate) => candidate.id === item.sourceItemId))
+      .filter((item): item is DevelopmentWorkItem => Boolean(item));
+
+    if (appliedItems.length) {
+      let nextItems = developmentItems;
+      appliedItems.forEach((item) => {
+        nextItems = saveDevelopmentWorkItem(item, nextItems);
+      });
+      preserveCodingAgentBriefReviewRef.current = true;
+      setDevelopmentItems(nextItems);
+      if (developmentBoardLink) {
+        URL.revokeObjectURL(developmentBoardLink.href);
+        setDevelopmentBoardLink(null);
+      }
+      if (developmentIssuesLink) {
+        URL.revokeObjectURL(developmentIssuesLink.href);
+        setDevelopmentIssuesLink(null);
+      }
+      if (developmentIssuesScriptLink) {
+        URL.revokeObjectURL(developmentIssuesScriptLink.href);
+        setDevelopmentIssuesScriptLink(null);
+      }
+      clearCodingAgentBriefDownloads();
+      clearProductReadinessDownload({ preserveCodingAgentBriefReview: true });
+    }
+
     recordAudit({
       type: "development.coding_sessions.implementation_evidence_prepared",
       severity: evidence.decision === "accepted-for-handoff" ? "success" : evidence.decision === "needs-evidence" ? "warning" : "error",
@@ -2302,6 +2355,34 @@ export function App() {
         gatewayError
       }
     });
+    recordAudit({
+      type: "development.coding_sessions.implementation_evidence_applied",
+      severity: reconciliation.decision === "applied"
+        ? "success"
+        : reconciliation.decision === "partial"
+          ? "warning"
+          : "error",
+      summary: `Coding agent implementation evidence reconciled with development board: ${reconciliation.decision}.`,
+      runId: reconciliation.runId,
+      metadata: {
+        decision: reconciliation.decision,
+        sourceDecision: reconciliation.sourceDecision,
+        total: reconciliation.summary.total,
+        matched: reconciliation.summary.matched,
+        applied: reconciliation.summary.applied,
+        skipped: reconciliation.summary.skipped,
+        blocked: reconciliation.summary.blocked,
+        source,
+        gatewayError
+      }
+    });
+
+    return {
+      evidence,
+      reconciliation,
+      source,
+      gatewayError
+    };
   }
 
   async function createCodingAgentSessionReceiptTemplate() {
@@ -2393,23 +2474,28 @@ export function App() {
         createCodingAgentSessionBundleDownload(bundle, false);
       }
       createCodingAgentSessionReceiptDownload(receipt);
-      await createCodingAgentImplementationEvidenceDownload(receipt);
+      const implementationResult = await createCodingAgentImplementationEvidenceDownload(receipt);
+      const statusMessage = source === "gateway"
+        ? copy.codingBriefs.statusReceiptReviewGateway(
+          receipt.decision,
+          receipt.summary.verified,
+          receipt.summary.pendingEvidence,
+          receipt.summary.failed
+        )
+        : copy.codingBriefs.statusReceiptReviewLocal(
+          receipt.decision,
+          receipt.summary.verified,
+          receipt.summary.pendingEvidence,
+          receipt.summary.failed,
+          gatewayError || undefined
+        );
       setRunState({
         status: source === "gateway" ? "gateway" : "local",
-        message: source === "gateway"
-          ? copy.codingBriefs.statusReceiptReviewGateway(
-            receipt.decision,
-            receipt.summary.verified,
-            receipt.summary.pendingEvidence,
-            receipt.summary.failed
-          )
-          : copy.codingBriefs.statusReceiptReviewLocal(
-            receipt.decision,
-            receipt.summary.verified,
-            receipt.summary.pendingEvidence,
-            receipt.summary.failed,
-            gatewayError || undefined
-          )
+        message: copy.codingBriefs.statusReceiptReviewApplied(
+          statusMessage,
+          implementationResult.reconciliation.summary.applied,
+          implementationResult.reconciliation.summary.skipped
+        )
       });
       recordAudit({
         type: "development.coding_sessions.receipt_reviewed",

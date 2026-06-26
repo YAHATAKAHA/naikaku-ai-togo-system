@@ -97,6 +97,8 @@ export function serializeCodingAgentImplementationEvidenceMarkdown(report: Codin
 function evidenceItemFor(item: CodingAgentSessionReceiptItem): CodingAgentImplementationEvidenceItem {
   return {
     sessionId: item.sessionId,
+    briefId: item.briefId,
+    sourceItemId: item.sourceItemId,
     title: item.title,
     receiptStatus: item.receiptStatus,
     accepted: item.receiptStatus === "verified",
@@ -122,6 +124,7 @@ function itemMarkdown(item: CodingAgentImplementationEvidenceItem, index: number
     `## ${index}. ${item.title}`,
     "",
     `- Session: ${item.sessionId}`,
+    item.sourceItemId ? `- Source item: ${item.sourceItemId}` : "- Source item: unknown",
     `- Receipt status: ${item.receiptStatus}`,
     `- Accepted: ${item.accepted ? "yes" : "no"}`,
     `- Next action: ${item.nextAction}`,

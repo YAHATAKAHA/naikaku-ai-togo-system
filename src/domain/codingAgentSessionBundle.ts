@@ -134,6 +134,7 @@ function briefToSession({
   return {
     id: `coding-session-${brief.id}`,
     briefId: brief.id,
+    sourceItemId: brief.sourceItemId,
     title: brief.title,
     roleId: brief.roleId,
     roleName: brief.roleName,
@@ -270,6 +271,7 @@ function sessionMarkdown(session: CodingAgentSession, index: number) {
     `## ${index}. ${session.title}`,
     "",
     `- Status: ${session.status}`,
+    `- Source item: ${session.sourceItemId}`,
     `- Executor: ${session.executorProfileId}`,
     `- Prompt file: ${session.promptFileName}`,
     `- Next action: ${session.nextAction}`,
