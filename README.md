@@ -35,6 +35,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Coding Agent Implementation Evidence export that turns reviewed receipts into JSON/Markdown handoff summaries without rerunning commands or inspecting files.
 - Coding Agent Implementation Artifact Audit that checks local changed-file and transcript references before accepted evidence can mark Development Board items done.
 - Coding Agent Implementation Evidence reconciliation that maps accepted, locally audited evidence back to source Development Board items and marks only matched, unblocked work as done.
+- Coding Agent Receipt Drill CLI that locally self-simulates a valid receipt and a mismatched receipt, proving accepted evidence can update Development Board items while unrelated evidence stays blocked.
 - GitHub Issue Drafts export that turns development work items into labeled, Markdown-ready issue payloads plus a reviewable `gh issue create` script for parallel implementation.
 - Memory Inbox for reviewable lessons, decisions, skill proposals, risks, and follow-up items before local persistence.
 - Workspace JSON import/export and recent run history for operator handoff.
@@ -87,6 +88,7 @@ npm run gateway   # start the local cabinet/sandbox gateway
 npm run rehearsal # run local release rehearsal and write output/rehearsal
 npm run rehearsal:strict # fail when warnings remain
 npm run rehearsal:drill # generate reviewed drill fixtures, then run strict rehearsal against them
+npm run coding-agent:drill # self-simulate valid and mismatched coding-agent receipt evidence
 npm run release:verify # run drill, then verify the latest rehearsal report for dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
 npm run build     # type-check and build
@@ -97,6 +99,8 @@ npm run preview   # preview the production build
 `npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, remediation plan, remediation issue drafts, and redaction checks. It exits non-zero for blockers and writes JSON, Markdown, issue draft, and reviewable `gh issue create` script artifacts under `output/rehearsal`. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 
 `npm run rehearsal:drill` first writes reviewed local fixtures under `output/release-drill`, then runs strict rehearsal with a provided run, provider-readiness export, approval records, audit events, reviewed memory, saved development items, and a secret probe. It is a reproducible sandbox drill for the release gate; it proves the evidence plumbing can close cleanly without claiming that real provider keys or production runners have been attached. Rehearsal JSON, CLI output, and the UI panel include an evidence claim that names this as `dry-run` evidence and lists the remaining production requirements.
+
+`npm run coding-agent:drill` writes a reproducible coding-agent receipt drill under `output/coding-agent-receipt-drill`. It builds the default Development Board, coding-agent briefs, brief review, session bundle, a valid receipt, and a mismatched receipt. The valid path must produce verified receipt review, accepted implementation evidence, verified artifact audit, and applied Development Board reconciliation. The mismatched path must stay `needs-evidence` / `needs-artifacts` with zero board items applied. The drill is local proof that the anti-fake evidence gate works; it is not production runner evidence.
 
 `npm run release:verify` turns the latest drill rehearsal into `naikaku.release-verification.v1` and fails if warnings, blockers, schema drift, or secret leakage are present. The workbench panel and local gateway expose the same verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
 

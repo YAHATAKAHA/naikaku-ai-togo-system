@@ -9,6 +9,7 @@
     "rehearsal": "tsx scripts/rehearsal.ts",
     "rehearsal:strict": "tsx scripts/rehearsal.ts --strict",
     "rehearsal:drill": "tsx scripts/release-drill-fixtures.ts --out output/release-drill && tsx scripts/rehearsal.ts --strict --workspace output/release-drill/workspace.json --run output/release-drill/run.json --provider-readiness output/release-drill/provider-readiness.json --approvals output/release-drill/approvals.json --audit output/release-drill/audit.json --memory output/release-drill/memory.json --saved-items output/release-drill/saved-items.json --secret-probe DRILL_REDACTION_PROBE --out output/rehearsal-drill",
+    "coding-agent:drill": "tsx scripts/coding-agent-receipt-drill.ts --out output/coding-agent-receipt-drill",
     "release:verify": "npm run rehearsal:drill && tsx scripts/verify-release.ts --report output/rehearsal-drill/release-rehearsal-latest.json --out output/rehearsal-drill/release-verification-latest.json",
     "release:verify:production": "tsx scripts/verify-release.ts --report output/rehearsal-drill/release-rehearsal-latest.json --require-production --out output/rehearsal-drill/release-verification-production-latest.json",
     "build": "tsc -b && vite build",
