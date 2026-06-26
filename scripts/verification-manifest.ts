@@ -8,6 +8,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
+  ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
   VerificationManifest
 } from "../src/domain/types";
@@ -16,6 +17,7 @@ interface VerificationManifestOptions {
   codingAgentReportPath: string;
   localizationDrillPath: string;
   executorContractDrillPath: string;
+  productionBoundaryDrillPath: string;
   releaseVerificationPath: string;
   outputPath: string;
   generatedAt?: string;
@@ -33,17 +35,20 @@ async function main() {
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
+  const productionBoundaryDrill = await loadProductionBoundaryDrill(options.productionBoundaryDrillPath);
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
     codingAgentReport,
     localizationDrill,
     executorContractDrill,
+    productionBoundaryDrill,
     releaseVerification,
     generatedAt: options.generatedAt,
     inputs: {
       codingAgentReceiptDrill: options.codingAgentReportPath,
       localizationDrill: options.localizationDrillPath,
       executorContractDrill: options.executorContractDrillPath,
+      productionBoundaryDrill: options.productionBoundaryDrillPath,
       releaseVerification: options.releaseVerificationPath
     }
   });
@@ -80,6 +85,14 @@ async function loadExecutorContractDrill(reportPath: string): Promise<ExecutorCo
   return parsed;
 }
 
+async function loadProductionBoundaryDrill(reportPath: string): Promise<ProductionBoundaryDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as ProductionBoundaryDrillSummary;
+  if (parsed.schema !== "naikaku.production-boundary-drill.v1") {
+    throw new Error("Production boundary drill must use schema naikaku.production-boundary-drill.v1.");
+  }
+  return parsed;
+}
+
 async function loadReleaseVerification(reportPath: string): Promise<ReleaseVerificationReport> {
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as ReleaseVerificationReport;
   if (parsed.schema !== "naikaku.release-verification.v1") {
@@ -111,6 +124,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
     localizationDrillPath: "output/localization-drill/summary.json",
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
+    productionBoundaryDrillPath: "output/verification/production-boundary-latest.json",
     releaseVerificationPath: "output/rehearsal-drill/release-verification-latest.json",
     outputPath: "output/verification/verification-manifest-latest.json",
     help: false
@@ -138,6 +152,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--executor-contract-drill") {
       options.executorContractDrillPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--production-boundary-drill") {
+      options.productionBoundaryDrillPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -185,6 +205,8 @@ Options:
   --localization-drill <path>    Read localization drill summary.
   --executor-contract-drill <path>
                                   Read executor contract drill summary.
+  --production-boundary-drill <path>
+                                  Read production boundary drill summary.
   --release-verification <path>  Read release verification JSON.
   --out <path>                   Write naikaku.verification-manifest.v1 JSON.
   --generated-at <iso>           Use a stable timestamp.

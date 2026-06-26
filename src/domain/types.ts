@@ -763,6 +763,27 @@ export interface ExecutorContractDrillSummary {
   };
 }
 
+export interface ProductionBoundaryDrillSummary {
+  schema: "naikaku.production-boundary-drill.v1";
+  generatedAt: string;
+  command: string;
+  expectedExitCode: number;
+  observedExitCode: number;
+  verificationPath: string;
+  sourceRunId: string;
+  decision: string;
+  scope: string;
+  requireProductionEvidence: boolean;
+  failedChecks: string[];
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type VerificationManifestDecision = "verified" | "invalid";
 export type VerificationManifestStatus = "pass" | "fail";
 
@@ -782,15 +803,18 @@ export interface VerificationManifest {
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
+    productionBoundaryDrill: string;
     releaseVerification: string;
   };
   source: {
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
+    productionBoundaryGeneratedAt: string;
     releaseVerificationGeneratedAt: string;
     localizationLocales: string[];
     executorProfiles: ExecutorProfileId[];
+    productionBoundaryExitCode: number;
     releaseRunId: string;
     releaseScope: string;
   };

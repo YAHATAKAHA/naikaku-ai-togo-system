@@ -7,6 +7,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
+  ProductionBoundaryDrillSummary,
   ReleaseVerificationReport
 } from "./types";
 
@@ -14,6 +15,7 @@ const inputs = {
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
   executorContractDrill: "output/executor-contract-drill/summary.json",
+  productionBoundaryDrill: "output/verification/production-boundary-latest.json",
   releaseVerification: "output/rehearsal-drill/release-verification-latest.json"
 };
 
@@ -23,6 +25,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -31,8 +34,8 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 6,
-      passed: 6,
+      total: 7,
+      passed: 7,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
@@ -41,10 +44,12 @@ describe("verification manifest", () => {
       "localization-drill",
       "executor-contract-drill",
       "release-verification",
-      "dry-run-boundary"
+      "dry-run-boundary",
+      "production-boundary-drill"
     ]);
     expect(manifest.source.localizationLocales).toEqual(["ja", "en", "zh-Hans", "zh-Hant", "ko"]);
     expect(manifest.source.executorProfiles).toContain("desktop-vm");
+    expect(manifest.source.productionBoundaryExitCode).toBe(4);
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
   });
 
@@ -56,6 +61,7 @@ describe("verification manifest", () => {
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -78,6 +84,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -98,6 +105,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorDrill,
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -107,6 +115,27 @@ describe("verification manifest", () => {
     expect(manifest.decision).toBe("invalid");
     expect(executorCheck?.status).toBe("fail");
     expect(executorCheck?.evidence.join(" ")).toContain("executed=true");
+  });
+
+  it("invalidates the manifest when production boundary exit code is not observed", () => {
+    const productionBoundaryDrill = productionBoundaryDrillFixture();
+    productionBoundaryDrill.observedExitCode = 0;
+    productionBoundaryDrill.checks.expectedExitCodeObserved = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill,
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const productionBoundaryCheck = manifest.checks.find((check) => check.id === "production-boundary-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(productionBoundaryCheck?.status).toBe("fail");
+    expect(productionBoundaryCheck?.evidence.join(" ")).toContain("Observed exit: 0");
   });
 
   it("invalidates the manifest when release verification is not dry-run verified", () => {
@@ -136,6 +165,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification,
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -307,6 +337,33 @@ function executorContractDrillFixture(): ExecutorContractDrillSummary {
       level: "local-drill",
       claim: "Local executor drill.",
       limitations: ["No real executor controlled."],
+      productionRequirements: ["Attach production runner evidence."]
+    }
+  };
+}
+
+function productionBoundaryDrillFixture(): ProductionBoundaryDrillSummary {
+  return {
+    schema: "naikaku.production-boundary-drill.v1",
+    generatedAt: "2026-06-27T00:04:00.000Z",
+    command: "npm.cmd run release:verify:production",
+    expectedExitCode: 4,
+    observedExitCode: 4,
+    verificationPath: "output/rehearsal-drill/release-verification-production-latest.json",
+    sourceRunId: "run-test",
+    decision: "not-production-ready",
+    scope: "production",
+    requireProductionEvidence: true,
+    failedChecks: ["production-evidence-required"],
+    checks: {
+      expectedExitCodeObserved: true,
+      productionNotReady: true,
+      dryRunEvidenceRejected: true
+    },
+    honestyClaim: {
+      level: "local-drill",
+      claim: "Local production boundary drill.",
+      limitations: ["No production runner evidence."],
       productionRequirements: ["Attach production runner evidence."]
     }
   };

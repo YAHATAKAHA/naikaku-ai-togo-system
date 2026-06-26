@@ -3,6 +3,7 @@ import type {
   ExecutorContractDrillSummary,
   ExecutorProfileId,
   LocalizationDrillSummary,
+  ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
   VerificationManifest,
   VerificationManifestCheck
@@ -21,12 +22,14 @@ export interface BuildVerificationManifestInput {
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
+  productionBoundaryDrill: ProductionBoundaryDrillSummary;
   releaseVerification: ReleaseVerificationReport;
   generatedAt?: string;
   inputs: {
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
+    productionBoundaryDrill: string;
     releaseVerification: string;
   };
 }
@@ -35,6 +38,7 @@ export function buildVerificationManifest({
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
+  productionBoundaryDrill,
   releaseVerification,
   generatedAt = new Date().toISOString(),
   inputs
@@ -45,7 +49,8 @@ export function buildVerificationManifest({
     localizationDrillCheck(localizationDrill),
     executorContractDrillCheck(executorContractDrill),
     releaseVerificationCheck(releaseVerification),
-    dryRunBoundaryCheck(releaseVerification)
+    dryRunBoundaryCheck(releaseVerification),
+    productionBoundaryDrillCheck(productionBoundaryDrill)
   ];
   const passed = checks.filter((check) => check.status === "pass").length;
   const failed = checks.length - passed;
@@ -59,9 +64,11 @@ export function buildVerificationManifest({
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
+      productionBoundaryGeneratedAt: productionBoundaryDrill.generatedAt,
       releaseVerificationGeneratedAt: releaseVerification.generatedAt,
       localizationLocales: localizationDrill.locales.map((locale) => locale.locale),
       executorProfiles: executorContractDrill.profiles.map((profile) => profile.profileId),
+      productionBoundaryExitCode: productionBoundaryDrill.observedExitCode,
       releaseRunId: releaseVerification.sourceRunId,
       releaseScope: releaseVerification.scope
     },
@@ -76,7 +83,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -264,5 +271,38 @@ function dryRunBoundaryCheck(report: ReleaseVerificationReport): VerificationMan
     nextAction: ok
       ? "Use production verification before claiming external production readiness."
       : "Regenerate release verification with explicit production-evidence requirements."
+  };
+}
+
+function productionBoundaryDrillCheck(report: ProductionBoundaryDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.production-boundary-drill.v1"
+    && report.expectedExitCode === 4
+    && report.observedExitCode === 4
+    && report.decision === "not-production-ready"
+    && report.scope === "production"
+    && report.requireProductionEvidence
+    && report.failedChecks.includes("production-evidence-required")
+    && checksPassed;
+
+  return {
+    id: "production-boundary-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Production boundary drill confirmed dry-run evidence is rejected with exit code 4."
+      : "Production boundary drill did not prove dry-run evidence is blocked from production claims.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Command: ${report.command}`,
+      `Expected exit: ${report.expectedExitCode}`,
+      `Observed exit: ${report.observedExitCode}`,
+      `Decision: ${report.decision}`,
+      `Scope: ${report.scope}`,
+      `Require production evidence: ${report.requireProductionEvidence ? "yes" : "no"}`,
+      `Failed checks: ${report.failedChecks.join(", ") || "none"}`
+    ],
+    nextAction: ok
+      ? "Keep this negative boundary drill attached until authenticated production evidence exists."
+      : "Restore production verification so dry-run evidence returns not-production-ready with exit code 4."
   };
 }
