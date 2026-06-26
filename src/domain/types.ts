@@ -774,6 +774,37 @@ export interface CodingAgentBriefs {
   };
 }
 
+export type CodingAgentBriefReviewStatus = "pass" | "warn" | "block";
+export type CodingAgentBriefReviewDecision = "ready" | "needs-review" | "blocked";
+
+export interface CodingAgentBriefReviewCheck {
+  id: string;
+  label: string;
+  status: CodingAgentBriefReviewStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentBriefReviewReport {
+  schema: "naikaku.coding-agent-brief-review.v1";
+  generatedAt: string;
+  sourceSchema: CodingAgentBriefs["schema"];
+  operatorLocale: string;
+  runId?: string;
+  decision: CodingAgentBriefReviewDecision;
+  checks: CodingAgentBriefReviewCheck[];
+  summary: {
+    total: number;
+    passed: number;
+    warnings: number;
+    blockers: number;
+    briefs: number;
+    implementable: number;
+    humanReview: number;
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -797,6 +828,7 @@ export type AuditEventType =
   | "development.board.exported"
   | "development.issues.exported"
   | "development.coding_briefs.exported"
+  | "development.coding_briefs.reviewed"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

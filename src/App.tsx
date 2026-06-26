@@ -61,6 +61,7 @@ import {
   saveProviderReadinessRow,
   saveWorkspace,
   serializeAuditLog,
+  serializeCodingAgentBriefReviewExport,
   serializeAutomationRunbookExport,
   serializeCodingAgentBriefsExport,
   serializeCodingAgentBriefsMarkdownExport,
@@ -82,6 +83,7 @@ import {
 import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
 import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
+import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
@@ -115,6 +117,7 @@ import {
   getLedgerSummaryViaGateway,
   listApprovalLedgerViaGateway,
   listEvidenceLedgerViaGateway,
+  reviewCodingAgentBriefsViaGateway,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
   saveApprovalRecordViaGateway,
@@ -129,6 +132,7 @@ import type {
   AuditEvent,
   CabinetRole,
   CabinetRun,
+  CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
@@ -201,6 +205,8 @@ export function App() {
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentBriefsLink, setCodingAgentBriefsLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentBriefsMarkdownLink, setCodingAgentBriefsMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentBriefReview, setCodingAgentBriefReview] = useState<CodingAgentBriefReviewReport | null>(null);
+  const [codingAgentBriefReviewLink, setCodingAgentBriefReviewLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -525,6 +531,18 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentBriefReviewLink) {
+        URL.revokeObjectURL(codingAgentBriefReviewLink.href);
+      }
+    };
+  }, [codingAgentBriefReviewLink]);
+
+  useEffect(() => {
+    clearCodingAgentBriefReview();
+  }, [codingAgentBriefs]);
+
+  useEffect(() => {
+    return () => {
       if (developmentIssuesLink) {
         URL.revokeObjectURL(developmentIssuesLink.href);
       }
@@ -564,6 +582,8 @@ export function App() {
     setDevelopmentBoardLink(null);
     setCodingAgentBriefsLink(null);
     setCodingAgentBriefsMarkdownLink(null);
+    setCodingAgentBriefReview(null);
+    setCodingAgentBriefReviewLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
@@ -604,6 +624,7 @@ export function App() {
     setReleaseRemediationScriptLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
+    clearCodingAgentBriefReview();
   }, [run?.id, workspace]);
 
   useEffect(() => {
@@ -701,6 +722,7 @@ export function App() {
       URL.revokeObjectURL(releaseVerificationLink.href);
       setReleaseVerificationLink(null);
     }
+    clearCodingAgentBriefReview();
   }
 
   function clearCodingAgentBriefDownloads() {
@@ -711,6 +733,14 @@ export function App() {
     if (codingAgentBriefsMarkdownLink) {
       URL.revokeObjectURL(codingAgentBriefsMarkdownLink.href);
       setCodingAgentBriefsMarkdownLink(null);
+    }
+  }
+
+  function clearCodingAgentBriefReview() {
+    setCodingAgentBriefReview(null);
+    if (codingAgentBriefReviewLink) {
+      URL.revokeObjectURL(codingAgentBriefReviewLink.href);
+      setCodingAgentBriefReviewLink(null);
     }
   }
 
@@ -910,6 +940,7 @@ export function App() {
     setDevelopmentBoardLink(null);
     setCodingAgentBriefsLink(null);
     setCodingAgentBriefsMarkdownLink(null);
+    clearCodingAgentBriefReview();
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
@@ -979,6 +1010,7 @@ export function App() {
       setDevelopmentBoardLink(null);
       setCodingAgentBriefsLink(null);
       setCodingAgentBriefsMarkdownLink(null);
+      clearCodingAgentBriefReview();
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
       setProviderReadinessLink(null);
@@ -1755,6 +1787,7 @@ export function App() {
       setDevelopmentBoardLink(null);
     }
     clearCodingAgentBriefDownloads();
+    clearCodingAgentBriefReview();
     if (developmentIssuesLink) {
       URL.revokeObjectURL(developmentIssuesLink.href);
       setDevelopmentIssuesLink(null);
@@ -1897,6 +1930,73 @@ export function App() {
         humanReview: codingAgentBriefs.summary.humanReview,
         format: "markdown",
         source: "local"
+      }
+    });
+  }
+
+  function createCodingAgentBriefReviewDownload(
+    report: CodingAgentBriefReviewReport,
+    requireProductionEvidence: boolean
+  ) {
+    const blob = new Blob([serializeCodingAgentBriefReviewExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const mode = requireProductionEvidence ? "production" : "dry-run";
+    const fileName = `naikaku-coding-agent-brief-review-${mode}-${runSlug}-${report.operatorLocale}.json`;
+
+    if (codingAgentBriefReviewLink) {
+      URL.revokeObjectURL(codingAgentBriefReviewLink.href);
+    }
+
+    setCodingAgentBriefReviewLink({ href: url, fileName });
+  }
+
+  async function runCodingAgentBriefReview(requireProductionEvidence = false) {
+    let review = buildCodingAgentBriefReview({
+      briefs: codingAgentBriefs,
+      releaseVerification,
+      requireProductionEvidence
+    });
+    let source: "gateway" | "local" = "local";
+    let gatewayError: string | null = null;
+
+    try {
+      review = await reviewCodingAgentBriefsViaGateway(
+        codingAgentBriefs,
+        releaseVerification,
+        requireProductionEvidence
+      );
+      source = "gateway";
+    } catch (error) {
+      gatewayError = error instanceof Error ? error.message : "unknown";
+    }
+
+    setCodingAgentBriefReview(review);
+    createCodingAgentBriefReviewDownload(review, requireProductionEvidence);
+    setRunState({
+      status: source === "gateway" ? "gateway" : "local",
+      message: source === "gateway"
+        ? copy.codingBriefs.statusReviewGateway(review.decision, review.summary.blockers, review.summary.warnings)
+        : copy.codingBriefs.statusReviewLocal(
+          review.decision,
+          review.summary.blockers,
+          review.summary.warnings,
+          gatewayError || undefined
+        )
+    });
+    recordAudit({
+      type: "development.coding_briefs.reviewed",
+      severity: review.decision === "ready" ? "success" : review.decision === "needs-review" ? "warning" : "error",
+      summary: `Coding agent brief review completed: ${review.decision}.`,
+      runId: review.runId,
+      metadata: {
+        briefs: review.summary.briefs,
+        passed: review.summary.passed,
+        warnings: review.summary.warnings,
+        blockers: review.summary.blockers,
+        source,
+        requireProductionEvidence,
+        gatewayError
       }
     });
   }
@@ -2284,11 +2384,15 @@ export function App() {
 
           <CodingAgentBriefsPanel
             briefs={codingAgentBriefs}
+            review={codingAgentBriefReview}
             exportLink={codingAgentBriefsLink}
             markdownLink={codingAgentBriefsMarkdownLink}
+            reviewLink={codingAgentBriefReviewLink}
             copy={copy.codingBriefs}
             onExport={() => void exportCodingAgentBriefs()}
             onExportMarkdown={exportCodingAgentBriefsMarkdown}
+            onReview={() => void runCodingAgentBriefReview(false)}
+            onProductionReview={() => void runCodingAgentBriefReview(true)}
           />
 
           <DevelopmentIssuesPanel

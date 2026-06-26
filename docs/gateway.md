@@ -723,6 +723,58 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs/review`
+
+Reviews generated coding agent briefs before they are handed to an implementation agent. This endpoint does not execute code, run tests, push Git, deploy, read secrets, or call providers. It checks that the prompt package contains the required schema, complete task data, sandbox prohibitions, verification commands, human-approval flags, and truthful release-gate evidence.
+
+The `briefs` payload should be the full object returned by `/v1/development/coding-briefs`; the example below is abbreviated for readability.
+
+```json
+{
+  "briefs": {
+    "schema": "naikaku.coding-agent-briefs.v1",
+    "briefs": [
+      {
+        "id": "coding-brief-dev-1",
+        "title": "Implement sandbox check",
+        "verificationCommands": ["npm run test", "npm run build"],
+        "sandbox": {
+          "prohibitedActions": ["raw-secret-export", "production-deploy", "remote-delete", "purchase", "external-message-send", "unreviewed-git-push"]
+        }
+      }
+    ]
+  },
+  "releaseVerification": {
+    "schema": "naikaku.release-verification.v1",
+    "decision": "verified",
+    "scope": "dry-run"
+  },
+  "requireProductionEvidence": false
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-brief-review.v1",
+  "decision": "ready",
+  "summary": {
+    "passed": 5,
+    "warnings": 0,
+    "blockers": 0,
+    "briefs": 12
+  },
+  "checks": [
+    {
+      "id": "coding-brief-sandbox-boundary",
+      "status": "pass",
+      "nextAction": "Keep these boundaries visible when copying prompts to coding agents."
+    }
+  ]
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

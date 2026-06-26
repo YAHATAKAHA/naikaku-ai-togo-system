@@ -65,6 +65,14 @@ export interface CodingAgentBriefsCopy {
   exportMarkdown: string;
   downloadJson: string;
   downloadMarkdown: string;
+  review: string;
+  productionReview: string;
+  downloadReview: string;
+  reviewDecision: string;
+  reviewNextAction: string;
+  reviewReady: string;
+  reviewDecisionLabel: (decision: string) => string;
+  reviewSummary: (passed: number, warnings: number, blockers: number) => string;
   mode: string;
   executor: string;
   releaseGate: string;
@@ -76,6 +84,8 @@ export interface CodingAgentBriefsCopy {
   statusGateway: string;
   statusFallback: (errorMessage?: string) => string;
   statusMarkdown: string;
+  statusReviewGateway: (decision: string, blockers: number, warnings: number) => string;
+  statusReviewLocal: (decision: string, blockers: number, warnings: number, errorMessage?: string) => string;
 }
 
 export interface AppCopy {
@@ -177,6 +187,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       exportMarkdown: "Markdown出力",
       downloadJson: "JSON取得",
       downloadMarkdown: "Markdown取得",
+      review: "Review",
+      productionReview: "本番Review",
+      downloadReview: "Review取得",
+      reviewDecision: "Review判定",
+      reviewNextAction: "次の対応",
+      reviewReady: "全てのブリーフは代理への引き渡し前チェックを通過しました。",
+      reviewDecisionLabel: jaBriefReviewDecision,
+      reviewSummary: (passed, warnings, blockers) => `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
       mode: "モード",
       executor: "Executor",
       releaseGate: "リリースゲート",
@@ -187,7 +205,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       empty: "Development Board から coding agent brief を生成してください。",
       statusGateway: "コーディング代理ブリーフをローカルゲートウェイ経由で出力しました。",
       statusFallback: (errorMessage) => `ゲートウェイ brief を利用できないため、ローカル出力を使用しました。${errorMessage || ""}`,
-      statusMarkdown: "コーディング代理 Markdown prompt pack をローカルで準備しました。"
+      statusMarkdown: "コーディング代理 Markdown prompt pack をローカルで準備しました。",
+      statusReviewGateway: (decision, blockers, warnings) => `ブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "リリース演習",
@@ -269,6 +289,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       exportMarkdown: "Export Markdown",
       downloadJson: "Download JSON",
       downloadMarkdown: "Download Markdown",
+      review: "Review",
+      productionReview: "Prod review",
+      downloadReview: "Download review",
+      reviewDecision: "Review decision",
+      reviewNextAction: "Next action",
+      reviewReady: "All briefs passed pre-handoff checks for coding agents.",
+      reviewDecisionLabel: (decision) => decision,
+      reviewSummary: (passed, warnings, blockers) => `${passed} pass / ${warnings} warnings / ${blockers} blockers`,
       mode: "Mode",
       executor: "Executor",
       releaseGate: "Release gate",
@@ -279,7 +307,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       empty: "Generate coding agent briefs from the Development Board.",
       statusGateway: "Coding agent briefs exported through the local gateway.",
       statusFallback: (errorMessage) => `Gateway coding agent briefs unavailable; used local export.${errorMessage ? ` ${errorMessage}` : ""}`,
-      statusMarkdown: "Coding agent Markdown prompt pack prepared locally."
+      statusMarkdown: "Coding agent Markdown prompt pack prepared locally.",
+      statusReviewGateway: (decision, blockers, warnings) => `Coding brief review ${decision}: ${blockers} blockers, ${warnings} warnings.`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "Release rehearsal",
@@ -361,6 +391,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       exportMarkdown: "导出 Markdown",
       downloadJson: "下载 JSON",
       downloadMarkdown: "下载 Markdown",
+      review: "审查",
+      productionReview: "生产审查",
+      downloadReview: "下载审查",
+      reviewDecision: "审查判定",
+      reviewNextAction: "下一步",
+      reviewReady: "所有 brief 已通过交付给编程代理前的检查。",
+      reviewDecisionLabel: zhHansBriefReviewDecision,
+      reviewSummary: (passed, warnings, blockers) => `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "发布门",
@@ -371,7 +409,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       empty: "请从 Development Board 生成编程代理 brief。",
       statusGateway: "编程代理 brief 已通过本地网关导出。",
       statusFallback: (errorMessage) => `网关 brief 不可用，已使用本地导出。${errorMessage || ""}`,
-      statusMarkdown: "编程代理 Markdown prompt pack 已在本地准备。"
+      statusMarkdown: "编程代理 Markdown prompt pack 已在本地准备。",
+      statusReviewGateway: (decision, blockers, warnings) => `编程代理 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "发布演练",
@@ -453,6 +493,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       exportMarkdown: "匯出 Markdown",
       downloadJson: "下載 JSON",
       downloadMarkdown: "下載 Markdown",
+      review: "審查",
+      productionReview: "生產審查",
+      downloadReview: "下載審查",
+      reviewDecision: "審查判定",
+      reviewNextAction: "下一步",
+      reviewReady: "所有 brief 已通過交付給編程代理前的檢查。",
+      reviewDecisionLabel: zhHantBriefReviewDecision,
+      reviewSummary: (passed, warnings, blockers) => `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "發布門",
@@ -463,7 +511,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       empty: "請從 Development Board 生成編程代理 brief。",
       statusGateway: "編程代理 brief 已透過本地閘道匯出。",
       statusFallback: (errorMessage) => `閘道 brief 不可用，已使用本地匯出。${errorMessage || ""}`,
-      statusMarkdown: "編程代理 Markdown prompt pack 已在本地準備。"
+      statusMarkdown: "編程代理 Markdown prompt pack 已在本地準備。",
+      statusReviewGateway: (decision, blockers, warnings) => `編程代理 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "發布演練",
@@ -545,6 +595,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       exportMarkdown: "Markdown 내보내기",
       downloadJson: "JSON 다운로드",
       downloadMarkdown: "Markdown 다운로드",
+      review: "검토",
+      productionReview: "운영 검토",
+      downloadReview: "검토 다운로드",
+      reviewDecision: "검토 판정",
+      reviewNextAction: "다음 조치",
+      reviewReady: "모든 브리프가 코딩 에이전트 인계 전 검사를 통과했습니다.",
+      reviewDecisionLabel: koBriefReviewDecision,
+      reviewSummary: (passed, warnings, blockers) => `${passed} 통과 / ${warnings} 경고 / ${blockers} 차단`,
       mode: "모드",
       executor: "Executor",
       releaseGate: "릴리스 게이트",
@@ -555,7 +613,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       empty: "Development Board에서 코딩 에이전트 브리프를 생성하세요.",
       statusGateway: "코딩 에이전트 브리프를 로컬 게이트웨이로 내보냈습니다.",
       statusFallback: (errorMessage) => `게이트웨이 브리프를 사용할 수 없어 로컬 내보내기를 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
-      statusMarkdown: "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다."
+      statusMarkdown: "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다.",
+      statusReviewGateway: (decision, blockers, warnings) => `코딩 에이전트 브리프 검토 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "릴리스 리허설",
@@ -620,6 +680,13 @@ function jaVerificationDecision(decision: string) {
   return decision;
 }
 
+function jaBriefReviewDecision(decision: string) {
+  if (decision === "ready") return "引き渡し可";
+  if (decision === "needs-review") return "レビュー要";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function zhHansRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "可发布";
   if (decision === "needs-review") return "需审查";
@@ -631,6 +698,13 @@ function zhHansVerificationDecision(decision: string) {
   if (decision === "verified") return "已验证";
   if (decision === "not-production-ready") return "生产未就绪";
   if (decision === "invalid") return "无效";
+  return decision;
+}
+
+function zhHansBriefReviewDecision(decision: string) {
+  if (decision === "ready") return "可交付";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
   return decision;
 }
 
@@ -648,6 +722,13 @@ function zhHantVerificationDecision(decision: string) {
   return decision;
 }
 
+function zhHantBriefReviewDecision(decision: string) {
+  if (decision === "ready") return "可交付";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function koRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "릴리스 가능";
   if (decision === "needs-review") return "검토 필요";
@@ -659,5 +740,12 @@ function koVerificationDecision(decision: string) {
   if (decision === "verified") return "검증됨";
   if (decision === "not-production-ready") return "운영 준비 전";
   if (decision === "invalid") return "무효";
+  return decision;
+}
+
+function koBriefReviewDecision(decision: string) {
+  if (decision === "ready") return "인계 가능";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
   return decision;
 }

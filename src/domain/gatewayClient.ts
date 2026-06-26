@@ -5,6 +5,7 @@ import type {
   CabinetRun,
   CabinetRunMode,
   CabinetWorkspace,
+  CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
@@ -533,6 +534,32 @@ export async function createCodingAgentBriefsViaGateway(
   }
 
   return (await response.json()) as CodingAgentBriefs;
+}
+
+export async function reviewCodingAgentBriefsViaGateway(
+  briefs: CodingAgentBriefs,
+  releaseVerification?: ReleaseVerificationReport | null,
+  requireProductionEvidence = false,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      briefs,
+      releaseVerification,
+      requireProductionEvidence
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent brief review failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentBriefReviewReport;
 }
 
 export async function checkGatewayHealth() {

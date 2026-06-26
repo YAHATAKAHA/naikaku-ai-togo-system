@@ -25,6 +25,7 @@ This backlog is written so different contributors can work in parallel.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
 - Add Coding Agent Briefs export that turns Development Board work into sandboxed implementation prompts and verification checklists.
+- Add Coding Agent Brief Review gate that blocks incomplete prompts, missing sandbox prohibitions, missing verification commands, and production evidence overclaims before agent handoff.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
 
 Acceptance:
@@ -44,6 +45,7 @@ Acceptance:
 - Operators can switch supported UI languages without resetting workspace state, session-only secrets, or release verification evidence.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become coding-agent briefs with explicit sandbox, verification, release-gate, and prohibited-action guidance before an implementation agent starts work.
+- Operators can review coding-agent briefs before handoff and receive a machine-readable `ready`, `needs-review`, or `blocked` decision with next actions.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 
 ## Track 2: Provider Adapters

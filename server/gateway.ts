@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
+import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
@@ -21,6 +22,7 @@ import type {
   CabinetRunMode,
   CabinetRole,
   CabinetWorkspace,
+  CodingAgentBriefs,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorRun,
@@ -80,6 +82,7 @@ const server = createServer(async (request, response) => {
           "release-verification",
           "development-issues",
           "coding-agent-briefs",
+          "coding-agent-brief-review",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -580,6 +583,30 @@ const server = createServer(async (request, response) => {
           : null
       });
       sendJson(response, 200, briefs);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/review") {
+      const body = await readJson<{
+        briefs?: CodingAgentBriefs;
+        releaseVerification?: ReleaseVerificationReport;
+        requireProductionEvidence?: boolean;
+      }>(request);
+      if (body.briefs?.schema !== "naikaku.coding-agent-briefs.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "briefs with schema naikaku.coding-agent-briefs.v1 are required."
+        });
+        return;
+      }
+      const review = buildCodingAgentBriefReview({
+        briefs: body.briefs,
+        releaseVerification: body.releaseVerification?.schema === "naikaku.release-verification.v1"
+          ? body.releaseVerification
+          : null,
+        requireProductionEvidence: Boolean(body.requireProductionEvidence)
+      });
+      sendJson(response, 200, review);
       return;
     }
 

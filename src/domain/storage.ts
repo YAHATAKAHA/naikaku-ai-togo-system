@@ -2,6 +2,7 @@ import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defa
 import { buildExecutorHandoff } from "./automation";
 import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
+import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
@@ -21,6 +22,7 @@ import type {
   CabinetRole,
   CabinetRun,
   CabinetWorkspace,
+  CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   DevelopmentBoard,
   DevelopmentIssueDrafts,
@@ -408,6 +410,10 @@ export function serializeCodingAgentBriefsExport(briefs: CodingAgentBriefs) {
 
 export function serializeCodingAgentBriefsMarkdownExport(briefs: CodingAgentBriefs) {
   return serializeCodingAgentBriefsMarkdown(briefs);
+}
+
+export function serializeCodingAgentBriefReviewExport(report: CodingAgentBriefReviewReport) {
+  return serializeCodingAgentBriefReview(report);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {

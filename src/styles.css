@@ -2848,6 +2848,66 @@ meter {
   color: var(--green);
 }
 
+.coding-brief-review {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7fbf9;
+  padding: 10px;
+  min-width: 0;
+}
+
+.coding-brief-review[data-decision="needs-review"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.coding-brief-review[data-decision="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.coding-brief-review div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.coding-brief-review strong,
+.coding-brief-review span,
+.coding-brief-review small,
+.coding-brief-review b {
+  overflow-wrap: anywhere;
+}
+
+.coding-brief-review strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.coding-brief-review div span,
+.coding-brief-review p span,
+.coding-brief-review small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.coding-brief-review p {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.coding-brief-review b {
+  color: var(--ink);
+  font-size: 12px;
+}
+
 .coding-briefs-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3973,6 +4033,7 @@ meter {
   .readiness-gate-heading,
   .rehearsal-check-heading,
   .rehearsal-subheading,
+  .coding-brief-review div,
   .coding-brief-heading,
   .issues-draft-heading,
   .ledger-row div,

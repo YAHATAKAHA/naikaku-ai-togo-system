@@ -108,6 +108,8 @@ The release verifier makes that boundary executable. The workbench panel, local 
 
 Coding Agent Briefs extend the same boundary to programming agents. They convert development work items into reviewable prompts that tell an implementation agent what to build, which verification commands to run, which executor boundary applies, and which actions are forbidden. The brief explicitly prohibits raw-secret export, unreviewed Git push, production deploys, remote deletes, purchases, and external message sends. It is a handoff artifact, not proof that implementation has happened.
 
+The Coding Agent Brief Review gate checks that every generated prompt still carries those prohibitions, core build/test commands, release verification commands when required, human approval flags for blocked or critical work, and honest dry-run versus production wording. If production evidence is required but the attached release verification is missing or only dry-run scoped, the review decision is `blocked`.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.

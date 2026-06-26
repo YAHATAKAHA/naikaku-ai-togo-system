@@ -1,23 +1,36 @@
-import { Bot, Download } from "lucide-react";
-import type { CodingAgentBrief, CodingAgentBriefs } from "../domain/types";
+import { AlertTriangle, Bot, Download, ShieldCheck } from "lucide-react";
+import type {
+  CodingAgentBrief,
+  CodingAgentBriefReviewCheck,
+  CodingAgentBriefReviewReport,
+  CodingAgentBriefs
+} from "../domain/types";
 import type { CodingAgentBriefsCopy } from "../i18n";
 
 interface CodingAgentBriefsPanelProps {
   briefs: CodingAgentBriefs;
+  review: CodingAgentBriefReviewReport | null;
   exportLink: { href: string; fileName: string } | null;
   markdownLink: { href: string; fileName: string } | null;
+  reviewLink: { href: string; fileName: string } | null;
   copy: CodingAgentBriefsCopy;
   onExport: () => void;
   onExportMarkdown: () => void;
+  onReview: () => void;
+  onProductionReview: () => void;
 }
 
 export function CodingAgentBriefsPanel({
   briefs,
+  review,
   exportLink,
   markdownLink,
+  reviewLink,
   copy,
   onExport,
-  onExportMarkdown
+  onExportMarkdown,
+  onReview,
+  onProductionReview
 }: CodingAgentBriefsPanelProps) {
   return (
     <section className="coding-briefs-panel">
@@ -43,6 +56,12 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onExportMarkdown} disabled={!briefs.briefs.length}>
           <Download size={15} /> {copy.exportMarkdown}
         </button>
+        <button type="button" onClick={onReview} disabled={!briefs.briefs.length}>
+          <ShieldCheck size={15} /> {copy.review}
+        </button>
+        <button type="button" onClick={onProductionReview} disabled={!briefs.briefs.length}>
+          <AlertTriangle size={15} /> {copy.productionReview}
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> {copy.downloadJson}
@@ -53,7 +72,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadMarkdown}
           </a>
         ) : null}
+        {reviewLink ? (
+          <a href={reviewLink.href} download={reviewLink.fileName}>
+            <Download size={15} /> {copy.downloadReview}
+          </a>
+        ) : null}
       </div>
+
+      {review ? (
+        <CodingBriefReviewReport review={review} copy={copy} />
+      ) : null}
 
       {briefs.briefs.length ? (
         <div className="coding-briefs-list">
@@ -65,6 +93,36 @@ export function CodingAgentBriefsPanel({
         <p className="coding-briefs-empty">{copy.empty}</p>
       )}
     </section>
+  );
+}
+
+function CodingBriefReviewReport({
+  review,
+  copy
+}: {
+  review: CodingAgentBriefReviewReport;
+  copy: CodingAgentBriefsCopy;
+}) {
+  const nextCheck = firstActionableCheck(review.checks);
+
+  return (
+    <div className="coding-brief-review" data-decision={review.decision}>
+      <div>
+        <strong>{copy.reviewDecision}: {copy.reviewDecisionLabel(review.decision)}</strong>
+        <span>{copy.reviewSummary(review.summary.passed, review.summary.warnings, review.summary.blockers)}</span>
+      </div>
+      {nextCheck ? (
+        <p>
+          <b>{nextCheck.label}</b>
+          <span>{nextCheck.summary}</span>
+          <small>{copy.reviewNextAction}: {nextCheck.nextAction}</small>
+        </p>
+      ) : (
+        <p>
+          <span>{copy.reviewReady}</span>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -93,4 +151,10 @@ function CodingBriefCard({
       <small>{copy.promptReady}</small>
     </article>
   );
+}
+
+function firstActionableCheck(checks: CodingAgentBriefReviewCheck[]) {
+  return checks.find((check) => check.status === "block")
+    || checks.find((check) => check.status === "warn")
+    || null;
 }
