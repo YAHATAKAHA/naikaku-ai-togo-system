@@ -22,7 +22,9 @@ import type {
   ReleaseRehearsalCheck,
   ReleaseRehearsalDecision,
   ReleaseRehearsalReport,
-  ReleaseRehearsalStatus
+  ReleaseRehearsalStatus,
+  ReleaseRemediationItem,
+  ReleaseRemediationPriority
 } from "./types";
 
 export interface BuildReleaseRehearsalReportInput {
@@ -142,6 +144,7 @@ export function buildReleaseRehearsalReport({
     }),
     productReadinessCheck(productReadiness.decision, productReadiness.score)
   ];
+  const remediationItems = buildRemediationItems(checks);
   const summary = {
     total: checks.length,
     passed: checks.filter((check) => check.status === "pass").length,
@@ -165,6 +168,10 @@ export function buildReleaseRehearsalReport({
     decision,
     score: rehearsalScore(summary.blockers, summary.warnings),
     checks,
+    remediation: {
+      items: remediationItems,
+      summary: remediationSummary(remediationItems)
+    },
     artifacts: {
       runId: rehearsalRun.id,
       releaseBundleSchema: releaseBundle.schema,
@@ -184,6 +191,170 @@ export function buildReleaseRehearsalReport({
 
 export function serializeReleaseRehearsalReport(report: ReleaseRehearsalReport) {
   return JSON.stringify(report, null, 2);
+}
+
+export function serializeReleaseRemediationMarkdown(report: ReleaseRehearsalReport) {
+  return [
+    "# Naikaku Release Remediation Plan",
+    "",
+    `Run: ${report.runId}`,
+    `Decision: ${report.decision}`,
+    `Score: ${report.score}/100`,
+    `Generated: ${report.generatedAt}`,
+    "",
+    "## Summary",
+    `- Items: ${report.remediation.summary.total}`,
+    `- Critical: ${report.remediation.summary.critical}`,
+    `- High: ${report.remediation.summary.high}`,
+    `- Medium: ${report.remediation.summary.medium}`,
+    `- Low: ${report.remediation.summary.low}`,
+    "",
+    "## Items",
+    ...(report.remediation.items.length
+      ? report.remediation.items.flatMap((item) => [
+          `### ${item.title}`,
+          `- Owner: ${item.owner}`,
+          `- Priority: ${item.priority}`,
+          `- Source check: ${item.sourceCheckId}`,
+          `- Action: ${item.action}`,
+          `- Verification: \`${item.verificationCommand}\``,
+          "- Acceptance:",
+          ...item.acceptanceCriteria.map((criterion) => `  - [ ] ${criterion}`),
+          ""
+        ])
+      : ["- None"])
+  ].join("\n");
+}
+
+function buildRemediationItems(checks: ReleaseRehearsalCheck[]): ReleaseRemediationItem[] {
+  return checks
+    .filter((check) => check.status !== "pass")
+    .map((check) => {
+      const template = remediationTemplate(check);
+
+      return {
+        id: `remediate-${check.id}`,
+        sourceCheckId: check.id,
+        category: check.category,
+        title: template.title,
+        owner: template.owner,
+        priority: remediationPriority(check.status, check.id),
+        status: "ready-to-assign",
+        action: check.nextAction,
+        acceptanceCriteria: template.acceptanceCriteria,
+        verificationCommand: template.verificationCommand
+      };
+    });
+}
+
+function remediationTemplate(check: ReleaseRehearsalCheck) {
+  if (check.id === "provider-readiness") {
+    return {
+      title: "Confirm every role API provider",
+      owner: "Provider adapter team",
+      acceptanceCriteria: [
+        "Each enabled role has endpoint, model, and API alias reviewed.",
+        "Provider Readiness shows zero unchecked, failed, or missing-secret rows.",
+        "Readiness export contains aliases only and no raw session secrets."
+      ],
+      verificationCommand: "npm run rehearsal:strict"
+    };
+  }
+
+  if (check.id === "automation-runbook") {
+    return {
+      title: "Resolve held automation actions",
+      owner: "Automation runner team",
+      acceptanceCriteria: [
+        "Every held action has an explicit approval, rejection, or safer replacement.",
+        "Automation Runbook includes runner-ready steps for approved work.",
+        "High-impact actions keep exact-payload approval records."
+      ],
+      verificationCommand: "npm run rehearsal:strict"
+    };
+  }
+
+  if (check.id === "executor-evidence") {
+    return {
+      title: "Upgrade executor evidence from placeholders",
+      owner: "Sandbox executor team",
+      acceptanceCriteria: [
+        "Runner steps emit replayable evidence hashes.",
+        "Shell, browser, desktop, or MCP runners attach real transcripts, screenshots, manifests, or request logs.",
+        "Evidence export can be stored through the gateway ledger."
+      ],
+      verificationCommand: "npm run rehearsal:strict"
+    };
+  }
+
+  if (check.id === "parallel-development") {
+    return {
+      title: "Unblock parallel team issue drafts",
+      owner: "Project coordination team",
+      acceptanceCriteria: [
+        "Blocked development items are resolved, split, or explicitly deferred.",
+        "Each enabled role has a workspace scaffold and issue draft that can be assigned.",
+        "Issue script remains reviewable and credential-free."
+      ],
+      verificationCommand: "npm run rehearsal:strict"
+    };
+  }
+
+  if (check.id === "product-readiness") {
+    return {
+      title: "Clear product readiness warnings",
+      owner: "Release owner",
+      acceptanceCriteria: [
+        "Product readiness gate returns ship-ready.",
+        "Release bundle summary has no missing artifacts and no unresolved blockers.",
+        "Release notes name only accepted residual risks."
+      ],
+      verificationCommand: "npm run rehearsal:strict"
+    };
+  }
+
+  if (check.id === "security-redaction") {
+    return {
+      title: "Stop secret leakage before release",
+      owner: "Safety auditor",
+      acceptanceCriteria: [
+        "No exported artifact contains sessionSecret or probed raw secret values.",
+        "Provider keys remain session-only or server-side.",
+        "Redaction checks pass in UI and CLI rehearsal."
+      ],
+      verificationCommand: "npm run rehearsal -- --no-write"
+    };
+  }
+
+  return {
+    title: `Resolve ${check.label}`,
+    owner: "Release owner",
+    acceptanceCriteria: [
+      `${check.label} check returns pass.`,
+      "Evidence is captured in the release rehearsal report."
+    ],
+    verificationCommand: "npm run rehearsal:strict"
+  };
+}
+
+function remediationPriority(
+  status: ReleaseRehearsalStatus,
+  checkId: string
+): ReleaseRemediationPriority {
+  if (status === "block") return "critical";
+  if (checkId === "provider-readiness" || checkId === "automation-runbook") return "high";
+  if (checkId === "product-readiness" || checkId === "parallel-development") return "high";
+  return "medium";
+}
+
+function remediationSummary(items: ReleaseRemediationItem[]) {
+  return {
+    total: items.length,
+    critical: items.filter((item) => item.priority === "critical").length,
+    high: items.filter((item) => item.priority === "high").length,
+    medium: items.filter((item) => item.priority === "medium").length,
+    low: items.filter((item) => item.priority === "low").length
+  };
 }
 
 function cabinetRunCheck(

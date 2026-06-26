@@ -542,6 +542,21 @@ export interface ReleaseRehearsalCheck {
   nextAction: string;
 }
 
+export type ReleaseRemediationPriority = "low" | "medium" | "high" | "critical";
+
+export interface ReleaseRemediationItem {
+  id: string;
+  sourceCheckId: string;
+  category: ReleaseRehearsalCategory;
+  title: string;
+  owner: string;
+  priority: ReleaseRemediationPriority;
+  status: "ready-to-assign";
+  action: string;
+  acceptanceCriteria: string[];
+  verificationCommand: string;
+}
+
 export interface ReleaseRehearsalReport {
   schema: "naikaku.release-rehearsal.v1";
   generatedAt: string;
@@ -551,6 +566,16 @@ export interface ReleaseRehearsalReport {
   decision: ReleaseRehearsalDecision;
   score: number;
   checks: ReleaseRehearsalCheck[];
+  remediation: {
+    items: ReleaseRemediationItem[];
+    summary: {
+      total: number;
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+    };
+  };
   artifacts: {
     runId: string;
     releaseBundleSchema: ProductReleaseBundle["schema"];

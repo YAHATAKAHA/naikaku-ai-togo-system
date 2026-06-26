@@ -1303,6 +1303,87 @@ meter {
   overflow-wrap: anywhere;
 }
 
+.rehearsal-remediation {
+  display: grid;
+  gap: 8px;
+}
+
+.rehearsal-subheading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rehearsal-subheading strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.rehearsal-subheading span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.rehearsal-remediation-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rehearsal-remediation-card {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 10px;
+  min-width: 0;
+}
+
+.rehearsal-remediation-card[data-priority="critical"] {
+  border-color: #f1b8b4;
+  background: #fff6f4;
+}
+
+.rehearsal-remediation-card[data-priority="high"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.rehearsal-remediation-card strong,
+.rehearsal-remediation-card span,
+.rehearsal-remediation-card p,
+.rehearsal-remediation-card small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.rehearsal-remediation-card strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.rehearsal-remediation-card span,
+.rehearsal-remediation-card p,
+.rehearsal-remediation-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rehearsal-remediation-card span,
+.rehearsal-remediation-card small {
+  font-weight: 850;
+}
+
+.rehearsal-remediation-card p {
+  margin: 0;
+}
+
 .rehearsal-check-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3544,6 +3625,7 @@ meter {
   .artifact-grid,
   .readiness-gate-list,
   .rehearsal-check-list,
+  .rehearsal-remediation-list,
   .provider-row-list,
   .runbook-step-list,
   .capability-card-list,
@@ -3597,6 +3679,7 @@ meter {
   .runbook-step-heading,
   .readiness-gate-heading,
   .rehearsal-check-heading,
+  .rehearsal-subheading,
   .issues-draft-heading,
   .ledger-row div,
   .queue-copy div {

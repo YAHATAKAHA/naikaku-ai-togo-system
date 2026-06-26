@@ -1,7 +1,11 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
-import { buildReleaseRehearsalReport, serializeReleaseRehearsalReport } from "../src/domain/releaseRehearsal";
+import {
+  buildReleaseRehearsalReport,
+  serializeReleaseRehearsalReport,
+  serializeReleaseRemediationMarkdown
+} from "../src/domain/releaseRehearsal";
 import { createDefaultWorkspace, parseWorkspaceExport } from "../src/domain/storage";
 import type { CabinetWorkspace, ProviderReadinessMatrix, ReleaseRehearsalReport } from "../src/domain/types";
 
@@ -31,11 +35,11 @@ async function main() {
     workspace,
     providerReadiness
   });
-  const outputPath = options.noWrite
+  const output = options.noWrite
     ? null
-    : await writeReport(report, options.outputDir);
+    : await writeReports(report, options.outputDir);
 
-  printSummary(report, outputPath, options.strict);
+  printSummary(report, output, options.strict);
 
   if (report.summary.blockers > 0) {
     process.exitCode = 2;
@@ -124,23 +128,31 @@ async function loadProviderReadiness(
   return parsed;
 }
 
-async function writeReport(report: ReleaseRehearsalReport, outputDir: string) {
+async function writeReports(report: ReleaseRehearsalReport, outputDir: string) {
   const absoluteDir = path.resolve(outputDir);
   const runSlug = report.runId.replace(/[^a-z0-9-]/gi, "-");
   const reportPath = path.join(absoluteDir, `release-rehearsal-${runSlug}.json`);
+  const remediationPath = path.join(absoluteDir, `release-remediation-${runSlug}.md`);
   const latestPath = path.join(absoluteDir, "release-rehearsal-latest.json");
+  const latestRemediationPath = path.join(absoluteDir, "release-remediation-latest.md");
   const serialized = serializeReleaseRehearsalReport(report);
+  const remediation = serializeReleaseRemediationMarkdown(report);
 
   await mkdir(absoluteDir, { recursive: true });
   await writeFile(reportPath, serialized);
+  await writeFile(remediationPath, remediation);
   await writeFile(latestPath, serialized);
+  await writeFile(latestRemediationPath, remediation);
 
-  return reportPath;
+  return {
+    reportPath,
+    remediationPath
+  };
 }
 
 function printSummary(
   report: ReleaseRehearsalReport,
-  outputPath: string | null,
+  output: { reportPath: string; remediationPath: string } | null,
   strict: boolean
 ) {
   console.log(`Release rehearsal: ${report.decision} (${report.score}/100)`);
@@ -153,8 +165,9 @@ function printSummary(
   );
   console.log(`Secret leak detected: ${report.summary.secretLeakDetected ? "yes" : "no"}`);
 
-  if (outputPath) {
-    console.log(`Report: ${outputPath}`);
+  if (output) {
+    console.log(`Report: ${output.reportPath}`);
+    console.log(`Remediation: ${output.remediationPath}`);
   } else {
     console.log("Report: not written (--no-write)");
   }
@@ -163,6 +176,15 @@ function printSummary(
   for (const check of report.checks) {
     console.log(`[${check.status}] ${check.label}: ${check.summary}`);
     console.log(`  Next: ${check.nextAction}`);
+  }
+
+  if (report.remediation.items.length) {
+    console.log("");
+    console.log("Remediation queue:");
+    for (const item of report.remediation.items.slice(0, 5)) {
+      console.log(`[${item.priority}] ${item.owner}: ${item.title}`);
+      console.log(`  Verify: ${item.verificationCommand}`);
+    }
   }
 
   if (report.summary.blockers > 0) {
@@ -194,7 +216,7 @@ Usage:
 Options:
   --workspace <path>            Read a workspace JSON export instead of the default workspace.
   --provider-readiness <path>   Read a provider readiness JSON export.
-  --out <dir>                   Write reports to this directory. Default: output/rehearsal
+  --out <dir>                   Write JSON and Markdown reports to this directory. Default: output/rehearsal
   --strict                      Exit with code 3 when warnings remain.
   --no-write                    Print results without writing report files.
   --help                        Show this help.

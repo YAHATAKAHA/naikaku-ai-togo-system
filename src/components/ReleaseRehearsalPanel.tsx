@@ -1,5 +1,10 @@
 import { AlertTriangle, CheckCircle2, CircleX, Download, FlaskConical, Play } from "lucide-react";
-import type { ReleaseRehearsalCheck, ReleaseRehearsalReport, ReleaseRehearsalStatus } from "../domain/types";
+import type {
+  ReleaseRehearsalCheck,
+  ReleaseRehearsalReport,
+  ReleaseRehearsalStatus,
+  ReleaseRemediationItem
+} from "../domain/types";
 
 interface ReleaseRehearsalPanelProps {
   report: ReleaseRehearsalReport | null;
@@ -54,6 +59,20 @@ export function ReleaseRehearsalPanel({
             <Metric label="Held" value={`${report.artifacts.heldActions}`} />
           </div>
 
+          {report.remediation.items.length ? (
+            <div className="rehearsal-remediation">
+              <div className="rehearsal-subheading">
+                <strong>Remediation queue</strong>
+                <span>{report.remediation.summary.high} high / {report.remediation.summary.medium} medium</span>
+              </div>
+              <div className="rehearsal-remediation-list">
+                {report.remediation.items.slice(0, 4).map((item) => (
+                  <RemediationCard item={item} key={item.id} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="rehearsal-check-list">
             {report.checks.map((check) => (
               <RehearsalCheckCard check={check} key={check.id} />
@@ -75,6 +94,19 @@ function Metric({ label, value }: { label: string; value: string }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function RemediationCard({ item }: { item: ReleaseRemediationItem }) {
+  return (
+    <article className="rehearsal-remediation-card" data-priority={item.priority}>
+      <div>
+        <strong>{item.title}</strong>
+        <span>{item.owner}</span>
+      </div>
+      <p>{item.action}</p>
+      <small>{item.verificationCommand}</small>
+    </article>
   );
 }
 

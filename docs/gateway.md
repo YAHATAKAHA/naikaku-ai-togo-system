@@ -550,6 +550,20 @@ Response:
     "secretLeakDetected": false,
     "evidenceItems": 3
   },
+  "remediation": {
+    "summary": {
+      "total": 3,
+      "high": 2
+    },
+    "items": [
+      {
+        "sourceCheckId": "provider-readiness",
+        "owner": "Provider adapter team",
+        "priority": "high",
+        "verificationCommand": "npm run rehearsal:strict"
+      }
+    ]
+  },
   "artifacts": {
     "releaseBundleSchema": "naikaku.product-release-bundle.v1",
     "evidenceSchema": "naikaku.executor-evidence.v1",

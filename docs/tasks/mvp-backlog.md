@@ -15,7 +15,7 @@ This backlog is written so different contributors can work in parallel.
 - Add role workspace scaffold script export for separate team startup.
 - Add Product Readiness gate with exportable release blockers, warnings, and evidence.
 - Add Product Release Bundle export for a single handoff artifact plus Markdown release notes.
-- Add Release Rehearsal self-check for local end-to-end delivery simulation and redaction checks.
+- Add Release Rehearsal self-check for local end-to-end delivery simulation, remediation planning, and redaction checks.
 - Add `npm run rehearsal` and `npm run rehearsal:strict` for reproducible local and CI handoff gates.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
@@ -29,7 +29,7 @@ Acceptance:
 - Each enabled role can receive a starter workspace with `.env.example`, runner notes, tasks, and security notes.
 - Operators can export a product readiness report that names remaining blockers before handoff.
 - Operators can export one release bundle that indexes current artifacts and review requirements, plus human-readable release notes.
-- Operators can run a local release rehearsal that proves the cabinet, automation, evidence, release bundle, notes, and secret redaction path before handoff.
+- Operators can run a local release rehearsal that proves the cabinet, automation, evidence, release bundle, notes, remediation plan, and secret redaction path before handoff.
 - Operators and CI can rerun the rehearsal from the command line, with strict mode failing while warnings remain.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
