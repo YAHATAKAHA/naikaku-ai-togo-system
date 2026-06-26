@@ -6,6 +6,7 @@ import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefRevie
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
+import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "../src/domain/codingAgentSessionReceipt";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
@@ -27,6 +28,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentSessionBundle,
+  CodingAgentSessionReceipt,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorRun,
@@ -89,6 +91,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-brief-review",
           "coding-agent-session-bundle",
           "coding-agent-session-drill",
+          "coding-agent-session-receipt",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -655,6 +658,49 @@ const server = createServer(async (request, response) => {
       }
       const drill = buildCodingAgentSessionDrill({ bundle: body.bundle });
       sendJson(response, 200, drill);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/session-receipt-template") {
+      const body = await readJson<{
+        bundle?: CodingAgentSessionBundle;
+      }>(request);
+      if (body.bundle?.schema !== "naikaku.coding-agent-session-bundle.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      const receipt = buildCodingAgentSessionReceiptTemplate({ bundle: body.bundle });
+      sendJson(response, 200, receipt);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/session-receipt-review") {
+      const body = await readJson<{
+        bundle?: CodingAgentSessionBundle;
+        receipt?: CodingAgentSessionReceipt;
+      }>(request);
+      if (body.bundle?.schema !== "naikaku.coding-agent-session-bundle.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      if (body.receipt?.schema !== "naikaku.coding-agent-session-receipt.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "receipt with schema naikaku.coding-agent-session-receipt.v1 is required."
+        });
+        return;
+      }
+      const receipt = reviewCodingAgentSessionReceipt({
+        bundle: body.bundle,
+        receipt: body.receipt
+      });
+      sendJson(response, 200, receipt);
       return;
     }
 

@@ -2878,6 +2878,16 @@ meter {
   min-width: 0;
 }
 
+.coding-session-receipt {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #b9dfd1;
+  border-radius: 8px;
+  background: #f3fbf7;
+  padding: 10px;
+  min-width: 0;
+}
+
 .coding-brief-review[data-decision="needs-review"] {
   border-color: #f3d19c;
   background: #fffaf0;
@@ -2893,6 +2903,11 @@ meter {
   background: #fffaf0;
 }
 
+.coding-session-receipt[data-decision="needs-evidence"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
 .coding-brief-review[data-decision="blocked"] {
   border-color: #f2b8b2;
   background: #fff6f5;
@@ -2904,6 +2919,11 @@ meter {
 }
 
 .coding-session-drill[data-decision="blocked"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.coding-session-receipt[data-decision="blocked"] {
   border-color: #f2b8b2;
   background: #fff6f5;
 }
@@ -2932,6 +2952,14 @@ meter {
   min-width: 0;
 }
 
+.coding-session-receipt div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .coding-brief-review strong,
 .coding-brief-review span,
 .coding-brief-review small,
@@ -2943,13 +2971,18 @@ meter {
 .coding-session-drill strong,
 .coding-session-drill span,
 .coding-session-drill small,
-.coding-session-drill b {
+.coding-session-drill b,
+.coding-session-receipt strong,
+.coding-session-receipt span,
+.coding-session-receipt small,
+.coding-session-receipt b {
   overflow-wrap: anywhere;
 }
 
 .coding-brief-review strong,
 .coding-session-bundle strong,
-.coding-session-drill strong {
+.coding-session-drill strong,
+.coding-session-receipt strong {
   color: var(--ink);
   font-size: 13px;
   font-weight: 900;
@@ -2963,7 +2996,10 @@ meter {
 .coding-session-bundle small,
 .coding-session-drill div span,
 .coding-session-drill p span,
-.coding-session-drill small {
+.coding-session-drill small,
+.coding-session-receipt div span,
+.coding-session-receipt p span,
+.coding-session-receipt small {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
@@ -2971,7 +3007,8 @@ meter {
 
 .coding-brief-review p,
 .coding-session-bundle p,
-.coding-session-drill p {
+.coding-session-drill p,
+.coding-session-receipt p {
   display: grid;
   gap: 5px;
   margin: 0;
@@ -2979,7 +3016,8 @@ meter {
 
 .coding-brief-review b,
 .coding-session-bundle b,
-.coding-session-drill b {
+.coding-session-drill b,
+.coding-session-receipt b {
   color: var(--ink);
   font-size: 12px;
 }
@@ -4112,6 +4150,7 @@ meter {
   .coding-brief-review div,
   .coding-session-bundle div,
   .coding-session-drill div,
+  .coding-session-receipt div,
   .coding-brief-heading,
   .issues-draft-heading,
   .ledger-row div,

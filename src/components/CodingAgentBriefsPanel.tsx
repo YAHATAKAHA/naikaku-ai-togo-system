@@ -1,4 +1,4 @@
-import { AlertTriangle, Bot, Download, PackageCheck, PlayCircle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Bot, ClipboardCheck, Download, PackageCheck, PlayCircle, ShieldCheck } from "lucide-react";
 import type {
   CodingAgentBrief,
   CodingAgentBriefReviewCheck,
@@ -7,7 +7,9 @@ import type {
   CodingAgentSession,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillItem,
-  CodingAgentSessionDrillReport
+  CodingAgentSessionDrillReport,
+  CodingAgentSessionReceipt,
+  CodingAgentSessionReceiptItem
 } from "../domain/types";
 import type { CodingAgentBriefsCopy } from "../i18n";
 
@@ -16,6 +18,7 @@ interface CodingAgentBriefsPanelProps {
   review: CodingAgentBriefReviewReport | null;
   sessionBundle: CodingAgentSessionBundle | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
+  sessionReceipt: CodingAgentSessionReceipt | null;
   exportLink: { href: string; fileName: string } | null;
   markdownLink: { href: string; fileName: string } | null;
   reviewLink: { href: string; fileName: string } | null;
@@ -23,6 +26,8 @@ interface CodingAgentBriefsPanelProps {
   sessionMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
   drillMarkdownLink: { href: string; fileName: string } | null;
+  receiptLink: { href: string; fileName: string } | null;
+  receiptMarkdownLink: { href: string; fileName: string } | null;
   copy: CodingAgentBriefsCopy;
   onExport: () => void;
   onExportMarkdown: () => void;
@@ -31,6 +36,7 @@ interface CodingAgentBriefsPanelProps {
   onExportSession: () => void;
   onExportProductionSession: () => void;
   onRunSessionDrill: () => void;
+  onCreateSessionReceipt: () => void;
 }
 
 export function CodingAgentBriefsPanel({
@@ -38,6 +44,7 @@ export function CodingAgentBriefsPanel({
   review,
   sessionBundle,
   sessionDrill,
+  sessionReceipt,
   exportLink,
   markdownLink,
   reviewLink,
@@ -45,6 +52,8 @@ export function CodingAgentBriefsPanel({
   sessionMarkdownLink,
   drillLink,
   drillMarkdownLink,
+  receiptLink,
+  receiptMarkdownLink,
   copy,
   onExport,
   onExportMarkdown,
@@ -52,7 +61,8 @@ export function CodingAgentBriefsPanel({
   onProductionReview,
   onExportSession,
   onExportProductionSession,
-  onRunSessionDrill
+  onRunSessionDrill,
+  onCreateSessionReceipt
 }: CodingAgentBriefsPanelProps) {
   return (
     <section className="coding-briefs-panel">
@@ -93,6 +103,9 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onRunSessionDrill} disabled={!briefs.briefs.length}>
           <PlayCircle size={15} /> {copy.sessionDrill}
         </button>
+        <button type="button" onClick={onCreateSessionReceipt} disabled={!briefs.briefs.length}>
+          <ClipboardCheck size={15} /> {copy.receiptTemplate}
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> {copy.downloadJson}
@@ -128,6 +141,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadDrillMarkdown}
           </a>
         ) : null}
+        {receiptLink ? (
+          <a href={receiptLink.href} download={receiptLink.fileName}>
+            <Download size={15} /> {copy.downloadReceiptJson}
+          </a>
+        ) : null}
+        {receiptMarkdownLink ? (
+          <a href={receiptMarkdownLink.href} download={receiptMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadReceiptMarkdown}
+          </a>
+        ) : null}
       </div>
 
       {review ? (
@@ -140,6 +163,10 @@ export function CodingAgentBriefsPanel({
 
       {sessionDrill ? (
         <CodingAgentSessionDrillReportView report={sessionDrill} copy={copy} />
+      ) : null}
+
+      {sessionReceipt ? (
+        <CodingAgentSessionReceiptReportView report={sessionReceipt} copy={copy} />
       ) : null}
 
       {briefs.briefs.length ? (
@@ -179,6 +206,38 @@ function CodingAgentSessionDrillReportView({
       ) : (
         <p>
           <span>{copy.drillReady}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CodingAgentSessionReceiptReportView({
+  report,
+  copy
+}: {
+  report: CodingAgentSessionReceipt;
+  copy: CodingAgentBriefsCopy;
+}) {
+  const actionableItem = firstActionableReceiptItem(report.items);
+
+  return (
+    <div className="coding-session-receipt" data-decision={report.decision}>
+      <div>
+        <strong>{copy.receiptDecision}: {copy.receiptDecisionLabel(report.decision)}</strong>
+        <span>
+          {copy.receiptSummary(report.summary.verified, report.summary.pendingEvidence, report.summary.failed)}
+        </span>
+      </div>
+      {actionableItem ? (
+        <p>
+          <b>{actionableItem.title}</b>
+          <span>{copy.receiptStatus(actionableItem.receiptStatus)}</span>
+          <small>{copy.receiptNextAction}: {actionableItem.nextAction}</small>
+        </p>
+      ) : (
+        <p>
+          <span>{copy.receiptReady}</span>
         </p>
       )}
     </div>
@@ -284,4 +343,8 @@ function firstHeldSession(sessions: CodingAgentSession[]) {
 
 function firstBlockedDrillItem(items: CodingAgentSessionDrillItem[]) {
   return items.find((item) => item.action !== "would-assign") || null;
+}
+
+function firstActionableReceiptItem(items: CodingAgentSessionReceiptItem[]) {
+  return items.find((item) => item.receiptStatus !== "verified") || null;
 }

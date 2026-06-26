@@ -860,6 +860,63 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs/session-receipt-template`
+
+Builds a receipt template for real coding-agent completion evidence. This endpoint does not execute code, inspect files, run shell commands, call providers, browse, deploy, send external messages, or push Git. It prepares the fields a receiving coding agent must fill: changed files, command results with exit codes, evidence artifacts, and remaining risk notes.
+
+```json
+{
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1",
+    "decision": "ready",
+    "sessions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-session-receipt.v1",
+  "mode": "evidence-review",
+  "decision": "needs-evidence",
+  "summary": {
+    "total": 8,
+    "verified": 0,
+    "pendingEvidence": 8,
+    "failed": 0,
+    "held": 0
+  },
+  "honestyClaim": {
+    "level": "submitted-evidence-review",
+    "claim": "This receipt reviews submitted coding-agent evidence and does not execute the work itself."
+  }
+}
+```
+
+### `POST /v1/development/coding-briefs/session-receipt-review`
+
+Reviews a filled receipt against the original session bundle. A verified review means the submitted evidence is structurally complete; it still does not prove Naikaku independently reran commands or inspected files.
+
+```json
+{
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1"
+  },
+  "receipt": {
+    "schema": "naikaku.coding-agent-session-receipt.v1",
+    "items": []
+  }
+}
+```
+
+Response decisions are:
+
+- `verified`: every ready session includes changed files, passing command exit codes, evidence artifacts, and risk notes.
+- `needs-evidence`: no command failed, but required implementation evidence is still missing.
+- `blocked`: a command failed, a session is held, or production evidence is required before acceptance.
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

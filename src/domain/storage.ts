@@ -6,6 +6,7 @@ import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
+import { serializeCodingAgentSessionReceipt, serializeCodingAgentSessionReceiptMarkdown } from "./codingAgentSessionReceipt";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
@@ -28,6 +29,7 @@ import type {
   CodingAgentBriefs,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
+  CodingAgentSessionReceipt,
   DevelopmentBoard,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
@@ -434,6 +436,14 @@ export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessio
 
 export function serializeCodingAgentSessionDrillMarkdownExport(report: CodingAgentSessionDrillReport) {
   return serializeCodingAgentSessionDrillMarkdown(report);
+}
+
+export function serializeCodingAgentSessionReceiptExport(report: CodingAgentSessionReceipt) {
+  return serializeCodingAgentSessionReceipt(report);
+}
+
+export function serializeCodingAgentSessionReceiptMarkdownExport(report: CodingAgentSessionReceipt) {
+  return serializeCodingAgentSessionReceiptMarkdown(report);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {

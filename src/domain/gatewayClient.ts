@@ -9,6 +9,7 @@ import type {
   CodingAgentBriefs,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
+  CodingAgentSessionReceipt,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
@@ -610,6 +611,47 @@ export async function createCodingAgentSessionDrillViaGateway(
   }
 
   return (await response.json()) as CodingAgentSessionDrillReport;
+}
+
+export async function createCodingAgentSessionReceiptTemplateViaGateway(
+  bundle: CodingAgentSessionBundle,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/session-receipt-template`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ bundle }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent receipt template failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentSessionReceipt;
+}
+
+export async function reviewCodingAgentSessionReceiptViaGateway(
+  bundle: CodingAgentSessionBundle,
+  receipt: CodingAgentSessionReceipt,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/session-receipt-review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ bundle, receipt }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent receipt review failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentSessionReceipt;
 }
 
 export async function checkGatewayHealth() {

@@ -114,6 +114,8 @@ Coding Agent Session Bundles package only the reviewed handoff state. They separ
 
 Coding Agent Session Drills add one more rehearsal boundary before real programming work. A drill can say a session `would-assign`, `needs-operator-review`, or is `not-assigned`, but it cannot be used as proof that files changed, tests ran, providers answered, browser actions occurred, or Git operations completed. Real coding-agent execution must return changed files, command output with exit codes, remaining risks, and production-mode release verification before any implementation claim is accepted.
 
+Coding Agent Session Receipts are that return boundary. A receipt template tells real coding agents what evidence to submit, and receipt review checks the submitted shape for changed files, command exit codes, evidence artifacts, and risk notes. The review still does not inspect files or rerun commands; production handoff must attach authenticated runner transcripts and production-mode release verification before the system can claim real implementation completion.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
