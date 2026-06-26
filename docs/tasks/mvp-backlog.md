@@ -12,6 +12,7 @@ This backlog is written so different contributors can work in parallel.
 - Add import/export workspace JSON.
 - Add role-level team work package export.
 - Add gateway endpoint for team work packages.
+- Add role workspace scaffold script export for separate team startup.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
@@ -21,6 +22,7 @@ Acceptance:
 - UI remains readable on desktop and tablet.
 - No raw API keys appear in exported JSON.
 - Each enabled role can receive a standalone package with provider alias, executor boundary, tasks, and acceptance criteria.
+- Each enabled role can receive a starter workspace with `.env.example`, runner notes, tasks, and security notes.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 

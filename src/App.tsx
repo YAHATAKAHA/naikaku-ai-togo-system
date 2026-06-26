@@ -64,6 +64,7 @@ import {
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
+  serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
 } from "./domain/storage";
@@ -78,6 +79,7 @@ import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
+import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
@@ -85,6 +87,7 @@ import {
   createAutomationRunbookViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
+  createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
   getLedgerSummaryViaGateway,
@@ -112,6 +115,7 @@ import type {
   MemoryEntry,
   ProviderConfig,
   ProviderReadinessRow,
+  RoleWorkspaceScaffolds,
   RunHistoryItem,
   TeamHandoff
 } from "./domain/types";
@@ -153,6 +157,7 @@ export function App() {
   const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [automationRunbookLink, setAutomationRunbookLink] = useState<{ href: string; fileName: string } | null>(null);
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -221,6 +226,10 @@ export function App() {
   const teamHandoff = useMemo(
     () => buildTeamHandoff({ workspace, run }),
     [run, workspace]
+  );
+  const roleWorkspaceScaffolds = useMemo<RoleWorkspaceScaffolds>(
+    () => buildRoleWorkspaceScaffolds({ handoff: teamHandoff }),
+    [teamHandoff]
   );
   const memoryCandidates = useMemo(
     () => (run ? buildMemoryCandidates({ run }) : []),
@@ -297,6 +306,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (roleWorkspaceLink) {
+        URL.revokeObjectURL(roleWorkspaceLink.href);
+      }
+    };
+  }, [roleWorkspaceLink]);
+
+  useEffect(() => {
+    return () => {
       if (auditLink) {
         URL.revokeObjectURL(auditLink.href);
       }
@@ -360,6 +377,7 @@ export function App() {
     setDevelopmentBoardLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
+    setRoleWorkspaceLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -376,6 +394,7 @@ export function App() {
 
   useEffect(() => {
     setTeamHandoffLink(null);
+    setRoleWorkspaceLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -615,6 +634,7 @@ export function App() {
     setExecutorRun(null);
     setHandoffLink(null);
     setTeamHandoffLink(null);
+    setRoleWorkspaceLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -672,6 +692,7 @@ export function App() {
       setExecutorRun(null);
       setHandoffLink(null);
       setTeamHandoffLink(null);
+      setRoleWorkspaceLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -784,6 +805,61 @@ export function App() {
         runId: teamHandoff.runId,
         metadata: {
           packages: teamHandoff.packages.length,
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
+  }
+
+  function createRoleWorkspaceScaffoldDownload(scaffolds: RoleWorkspaceScaffolds) {
+    const blob = new Blob([serializeRoleWorkspaceScaffoldScriptExport(scaffolds)], { type: "text/x-shellscript" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = scaffolds.runId ? scaffolds.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-role-workspaces-${runSlug}.sh`;
+
+    if (roleWorkspaceLink) {
+      URL.revokeObjectURL(roleWorkspaceLink.href);
+    }
+
+    setRoleWorkspaceLink({ href: url, fileName });
+  }
+
+  async function exportRoleWorkspaceScaffolds() {
+    try {
+      const gatewayScaffolds = await createRoleWorkspaceScaffoldsViaGateway(workspace, run);
+      createRoleWorkspaceScaffoldDownload(gatewayScaffolds);
+      setRunState({
+        status: "gateway",
+        message: "Role workspace scaffold script exported through the local gateway."
+      });
+      recordAudit({
+        type: "role.workspaces.exported",
+        severity: "info",
+        summary: "Role workspace scaffold script exported through gateway.",
+        runId: gatewayScaffolds.runId,
+        metadata: {
+          roles: gatewayScaffolds.summary.roles,
+          files: gatewayScaffolds.summary.files,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createRoleWorkspaceScaffoldDownload(roleWorkspaceScaffolds);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway role workspaces unavailable; used local export. ${error.message}`
+          : "Gateway role workspaces unavailable; used local export."
+      });
+      recordAudit({
+        type: "role.workspaces.exported",
+        severity: "warning",
+        summary: "Role workspace scaffold script exported locally.",
+        runId: roleWorkspaceScaffolds.runId,
+        metadata: {
+          roles: roleWorkspaceScaffolds.summary.roles,
+          files: roleWorkspaceScaffolds.summary.files,
+          source: "local",
           gatewayError: error instanceof Error ? error.message : "unknown"
         }
       });
@@ -1431,7 +1507,9 @@ export function App() {
           <TeamHandoffPanel
             handoff={teamHandoff}
             exportLink={teamHandoffLink}
+            scaffoldLink={roleWorkspaceLink}
             onExport={exportTeamHandoff}
+            onExportScaffolds={exportRoleWorkspaceScaffolds}
           />
 
           <DevelopmentBoardPanel

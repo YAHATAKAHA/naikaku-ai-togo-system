@@ -1,16 +1,20 @@
-import { Download, PackageCheck, UsersRound } from "lucide-react";
+import { Download, FolderTree, PackageCheck, UsersRound } from "lucide-react";
 import type { TeamHandoff, TeamPackageStatus } from "../domain/types";
 
 interface TeamHandoffPanelProps {
   handoff: TeamHandoff;
   exportLink: { href: string; fileName: string } | null;
+  scaffoldLink: { href: string; fileName: string } | null;
   onExport: () => void;
+  onExportScaffolds: () => void;
 }
 
 export function TeamHandoffPanel({
   handoff,
   exportLink,
-  onExport
+  scaffoldLink,
+  onExport,
+  onExportScaffolds
 }: TeamHandoffPanelProps) {
   return (
     <section className="team-panel">
@@ -33,9 +37,17 @@ export function TeamHandoffPanel({
         <button type="button" onClick={onExport}>
           <PackageCheck size={15} /> Export packages
         </button>
+        <button type="button" onClick={onExportScaffolds}>
+          <FolderTree size={15} /> Export scaffolds
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> Download JSON
+          </a>
+        ) : null}
+        {scaffoldLink ? (
+          <a href={scaffoldLink.href} download={scaffoldLink.fileName}>
+            <Download size={15} /> Download script
           </a>
         ) : null}
       </div>

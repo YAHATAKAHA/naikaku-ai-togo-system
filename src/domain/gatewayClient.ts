@@ -12,6 +12,7 @@ import type {
   ExecutorRun,
   MemoryEntry,
   ProviderConfig,
+  RoleWorkspaceScaffolds,
   TeamHandoff
 } from "./types";
 
@@ -319,6 +320,27 @@ export async function createTeamHandoffViaGateway(
   }
 
   return (await response.json()) as TeamHandoff;
+}
+
+export async function createRoleWorkspaceScaffoldsViaGateway(
+  workspace: CabinetWorkspace,
+  run?: CabinetRun | null,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/team/workspaces`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ workspace, run }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway role workspace scaffolds failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as RoleWorkspaceScaffolds;
 }
 
 export async function createDevelopmentIssuesViaGateway(

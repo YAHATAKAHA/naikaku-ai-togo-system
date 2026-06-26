@@ -363,6 +363,50 @@ Response:
 }
 ```
 
+### `POST /v1/team/workspaces`
+
+Builds per-role workspace scaffolds from the same team handoff contract. The response is safe to export because it includes `.env.example` placeholders and provider aliases, not raw session secrets. The workbench can derive a reviewable shell script from this response to create local starter folders for each role team.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.role-workspace-scaffolds.v1",
+  "summary": {
+    "roles": 8,
+    "files": 40,
+    "envFiles": 8,
+    "runnerNotes": 8
+  },
+  "scaffolds": [
+    {
+      "rootPath": "team-workspaces/prime-minister",
+      "files": [
+        {
+          "path": "team-workspaces/prime-minister/.env.example",
+          "purpose": "env-example"
+        }
+      ]
+    }
+  ]
+}
+```
+
 ### `POST /v1/development/issues`
 
 Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication. The workbench can also derive a reviewable `gh issue create` shell script from this response, but the gateway still does not hold GitHub credentials or create issues directly.

@@ -34,6 +34,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Automation Runbook panel and export for runner commands, evidence requirements, verification gates, and rollback notes derived from executor-ready actions.
 - Server Ledger panel for refreshing gateway-side approval records and executor evidence bundles without exposing runner credentials to the browser.
 - Local audit trail with export for operator actions and automation milestones.
+- Role Workspace scaffold export for per-role README, `.env.example`, task list, runner notes, and security notes.
 - Development Board for role-owned implementation items, next-loop tasks, accepted memory, status tracking, and JSON export.
 - GitHub Issue Drafts panel and export for labeled, Markdown-ready issue payloads and a reviewable GitHub CLI script derived from Development Board items.
 - Memory Inbox review for candidate lessons, decisions, skill proposals, risks, and next-cycle follow-ups.
@@ -123,6 +124,8 @@ Parallel development starts from `TeamHandoff`. A handoff turns the current work
 
 The workbench can export these packages as JSON. The local gateway also exposes `/v1/team/packages` so backend services, separate teams, or future CI workflows can request the same structure without scraping frontend state.
 
+`RoleWorkspaceScaffolds` turns the same handoff into `naikaku.role-workspace-scaffolds.v1`. Each scaffold creates a per-role workspace folder with a README, `.env.example`, task checklist, runner notes, and security notes. The workbench exports this as a reviewable shell script that only creates local files; it does not install dependencies, call providers, or embed raw secrets.
+
 ## Development Board
 
 The Development Board converts planning output into work that separate teams can own. It merges:
@@ -164,6 +167,7 @@ Production persistence should store:
 - Executor evidence bundles for replay, audit, and runner compatibility checks.
 - Local gateway ledger records for approval decisions and executor evidence bundles.
 - Team handoff packages for parallel development.
+- Role workspace scaffolds for separate team startup.
 - Development board items and status changes for separate implementation teams.
 - GitHub issue drafts and reviewable CLI scripts for parallel implementation handoff.
 - Custom role definitions beyond the default cabinet.

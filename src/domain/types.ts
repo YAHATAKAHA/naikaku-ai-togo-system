@@ -385,6 +385,48 @@ export interface TeamHandoff {
   };
 }
 
+export type RoleWorkspaceFilePurpose = "readme" | "env-example" | "tasks" | "runner-notes" | "security";
+
+export interface RoleWorkspaceFile {
+  path: string;
+  purpose: RoleWorkspaceFilePurpose;
+  mode: "0644";
+  content: string;
+}
+
+export interface RoleWorkspaceScaffold {
+  id: string;
+  packageId: string;
+  roleId: string;
+  roleName: string;
+  ministry: string;
+  rootPath: string;
+  status: TeamPackageStatus;
+  providerAlias: string;
+  executorProfileId: ExecutorProfileId;
+  files: RoleWorkspaceFile[];
+  commands: string[];
+  generatedAt: string;
+}
+
+export interface RoleWorkspaceScaffolds {
+  schema: "naikaku.role-workspace-scaffolds.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  scaffolds: RoleWorkspaceScaffold[];
+  summary: {
+    roles: number;
+    files: number;
+    ready: number;
+    needsApproval: number;
+    blocked: number;
+    templates: number;
+    envFiles: number;
+    runnerNotes: number;
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
@@ -475,6 +517,7 @@ export type AuditEventType =
   | "executor.run.dry.completed"
   | "executor.evidence.exported"
   | "team.handoff.exported"
+  | "role.workspaces.exported"
   | "memory.entry.accepted"
   | "memory.entry.rejected"
   | "memory.log.exported"

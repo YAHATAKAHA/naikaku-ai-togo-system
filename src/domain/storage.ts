@@ -7,6 +7,7 @@ import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } fr
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
+import { serializeRoleWorkspaceScaffoldScript, serializeRoleWorkspaceScaffolds } from "./roleWorkspaceScaffolds";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
   AutomationApprovalRecord,
@@ -22,6 +23,7 @@ import type {
   MemoryEntry,
   ProviderReadinessMatrix,
   ProviderReadinessRow,
+  RoleWorkspaceScaffolds,
   RunHistoryItem
 } from "./types";
 
@@ -388,6 +390,14 @@ export function serializeDevelopmentIssueDraftsExport(drafts: DevelopmentIssueDr
 
 export function serializeDevelopmentIssueGhScriptExport(drafts: DevelopmentIssueDrafts) {
   return serializeDevelopmentIssueGhScript(drafts);
+}
+
+export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {
+  return serializeRoleWorkspaceScaffolds(scaffolds);
+}
+
+export function serializeRoleWorkspaceScaffoldScriptExport(scaffolds: RoleWorkspaceScaffolds) {
+  return serializeRoleWorkspaceScaffoldScript(scaffolds);
 }
 
 export function loadProviderReadinessRows(): ProviderReadinessRow[] {
