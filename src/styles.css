@@ -186,6 +186,7 @@ a.secondary-button {
 .footer-panel,
 .automation-panel,
 .runbook-panel,
+.readiness-panel,
 .provider-panel,
 .capability-panel,
 .ledger-panel,
@@ -1368,6 +1369,200 @@ meter {
 
 .ledger-row p {
   margin: 0;
+}
+
+.readiness-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.readiness-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.readiness-summary span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.readiness-summary span[data-status="ship-ready"],
+.readiness-summary span[data-status="pass"] {
+  color: var(--green);
+}
+
+.readiness-summary span[data-status="needs-review"],
+.readiness-summary span[data-status="warn"] {
+  color: var(--amber);
+}
+
+.readiness-summary span[data-status="blocked"],
+.readiness-summary span[data-status="block"] {
+  color: var(--red);
+}
+
+.readiness-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.readiness-export-row span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.readiness-export-row button,
+.readiness-export-row a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.readiness-export-row a {
+  color: var(--green);
+}
+
+.readiness-gate-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.readiness-gate-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+  min-width: 0;
+}
+
+.readiness-gate-card[data-status="pass"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.readiness-gate-card[data-status="warn"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.readiness-gate-card[data-status="block"] {
+  border-color: #f2b8b2;
+  background: #fff6f5;
+}
+
+.readiness-gate-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.readiness-gate-heading strong,
+.readiness-gate-heading span,
+.readiness-gate-heading small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.readiness-gate-heading strong {
+  font-size: 13px;
+}
+
+.readiness-gate-heading span,
+.readiness-gate-card p,
+.readiness-gate-card small,
+.readiness-evidence span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.readiness-gate-heading small {
+  flex: 0 0 auto;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.readiness-gate-card[data-status="pass"] .readiness-gate-heading small {
+  color: var(--green);
+  background: #e5f6ef;
+}
+
+.readiness-gate-card[data-status="warn"] .readiness-gate-heading small {
+  color: var(--amber);
+  background: #fff0d0;
+}
+
+.readiness-gate-card[data-status="block"] .readiness-gate-heading small {
+  color: var(--red);
+  background: #ffe3df;
+}
+
+.readiness-gate-card p {
+  margin: 0;
+}
+
+.readiness-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.readiness-evidence span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 850;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .provider-panel {
@@ -3118,6 +3313,7 @@ meter {
 
   .stage-track,
   .artifact-grid,
+  .readiness-gate-list,
   .provider-row-list,
   .runbook-step-list,
   .capability-card-list,
@@ -3130,6 +3326,7 @@ meter {
   .executor-list,
   .score-grid,
   .metric-strip,
+  .readiness-summary,
   .provider-summary,
   .runbook-summary,
   .capability-summary,
@@ -3157,6 +3354,7 @@ meter {
   .handoff-strip,
   .runbook-export-row,
   .ledger-refresh-row,
+  .readiness-export-row,
   .provider-export-row,
   .team-export-row,
   .development-export-row,
@@ -3164,6 +3362,7 @@ meter {
   .memory-export-row,
   .executor-result-heading,
   .runbook-step-heading,
+  .readiness-gate-heading,
   .issues-draft-heading,
   .ledger-row div,
   .queue-copy div {

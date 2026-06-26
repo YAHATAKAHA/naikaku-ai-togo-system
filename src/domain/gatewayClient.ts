@@ -12,6 +12,8 @@ import type {
   ExecutorRun,
   MemoryEntry,
   ProviderConfig,
+  ProviderReadinessMatrix,
+  ProductReadinessReport,
   RoleWorkspaceScaffolds,
   TeamHandoff
 } from "./types";
@@ -341,6 +343,40 @@ export async function createRoleWorkspaceScaffoldsViaGateway(
   }
 
   return (await response.json()) as RoleWorkspaceScaffolds;
+}
+
+export async function createProductReadinessViaGateway(
+  workspace: CabinetWorkspace,
+  providerReadiness: ProviderReadinessMatrix,
+  run?: CabinetRun | null,
+  approvalRecords: AutomationApprovalRecord[] = [],
+  memoryEntries: MemoryEntry[] = [],
+  savedItems: DevelopmentWorkItem[] = [],
+  auditEvents: unknown[] = [],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/product/readiness`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      workspace,
+      providerReadiness,
+      run,
+      approvalRecords,
+      memoryEntries,
+      savedItems,
+      auditEvents
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway product readiness failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ProductReadinessReport;
 }
 
 export async function createDevelopmentIssuesViaGateway(

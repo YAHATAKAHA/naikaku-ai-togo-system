@@ -407,6 +407,55 @@ Response:
 }
 ```
 
+### `POST /v1/product/readiness`
+
+Builds the product delivery gate from the current workspace and optional run state. This endpoint does not execute providers or runners. It combines provider readiness, sandbox capability coverage, automation runbook status, team handoffs, role workspace scaffolds, development board items, issue drafts, audit events, approvals, and memory review into `naikaku.product-readiness.v1`.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "providerReadiness": {
+    "schema": "naikaku.provider-readiness.v1",
+    "rows": []
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  },
+  "approvalRecords": [],
+  "memoryEntries": [],
+  "savedItems": [],
+  "auditEvents": []
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.product-readiness.v1",
+  "decision": "needs-review",
+  "score": 72,
+  "summary": {
+    "passed": 8,
+    "warnings": 3,
+    "blockers": 1
+  },
+  "gates": [
+    {
+      "category": "automation",
+      "status": "warn",
+      "label": "Automation runbook"
+    }
+  ]
+}
+```
+
 ### `POST /v1/development/issues`
 
 Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication. The workbench can also derive a reviewable `gh issue create` shell script from this response, but the gateway still does not hold GitHub credentials or create issues directly.

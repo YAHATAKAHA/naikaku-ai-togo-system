@@ -27,6 +27,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Per-role executor and permission settings.
 - Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.
+- Product Readiness gate with exportable blocker/warning evidence across role APIs, automation, sandbox policy, parallel development, audit, and memory.
 - Sandbox policy editing.
 - Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
@@ -58,6 +59,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - `CabinetScore`
 - `TeamHandoff`
 - `TeamWorkPackage`
+- `ProductReadinessReport`
 - `DevelopmentBoard`
 - `DevelopmentWorkItem`
 - `AuditEvent`
@@ -126,6 +128,12 @@ The workbench can export these packages as JSON. The local gateway also exposes 
 
 `RoleWorkspaceScaffolds` turns the same handoff into `naikaku.role-workspace-scaffolds.v1`. Each scaffold creates a per-role workspace folder with a README, `.env.example`, task checklist, runner notes, and security notes. The workbench exports this as a reviewable shell script that only creates local files; it does not install dependencies, call providers, or embed raw secrets.
 
+## Product Readiness
+
+`ProductReadinessReport` is the workbench's delivery gate. It combines Provider Readiness, Sandbox Capability, Automation Runbook, Team Handoff, Role Workspace Scaffolds, Development Board, GitHub Issue Drafts, audit events, approvals, and reviewed memory into `naikaku.product-readiness.v1`.
+
+The report gives a score, decision, and gate list. Gates are grouped into role API, automation, sandbox, parallel development, evidence, and memory. Each gate includes status, evidence, and next action so an operator can see whether the current state is ship-ready, needs review, or blocked. The local gateway exposes the same report through `/v1/product/readiness`.
+
 ## Development Board
 
 The Development Board converts planning output into work that separate teams can own. It merges:
@@ -166,6 +174,7 @@ Production persistence should store:
 - Automation runbooks for runner implementation, evidence gates, and rollback review.
 - Executor evidence bundles for replay, audit, and runner compatibility checks.
 - Local gateway ledger records for approval decisions and executor evidence bundles.
+- Product readiness reports for release review and handoff.
 - Team handoff packages for parallel development.
 - Role workspace scaffolds for separate team startup.
 - Development board items and status changes for separate implementation teams.

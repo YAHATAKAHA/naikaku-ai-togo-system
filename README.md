@@ -15,6 +15,7 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 - Sandbox Capability matrix that maps each executor profile to representative actions, approval gates, runner contracts, and required evidence before real computer-use runners are attached.
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
 - Browser-to-gateway run path with local fallback when the gateway is offline.
+- Product Readiness gate that scores role APIs, automation, sandbox safety, parallel development artifacts, evidence, and memory review before handoff.
 - Automation queue proposals, persisted approval records, executor handoff export, and a safe executor dry-run before any real runner consumes work.
 - Automation Runbook export that turns executor-ready actions into runner commands, evidence gates, verification gates, and rollback notes for parallel runner teams.
 - Executor evidence bundles with per-step simulated transcripts, screenshot/artifact placeholders, evidence hashes, replay flags, and JSON export for future runner audit.
@@ -52,7 +53,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, development issue draft, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, development issue draft, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, set:
 

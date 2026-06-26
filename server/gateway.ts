@@ -5,11 +5,14 @@ import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
+import { buildProductReadinessReport } from "../src/domain/productReadiness";
+import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
 import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type {
   AutomationApprovalRecord,
+  AuditEvent,
   CabinetRun,
   CabinetRunMode,
   CabinetRole,
@@ -20,6 +23,7 @@ import type {
   ExecutorHandoff,
   MemoryEntry,
   ProviderConfig,
+  ProviderReadinessMatrix,
   SandboxPolicy
 } from "../src/domain/types";
 import {
@@ -64,6 +68,7 @@ const server = createServer(async (request, response) => {
           "ledger-store",
           "team-packages",
           "role-workspace-scaffolds",
+          "product-readiness",
           "development-issues",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -315,6 +320,66 @@ const server = createServer(async (request, response) => {
       });
       const scaffolds = buildRoleWorkspaceScaffolds({ handoff: teamHandoff });
       sendJson(response, 200, scaffolds);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/product/readiness") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+        providerReadiness?: ProviderReadinessMatrix;
+        approvalRecords?: AutomationApprovalRecord[];
+        memoryEntries?: MemoryEntry[];
+        savedItems?: DevelopmentWorkItem[];
+        auditEvents?: AuditEvent[];
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const run = Array.isArray(body.run?.artifacts) ? body.run : undefined;
+      const providerReadiness = body.providerReadiness?.schema === "naikaku.provider-readiness.v1"
+        ? body.providerReadiness
+        : buildProviderReadinessMatrix({ roles: workspace.roles });
+      const sandboxCapabilities = buildSandboxCapabilityRegistry({
+        profiles: executorProfiles,
+        roles: workspace.roles,
+        sandboxPolicy: workspace.sandboxPolicy
+      });
+      const automationRunbook = run
+        ? buildAutomationRunbook({
+          run,
+          approvalRecords: body.approvalRecords || []
+        })
+        : undefined;
+      const handoff = buildTeamHandoff({
+        workspace,
+        run
+      });
+      const roleWorkspaces = buildRoleWorkspaceScaffolds({ handoff });
+      const developmentBoard = buildDevelopmentBoard({
+        handoff,
+        run,
+        memoryEntries: body.memoryEntries || [],
+        savedItems: body.savedItems || []
+      });
+      const issueDrafts = buildDevelopmentIssueDrafts({ board: developmentBoard });
+      const report = buildProductReadinessReport({
+        workspace,
+        run,
+        providerReadiness,
+        sandboxCapabilities,
+        automationRunbook,
+        teamHandoff: handoff,
+        roleWorkspaces,
+        developmentBoard,
+        issueDrafts,
+        approvalRecords: body.approvalRecords || [],
+        memoryEntries: body.memoryEntries || [],
+        auditEvents: body.auditEvents || []
+      });
+      sendJson(response, 200, report);
       return;
     }
 

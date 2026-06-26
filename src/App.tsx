@@ -26,6 +26,7 @@ import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
+import { ProductReadinessPanel } from "./components/ProductReadinessPanel";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
 import { RunLog } from "./components/RunLog";
@@ -64,6 +65,7 @@ import {
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
+  serializeProductReadinessExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
@@ -78,6 +80,7 @@ import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/execut
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
+import { buildProductReadinessReport } from "./domain/productReadiness";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
 import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
@@ -87,6 +90,7 @@ import {
   createAutomationRunbookViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
+  createProductReadinessViaGateway,
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
@@ -115,6 +119,7 @@ import type {
   MemoryEntry,
   ProviderConfig,
   ProviderReadinessRow,
+  ProductReadinessReport,
   RoleWorkspaceScaffolds,
   RunHistoryItem,
   TeamHandoff
@@ -158,6 +163,7 @@ export function App() {
   const [automationRunbookLink, setAutomationRunbookLink] = useState<{ href: string; fileName: string } | null>(null);
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [productReadinessLink, setProductReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -271,6 +277,37 @@ export function App() {
       }),
     [developmentBoard]
   );
+  const productReadinessReport = useMemo<ProductReadinessReport>(
+    () =>
+      buildProductReadinessReport({
+        workspace,
+        run,
+        providerReadiness: providerReadinessMatrix,
+        sandboxCapabilities: sandboxCapabilityRegistry,
+        automationRunbook,
+        teamHandoff,
+        roleWorkspaces: roleWorkspaceScaffolds,
+        developmentBoard,
+        issueDrafts: developmentIssueDrafts,
+        approvalRecords,
+        auditEvents,
+        memoryEntries
+      }),
+    [
+      approvalRecords,
+      auditEvents,
+      automationRunbook,
+      developmentBoard,
+      developmentIssueDrafts,
+      memoryEntries,
+      providerReadinessMatrix,
+      roleWorkspaceScaffolds,
+      run,
+      sandboxCapabilityRegistry,
+      teamHandoff,
+      workspace
+    ]
+  );
 
   useEffect(() => {
     return () => {
@@ -311,6 +348,14 @@ export function App() {
       }
     };
   }, [roleWorkspaceLink]);
+
+  useEffect(() => {
+    return () => {
+      if (productReadinessLink) {
+        URL.revokeObjectURL(productReadinessLink.href);
+      }
+    };
+  }, [productReadinessLink]);
 
   useEffect(() => {
     return () => {
@@ -378,6 +423,7 @@ export function App() {
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
+    setProductReadinessLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -395,6 +441,7 @@ export function App() {
   useEffect(() => {
     setTeamHandoffLink(null);
     setRoleWorkspaceLink(null);
+    setProductReadinessLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -449,6 +496,13 @@ export function App() {
   function recordAudit(input: AuditEventInput) {
     const event = createAuditEvent(input);
     setAuditEvents((current) => appendAuditEvent(event, current));
+  }
+
+  function clearProductReadinessDownload() {
+    if (productReadinessLink) {
+      URL.revokeObjectURL(productReadinessLink.href);
+      setProductReadinessLink(null);
+    }
   }
 
   async function refreshServerLedger() {
@@ -635,6 +689,7 @@ export function App() {
     setHandoffLink(null);
     setTeamHandoffLink(null);
     setRoleWorkspaceLink(null);
+    setProductReadinessLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -693,6 +748,7 @@ export function App() {
       setHandoffLink(null);
       setTeamHandoffLink(null);
       setRoleWorkspaceLink(null);
+      setProductReadinessLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -742,6 +798,7 @@ export function App() {
     setAutomationRunbookLink(null);
     setExecutorRun(null);
     setExecutorEvidenceLink(null);
+    clearProductReadinessDownload();
     recordAudit({
       type: "automation.decision.recorded",
       severity: decision === "approved" ? "success" : "warning",
@@ -866,6 +923,71 @@ export function App() {
     }
   }
 
+  function createProductReadinessDownload(report: ProductReadinessReport) {
+    const blob = new Blob([serializeProductReadinessExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-product-readiness-${runSlug}.json`;
+
+    if (productReadinessLink) {
+      URL.revokeObjectURL(productReadinessLink.href);
+    }
+
+    setProductReadinessLink({ href: url, fileName });
+  }
+
+  async function exportProductReadiness() {
+    try {
+      const gatewayReport = await createProductReadinessViaGateway(
+        workspace,
+        providerReadinessMatrix,
+        run,
+        approvalRecords,
+        memoryEntries,
+        developmentItems,
+        auditEvents
+      );
+      createProductReadinessDownload(gatewayReport);
+      setRunState({
+        status: "gateway",
+        message: "Product readiness report exported through the local gateway."
+      });
+      recordAudit({
+        type: "product.readiness.exported",
+        severity: gatewayReport.decision === "blocked" ? "warning" : "info",
+        summary: `Product readiness report exported: ${gatewayReport.decision}.`,
+        runId: gatewayReport.runId,
+        metadata: {
+          score: gatewayReport.score,
+          blockers: gatewayReport.summary.blockers,
+          warnings: gatewayReport.summary.warnings,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createProductReadinessDownload(productReadinessReport);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway product readiness unavailable; used local export. ${error.message}`
+          : "Gateway product readiness unavailable; used local export."
+      });
+      recordAudit({
+        type: "product.readiness.exported",
+        severity: productReadinessReport.decision === "blocked" ? "warning" : "info",
+        summary: `Product readiness report exported locally: ${productReadinessReport.decision}.`,
+        runId: productReadinessReport.runId,
+        metadata: {
+          score: productReadinessReport.score,
+          blockers: productReadinessReport.summary.blockers,
+          warnings: productReadinessReport.summary.warnings,
+          source: "local",
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
+  }
+
   function exportExecutorHandoff() {
     if (!run) return;
 
@@ -958,6 +1080,7 @@ export function App() {
     try {
       setExecutorRun(await runExecutorHandoffViaGateway(handoff));
       setExecutorEvidenceLink(null);
+      clearProductReadinessDownload();
       setRunState({
         status: "gateway",
         message: "Executor dry-run completed through the local gateway."
@@ -976,6 +1099,7 @@ export function App() {
       const localExecutorRun = runExecutorHandoff({ handoff });
       setExecutorRun(localExecutorRun);
       setExecutorEvidenceLink(null);
+      clearProductReadinessDownload();
       setRunState({
         status: "fallback",
         message: error instanceof Error
@@ -1080,6 +1204,7 @@ export function App() {
       URL.revokeObjectURL(developmentIssuesScriptLink.href);
       setDevelopmentIssuesScriptLink(null);
     }
+    clearProductReadinessDownload();
     recordAudit({
       type: decision === "accepted" ? "memory.entry.accepted" : "memory.entry.rejected",
       severity: decision === "accepted" ? "success" : "warning",
@@ -1139,6 +1264,7 @@ export function App() {
       URL.revokeObjectURL(developmentIssuesScriptLink.href);
       setDevelopmentIssuesScriptLink(null);
     }
+    clearProductReadinessDownload();
     recordAudit({
       type: "development.item.status.changed",
       severity: status === "blocked" ? "warning" : status === "done" ? "success" : "info",
@@ -1326,6 +1452,7 @@ export function App() {
       URL.revokeObjectURL(providerReadinessLink.href);
       setProviderReadinessLink(null);
     }
+    clearProductReadinessDownload();
     recordAudit({
       type: "provider.readiness.checked",
       severity: row.status === "ready" ? "success" : row.status === "failed" ? "error" : "warning",
@@ -1371,6 +1498,7 @@ export function App() {
       URL.revokeObjectURL(auditLink.href);
       setAuditLink(null);
     }
+    clearProductReadinessDownload();
   }
 
   return (
@@ -1459,6 +1587,12 @@ export function App() {
             runStatus={runState}
             runMode={runMode}
             onRunModeChange={setRunMode}
+          />
+
+          <ProductReadinessPanel
+            report={productReadinessReport}
+            exportLink={productReadinessLink}
+            onExport={exportProductReadiness}
           />
 
           <ProviderReadinessPanel

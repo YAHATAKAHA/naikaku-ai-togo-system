@@ -427,6 +427,45 @@ export interface RoleWorkspaceScaffolds {
   };
 }
 
+export type ProductReadinessCategory =
+  | "role-api"
+  | "automation"
+  | "sandbox"
+  | "parallel-development"
+  | "evidence"
+  | "memory";
+
+export type ProductReadinessStatus = "pass" | "warn" | "block";
+export type ProductReadinessDecision = "ship-ready" | "needs-review" | "blocked";
+
+export interface ProductReadinessGate {
+  id: string;
+  category: ProductReadinessCategory;
+  label: string;
+  status: ProductReadinessStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface ProductReadinessReport {
+  schema: "naikaku.product-readiness.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  decision: ProductReadinessDecision;
+  score: number;
+  gates: ProductReadinessGate[];
+  summary: {
+    total: number;
+    passed: number;
+    warnings: number;
+    blockers: number;
+    categories: ProductReadinessCategory[];
+    categoriesReady: number;
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
@@ -524,6 +563,7 @@ export type AuditEventType =
   | "development.item.status.changed"
   | "development.board.exported"
   | "development.issues.exported"
+  | "product.readiness.exported"
   | "provider.readiness.checked"
   | "provider.readiness.exported";
 
