@@ -89,6 +89,7 @@ npm run rehearsal # run local release rehearsal and write output/rehearsal
 npm run rehearsal:strict # fail when warnings remain
 npm run rehearsal:drill # generate reviewed drill fixtures, then run strict rehearsal against them
 npm run coding-agent:drill # self-simulate valid and mismatched coding-agent receipt evidence
+npm run verification:manifest # aggregate receipt drill and release verification evidence
 npm run release:verify # run coding-agent and release drills, then verify dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
 npm run build     # type-check and build
@@ -102,7 +103,9 @@ npm run preview   # preview the production build
 
 `npm run coding-agent:drill` writes a reproducible coding-agent receipt drill under `output/coding-agent-receipt-drill`. It builds the default Development Board, coding-agent briefs, brief review, session bundle, a valid receipt, and a mismatched receipt. The valid path must produce verified receipt review, accepted implementation evidence, verified artifact audit, and applied Development Board reconciliation. The mismatched path must stay `needs-evidence` / `needs-artifacts` with zero board items applied. The drill is local proof that the anti-fake evidence gate works; it is not production runner evidence.
 
-`npm run release:verify` first runs the coding-agent receipt drill, then the release rehearsal drill, then turns the latest drill rehearsal into `naikaku.release-verification.v1`. It fails if coding-agent evidence gates accept mismatched evidence, if warnings, blockers, schema drift, or secret leakage are present, or if the release verification cannot pass for dry-run scope. The workbench panel and local gateway expose the same release verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
+`npm run verification:manifest` reads the latest coding-agent receipt drill summary and release verification report, then writes `naikaku.verification-manifest.v1` to `output/verification/verification-manifest-latest.json`. The manifest fails if the valid coding-agent receipt does not apply all board items, if the mismatched receipt updates any board item, if release verification fails, or if the dry-run versus production boundary is unclear.
+
+`npm run release:verify` first runs the coding-agent receipt drill, then the release rehearsal drill, then turns the latest drill rehearsal into `naikaku.release-verification.v1`, and finally writes the verification manifest. It fails if coding-agent evidence gates accept mismatched evidence, if warnings, blockers, schema drift, or secret leakage are present, if the release verification cannot pass for dry-run scope, or if the manifest cannot prove both local gates. The workbench panel and local gateway expose the same release verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
 
 ## Repository Map
 
