@@ -771,6 +771,7 @@ export interface CodingAgentDispatchSimulationSummary {
     plannedCommands: number;
     expectedEvidenceArtifacts: number;
     receiptDraftItems: number;
+    receiptDraftFilesWritten: number;
     unsafePaths: number;
   };
   productionHeld: {
@@ -780,6 +781,7 @@ export interface CodingAgentDispatchSimulationSummary {
     blocked: number;
     promptFiles: number;
     receiptDraftItems: number;
+    receiptDraftFilesWritten: number;
   };
   checks: Record<string, boolean>;
   honestyClaim: {

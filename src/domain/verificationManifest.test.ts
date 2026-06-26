@@ -135,6 +135,54 @@ describe("verification manifest", () => {
     expect(simulationCheck?.summary).toContain("did not preserve");
   });
 
+  it("invalidates the manifest when dispatch simulation receipt draft files are missing", () => {
+    const codingAgentDispatchSimulation = codingAgentDispatchSimulationFixture();
+    codingAgentDispatchSimulation.simulation.receiptDraftFilesWritten = 7;
+    codingAgentDispatchSimulation.checks.receiptDraftFilesWritten = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const simulationCheck = manifest.checks.find((check) => check.id === "coding-agent-dispatch-simulation");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(simulationCheck?.status).toBe("fail");
+    expect(simulationCheck?.evidence).toContain("Receipt draft files written: 7");
+  });
+
+  it("invalidates the manifest when production-held dispatch simulation writes receipt draft files", () => {
+    const codingAgentDispatchSimulation = codingAgentDispatchSimulationFixture();
+    codingAgentDispatchSimulation.productionHeld.receiptDraftFilesWritten = 1;
+    codingAgentDispatchSimulation.checks.productionHeldNoReceiptDraftFiles = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const simulationCheck = manifest.checks.find((check) => check.id === "coding-agent-dispatch-simulation");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(simulationCheck?.status).toBe("fail");
+    expect(simulationCheck?.evidence).toContain("Production-held receipt draft files: 1");
+  });
+
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
     const codingAgentReport = codingAgentReportFixture();
     codingAgentReport.outOfScope.boardItemsApplied = 1;
@@ -396,6 +444,7 @@ function codingAgentDispatchSimulationFixture(): CodingAgentDispatchSimulationSu
       plannedCommands: 16,
       expectedEvidenceArtifacts: 24,
       receiptDraftItems: 8,
+      receiptDraftFilesWritten: 8,
       unsafePaths: 0
     },
     productionHeld: {
@@ -404,18 +453,22 @@ function codingAgentDispatchSimulationFixture(): CodingAgentDispatchSimulationSu
       held: 8,
       blocked: 0,
       promptFiles: 0,
-      receiptDraftItems: 0
+      receiptDraftItems: 0,
+      receiptDraftFilesWritten: 0
     },
     checks: {
       validDispatchable: true,
       validSimulationReady: true,
       receiptDraftsCreated: true,
+      receiptDraftFilesWritten: true,
+      receiptDraftsPending: true,
       plannedCommandsCovered: true,
       evidenceArtifactsCovered: true,
       pathsSafe: true,
       noExecutionClaim: true,
       productionHeldNotReady: true,
-      productionHeldNoReceiptDrafts: true
+      productionHeldNoReceiptDrafts: true,
+      productionHeldNoReceiptDraftFiles: true
     },
     honestyClaim: {
       level: "local-drill",

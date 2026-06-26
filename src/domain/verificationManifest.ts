@@ -121,6 +121,7 @@ function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary
     && report.simulation.readyForAgent === report.source.readyItems
     && report.simulation.blocked === 0
     && report.simulation.receiptDraftItems === report.source.readyItems
+    && report.simulation.receiptDraftFilesWritten === report.source.readyItems
     && report.simulation.plannedCommands > 0
     && report.simulation.expectedEvidenceArtifacts > 0
     && report.simulation.unsafePaths === 0
@@ -128,6 +129,7 @@ function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary
     && report.productionHeld.readyForAgent === 0
     && report.productionHeld.promptFiles === 0
     && report.productionHeld.receiptDraftItems === 0
+    && report.productionHeld.receiptDraftFilesWritten === 0
     && checksPassed;
 
   return {
@@ -143,13 +145,15 @@ function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary
       `Simulation decision: ${report.simulation.decision}`,
       `Ready for real agent: ${report.simulation.readyForAgent}/${report.source.readyItems}`,
       `Receipt draft items: ${report.simulation.receiptDraftItems}`,
+      `Receipt draft files written: ${report.simulation.receiptDraftFilesWritten}`,
       `Planned commands: ${report.simulation.plannedCommands}`,
       `Expected evidence artifacts: ${report.simulation.expectedEvidenceArtifacts}`,
       `Unsafe paths: ${report.simulation.unsafePaths}`,
       `Production-held decision: ${report.productionHeld.decision}`,
       `Production-held ready: ${report.productionHeld.readyForAgent}`,
       `Production-held prompt files: ${report.productionHeld.promptFiles}`,
-      `Production-held receipt drafts: ${report.productionHeld.receiptDraftItems}`
+      `Production-held receipt drafts: ${report.productionHeld.receiptDraftItems}`,
+      `Production-held receipt draft files: ${report.productionHeld.receiptDraftFilesWritten}`
     ],
     nextAction: ok
       ? "Keep the dispatch simulation summary attached before handing prompts to real coding agents."

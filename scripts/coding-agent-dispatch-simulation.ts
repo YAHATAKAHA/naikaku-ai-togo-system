@@ -31,6 +31,7 @@ interface SimulationOptions {
 interface SimulationCase {
   simulation: CodingAgentDispatchSimulation;
   manifest: ReturnType<typeof buildCodingAgentDispatchManifest>;
+  receiptDraftFilesWritten: number;
 }
 
 async function main() {
@@ -82,14 +83,15 @@ async function main() {
       promptFiles: valid.manifest.summary.promptFiles,
       receiptTemplates: valid.manifest.summary.receiptTemplates
     },
-    simulation: simulationSummary(valid.simulation),
+    simulation: simulationSummary(valid),
     productionHeld: {
       decision: productionHeld.simulation.decision,
       readyForAgent: productionHeld.simulation.summary.readyForAgent,
       held: productionHeld.simulation.summary.held,
       blocked: productionHeld.simulation.summary.blocked,
       promptFiles: productionHeld.manifest.summary.promptFiles,
-      receiptDraftItems: productionHeld.simulation.summary.receiptDraftItems
+      receiptDraftItems: productionHeld.simulation.summary.receiptDraftItems,
+      receiptDraftFilesWritten: productionHeld.receiptDraftFilesWritten
     },
     checks: checksFor(valid, productionHeld),
     honestyClaim: {
@@ -199,14 +201,76 @@ async function runCase({
     serializeCodingAgentDispatchSimulationMarkdown(simulation),
     "utf8"
   );
+  const receiptDraftFilesWritten = await writeReceiptDraftFiles({
+    caseDir,
+    simulation
+  });
 
   return {
     simulation,
-    manifest
+    manifest,
+    receiptDraftFilesWritten
   };
 }
 
-function simulationSummary(simulation: CodingAgentDispatchSimulation): CodingAgentDispatchSimulationSummary["simulation"] {
+async function writeReceiptDraftFiles({
+  caseDir,
+  simulation
+}: {
+  caseDir: string;
+  simulation: CodingAgentDispatchSimulation;
+}) {
+  const draftItems = simulation.items.filter((item) => item.receiptDraft);
+  if (draftItems.length === 0) {
+    return 0;
+  }
+
+  const draftDir = path.join(caseDir, "receipt-drafts");
+  await mkdir(draftDir, { recursive: true });
+
+  await Promise.all(draftItems.map((item, index) =>
+    writeJson(
+      path.join(draftDir, `${String(index + 1).padStart(2, "0")}-${safeFileStem(item.sessionId)}.json`),
+      {
+        schema: "naikaku.coding-agent-dispatch-simulation-receipt-draft.v1",
+        generatedAt: simulation.generatedAt,
+        mode: simulation.mode,
+        status: "pending-real-execution",
+        sessionId: item.sessionId,
+        sourceItemId: item.sourceItemId,
+        promptPath: item.promptPath,
+        receiptTemplatePath: item.receiptTemplatePath,
+        evidenceArtifactPrefix: item.evidenceArtifactPrefix,
+        plannedSteps: item.plannedSteps,
+        receiptDraft: item.receiptDraft,
+        honestyClaim: {
+          level: simulation.honestyClaim.level,
+          claim: "This file is a pending local simulation draft for a real coding-agent receipt.",
+          limitations: [
+            "No implementation work, shell command, browser action, commit, push, deploy, or production call has been executed for this draft.",
+            "All command results must remain pending until replaced by real transcripts and exit codes from the governed workspace."
+          ],
+          productionRequirements: [
+            "Replace this draft with the completed receipt after real coding-agent execution.",
+            "Attach changed files, command transcripts, evidence artifacts, and remaining risks before receipt review."
+          ]
+        }
+      }
+    )
+  ));
+
+  return draftItems.length;
+}
+
+function safeFileStem(value: string) {
+  const stem = value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  return stem || "session";
+}
+
+function simulationSummary(
+  simulationCase: SimulationCase
+): CodingAgentDispatchSimulationSummary["simulation"] {
+  const { simulation } = simulationCase;
   return {
     decision: simulation.decision,
     readyForAgent: simulation.summary.readyForAgent,
@@ -215,6 +279,7 @@ function simulationSummary(simulation: CodingAgentDispatchSimulation): CodingAge
     plannedCommands: simulation.summary.plannedCommands,
     expectedEvidenceArtifacts: simulation.summary.expectedEvidenceArtifacts,
     receiptDraftItems: simulation.summary.receiptDraftItems,
+    receiptDraftFilesWritten: simulationCase.receiptDraftFilesWritten,
     unsafePaths: simulation.summary.unsafePaths
   };
 }
@@ -228,6 +293,19 @@ function checksFor(valid: SimulationCase, productionHeld: SimulationCase) {
     receiptDraftsCreated:
       valid.simulation.summary.receiptDraftItems === valid.manifest.summary.ready &&
       valid.simulation.items.every((item) => Boolean(item.receiptDraft)),
+    receiptDraftFilesWritten:
+      valid.receiptDraftFilesWritten === valid.simulation.summary.receiptDraftItems,
+    receiptDraftsPending:
+      valid.simulation.items.every((item) =>
+        !item.receiptDraft ||
+        (
+          item.receiptDraft.commandResults.every((result) =>
+            result.exitCode === null &&
+            result.outputSummary.includes("did not run this command")
+          ) &&
+          item.receiptDraft.changedFiles.length === 0
+        )
+      ),
     plannedCommandsCovered:
       valid.simulation.summary.plannedCommands === valid.manifest.items.reduce(
         (total, item) => total + item.verificationCommands.length,
@@ -246,7 +324,8 @@ function checksFor(valid: SimulationCase, productionHeld: SimulationCase) {
       productionHeld.manifest.decision === "blocked" &&
       productionHeld.simulation.decision === "needs-review" &&
       productionHeld.simulation.summary.readyForAgent === 0,
-    productionHeldNoReceiptDrafts: productionHeld.simulation.summary.receiptDraftItems === 0
+    productionHeldNoReceiptDrafts: productionHeld.simulation.summary.receiptDraftItems === 0,
+    productionHeldNoReceiptDraftFiles: productionHeld.receiptDraftFilesWritten === 0
   };
 }
 
@@ -265,6 +344,7 @@ function summaryMarkdown(summary: CodingAgentDispatchSimulationSummary) {
     `- Planned commands: ${summary.simulation.plannedCommands}`,
     `- Expected evidence artifacts: ${summary.simulation.expectedEvidenceArtifacts}`,
     `- Receipt draft items: ${summary.simulation.receiptDraftItems}`,
+    `- Receipt draft files written: ${summary.simulation.receiptDraftFilesWritten}`,
     `- Unsafe paths: ${summary.simulation.unsafePaths}`,
     "",
     "## Production-Held Simulation",
@@ -273,6 +353,7 @@ function summaryMarkdown(summary: CodingAgentDispatchSimulationSummary) {
     `- Ready for real agent: ${summary.productionHeld.readyForAgent}`,
     `- Held: ${summary.productionHeld.held}`,
     `- Receipt draft items: ${summary.productionHeld.receiptDraftItems}`,
+    `- Receipt draft files written: ${summary.productionHeld.receiptDraftFilesWritten}`,
     "",
     "## Checks",
     "",
@@ -367,11 +448,11 @@ function printSummary(summary: CodingAgentDispatchSimulationSummary) {
   console.log(`Output: ${summary.outputDir}`);
   console.log(
     `Valid: ${summary.simulation.decision}, ready ${summary.simulation.readyForAgent}, ` +
-    `receipt drafts ${summary.simulation.receiptDraftItems}`
+    `receipt drafts ${summary.simulation.receiptDraftItems}, files ${summary.simulation.receiptDraftFilesWritten}`
   );
   console.log(
     `Production-held: ${summary.productionHeld.decision}, ready ${summary.productionHeld.readyForAgent}, ` +
-    `receipt drafts ${summary.productionHeld.receiptDraftItems}`
+    `receipt drafts ${summary.productionHeld.receiptDraftItems}, files ${summary.productionHeld.receiptDraftFilesWritten}`
   );
   console.log(`Checks: ${passed} pass, ${failed} fail`);
 }
