@@ -67,6 +67,8 @@ import {
   serializeCodingAgentBriefsMarkdownExport,
   serializeCodingAgentSessionBundleExport,
   serializeCodingAgentSessionBundleMarkdownExport,
+  serializeCodingAgentSessionDrillExport,
+  serializeCodingAgentSessionDrillMarkdownExport,
   serializeDevelopmentBoardExport,
   serializeDevelopmentIssueDraftsExport,
   serializeDevelopmentIssueGhScriptExport,
@@ -88,6 +90,7 @@ import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
+import { buildCodingAgentSessionDrill } from "./domain/codingAgentSessionDrill";
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
@@ -110,6 +113,7 @@ import {
   createAutomationRunbookViaGateway,
   createCodingAgentBriefsViaGateway,
   createCodingAgentSessionBundleViaGateway,
+  createCodingAgentSessionDrillViaGateway,
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createProductReadinessViaGateway,
@@ -139,6 +143,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentSessionBundle,
+  CodingAgentSessionDrillReport,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   DevelopmentWorkItemStatus,
@@ -215,6 +220,9 @@ export function App() {
   const [codingAgentSessionBundle, setCodingAgentSessionBundle] = useState<CodingAgentSessionBundle | null>(null);
   const [codingAgentSessionBundleLink, setCodingAgentSessionBundleLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionBundleMarkdownLink, setCodingAgentSessionBundleMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionDrill, setCodingAgentSessionDrill] = useState<CodingAgentSessionDrillReport | null>(null);
+  const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionDrillMarkdownLink, setCodingAgentSessionDrillMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -562,6 +570,22 @@ export function App() {
   }, [codingAgentSessionBundleMarkdownLink]);
 
   useEffect(() => {
+    return () => {
+      if (codingAgentSessionDrillLink) {
+        URL.revokeObjectURL(codingAgentSessionDrillLink.href);
+      }
+    };
+  }, [codingAgentSessionDrillLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentSessionDrillMarkdownLink) {
+        URL.revokeObjectURL(codingAgentSessionDrillMarkdownLink.href);
+      }
+    };
+  }, [codingAgentSessionDrillMarkdownLink]);
+
+  useEffect(() => {
     clearCodingAgentBriefReview();
   }, [codingAgentBriefs]);
 
@@ -611,6 +635,9 @@ export function App() {
     setCodingAgentSessionBundle(null);
     setCodingAgentSessionBundleLink(null);
     setCodingAgentSessionBundleMarkdownLink(null);
+    setCodingAgentSessionDrill(null);
+    setCodingAgentSessionDrillLink(null);
+    setCodingAgentSessionDrillMarkdownLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
@@ -781,6 +808,19 @@ export function App() {
     if (codingAgentSessionBundleMarkdownLink) {
       URL.revokeObjectURL(codingAgentSessionBundleMarkdownLink.href);
       setCodingAgentSessionBundleMarkdownLink(null);
+    }
+    clearCodingAgentSessionDrill();
+  }
+
+  function clearCodingAgentSessionDrill() {
+    setCodingAgentSessionDrill(null);
+    if (codingAgentSessionDrillLink) {
+      URL.revokeObjectURL(codingAgentSessionDrillLink.href);
+      setCodingAgentSessionDrillLink(null);
+    }
+    if (codingAgentSessionDrillMarkdownLink) {
+      URL.revokeObjectURL(codingAgentSessionDrillMarkdownLink.href);
+      setCodingAgentSessionDrillMarkdownLink(null);
     }
   }
 
@@ -2087,6 +2127,7 @@ export function App() {
       gatewayError = error instanceof Error ? error.message : "unknown";
     }
 
+    clearCodingAgentSessionDrill();
     setCodingAgentBriefReview(bundle.review);
     setCodingAgentSessionBundle(bundle);
     createCodingAgentSessionBundleDownload(bundle, requireProductionEvidence);
@@ -2113,6 +2154,77 @@ export function App() {
         productionHeld: bundle.summary.productionHeld,
         source,
         requireProductionEvidence,
+        gatewayError
+      }
+    });
+  }
+
+  function createCodingAgentSessionDrillDownload(report: CodingAgentSessionDrillReport) {
+    const blob = new Blob([serializeCodingAgentSessionDrillExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentSessionDrillMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-session-drill-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-session-drill-${runSlug}-${report.operatorLocale}.md`;
+
+    if (codingAgentSessionDrillLink) {
+      URL.revokeObjectURL(codingAgentSessionDrillLink.href);
+    }
+    if (codingAgentSessionDrillMarkdownLink) {
+      URL.revokeObjectURL(codingAgentSessionDrillMarkdownLink.href);
+    }
+
+    setCodingAgentSessionDrillLink({ href: url, fileName });
+    setCodingAgentSessionDrillMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
+  async function runCodingAgentSessionDrill() {
+    const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
+      briefs: codingAgentBriefs,
+      review: codingAgentBriefReview,
+      releaseVerification
+    });
+    let drill = buildCodingAgentSessionDrill({ bundle });
+    let source: "gateway" | "local" = "local";
+    let gatewayError: string | null = null;
+
+    try {
+      drill = await createCodingAgentSessionDrillViaGateway(bundle);
+      source = "gateway";
+    } catch (error) {
+      gatewayError = error instanceof Error ? error.message : "unknown";
+    }
+
+    setCodingAgentBriefReview(bundle.review);
+    setCodingAgentSessionBundle(bundle);
+    setCodingAgentSessionDrill(drill);
+    if (!codingAgentSessionBundle) {
+      createCodingAgentSessionBundleDownload(bundle, false);
+    }
+    createCodingAgentSessionDrillDownload(drill);
+    setRunState({
+      status: source === "gateway" ? "gateway" : "local",
+      message: source === "gateway"
+        ? copy.codingBriefs.statusDrillGateway(drill.decision, drill.summary.wouldAssign, drill.summary.notAssigned)
+        : copy.codingBriefs.statusDrillLocal(
+          drill.decision,
+          drill.summary.wouldAssign,
+          drill.summary.notAssigned,
+          gatewayError || undefined
+        )
+    });
+    recordAudit({
+      type: "development.coding_sessions.drilled",
+      severity: drill.decision === "assignable" ? "success" : drill.decision === "held" ? "warning" : "error",
+      summary: `Coding agent session drill completed: ${drill.decision}.`,
+      runId: drill.runId,
+      metadata: {
+        sessions: drill.summary.total,
+        wouldAssign: drill.summary.wouldAssign,
+        notAssigned: drill.summary.notAssigned,
+        needsReview: drill.summary.needsReview,
+        source,
         gatewayError
       }
     });
@@ -2503,11 +2615,14 @@ export function App() {
             briefs={codingAgentBriefs}
             review={codingAgentBriefReview}
             sessionBundle={codingAgentSessionBundle}
+            sessionDrill={codingAgentSessionDrill}
             exportLink={codingAgentBriefsLink}
             markdownLink={codingAgentBriefsMarkdownLink}
             reviewLink={codingAgentBriefReviewLink}
             sessionLink={codingAgentSessionBundleLink}
             sessionMarkdownLink={codingAgentSessionBundleMarkdownLink}
+            drillLink={codingAgentSessionDrillLink}
+            drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
             copy={copy.codingBriefs}
             onExport={() => void exportCodingAgentBriefs()}
             onExportMarkdown={exportCodingAgentBriefsMarkdown}
@@ -2515,6 +2630,7 @@ export function App() {
             onProductionReview={() => void runCodingAgentBriefReview(true)}
             onExportSession={() => void exportCodingAgentSessionBundle(false)}
             onExportProductionSession={() => void exportCodingAgentSessionBundle(true)}
+            onRunSessionDrill={() => void runCodingAgentSessionDrill()}
           />
 
           <DevelopmentIssuesPanel

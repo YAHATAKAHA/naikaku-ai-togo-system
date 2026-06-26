@@ -1,11 +1,13 @@
-import { AlertTriangle, Bot, Download, PackageCheck, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Bot, Download, PackageCheck, PlayCircle, ShieldCheck } from "lucide-react";
 import type {
   CodingAgentBrief,
   CodingAgentBriefReviewCheck,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentSession,
-  CodingAgentSessionBundle
+  CodingAgentSessionBundle,
+  CodingAgentSessionDrillItem,
+  CodingAgentSessionDrillReport
 } from "../domain/types";
 import type { CodingAgentBriefsCopy } from "../i18n";
 
@@ -13,11 +15,14 @@ interface CodingAgentBriefsPanelProps {
   briefs: CodingAgentBriefs;
   review: CodingAgentBriefReviewReport | null;
   sessionBundle: CodingAgentSessionBundle | null;
+  sessionDrill: CodingAgentSessionDrillReport | null;
   exportLink: { href: string; fileName: string } | null;
   markdownLink: { href: string; fileName: string } | null;
   reviewLink: { href: string; fileName: string } | null;
   sessionLink: { href: string; fileName: string } | null;
   sessionMarkdownLink: { href: string; fileName: string } | null;
+  drillLink: { href: string; fileName: string } | null;
+  drillMarkdownLink: { href: string; fileName: string } | null;
   copy: CodingAgentBriefsCopy;
   onExport: () => void;
   onExportMarkdown: () => void;
@@ -25,24 +30,29 @@ interface CodingAgentBriefsPanelProps {
   onProductionReview: () => void;
   onExportSession: () => void;
   onExportProductionSession: () => void;
+  onRunSessionDrill: () => void;
 }
 
 export function CodingAgentBriefsPanel({
   briefs,
   review,
   sessionBundle,
+  sessionDrill,
   exportLink,
   markdownLink,
   reviewLink,
   sessionLink,
   sessionMarkdownLink,
+  drillLink,
+  drillMarkdownLink,
   copy,
   onExport,
   onExportMarkdown,
   onReview,
   onProductionReview,
   onExportSession,
-  onExportProductionSession
+  onExportProductionSession,
+  onRunSessionDrill
 }: CodingAgentBriefsPanelProps) {
   return (
     <section className="coding-briefs-panel">
@@ -80,6 +90,9 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onExportProductionSession} disabled={!briefs.briefs.length}>
           <AlertTriangle size={15} /> {copy.productionSession}
         </button>
+        <button type="button" onClick={onRunSessionDrill} disabled={!briefs.briefs.length}>
+          <PlayCircle size={15} /> {copy.sessionDrill}
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> {copy.downloadJson}
@@ -105,6 +118,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadSessionMarkdown}
           </a>
         ) : null}
+        {drillLink ? (
+          <a href={drillLink.href} download={drillLink.fileName}>
+            <Download size={15} /> {copy.downloadDrillJson}
+          </a>
+        ) : null}
+        {drillMarkdownLink ? (
+          <a href={drillMarkdownLink.href} download={drillMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadDrillMarkdown}
+          </a>
+        ) : null}
       </div>
 
       {review ? (
@@ -113,6 +136,10 @@ export function CodingAgentBriefsPanel({
 
       {sessionBundle ? (
         <CodingAgentSessionBundleReport bundle={sessionBundle} copy={copy} />
+      ) : null}
+
+      {sessionDrill ? (
+        <CodingAgentSessionDrillReportView report={sessionDrill} copy={copy} />
       ) : null}
 
       {briefs.briefs.length ? (
@@ -125,6 +152,36 @@ export function CodingAgentBriefsPanel({
         <p className="coding-briefs-empty">{copy.empty}</p>
       )}
     </section>
+  );
+}
+
+function CodingAgentSessionDrillReportView({
+  report,
+  copy
+}: {
+  report: CodingAgentSessionDrillReport;
+  copy: CodingAgentBriefsCopy;
+}) {
+  const blockedItem = firstBlockedDrillItem(report.items);
+
+  return (
+    <div className="coding-session-drill" data-decision={report.decision}>
+      <div>
+        <strong>{copy.drillDecision}: {copy.drillDecisionLabel(report.decision)}</strong>
+        <span>{copy.drillSummary(report.summary.wouldAssign, report.summary.notAssigned)}</span>
+      </div>
+      {blockedItem ? (
+        <p>
+          <b>{blockedItem.title}</b>
+          <span>{copy.drillAction(blockedItem.action)}</span>
+          <small>{copy.drillNextAction}: {blockedItem.nextAction}</small>
+        </p>
+      ) : (
+        <p>
+          <span>{copy.drillReady}</span>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -223,4 +280,8 @@ function firstActionableCheck(checks: CodingAgentBriefReviewCheck[]) {
 
 function firstHeldSession(sessions: CodingAgentSession[]) {
   return sessions.find((session) => session.status !== "ready-for-agent") || null;
+}
+
+function firstBlockedDrillItem(items: CodingAgentSessionDrillItem[]) {
+  return items.find((item) => item.action !== "would-assign") || null;
 }

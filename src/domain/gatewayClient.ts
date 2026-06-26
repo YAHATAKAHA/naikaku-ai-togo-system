@@ -8,6 +8,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentSessionBundle,
+  CodingAgentSessionDrillReport,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
@@ -589,6 +590,26 @@ export async function createCodingAgentSessionBundleViaGateway(
   }
 
   return (await response.json()) as CodingAgentSessionBundle;
+}
+
+export async function createCodingAgentSessionDrillViaGateway(
+  bundle: CodingAgentSessionBundle,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/session-drill`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ bundle }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent session drill failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentSessionDrillReport;
 }
 
 export async function checkGatewayHealth() {

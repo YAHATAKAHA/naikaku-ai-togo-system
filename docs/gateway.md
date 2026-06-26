@@ -824,6 +824,42 @@ Response:
 }
 ```
 
+### `POST /v1/development/coding-briefs/session-drill`
+
+Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.
+
+```json
+{
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1",
+    "decision": "ready",
+    "sessions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-session-drill.v1",
+  "mode": "dry-run",
+  "decision": "assignable",
+  "bundleDecision": "ready",
+  "summary": {
+    "total": 8,
+    "wouldAssign": 8,
+    "notAssigned": 0,
+    "needsReview": 0,
+    "blocked": 0
+  },
+  "honestyClaim": {
+    "level": "dry-run",
+    "claim": "This drill only simulates coding-agent session assignment decisions."
+  }
+}
+```
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

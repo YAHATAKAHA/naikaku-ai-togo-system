@@ -70,8 +70,11 @@ export interface CodingAgentBriefsCopy {
   downloadReview: string;
   sessionPack: string;
   productionSession: string;
+  sessionDrill: string;
   downloadSessionJson: string;
   downloadSessionMarkdown: string;
+  downloadDrillJson: string;
+  downloadDrillMarkdown: string;
   reviewDecision: string;
   reviewNextAction: string;
   reviewReady: string;
@@ -83,6 +86,12 @@ export interface CodingAgentBriefsCopy {
   sessionHeld: (status: string) => string;
   sessionDecisionLabel: (decision: string) => string;
   sessionSummary: (ready: number, held: number) => string;
+  drillDecision: string;
+  drillNextAction: string;
+  drillReady: string;
+  drillAction: (action: string) => string;
+  drillDecisionLabel: (decision: string) => string;
+  drillSummary: (wouldAssign: number, notAssigned: number) => string;
   mode: string;
   executor: string;
   releaseGate: string;
@@ -98,6 +107,8 @@ export interface CodingAgentBriefsCopy {
   statusReviewLocal: (decision: string, blockers: number, warnings: number, errorMessage?: string) => string;
   statusSessionGateway: (decision: string, ready: number, held: number) => string;
   statusSessionLocal: (decision: string, ready: number, held: number, errorMessage?: string) => string;
+  statusDrillGateway: (decision: string, wouldAssign: number, notAssigned: number) => string;
+  statusDrillLocal: (decision: string, wouldAssign: number, notAssigned: number, errorMessage?: string) => string;
 }
 
 export interface AppCopy {
@@ -204,8 +215,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadReview: "Review取得",
       sessionPack: "Session pack",
       productionSession: "本番Session",
+      sessionDrill: "Session演習",
       downloadSessionJson: "Session JSON",
       downloadSessionMarkdown: "Session MD",
+      downloadDrillJson: "演習JSON",
+      downloadDrillMarkdown: "演習MD",
       reviewDecision: "Review判定",
       reviewNextAction: "次の対応",
       reviewReady: "全てのブリーフは代理への引き渡し前チェックを通過しました。",
@@ -217,6 +231,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留: ${jaCodingSessionStatus(status)}`,
       sessionDecisionLabel: jaBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      drillDecision: "Drill判定",
+      drillNextAction: "次の対応",
+      drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
+      drillAction: jaCodingDrillAction,
+      drillDecisionLabel: jaCodingDrillDecision,
+      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign}割当 / ${notAssigned}停止`,
       mode: "モード",
       executor: "Executor",
       releaseGate: "リリースゲート",
@@ -231,7 +251,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReviewGateway: (decision, blockers, warnings) => `ブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
       statusReviewLocal: (decision, blockers, warnings, errorMessage) => `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusSessionGateway: (decision, ready, held) => `Session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) => `Session演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `ローカルで session 演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "リリース演習",
@@ -318,8 +340,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadReview: "Download review",
       sessionPack: "Session pack",
       productionSession: "Prod session",
+      sessionDrill: "Session 演练",
       downloadSessionJson: "Session JSON",
       downloadSessionMarkdown: "Session MD",
+      downloadDrillJson: "演练 JSON",
+      downloadDrillMarkdown: "演练 MD",
       reviewDecision: "Review decision",
       reviewNextAction: "Next action",
       reviewReady: "All briefs passed pre-handoff checks for coding agents.",
@@ -331,6 +356,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `Held: ${status}`,
       sessionDecisionLabel: (decision) => decision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      drillDecision: "Drill decision",
+      drillNextAction: "Next action",
+      drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
+      drillAction: enCodingDrillAction,
+      drillDecisionLabel: enCodingDrillDecision,
+      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} assign / ${notAssigned} stopped`,
       mode: "Mode",
       executor: "Executor",
       releaseGate: "Release gate",
@@ -345,7 +376,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReviewGateway: (decision, blockers, warnings) => `Coding brief review ${decision}: ${blockers} blockers, ${warnings} warnings.`,
       statusReviewLocal: (decision, blockers, warnings, errorMessage) => `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusSessionGateway: (decision, ready, held) => `Coding session bundle ${decision}: ${ready} ready, ${held} held.`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) => `Coding session drill ${enCodingDrillDecision(decision)}: ${wouldAssign} assign, ${notAssigned} stopped.`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `Coding session drill completed locally: ${enCodingDrillDecision(decision)}, ${wouldAssign} assign, ${notAssigned} stopped.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "Release rehearsal",
@@ -432,8 +465,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadReview: "下载审查",
       sessionPack: "Session 包",
       productionSession: "生产 Session",
+      sessionDrill: "Session 演練",
       downloadSessionJson: "Session JSON",
       downloadSessionMarkdown: "Session MD",
+      downloadDrillJson: "演練 JSON",
+      downloadDrillMarkdown: "演練 MD",
       reviewDecision: "审查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通过交付给编程代理前的检查。",
@@ -445,6 +481,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留：${zhHansCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHansBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      drillDecision: "Drill 判定",
+      drillNextAction: "下一步",
+      drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
+      drillAction: zhHansCodingDrillAction,
+      drillDecisionLabel: zhHansCodingDrillDecision,
+      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 分配 / ${notAssigned} 停止`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "发布门",
@@ -459,7 +501,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReviewGateway: (decision, blockers, warnings) => `编程代理 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
       statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusSessionGateway: (decision, ready, held) => `编程代理 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`
+      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) => `编程代理 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 网关：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "发布演练",
@@ -546,8 +590,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadReview: "下載審查",
       sessionPack: "Session 包",
       productionSession: "生產 Session",
+      sessionDrill: "Session 모의실행",
       downloadSessionJson: "Session JSON",
       downloadSessionMarkdown: "Session MD",
+      downloadDrillJson: "모의실행 JSON",
+      downloadDrillMarkdown: "모의실행 MD",
       reviewDecision: "審查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通過交付給編程代理前的檢查。",
@@ -559,6 +606,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `保留：${zhHantCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHantBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      drillDecision: "Drill 判定",
+      drillNextAction: "下一步",
+      drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
+      drillAction: zhHantCodingDrillAction,
+      drillDecisionLabel: zhHantCodingDrillDecision,
+      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 分配 / ${notAssigned} 停止`,
       mode: "模式",
       executor: "Executor",
       releaseGate: "發布門",
@@ -573,7 +626,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReviewGateway: (decision, blockers, warnings) => `編程代理 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
       statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusSessionGateway: (decision, ready, held) => `編程代理 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`
+      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) => `編程代理 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 閘道：${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "發布演練",
@@ -660,8 +715,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadReview: "검토 다운로드",
       sessionPack: "Session pack",
       productionSession: "운영 Session",
+      sessionDrill: "Session 모의실행",
       downloadSessionJson: "Session JSON",
       downloadSessionMarkdown: "Session MD",
+      downloadDrillJson: "모의실행 JSON",
+      downloadDrillMarkdown: "모의실행 MD",
       reviewDecision: "검토 판정",
       reviewNextAction: "다음 조치",
       reviewReady: "모든 브리프가 코딩 에이전트 인계 전 검사를 통과했습니다.",
@@ -673,6 +731,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       sessionHeld: (status) => `보류: ${koCodingSessionStatus(status)}`,
       sessionDecisionLabel: koBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
+      drillDecision: "Drill 판정",
+      drillNextAction: "다음 조치",
+      drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
+      drillAction: koCodingDrillAction,
+      drillDecisionLabel: koCodingDrillDecision,
+      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 할당 / ${notAssigned} 중지`,
       mode: "모드",
       executor: "Executor",
       releaseGate: "릴리스 게이트",
@@ -687,7 +751,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReviewGateway: (decision, blockers, warnings) => `코딩 에이전트 브리프 검토 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
       statusReviewLocal: (decision, blockers, warnings, errorMessage) => `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusSessionGateway: (decision, ready, held) => `코딩 에이전트 session bundle ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
+      statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) => `코딩 에이전트 session 모의실행 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `로컬에서 session 모의실행 완료 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`
     },
     releaseRehearsal: {
       title: "릴리스 리허설",
@@ -766,6 +832,34 @@ function jaCodingSessionStatus(status: string) {
   return status;
 }
 
+function jaCodingDrillDecision(decision: string) {
+  if (decision === "assignable") return "割当可";
+  if (decision === "held") return "保留";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
+function jaCodingDrillAction(action: string) {
+  if (action === "would-assign") return "割当予定";
+  if (action === "not-assigned") return "割当停止";
+  if (action === "needs-operator-review") return "オペレーター確認";
+  return action;
+}
+
+function enCodingDrillDecision(decision: string) {
+  if (decision === "assignable") return "assignable";
+  if (decision === "held") return "held";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enCodingDrillAction(action: string) {
+  if (action === "would-assign") return "would assign";
+  if (action === "not-assigned") return "not assigned";
+  if (action === "needs-operator-review") return "operator review";
+  return action;
+}
+
 function zhHansRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "可发布";
   if (decision === "needs-review") return "需审查";
@@ -792,6 +886,20 @@ function zhHansCodingSessionStatus(status: string) {
   if (status === "held-for-review") return "等待审查";
   if (status === "held-for-production-evidence") return "等待生产证据";
   return status;
+}
+
+function zhHansCodingDrillDecision(decision: string) {
+  if (decision === "assignable") return "可分配";
+  if (decision === "held") return "保留";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansCodingDrillAction(action: string) {
+  if (action === "would-assign") return "模拟分配";
+  if (action === "not-assigned") return "停止分配";
+  if (action === "needs-operator-review") return "需要操作者审查";
+  return action;
 }
 
 function zhHantRehearsalDecision(decision: string) {
@@ -822,6 +930,20 @@ function zhHantCodingSessionStatus(status: string) {
   return status;
 }
 
+function zhHantCodingDrillDecision(decision: string) {
+  if (decision === "assignable") return "可分配";
+  if (decision === "held") return "保留";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHantCodingDrillAction(action: string) {
+  if (action === "would-assign") return "模擬分配";
+  if (action === "not-assigned") return "停止分配";
+  if (action === "needs-operator-review") return "需要操作者審查";
+  return action;
+}
+
 function koRehearsalDecision(decision: string) {
   if (decision === "release-ready") return "릴리스 가능";
   if (decision === "needs-review") return "검토 필요";
@@ -848,4 +970,18 @@ function koCodingSessionStatus(status: string) {
   if (status === "held-for-review") return "검토 대기";
   if (status === "held-for-production-evidence") return "운영 증거 대기";
   return status;
+}
+
+function koCodingDrillDecision(decision: string) {
+  if (decision === "assignable") return "할당 가능";
+  if (decision === "held") return "보류";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koCodingDrillAction(action: string) {
+  if (action === "would-assign") return "할당 예정";
+  if (action === "not-assigned") return "할당 중지";
+  if (action === "needs-operator-review") return "운영자 검토 필요";
+  return action;
 }

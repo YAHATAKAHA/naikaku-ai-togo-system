@@ -5,6 +5,7 @@ import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
+import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
@@ -25,6 +26,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentSessionBundle,
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorRun,
@@ -86,6 +88,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-briefs",
           "coding-agent-brief-review",
           "coding-agent-session-bundle",
+          "coding-agent-session-drill",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -636,6 +639,22 @@ const server = createServer(async (request, response) => {
         requireProductionEvidence: Boolean(body.requireProductionEvidence)
       });
       sendJson(response, 200, bundle);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/session-drill") {
+      const body = await readJson<{
+        bundle?: CodingAgentSessionBundle;
+      }>(request);
+      if (body.bundle?.schema !== "naikaku.coding-agent-session-bundle.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      const drill = buildCodingAgentSessionDrill({ bundle: body.bundle });
+      sendJson(response, 200, drill);
       return;
     }
 

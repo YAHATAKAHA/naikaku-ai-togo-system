@@ -5,6 +5,7 @@ import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from
 import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
+import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
@@ -26,6 +27,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentSessionBundle,
+  CodingAgentSessionDrillReport,
   DevelopmentBoard,
   DevelopmentIssueDrafts,
   DevelopmentWorkItem,
@@ -424,6 +426,14 @@ export function serializeCodingAgentSessionBundleExport(bundle: CodingAgentSessi
 
 export function serializeCodingAgentSessionBundleMarkdownExport(bundle: CodingAgentSessionBundle) {
   return serializeCodingAgentSessionBundleMarkdown(bundle);
+}
+
+export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessionDrillReport) {
+  return serializeCodingAgentSessionDrill(report);
+}
+
+export function serializeCodingAgentSessionDrillMarkdownExport(report: CodingAgentSessionDrillReport) {
+  return serializeCodingAgentSessionDrillMarkdown(report);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {

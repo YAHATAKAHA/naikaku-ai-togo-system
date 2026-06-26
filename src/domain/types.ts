@@ -852,6 +852,53 @@ export interface CodingAgentSessionBundle {
   };
 }
 
+export type CodingAgentSessionDrillAction =
+  | "would-assign"
+  | "not-assigned"
+  | "needs-operator-review";
+export type CodingAgentSessionDrillDecision = "assignable" | "held" | "blocked";
+
+export interface CodingAgentSessionDrillItem {
+  sessionId: string;
+  title: string;
+  status: CodingAgentSessionStatus;
+  action: CodingAgentSessionDrillAction;
+  executorProfileId: ExecutorProfileId;
+  reason: string;
+  simulatedPromptBytes: number;
+  requiredCommands: string[];
+  requiredEvidence: string[];
+  safetyStops: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentSessionDrillReport {
+  schema: "naikaku.coding-agent-session-drill.v1";
+  generatedAt: string;
+  mode: "dry-run";
+  sourceSchema: CodingAgentSessionBundle["schema"];
+  bundleDecision: CodingAgentSessionBundleDecision;
+  decision: CodingAgentSessionDrillDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentSessionDrillItem[];
+  honestyClaim: {
+    level: "dry-run";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+  summary: {
+    total: number;
+    wouldAssign: number;
+    notAssigned: number;
+    needsReview: number;
+    blocked: number;
+    requiredCommands: number;
+    requiredEvidence: number;
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -877,6 +924,7 @@ export type AuditEventType =
   | "development.coding_briefs.exported"
   | "development.coding_briefs.reviewed"
   | "development.coding_sessions.exported"
+  | "development.coding_sessions.drilled"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"
