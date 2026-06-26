@@ -6,6 +6,7 @@ import type {
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentDispatchArchive,
+  CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchManifestItem,
   CodingAgentSession,
@@ -23,6 +24,7 @@ interface CodingAgentBriefsPanelProps {
   sessionBundle: CodingAgentSessionBundle | null;
   dispatchManifest: CodingAgentDispatchManifest | null;
   dispatchArchive: CodingAgentDispatchArchive | null;
+  dispatchArchiveAudit: CodingAgentDispatchArchiveAudit | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
   sessionReceipt: CodingAgentSessionReceipt | null;
   exportLink: { href: string; fileName: string } | null;
@@ -34,6 +36,8 @@ interface CodingAgentBriefsPanelProps {
   dispatchMarkdownLink: { href: string; fileName: string } | null;
   dispatchArchiveLink: { href: string; fileName: string } | null;
   dispatchArchiveMarkdownLink: { href: string; fileName: string } | null;
+  dispatchArchiveAuditLink: { href: string; fileName: string } | null;
+  dispatchArchiveAuditMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
   drillMarkdownLink: { href: string; fileName: string } | null;
   receiptLink: { href: string; fileName: string } | null;
@@ -59,6 +63,7 @@ export function CodingAgentBriefsPanel({
   sessionBundle,
   dispatchManifest,
   dispatchArchive,
+  dispatchArchiveAudit,
   sessionDrill,
   sessionReceipt,
   exportLink,
@@ -70,6 +75,8 @@ export function CodingAgentBriefsPanel({
   dispatchMarkdownLink,
   dispatchArchiveLink,
   dispatchArchiveMarkdownLink,
+  dispatchArchiveAuditLink,
+  dispatchArchiveAuditMarkdownLink,
   drillLink,
   drillMarkdownLink,
   receiptLink,
@@ -208,6 +215,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadDispatchArchiveMarkdown}
           </a>
         ) : null}
+        {dispatchArchiveAuditLink ? (
+          <a href={dispatchArchiveAuditLink.href} download={dispatchArchiveAuditLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchArchiveAuditJson}
+          </a>
+        ) : null}
+        {dispatchArchiveAuditMarkdownLink ? (
+          <a href={dispatchArchiveAuditMarkdownLink.href} download={dispatchArchiveAuditMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchArchiveAuditMarkdown}
+          </a>
+        ) : null}
         {receiptLink ? (
           <a href={receiptLink.href} download={receiptLink.fileName}>
             <Download size={15} /> {copy.downloadReceiptJson}
@@ -243,7 +260,12 @@ export function CodingAgentBriefsPanel({
       ) : null}
 
       {dispatchManifest ? (
-        <CodingAgentDispatchManifestReport manifest={dispatchManifest} archive={dispatchArchive} copy={copy} />
+        <CodingAgentDispatchManifestReport
+          manifest={dispatchManifest}
+          archive={dispatchArchive}
+          archiveAudit={dispatchArchiveAudit}
+          copy={copy}
+        />
       ) : null}
 
       {sessionReceipt ? (
@@ -339,10 +361,12 @@ function CodingAgentSessionReceiptReportView({
 function CodingAgentDispatchManifestReport({
   manifest,
   archive,
+  archiveAudit,
   copy
 }: {
   manifest: CodingAgentDispatchManifest;
   archive: CodingAgentDispatchArchive | null;
+  archiveAudit: CodingAgentDispatchArchiveAudit | null;
   copy: CodingAgentBriefsCopy;
 }) {
   const heldItem = firstHeldDispatchItem(manifest.items);
@@ -368,6 +392,16 @@ function CodingAgentDispatchManifestReport({
             archive.summary.totalBytes
           )}</strong>
           <span>{copy.dispatchUnassignedHeld(archive.summary.unassignedHeldItems)}</span>
+        </div>
+      ) : null}
+      {archiveAudit ? (
+        <div>
+          <strong>{copy.dispatchArchiveAudit}: {copy.dispatchAuditDecisionLabel(archiveAudit.decision)}</strong>
+          <span>{copy.dispatchAuditSummary(
+            archiveAudit.summary.passed,
+            archiveAudit.summary.warnings,
+            archiveAudit.summary.blockers
+          )}</span>
         </div>
       ) : null}
       {heldItem ? (
