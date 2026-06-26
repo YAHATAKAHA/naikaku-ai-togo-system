@@ -35,7 +35,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Server Ledger panel for refreshing gateway-side approval records and executor evidence bundles without exposing runner credentials to the browser.
 - Local audit trail with export for operator actions and automation milestones.
 - Development Board for role-owned implementation items, next-loop tasks, accepted memory, status tracking, and JSON export.
-- GitHub Issue Drafts panel and export for labeled, Markdown-ready issue payloads derived from Development Board items.
+- GitHub Issue Drafts panel and export for labeled, Markdown-ready issue payloads and a reviewable GitHub CLI script derived from Development Board items.
 - Memory Inbox review for candidate lessons, decisions, skill proposals, risks, and next-cycle follow-ups.
 
 ## Domain Layer
@@ -133,7 +133,7 @@ The Development Board converts planning output into work that separate teams can
 
 Each `DevelopmentWorkItem` keeps source linkage, owner role, stage, priority, acceptance criteria, deliverables, tags, and operator-controlled status. Status changes are stored locally and audited. The board can be exported as `naikaku.development-board.v1` JSON so human teams, GitHub issue tooling, or future automation services can consume the same work queue.
 
-`DevelopmentIssueDrafts` converts that board into `naikaku.github-issue-drafts.v1`. Each draft includes a title, Markdown body, labels, owner hints, priority, source links, acceptance criteria, deliverables, and run traceability. The current workbench exports drafts only; a later GitHub connector can create issues from the same payload after authentication and repository policy checks.
+`DevelopmentIssueDrafts` converts that board into `naikaku.github-issue-drafts.v1`. Each draft includes a title, Markdown body, labels, owner hints, priority, source links, acceptance criteria, deliverables, and run traceability. The current workbench exports drafts and can locally derive a `gh issue create` shell script from the same payload. The script is credential-free at export time; teams run it only inside their own authenticated repository environment after review. A later GitHub connector can create issues from the same payload after authentication and repository policy checks.
 
 ## Memory and Learning
 
@@ -165,7 +165,7 @@ Production persistence should store:
 - Local gateway ledger records for approval decisions and executor evidence bundles.
 - Team handoff packages for parallel development.
 - Development board items and status changes for separate implementation teams.
-- GitHub issue drafts for parallel implementation handoff.
+- GitHub issue drafts and reviewable CLI scripts for parallel implementation handoff.
 - Custom role definitions beyond the default cabinet.
 - Audit events for workspace changes, role changes, run completion, approvals, executor dry-runs, and exports.
 - Reviewed memory entries with accepted and rejected decisions, retention labels, and consent tags.

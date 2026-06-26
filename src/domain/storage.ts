@@ -3,7 +3,7 @@ import { buildExecutorHandoff } from "./automation";
 import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeDevelopmentBoard } from "./developmentBoard";
-import { serializeDevelopmentIssueDrafts } from "./developmentIssues";
+import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
@@ -384,6 +384,10 @@ export function serializeDevelopmentBoardExport(board: DevelopmentBoard) {
 
 export function serializeDevelopmentIssueDraftsExport(drafts: DevelopmentIssueDrafts) {
   return serializeDevelopmentIssueDrafts(drafts);
+}
+
+export function serializeDevelopmentIssueGhScriptExport(drafts: DevelopmentIssueDrafts) {
+  return serializeDevelopmentIssueGhScript(drafts);
 }
 
 export function loadProviderReadinessRows(): ProviderReadinessRow[] {

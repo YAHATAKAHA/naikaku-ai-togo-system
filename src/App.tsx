@@ -60,6 +60,7 @@ import {
   serializeAutomationRunbookExport,
   serializeDevelopmentBoardExport,
   serializeDevelopmentIssueDraftsExport,
+  serializeDevelopmentIssueGhScriptExport,
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
@@ -156,6 +157,7 @@ export function App() {
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
   const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [serverLedger, setServerLedger] = useState<ServerLedgerState>({
@@ -327,6 +329,14 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (developmentIssuesScriptLink) {
+        URL.revokeObjectURL(developmentIssuesScriptLink.href);
+      }
+    };
+  }, [developmentIssuesScriptLink]);
+
+  useEffect(() => {
+    return () => {
       if (providerReadinessLink) {
         URL.revokeObjectURL(providerReadinessLink.href);
       }
@@ -349,6 +359,7 @@ export function App() {
     setMemoryLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentIssuesLink(null);
+    setDevelopmentIssuesScriptLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -366,6 +377,7 @@ export function App() {
   useEffect(() => {
     setTeamHandoffLink(null);
     setDevelopmentIssuesLink(null);
+    setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
 
   useEffect(() => {
@@ -606,6 +618,7 @@ export function App() {
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
+    setDevelopmentIssuesScriptLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setSessionSecrets({});
@@ -661,6 +674,7 @@ export function App() {
       setTeamHandoffLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
+      setDevelopmentIssuesScriptLink(null);
       setProviderReadinessLink(null);
       setExecutorEvidenceLink(null);
       setRunState({
@@ -986,6 +1000,10 @@ export function App() {
       URL.revokeObjectURL(developmentIssuesLink.href);
       setDevelopmentIssuesLink(null);
     }
+    if (developmentIssuesScriptLink) {
+      URL.revokeObjectURL(developmentIssuesScriptLink.href);
+      setDevelopmentIssuesScriptLink(null);
+    }
     recordAudit({
       type: decision === "accepted" ? "memory.entry.accepted" : "memory.entry.rejected",
       severity: decision === "accepted" ? "success" : "warning",
@@ -1041,6 +1059,10 @@ export function App() {
       URL.revokeObjectURL(developmentIssuesLink.href);
       setDevelopmentIssuesLink(null);
     }
+    if (developmentIssuesScriptLink) {
+      URL.revokeObjectURL(developmentIssuesScriptLink.href);
+      setDevelopmentIssuesScriptLink(null);
+    }
     recordAudit({
       type: "development.item.status.changed",
       severity: status === "blocked" ? "warning" : status === "done" ? "success" : "info",
@@ -1095,6 +1117,19 @@ export function App() {
     setDevelopmentIssuesLink({ href: url, fileName });
   }
 
+  function createDevelopmentIssuesScriptDownload(drafts: DevelopmentIssueDrafts) {
+    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], { type: "text/x-shellscript" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = drafts.runId ? drafts.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-gh-issue-create-${runSlug}.sh`;
+
+    if (developmentIssuesScriptLink) {
+      URL.revokeObjectURL(developmentIssuesScriptLink.href);
+    }
+
+    setDevelopmentIssuesScriptLink({ href: url, fileName });
+  }
+
   async function exportDevelopmentIssues() {
     try {
       const gatewayDrafts = await createDevelopmentIssuesViaGateway(
@@ -1140,6 +1175,26 @@ export function App() {
         }
       });
     }
+  }
+
+  function exportDevelopmentIssueScript() {
+    createDevelopmentIssuesScriptDownload(developmentIssueDrafts);
+    setRunState({
+      status: "local",
+      message: "GitHub CLI issue script prepared locally."
+    });
+    recordAudit({
+      type: "development.issues.exported",
+      severity: "info",
+      summary: "GitHub CLI issue creation script prepared.",
+      runId: developmentIssueDrafts.runId,
+      metadata: {
+        drafts: developmentIssueDrafts.summary.total,
+        blocked: developmentIssueDrafts.summary.blocked,
+        format: "gh-script",
+        source: "local"
+      }
+    });
   }
 
   async function testProviderReadiness(row: ProviderReadinessRow) {
@@ -1389,7 +1444,9 @@ export function App() {
           <DevelopmentIssuesPanel
             drafts={developmentIssueDrafts}
             exportLink={developmentIssuesLink}
+            scriptLink={developmentIssuesScriptLink}
             onExport={exportDevelopmentIssues}
+            onExportScript={exportDevelopmentIssueScript}
           />
 
           <MemoryInboxPanel

@@ -4,6 +4,7 @@ import { buildDevelopmentBoard } from "./developmentBoard";
 import {
   buildDevelopmentIssueDrafts,
   serializeDevelopmentIssueDrafts,
+  serializeDevelopmentIssueGhScript,
   serializeDevelopmentIssueMarkdown
 } from "./developmentIssues";
 import { runCabinetMission } from "./orchestrator";
@@ -61,5 +62,44 @@ describe("development issue drafts", () => {
     expect(markdown).toContain("# [Team]");
     expect(json).not.toContain("sessionSecret");
     expect(markdown).not.toContain("sessionSecret");
+  });
+
+  it("serializes a reviewable GitHub CLI creation script", () => {
+    const workspace = {
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    };
+    const handoff = buildTeamHandoff({
+      workspace,
+      generatedAt: "2026-06-26T00:00:00.000Z"
+    });
+    const board = buildDevelopmentBoard({ handoff });
+    const drafts = buildDevelopmentIssueDrafts({ board });
+    const script = serializeDevelopmentIssueGhScript({
+      ...drafts,
+      drafts: [
+        {
+          ...drafts.drafts[0],
+          title: "Owner's task",
+          body: `${drafts.drafts[0].body}\n\nDon't break quoted body text.`,
+          labels: ["naikaku", "team's-label"],
+          assigneeHint: "Builder's team",
+          milestoneHint: "MVP's first run"
+        }
+      ]
+    });
+
+    expect(script).toContain("#!/usr/bin/env bash");
+    expect(script).toContain("set -euo pipefail");
+    expect(script).toContain("gh issue create");
+    expect(script).toContain("--body-file '.naikaku-issue-01-");
+    expect(script).toContain("--title 'Owner'\\''s task'");
+    expect(script).toContain("--label 'naikaku'");
+    expect(script).toContain("--label 'team'\\''s-label'");
+    expect(script).toContain("# Assignee hint: Builder's team");
+    expect(script).toContain("# Milestone hint: MVP's first run");
+    expect(script).not.toContain("--milestone");
+    expect(script).not.toContain("sessionSecret");
   });
 });

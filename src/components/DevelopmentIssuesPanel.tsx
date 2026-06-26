@@ -1,16 +1,20 @@
-import { Download, Github } from "lucide-react";
+import { Download, Github, Terminal } from "lucide-react";
 import type { DevelopmentIssueDraft, DevelopmentIssueDrafts } from "../domain/types";
 
 interface DevelopmentIssuesPanelProps {
   drafts: DevelopmentIssueDrafts;
   exportLink: { href: string; fileName: string } | null;
+  scriptLink: { href: string; fileName: string } | null;
   onExport: () => void;
+  onExportScript: () => void;
 }
 
 export function DevelopmentIssuesPanel({
   drafts,
   exportLink,
-  onExport
+  scriptLink,
+  onExport,
+  onExportScript
 }: DevelopmentIssuesPanelProps) {
   return (
     <section className="issues-panel">
@@ -33,9 +37,17 @@ export function DevelopmentIssuesPanel({
         <button type="button" onClick={onExport} disabled={!drafts.drafts.length}>
           <Download size={15} /> Export issues
         </button>
+        <button type="button" onClick={onExportScript} disabled={!drafts.drafts.length}>
+          <Terminal size={15} /> Export gh script
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> Download JSON
+          </a>
+        ) : null}
+        {scriptLink ? (
+          <a href={scriptLink.href} download={scriptLink.fileName}>
+            <Download size={15} /> Download script
           </a>
         ) : null}
       </div>

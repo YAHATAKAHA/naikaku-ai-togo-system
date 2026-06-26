@@ -365,7 +365,7 @@ Response:
 
 ### `POST /v1/development/issues`
 
-Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication.
+Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication. The workbench can also derive a reviewable `gh issue create` shell script from this response, but the gateway still does not hold GitHub credentials or create issues directly.
 
 ```json
 {
