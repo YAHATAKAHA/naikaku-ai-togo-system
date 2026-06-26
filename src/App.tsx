@@ -66,6 +66,7 @@ import {
   serializeMemoryLog,
   serializeProviderReadinessExport,
   serializeProductReadinessExport,
+  serializeProductReleaseBundleExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
   serializeWorkspace
@@ -81,6 +82,7 @@ import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
 import { buildProductReadinessReport } from "./domain/productReadiness";
+import { buildProductReleaseBundle } from "./domain/productReleaseBundle";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
 import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
@@ -91,6 +93,7 @@ import {
   createDevelopmentIssuesViaGateway,
   createExecutorEvidenceViaGateway,
   createProductReadinessViaGateway,
+  createProductReleaseBundleViaGateway,
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
@@ -120,6 +123,7 @@ import type {
   ProviderConfig,
   ProviderReadinessRow,
   ProductReadinessReport,
+  ProductReleaseBundle,
   RoleWorkspaceScaffolds,
   RunHistoryItem,
   TeamHandoff
@@ -164,6 +168,7 @@ export function App() {
   const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
   const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [productReadinessLink, setProductReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [productReleaseLink, setProductReleaseLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -308,6 +313,37 @@ export function App() {
       workspace
     ]
   );
+  const productReleaseBundle = useMemo<ProductReleaseBundle>(
+    () =>
+      buildProductReleaseBundle({
+        workspace,
+        run,
+        providerReadiness: providerReadinessMatrix,
+        productReadiness: productReadinessReport,
+        automationRunbook,
+        teamHandoff,
+        roleWorkspaces: roleWorkspaceScaffolds,
+        developmentBoard,
+        issueDrafts: developmentIssueDrafts,
+        approvalRecords,
+        auditEvents,
+        memoryEntries
+      }),
+    [
+      approvalRecords,
+      auditEvents,
+      automationRunbook,
+      developmentBoard,
+      developmentIssueDrafts,
+      memoryEntries,
+      productReadinessReport,
+      providerReadinessMatrix,
+      roleWorkspaceScaffolds,
+      run,
+      teamHandoff,
+      workspace
+    ]
+  );
 
   useEffect(() => {
     return () => {
@@ -356,6 +392,14 @@ export function App() {
       }
     };
   }, [productReadinessLink]);
+
+  useEffect(() => {
+    return () => {
+      if (productReleaseLink) {
+        URL.revokeObjectURL(productReleaseLink.href);
+      }
+    };
+  }, [productReleaseLink]);
 
   useEffect(() => {
     return () => {
@@ -424,6 +468,7 @@ export function App() {
     setDevelopmentIssuesScriptLink(null);
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
+    setProductReleaseLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -442,6 +487,7 @@ export function App() {
     setTeamHandoffLink(null);
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
+    setProductReleaseLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -502,6 +548,14 @@ export function App() {
     if (productReadinessLink) {
       URL.revokeObjectURL(productReadinessLink.href);
       setProductReadinessLink(null);
+    }
+    clearProductReleaseDownload();
+  }
+
+  function clearProductReleaseDownload() {
+    if (productReleaseLink) {
+      URL.revokeObjectURL(productReleaseLink.href);
+      setProductReleaseLink(null);
     }
   }
 
@@ -690,6 +744,7 @@ export function App() {
     setTeamHandoffLink(null);
     setRoleWorkspaceLink(null);
     setProductReadinessLink(null);
+    setProductReleaseLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -749,6 +804,7 @@ export function App() {
       setTeamHandoffLink(null);
       setRoleWorkspaceLink(null);
       setProductReadinessLink(null);
+      setProductReleaseLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -981,6 +1037,73 @@ export function App() {
           score: productReadinessReport.score,
           blockers: productReadinessReport.summary.blockers,
           warnings: productReadinessReport.summary.warnings,
+          source: "local",
+          gatewayError: error instanceof Error ? error.message : "unknown"
+        }
+      });
+    }
+  }
+
+  function createProductReleaseBundleDownload(bundle: ProductReleaseBundle) {
+    const blob = new Blob([serializeProductReleaseBundleExport(bundle)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const runSlug = bundle.runId ? bundle.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-product-release-bundle-${runSlug}.json`;
+
+    if (productReleaseLink) {
+      URL.revokeObjectURL(productReleaseLink.href);
+    }
+
+    setProductReleaseLink({ href: url, fileName });
+  }
+
+  async function exportProductReleaseBundle() {
+    try {
+      const gatewayBundle = await createProductReleaseBundleViaGateway(
+        workspace,
+        providerReadinessMatrix,
+        run,
+        approvalRecords,
+        memoryEntries,
+        developmentItems,
+        auditEvents
+      );
+      createProductReleaseBundleDownload(gatewayBundle);
+      setRunState({
+        status: "gateway",
+        message: "Product release bundle exported through the local gateway."
+      });
+      recordAudit({
+        type: "product.release.exported",
+        severity: gatewayBundle.readiness.decision === "blocked" ? "warning" : "info",
+        summary: `Product release bundle exported: ${gatewayBundle.readiness.decision}.`,
+        runId: gatewayBundle.runId,
+        metadata: {
+          score: gatewayBundle.readiness.score,
+          artifacts: gatewayBundle.summary.artifacts,
+          missing: gatewayBundle.summary.missing,
+          reviewRequired: gatewayBundle.summary.reviewRequired,
+          source: "gateway"
+        }
+      });
+    } catch (error) {
+      createProductReleaseBundleDownload(productReleaseBundle);
+      setRunState({
+        status: "fallback",
+        message: error instanceof Error
+          ? `Gateway product release bundle unavailable; used local export. ${error.message}`
+          : "Gateway product release bundle unavailable; used local export."
+      });
+      recordAudit({
+        type: "product.release.exported",
+        severity: productReleaseBundle.readiness.decision === "blocked" ? "warning" : "info",
+        summary: `Product release bundle exported locally: ${productReleaseBundle.readiness.decision}.`,
+        runId: productReleaseBundle.runId,
+        metadata: {
+          score: productReleaseBundle.readiness.score,
+          artifacts: productReleaseBundle.summary.artifacts,
+          missing: productReleaseBundle.summary.missing,
+          reviewRequired: productReleaseBundle.summary.reviewRequired,
           source: "local",
           gatewayError: error instanceof Error ? error.message : "unknown"
         }
@@ -1592,7 +1715,9 @@ export function App() {
           <ProductReadinessPanel
             report={productReadinessReport}
             exportLink={productReadinessLink}
+            releaseLink={productReleaseLink}
             onExport={exportProductReadiness}
+            onExportRelease={exportProductReleaseBundle}
           />
 
           <ProviderReadinessPanel

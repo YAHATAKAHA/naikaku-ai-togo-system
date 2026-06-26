@@ -6,6 +6,7 @@ import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "../src/domain/developmentIssues";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "../src/domain/executorRunner";
 import { buildProductReadinessReport } from "../src/domain/productReadiness";
+import { buildProductReleaseBundle } from "../src/domain/productReleaseBundle";
 import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
 import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
@@ -69,6 +70,7 @@ const server = createServer(async (request, response) => {
           "team-packages",
           "role-workspace-scaffolds",
           "product-readiness",
+          "product-release-bundle",
           "development-issues",
           "sandbox-capabilities",
           "sandbox-policy-check"
@@ -380,6 +382,80 @@ const server = createServer(async (request, response) => {
         auditEvents: body.auditEvents || []
       });
       sendJson(response, 200, report);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/product/release-bundle") {
+      const body = await readJson<{
+        workspace?: CabinetWorkspace;
+        run?: CabinetRun;
+        providerReadiness?: ProviderReadinessMatrix;
+        approvalRecords?: AutomationApprovalRecord[];
+        memoryEntries?: MemoryEntry[];
+        savedItems?: DevelopmentWorkItem[];
+        auditEvents?: AuditEvent[];
+      }>(request);
+      const workspace = body.workspace || {
+        roles: defaultRoles,
+        sandboxPolicy: defaultSandboxPolicy,
+        mission: defaultMission
+      };
+      const run = Array.isArray(body.run?.artifacts) ? body.run : undefined;
+      const providerReadiness = body.providerReadiness?.schema === "naikaku.provider-readiness.v1"
+        ? body.providerReadiness
+        : buildProviderReadinessMatrix({ roles: workspace.roles });
+      const sandboxCapabilities = buildSandboxCapabilityRegistry({
+        profiles: executorProfiles,
+        roles: workspace.roles,
+        sandboxPolicy: workspace.sandboxPolicy
+      });
+      const automationRunbook = run
+        ? buildAutomationRunbook({
+          run,
+          approvalRecords: body.approvalRecords || []
+        })
+        : undefined;
+      const handoff = buildTeamHandoff({
+        workspace,
+        run
+      });
+      const roleWorkspaces = buildRoleWorkspaceScaffolds({ handoff });
+      const developmentBoard = buildDevelopmentBoard({
+        handoff,
+        run,
+        memoryEntries: body.memoryEntries || [],
+        savedItems: body.savedItems || []
+      });
+      const issueDrafts = buildDevelopmentIssueDrafts({ board: developmentBoard });
+      const productReadiness = buildProductReadinessReport({
+        workspace,
+        run,
+        providerReadiness,
+        sandboxCapabilities,
+        automationRunbook,
+        teamHandoff: handoff,
+        roleWorkspaces,
+        developmentBoard,
+        issueDrafts,
+        approvalRecords: body.approvalRecords || [],
+        memoryEntries: body.memoryEntries || [],
+        auditEvents: body.auditEvents || []
+      });
+      const bundle = buildProductReleaseBundle({
+        workspace,
+        run,
+        providerReadiness,
+        productReadiness,
+        automationRunbook,
+        teamHandoff: handoff,
+        roleWorkspaces,
+        developmentBoard,
+        issueDrafts,
+        approvalRecords: body.approvalRecords || [],
+        memoryEntries: body.memoryEntries || [],
+        auditEvents: body.auditEvents || []
+      });
+      sendJson(response, 200, bundle);
       return;
     }
 

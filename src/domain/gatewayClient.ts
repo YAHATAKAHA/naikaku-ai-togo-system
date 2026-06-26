@@ -14,6 +14,7 @@ import type {
   ProviderConfig,
   ProviderReadinessMatrix,
   ProductReadinessReport,
+  ProductReleaseBundle,
   RoleWorkspaceScaffolds,
   TeamHandoff
 } from "./types";
@@ -377,6 +378,40 @@ export async function createProductReadinessViaGateway(
   }
 
   return (await response.json()) as ProductReadinessReport;
+}
+
+export async function createProductReleaseBundleViaGateway(
+  workspace: CabinetWorkspace,
+  providerReadiness: ProviderReadinessMatrix,
+  run?: CabinetRun | null,
+  approvalRecords: AutomationApprovalRecord[] = [],
+  memoryEntries: MemoryEntry[] = [],
+  savedItems: DevelopmentWorkItem[] = [],
+  auditEvents: unknown[] = [],
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/product/release-bundle`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      workspace,
+      providerReadiness,
+      run,
+      approvalRecords,
+      memoryEntries,
+      savedItems,
+      auditEvents
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway product release bundle failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as ProductReleaseBundle;
 }
 
 export async function createDevelopmentIssuesViaGateway(

@@ -466,6 +466,61 @@ export interface ProductReadinessReport {
   };
 }
 
+export type ProductReleaseBundleItemStatus = "included" | "missing" | "review-required";
+
+export interface ProductReleaseBundleItem {
+  id: string;
+  label: string;
+  schema: string;
+  status: ProductReleaseBundleItemStatus;
+  count: number;
+  exportHint: string;
+}
+
+export interface ProductReleaseBundle {
+  schema: "naikaku.product-release-bundle.v1";
+  generatedAt: string;
+  mission: string;
+  runId?: string;
+  readiness: {
+    decision: ProductReadinessDecision;
+    score: number;
+    blockers: number;
+    warnings: number;
+  };
+  contents: {
+    workspace: CabinetWorkspace;
+    run?: CabinetRun;
+    providerReadiness: ProviderReadinessMatrix;
+    productReadiness: ProductReadinessReport;
+    automationRunbook?: AutomationRunbook;
+    teamHandoff: TeamHandoff;
+    roleWorkspaces: RoleWorkspaceScaffolds;
+    developmentBoard: DevelopmentBoard;
+    issueDrafts: DevelopmentIssueDrafts;
+    approvalRecords: AutomationApprovalRecord[];
+    auditEvents: AuditEvent[];
+    memoryEntries: MemoryEntry[];
+  };
+  manifest: {
+    items: ProductReleaseBundleItem[];
+    operatorCommands: string[];
+    handoffChecklist: string[];
+    securityNotes: string[];
+  };
+  summary: {
+    artifacts: number;
+    missing: number;
+    reviewRequired: number;
+    roles: number;
+    automationSteps: number;
+    issueDrafts: number;
+    workspaceFiles: number;
+    auditEvents: number;
+    memoryEntries: number;
+  };
+}
+
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
 export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
@@ -564,6 +619,7 @@ export type AuditEventType =
   | "development.board.exported"
   | "development.issues.exported"
   | "product.readiness.exported"
+  | "product.release.exported"
   | "provider.readiness.checked"
   | "provider.readiness.exported";
 

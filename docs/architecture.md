@@ -28,6 +28,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Editable ministry, cabinet stage, and risk posture per role.
 - Mission pipeline visualization.
 - Product Readiness gate with exportable blocker/warning evidence across role APIs, automation, sandbox policy, parallel development, audit, and memory.
+- Product Release Bundle export for a single safe handoff artifact containing release manifest and current workbench evidence.
 - Sandbox policy editing.
 - Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
@@ -134,6 +135,8 @@ The workbench can export these packages as JSON. The local gateway also exposes 
 
 The report gives a score, decision, and gate list. Gates are grouped into role API, automation, sandbox, parallel development, evidence, and memory. Each gate includes status, evidence, and next action so an operator can see whether the current state is ship-ready, needs review, or blocked. The local gateway exposes the same report through `/v1/product/readiness`.
 
+`ProductReleaseBundle` packages the same state into `naikaku.product-release-bundle.v1`. It includes the workspace, optional run, provider readiness, product readiness report, automation runbook, team handoff, role workspace scaffolds, development board, issue drafts, approvals, audit events, reviewed memory, and a release manifest. The manifest marks included, missing, and review-required artifacts, then adds operator commands, handoff checklist items, and security notes for delivery.
+
 ## Development Board
 
 The Development Board converts planning output into work that separate teams can own. It merges:
@@ -175,6 +178,7 @@ Production persistence should store:
 - Executor evidence bundles for replay, audit, and runner compatibility checks.
 - Local gateway ledger records for approval decisions and executor evidence bundles.
 - Product readiness reports for release review and handoff.
+- Product release bundles for complete delivery handoff.
 - Team handoff packages for parallel development.
 - Role workspace scaffolds for separate team startup.
 - Development board items and status changes for separate implementation teams.

@@ -8,6 +8,7 @@ import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
 import { serializeProductReadinessReport } from "./productReadiness";
+import { serializeProductReleaseBundle } from "./productReleaseBundle";
 import { serializeRoleWorkspaceScaffoldScript, serializeRoleWorkspaceScaffolds } from "./roleWorkspaceScaffolds";
 import { completeRole, isDefaultRoleId } from "./roles";
 import type {
@@ -25,6 +26,7 @@ import type {
   ProviderReadinessMatrix,
   ProviderReadinessRow,
   ProductReadinessReport,
+  ProductReleaseBundle,
   RoleWorkspaceScaffolds,
   RunHistoryItem
 } from "./types";
@@ -404,6 +406,10 @@ export function serializeRoleWorkspaceScaffoldScriptExport(scaffolds: RoleWorksp
 
 export function serializeProductReadinessExport(report: ProductReadinessReport) {
   return serializeProductReadinessReport(report);
+}
+
+export function serializeProductReleaseBundleExport(bundle: ProductReleaseBundle) {
+  return serializeProductReleaseBundle(bundle);
 }
 
 export function loadProviderReadinessRows(): ProviderReadinessRow[] {

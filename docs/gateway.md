@@ -456,6 +456,59 @@ Response:
 }
 ```
 
+### `POST /v1/product/release-bundle`
+
+Builds a single release handoff artifact from the same state used by Product Readiness. This endpoint does not execute providers, runners, shell scripts, or GitHub calls. It packages the current workspace evidence into `naikaku.product-release-bundle.v1` with a manifest of included, missing, and review-required artifacts.
+
+```json
+{
+  "workspace": {
+    "mission": "Build a sandbox-first multi-model AI cabinet",
+    "roles": [],
+    "sandboxPolicy": {}
+  },
+  "providerReadiness": {
+    "schema": "naikaku.provider-readiness.v1",
+    "rows": []
+  },
+  "run": {
+    "id": "run-...",
+    "artifacts": [],
+    "automationActions": []
+  },
+  "approvalRecords": [],
+  "memoryEntries": [],
+  "savedItems": [],
+  "auditEvents": []
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.product-release-bundle.v1",
+  "readiness": {
+    "decision": "needs-review",
+    "score": 72
+  },
+  "summary": {
+    "artifacts": 12,
+    "missing": 1,
+    "reviewRequired": 4
+  },
+  "manifest": {
+    "items": [
+      {
+        "id": "product-readiness",
+        "status": "review-required"
+      }
+    ],
+    "operatorCommands": ["npm run test", "npm run build"]
+  }
+}
+```
+
 ### `POST /v1/development/issues`
 
 Builds GitHub-ready issue drafts from the current workspace, optional run, reviewed memory, and saved development item statuses. This endpoint does not call GitHub. It returns labeled Markdown payloads that a human, CLI, or future GitHub connector can use after repository authentication. The workbench can also derive a reviewable `gh issue create` shell script from this response, but the gateway still does not hold GitHub credentials or create issues directly.

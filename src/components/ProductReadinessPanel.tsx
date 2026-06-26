@@ -4,13 +4,17 @@ import type { ProductReadinessGate, ProductReadinessReport } from "../domain/typ
 interface ProductReadinessPanelProps {
   report: ProductReadinessReport;
   exportLink: { href: string; fileName: string } | null;
+  releaseLink: { href: string; fileName: string } | null;
   onExport: () => void;
+  onExportRelease: () => void;
 }
 
 export function ProductReadinessPanel({
   report,
   exportLink,
-  onExport
+  releaseLink,
+  onExport,
+  onExportRelease
 }: ProductReadinessPanelProps) {
   return (
     <section className="readiness-panel" data-decision={report.decision}>
@@ -33,9 +37,17 @@ export function ProductReadinessPanel({
         <button type="button" onClick={onExport} disabled={!report.gates.length}>
           <Download size={15} /> Export report
         </button>
+        <button type="button" onClick={onExportRelease} disabled={!report.gates.length}>
+          <Download size={15} /> Export bundle
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> Download JSON
+          </a>
+        ) : null}
+        {releaseLink ? (
+          <a href={releaseLink.href} download={releaseLink.fileName}>
+            <Download size={15} /> Download bundle
           </a>
         ) : null}
       </div>
