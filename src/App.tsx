@@ -2396,6 +2396,10 @@ export function App() {
         uncheckedPaths: artifactAudit.summary.uncheckedPaths,
         fingerprintedPaths: artifactAudit.summary.fingerprintedPaths,
         totalBytes: artifactAudit.summary.totalBytes,
+        uniquePaths: artifactAudit.summary.uniquePaths,
+        duplicatePathRefs: artifactAudit.summary.duplicatePathRefs,
+        uniqueFingerprintedPaths: artifactAudit.summary.uniqueFingerprintedPaths,
+        uniqueFingerprintBytes: artifactAudit.summary.uniqueFingerprintBytes,
         source: artifactAuditSource,
         gatewayError: artifactAuditError
       }

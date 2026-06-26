@@ -32,19 +32,7 @@ export function auditCodingAgentImplementationArtifacts({
   const probe = artifactProbe ?? pathExistsProbe(pathExists);
   const items = evidence.items.map((item) => auditItem(item, evidence, probe));
   const paths = items.flatMap((item) => item.paths);
-  const summary = {
-    total: items.length,
-    verified: items.filter((item) => item.decision === "verified").length,
-    needsArtifacts: items.filter((item) => item.decision === "needs-artifacts").length,
-    blocked: items.filter((item) => item.decision === "blocked").length,
-    paths: paths.length,
-    verifiedPaths: paths.filter((path) => path.status === "verified").length,
-    missingPaths: paths.filter((path) => path.status === "missing").length,
-    unsafePaths: paths.filter((path) => path.status === "unsafe").length,
-    uncheckedPaths: paths.filter((path) => path.status === "not-checked").length,
-    fingerprintedPaths: paths.filter((path) => Boolean(path.sha256)).length,
-    totalBytes: paths.reduce((total, path) => total + (path.bytes ?? 0), 0)
-  };
+  const summary = summarizeAudit(items, paths);
 
   return {
     schema: "naikaku.coding-agent-implementation-artifact-audit.v1",
@@ -162,6 +150,18 @@ function checkPath(
     };
   }
 
+  if (kind === "command-transcript" && typeof probeResult.bytes === "number" && probeResult.bytes <= 0) {
+    return {
+      kind,
+      path,
+      status: "missing",
+      reason: "Command transcript artifact exists but is empty.",
+      bytes: probeResult.bytes,
+      sha256: probeResult.sha256,
+      modifiedAt: probeResult.modifiedAt
+    };
+  }
+
   return {
     kind,
     path,
@@ -178,6 +178,43 @@ function pathExistsProbe(pathExists?: (relativePath: string) => boolean) {
   return (relativePath: string): CodingAgentArtifactProbeResult => ({
     exists: pathExists(relativePath)
   });
+}
+
+function summarizeAudit(
+  items: CodingAgentImplementationArtifactAuditItem[],
+  paths: CodingAgentImplementationArtifactPath[]
+): CodingAgentImplementationArtifactAudit["summary"] {
+  const uniquePathKeys = new Set(paths.map((path) => path.path));
+  const uniqueFingerprintedPathKeys = new Set(
+    paths.filter((path) => Boolean(path.sha256)).map((path) => path.path)
+  );
+
+  return {
+    total: items.length,
+    verified: items.filter((item) => item.decision === "verified").length,
+    needsArtifacts: items.filter((item) => item.decision === "needs-artifacts").length,
+    blocked: items.filter((item) => item.decision === "blocked").length,
+    paths: paths.length,
+    verifiedPaths: paths.filter((path) => path.status === "verified").length,
+    missingPaths: paths.filter((path) => path.status === "missing").length,
+    unsafePaths: paths.filter((path) => path.status === "unsafe").length,
+    uncheckedPaths: paths.filter((path) => path.status === "not-checked").length,
+    fingerprintedPaths: paths.filter((path) => Boolean(path.sha256)).length,
+    totalBytes: paths.reduce((total, path) => total + (path.bytes ?? 0), 0),
+    uniquePaths: uniquePathKeys.size,
+    duplicatePathRefs: paths.length - uniquePathKeys.size,
+    uniqueFingerprintedPaths: uniqueFingerprintedPathKeys.size,
+    uniqueFingerprintBytes: uniqueFingerprintBytes(paths)
+  };
+}
+
+function uniqueFingerprintBytes(paths: CodingAgentImplementationArtifactPath[]) {
+  const seen = new Set<string>();
+  return paths.reduce((total, path) => {
+    if (!path.sha256 || seen.has(path.path)) return total;
+    seen.add(path.path);
+    return total + (path.bytes ?? 0);
+  }, 0);
 }
 
 function itemDecision(

@@ -1060,6 +1060,10 @@ export interface CodingAgentImplementationArtifactAudit {
     uncheckedPaths: number;
     fingerprintedPaths: number;
     totalBytes: number;
+    uniquePaths: number;
+    duplicatePathRefs: number;
+    uniqueFingerprintedPaths: number;
+    uniqueFingerprintBytes: number;
   };
   honestyClaim: {
     claim: string;

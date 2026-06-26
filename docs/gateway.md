@@ -953,7 +953,7 @@ Implementation evidence decisions are:
 
 ### `POST /v1/development/coding-briefs/implementation-artifact-audit`
 
-Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, inspect command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints.
+Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, inspect command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints. Repeated references are reported separately from unique files, and empty command transcripts are treated as missing proof.
 
 ```json
 {
@@ -976,7 +976,11 @@ Response:
     "missingPaths": 0,
     "unsafePaths": 0,
     "fingerprintedPaths": 24,
-    "totalBytes": 48192
+    "totalBytes": 48192,
+    "uniquePaths": 9,
+    "duplicatePathRefs": 15,
+    "uniqueFingerprintedPaths": 9,
+    "uniqueFingerprintBytes": 18048
   },
   "items": [
     {
@@ -997,7 +1001,7 @@ Response:
 Artifact audit decisions are:
 
 - `verified`: every accepted item has safe, existing local changed-file and transcript references; gateway-backed checks include local file fingerprints.
-- `needs-artifacts`: required references are missing, absent, or could not be checked without gateway filesystem access.
+- `needs-artifacts`: required references are missing, absent, empty for command transcripts, or could not be checked without gateway filesystem access.
 - `blocked`: a referenced path is unsafe or implementation evidence is blocked.
 
 ### `POST /v1/sandbox/check`
