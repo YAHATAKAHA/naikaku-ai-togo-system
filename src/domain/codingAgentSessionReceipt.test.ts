@@ -104,6 +104,24 @@ describe("coding agent session receipt", () => {
     expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact must include a local artifact path");
   });
 
+  it("keeps receipts pending when evidence artifacts do not cover the requested evidence items", () => {
+    const bundle = defaultBundle();
+    const submitted = completedReceiptFor(bundle);
+    submitted.items[0].evidence = bundle.sessions[0].evidenceRequired.map((_, index) =>
+      `Unrelated proof ${index + 1}: output/coding-agent/${bundle.sessions[0].id}/unrelated-${index + 1}.txt`
+    );
+
+    const reviewed = reviewCodingAgentSessionReceipt({
+      bundle,
+      receipt: submitted
+    });
+
+    expect(reviewed.decision).toBe("needs-evidence");
+    expect(reviewed.summary.pendingEvidence).toBe(1);
+    expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact is required for: Changed files summary.");
+    expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact is required for: Relevant command output with exit codes.");
+  });
+
   it("keeps receipts pending when submitted artifact paths escape the sandbox", () => {
     const bundle = defaultBundle();
     const submitted = completedReceiptFor(bundle);

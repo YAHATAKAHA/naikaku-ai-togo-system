@@ -21,6 +21,7 @@ Naikaku adaptation:
 - Keep gateway and routing ideas, but make cabinet roles explicit.
 - Add sandbox policy and scoring as first-class product surfaces.
 - Avoid direct host control by default.
+- Keep operator language explicit in generated work packets so a Japan-first workbench can still hand tasks to multilingual coding agents without changing the evidence contract.
 
 ## Hermes Agent
 

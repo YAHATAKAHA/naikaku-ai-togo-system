@@ -28,8 +28,30 @@ describe("coding agent briefs", () => {
     expect(briefs.summary.total).toBe(board.items.length);
     expect(briefs.summary.implementable).toBeGreaterThan(0);
     expect(briefs.briefs[0].prompt).toContain("sandboxed coding agent");
+    expect(briefs.briefs[0].prompt).toContain("Write operator-facing summaries, risks, and next actions in Japanese.");
     expect(briefs.briefs[0].verificationCommands).toContain("npm run test");
     expect(briefs.briefs[0].sandbox.prohibitedActions).toContain("unreviewed-git-push");
+  });
+
+  it("keeps coding-agent machine contracts stable while localizing operator-facing output", () => {
+    const handoff = buildTeamHandoff({ workspace });
+    const board = buildDevelopmentBoard({ handoff });
+
+    const expected = [
+      ["ja", "Japanese"],
+      ["en", "English"],
+      ["zh-Hans", "Simplified Chinese"],
+      ["zh-Hant", "Traditional Chinese"],
+      ["ko", "Korean"]
+    ];
+
+    expected.forEach(([locale, language]) => {
+      const briefs = buildCodingAgentBriefs({ board, operatorLocale: locale });
+
+      expect(briefs.briefs[0].prompt).toContain(`Operator language: ${locale}.`);
+      expect(briefs.briefs[0].prompt).toContain(`Write operator-facing summaries, risks, and next actions in ${language}.`);
+      expect(briefs.briefs[0].prompt).toContain("Keep commands, file paths, JSON schema keys, and evidence artifact paths unchanged.");
+    });
   });
 
   it("requires release verification evidence for critical or release-gated work", () => {

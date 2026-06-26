@@ -198,9 +198,12 @@ function buildPrompt({
   releaseGateNextAction: string;
   operatorLocale: string;
 }) {
+  const languageInstruction = operatorLanguageInstruction(operatorLocale);
+
   return [
     "You are a sandboxed coding agent for Naikaku AI Togo.",
     `Operator language: ${operatorLocale}.`,
+    `Write operator-facing summaries, risks, and next actions in ${languageInstruction}. Keep commands, file paths, JSON schema keys, and evidence artifact paths unchanged.`,
     `Mission: ${board.mission}`,
     `Task: ${item.title}`,
     `Mode: ${mode}. Priority: ${item.priority}. Status: ${item.status}.`,
@@ -224,6 +227,14 @@ function buildPrompt({
     "",
     "Return a concise summary, files changed, verification evidence, and remaining risks."
   ].join("\n");
+}
+
+function operatorLanguageInstruction(locale: string) {
+  if (locale === "en") return "English";
+  if (locale === "zh-Hans") return "Simplified Chinese";
+  if (locale === "zh-Hant") return "Traditional Chinese";
+  if (locale === "ko") return "Korean";
+  return "Japanese";
 }
 
 function briefMarkdown(brief: CodingAgentBrief, index: number) {

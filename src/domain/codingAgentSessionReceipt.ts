@@ -266,6 +266,11 @@ function missingEvidenceFor({
   if (evidence.length < session.evidenceRequired.length) {
     missing.push("Evidence artifacts are required for every session evidence item.");
   }
+  session.evidenceRequired.forEach((required) => {
+    if (!evidence.some((entry) => evidenceEntryCoversRequirement(entry, required))) {
+      missing.push(`Evidence artifact is required for: ${required}`);
+    }
+  });
   evidence.forEach((entry) => {
     const artifactPath = evidenceArtifactPathFrom(entry);
     if (!artifactPath) {
@@ -282,6 +287,14 @@ function missingEvidenceFor({
   }
 
   return missing;
+}
+
+function evidenceEntryCoversRequirement(entry: string, required: string) {
+  return normalizeEvidenceText(entry).includes(normalizeEvidenceText(required));
+}
+
+function normalizeEvidenceText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 }
 
 function normalizeCommands(

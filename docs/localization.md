@@ -28,6 +28,7 @@ This is the same direction as a coding agent workbench: the system should help u
 
 - New visible UI copy should be routed through `src/i18n.ts`.
 - Japanese copy should be written first, then mirrored to English, Simplified Chinese, Traditional Chinese, and Korean.
+- Coding-agent briefs must pass the selected operator locale through to implementation agents, and those agents should localize summaries, risks, and next actions while preserving commands, paths, schema keys, and evidence artifact paths.
 - Security and release-gate terms must stay precise across languages: `dry-run`, production evidence, session-only secrets, approval, blocker, warning, and verifier decisions cannot be softened.
 - Exported JSON schemas remain language-neutral. Locale affects UI labels and operator-facing summaries, not machine contract keys.
 - CLI output may stay English until the UI locale foundation is complete; release evidence files must remain stable for automation.
