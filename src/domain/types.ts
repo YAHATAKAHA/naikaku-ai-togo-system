@@ -1064,6 +1064,8 @@ export interface CodingAgentImplementationArtifactAudit {
     duplicatePathRefs: number;
     uniqueFingerprintedPaths: number;
     uniqueFingerprintBytes: number;
+    reusedTranscriptPaths: number;
+    reusedTranscriptRefs: number;
   };
   honestyClaim: {
     claim: string;

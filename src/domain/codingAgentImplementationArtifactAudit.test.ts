@@ -46,6 +46,8 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.duplicatePathRefs).toBe(0);
     expect(audit.summary.uniqueFingerprintedPaths).toBe(audit.summary.fingerprintedPaths);
     expect(audit.summary.uniqueFingerprintBytes).toBe(audit.summary.totalBytes);
+    expect(audit.summary.reusedTranscriptPaths).toBe(0);
+    expect(audit.summary.reusedTranscriptRefs).toBe(0);
     expect(audit.items[0].paths[0]).toMatchObject({
       status: "verified",
       sha256,
@@ -70,7 +72,32 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.uniqueFingerprintBytes).toBe(0);
   });
 
-  it("separates repeated artifact references from unique fingerprinted files", () => {
+  it("allows shared changed files when each command has its own transcript", () => {
+    const evidence = acceptedEvidenceFixture();
+    evidence.items.forEach((item) => {
+      item.changedFiles = ["src/shared-artifact.ts"];
+    });
+
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.endsWith(".log") ? 456 : 123,
+        sha256: relativePath.endsWith(".log") ? "b".repeat(64) : "c".repeat(64),
+        modifiedAt: evidence.generatedAt
+      })
+    });
+
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.paths).toBe(24);
+    expect(audit.summary.uniquePaths).toBe(17);
+    expect(audit.summary.duplicatePathRefs).toBe(7);
+    expect(audit.summary.reusedTranscriptPaths).toBe(0);
+    expect(audit.summary.reusedTranscriptRefs).toBe(0);
+  });
+
+  it("rejects reused transcript references across command results", () => {
     const evidence = acceptedEvidenceFixture();
     evidence.items.forEach((item) => {
       item.changedFiles = ["src/shared-artifact.ts"];
@@ -91,7 +118,7 @@ describe("coding agent implementation artifact audit", () => {
       })
     });
 
-    expect(audit.decision).toBe("verified");
+    expect(audit.decision).toBe("needs-artifacts");
     expect(audit.summary.paths).toBe(24);
     expect(audit.summary.fingerprintedPaths).toBe(24);
     expect(audit.summary.uniquePaths).toBe(2);
@@ -99,6 +126,9 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.uniqueFingerprintedPaths).toBe(2);
     expect(audit.summary.totalBytes).toBeGreaterThan(audit.summary.uniqueFingerprintBytes);
     expect(audit.summary.uniqueFingerprintBytes).toBe(579);
+    expect(audit.summary.reusedTranscriptPaths).toBe(1);
+    expect(audit.summary.reusedTranscriptRefs).toBe(15);
+    expect(audit.items[0].missing.join(" ")).toContain("Transcript reference is reused by 16 command results");
   });
 
   it("rejects empty command transcript artifacts", () => {

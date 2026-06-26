@@ -131,7 +131,8 @@ export interface CodingAgentBriefsCopy {
     verifiedPaths: number,
     unresolvedPaths: number,
     applied: number,
-    skipped: number
+    skipped: number,
+    reusedTranscriptRefs: number
   ) => string;
   statusReceiptImportError: (errorMessage: string) => string;
 }
@@ -295,8 +296,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `ローカルで証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptReviewGateway: (decision, verified, pending, failed) => `取り込んだ証拠の審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
       statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `ローカルで取り込んだ証拠を審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped) =>
-        `${message} アーティファクト監査 ${artifactDecision}: ${verifiedPaths}件確認、${unresolvedPaths}件未解決。Development Board へ ${applied}件反映、${skipped}件保留。`,
+      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs) =>
+        `${message} アーティファクト監査 ${artifactDecision}: ${verifiedPaths}件確認、${unresolvedPaths}件未解決${reusedTranscriptRefs ? `、transcript再利用 ${reusedTranscriptRefs}件` : ""}。Development Board へ ${applied}件反映、${skipped}件保留。`,
       statusReceiptImportError: (errorMessage) => `証拠提出書を取り込めませんでした。${errorMessage}`
     },
     releaseRehearsal: {
@@ -439,8 +440,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `Coding receipt template completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptReviewGateway: (decision, verified, pending, failed) => `Imported receipt review ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
       statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `Imported receipt review completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped) =>
-        `${message} Artifact audit ${artifactDecision}: ${verifiedPaths} verified, ${unresolvedPaths} unresolved. Development Board applied ${applied}, held ${skipped}.`,
+      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs) =>
+        `${message} Artifact audit ${artifactDecision}: ${verifiedPaths} verified, ${unresolvedPaths} unresolved${reusedTranscriptRefs ? `, ${reusedTranscriptRefs} reused transcript refs` : ""}. Development Board applied ${applied}, held ${skipped}.`,
       statusReceiptImportError: (errorMessage) => `Receipt import failed. ${errorMessage}`
     },
     releaseRehearsal: {
@@ -583,8 +584,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusReceiptReviewGateway: (decision, verified, pending, failed) => `导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
       statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped) =>
-        `${message} 工件审计 ${artifactDecision}：${verifiedPaths} 项已确认，${unresolvedPaths} 项未解决。Development Board 已应用 ${applied} 项，保留 ${skipped} 项。`,
+      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs) =>
+        `${message} 工件审计 ${artifactDecision}：${verifiedPaths} 项已确认，${unresolvedPaths} 项未解决${reusedTranscriptRefs ? `，${reusedTranscriptRefs} 项 transcript 复用` : ""}。Development Board 已应用 ${applied} 项，保留 ${skipped} 项。`,
       statusReceiptImportError: (errorMessage) => `证据回执导入失败。${errorMessage}`
     },
     releaseRehearsal: {
@@ -727,8 +728,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusReceiptReviewGateway: (decision, verified, pending, failed) => `匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
       statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped) =>
-        `${message} 工件稽核 ${artifactDecision}：${verifiedPaths} 項已確認，${unresolvedPaths} 項未解決。Development Board 已套用 ${applied} 項，保留 ${skipped} 項。`,
+      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs) =>
+        `${message} 工件稽核 ${artifactDecision}：${verifiedPaths} 項已確認，${unresolvedPaths} 項未解決${reusedTranscriptRefs ? `，${reusedTranscriptRefs} 項 transcript 重複使用` : ""}。Development Board 已套用 ${applied} 項，保留 ${skipped} 項。`,
       statusReceiptImportError: (errorMessage) => `證據回執匯入失敗。${errorMessage}`
     },
     releaseRehearsal: {
@@ -871,8 +872,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `로컬에서 증거 템플릿 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptReviewGateway: (decision, verified, pending, failed) => `가져온 증거 검토 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
       statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `로컬에서 가져온 증거 검토 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped) =>
-        `${message} 아티팩트 감사 ${artifactDecision}: ${verifiedPaths}개 확인, ${unresolvedPaths}개 미해결. Development Board에 ${applied}개 적용, ${skipped}개 보류.`,
+      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs) =>
+        `${message} 아티팩트 감사 ${artifactDecision}: ${verifiedPaths}개 확인, ${unresolvedPaths}개 미해결${reusedTranscriptRefs ? `, transcript 재사용 ${reusedTranscriptRefs}개` : ""}. Development Board에 ${applied}개 적용, ${skipped}개 보류.`,
       statusReceiptImportError: (errorMessage) => `증거 제출서 가져오기에 실패했습니다. ${errorMessage}`
     },
     releaseRehearsal: {

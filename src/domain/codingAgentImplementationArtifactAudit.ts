@@ -30,7 +30,8 @@ export function auditCodingAgentImplementationArtifacts({
   pathExists
 }: AuditCodingAgentImplementationArtifactsInput): CodingAgentImplementationArtifactAudit {
   const probe = artifactProbe ?? pathExistsProbe(pathExists);
-  const items = evidence.items.map((item) => auditItem(item, evidence, probe));
+  const transcriptUsage = transcriptUsageFor(evidence);
+  const items = evidence.items.map((item) => auditItem(item, evidence, transcriptUsage, probe));
   const paths = items.flatMap((item) => item.paths);
   const summary = summarizeAudit(items, paths);
 
@@ -57,6 +58,7 @@ export function auditCodingAgentImplementationArtifacts({
 function auditItem(
   item: CodingAgentImplementationEvidenceItem,
   evidence: CodingAgentImplementationEvidence,
+  transcriptUsage: Map<string, number>,
   artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
 ): CodingAgentImplementationArtifactAuditItem {
   const paths: CodingAgentImplementationArtifactPath[] = [];
@@ -82,6 +84,13 @@ function auditItem(
     if (!result.transcriptRef) {
       missing.push(`Transcript reference is required: ${result.command}.`);
       return;
+    }
+
+    const usageCount = transcriptUsage.get(result.transcriptRef) ?? 0;
+    if (usageCount > 1) {
+      missing.push(
+        `Transcript reference is reused by ${usageCount} command results: ${result.transcriptRef}. Provide one transcript artifact per command result.`
+      );
     }
 
     paths.push(checkPath("command-transcript", result.transcriptRef, artifactProbe));
@@ -188,6 +197,8 @@ function summarizeAudit(
   const uniqueFingerprintedPathKeys = new Set(
     paths.filter((path) => Boolean(path.sha256)).map((path) => path.path)
   );
+  const transcriptRefCounts = countTranscriptRefs(paths);
+  const reusedTranscriptCounts = [...transcriptRefCounts.values()].filter((count) => count > 1);
 
   return {
     total: items.length,
@@ -204,8 +215,31 @@ function summarizeAudit(
     uniquePaths: uniquePathKeys.size,
     duplicatePathRefs: paths.length - uniquePathKeys.size,
     uniqueFingerprintedPaths: uniqueFingerprintedPathKeys.size,
-    uniqueFingerprintBytes: uniqueFingerprintBytes(paths)
+    uniqueFingerprintBytes: uniqueFingerprintBytes(paths),
+    reusedTranscriptPaths: reusedTranscriptCounts.length,
+    reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0)
   };
+}
+
+function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
+  const usage = new Map<string, number>();
+  evidence.items.forEach((item) => {
+    item.commandResults.forEach((result) => {
+      if (!result.transcriptRef) return;
+      usage.set(result.transcriptRef, (usage.get(result.transcriptRef) ?? 0) + 1);
+    });
+  });
+  return usage;
+}
+
+function countTranscriptRefs(paths: CodingAgentImplementationArtifactPath[]) {
+  const counts = new Map<string, number>();
+  paths
+    .filter((path) => path.kind === "command-transcript")
+    .forEach((path) => {
+      counts.set(path.path, (counts.get(path.path) ?? 0) + 1);
+    });
+  return counts;
 }
 
 function uniqueFingerprintBytes(paths: CodingAgentImplementationArtifactPath[]) {
