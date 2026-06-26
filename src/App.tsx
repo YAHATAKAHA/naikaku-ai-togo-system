@@ -69,6 +69,8 @@ import {
   serializeCodingAgentSessionBundleMarkdownExport,
   serializeCodingAgentSessionDrillExport,
   serializeCodingAgentSessionDrillMarkdownExport,
+  serializeCodingAgentImplementationEvidenceExport,
+  serializeCodingAgentImplementationEvidenceMarkdownExport,
   serializeCodingAgentSessionReceiptExport,
   serializeCodingAgentSessionReceiptMarkdownExport,
   serializeDevelopmentBoardExport,
@@ -91,6 +93,7 @@ import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
+import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "./domain/codingAgentSessionDrill";
 import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "./domain/codingAgentSessionReceipt";
@@ -115,6 +118,7 @@ import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type
 import {
   createAutomationRunbookViaGateway,
   createCodingAgentBriefsViaGateway,
+  createCodingAgentImplementationEvidenceViaGateway,
   createCodingAgentSessionBundleViaGateway,
   createCodingAgentSessionDrillViaGateway,
   createCodingAgentSessionReceiptTemplateViaGateway,
@@ -147,6 +151,7 @@ import type {
   CabinetRun,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
   CodingAgentSessionReceipt,
@@ -232,6 +237,8 @@ export function App() {
   const [codingAgentSessionReceipt, setCodingAgentSessionReceipt] = useState<CodingAgentSessionReceipt | null>(null);
   const [codingAgentSessionReceiptLink, setCodingAgentSessionReceiptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionReceiptMarkdownLink, setCodingAgentSessionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentImplementationEvidenceLink, setCodingAgentImplementationEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentImplementationEvidenceMarkdownLink, setCodingAgentImplementationEvidenceMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -611,6 +618,22 @@ export function App() {
   }, [codingAgentSessionReceiptMarkdownLink]);
 
   useEffect(() => {
+    return () => {
+      if (codingAgentImplementationEvidenceLink) {
+        URL.revokeObjectURL(codingAgentImplementationEvidenceLink.href);
+      }
+    };
+  }, [codingAgentImplementationEvidenceLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentImplementationEvidenceMarkdownLink) {
+        URL.revokeObjectURL(codingAgentImplementationEvidenceMarkdownLink.href);
+      }
+    };
+  }, [codingAgentImplementationEvidenceMarkdownLink]);
+
+  useEffect(() => {
     clearCodingAgentBriefReview();
   }, [codingAgentBriefs]);
 
@@ -862,6 +885,18 @@ export function App() {
     if (codingAgentSessionReceiptMarkdownLink) {
       URL.revokeObjectURL(codingAgentSessionReceiptMarkdownLink.href);
       setCodingAgentSessionReceiptMarkdownLink(null);
+    }
+    clearCodingAgentImplementationEvidence();
+  }
+
+  function clearCodingAgentImplementationEvidence() {
+    if (codingAgentImplementationEvidenceLink) {
+      URL.revokeObjectURL(codingAgentImplementationEvidenceLink.href);
+      setCodingAgentImplementationEvidenceLink(null);
+    }
+    if (codingAgentImplementationEvidenceMarkdownLink) {
+      URL.revokeObjectURL(codingAgentImplementationEvidenceMarkdownLink.href);
+      setCodingAgentImplementationEvidenceMarkdownLink(null);
     }
   }
 
@@ -2221,6 +2256,54 @@ export function App() {
     setCodingAgentSessionReceiptMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  async function createCodingAgentImplementationEvidenceDownload(receipt: CodingAgentSessionReceipt) {
+    let evidence: CodingAgentImplementationEvidence = buildCodingAgentImplementationEvidence({ receipt });
+    let source: "gateway" | "local" = "local";
+    let gatewayError: string | null = null;
+
+    try {
+      evidence = await createCodingAgentImplementationEvidenceViaGateway(receipt);
+      source = "gateway";
+    } catch (error) {
+      gatewayError = error instanceof Error ? error.message : "unknown";
+    }
+
+    const blob = new Blob([serializeCodingAgentImplementationEvidenceExport(evidence)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentImplementationEvidenceMarkdownExport(evidence)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = evidence.runId ? evidence.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-implementation-evidence-${runSlug}-${evidence.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-implementation-evidence-${runSlug}-${evidence.operatorLocale}.md`;
+
+    if (codingAgentImplementationEvidenceLink) {
+      URL.revokeObjectURL(codingAgentImplementationEvidenceLink.href);
+    }
+    if (codingAgentImplementationEvidenceMarkdownLink) {
+      URL.revokeObjectURL(codingAgentImplementationEvidenceMarkdownLink.href);
+    }
+
+    setCodingAgentImplementationEvidenceLink({ href: url, fileName });
+    setCodingAgentImplementationEvidenceMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    recordAudit({
+      type: "development.coding_sessions.implementation_evidence_prepared",
+      severity: evidence.decision === "accepted-for-handoff" ? "success" : evidence.decision === "needs-evidence" ? "warning" : "error",
+      summary: `Coding agent implementation evidence prepared: ${evidence.decision}.`,
+      runId: evidence.runId,
+      metadata: {
+        sessions: evidence.summary.total,
+        accepted: evidence.summary.accepted,
+        needsEvidence: evidence.summary.needsEvidence,
+        blocked: evidence.summary.blocked,
+        changedFiles: evidence.summary.changedFiles,
+        commandResults: evidence.summary.commandResults,
+        failedCommands: evidence.summary.failedCommands,
+        source,
+        gatewayError
+      }
+    });
+  }
+
   async function createCodingAgentSessionReceiptTemplate() {
     const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
@@ -2245,6 +2328,7 @@ export function App() {
       createCodingAgentSessionBundleDownload(bundle, false);
     }
     createCodingAgentSessionReceiptDownload(receipt);
+    clearCodingAgentImplementationEvidence();
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -2309,6 +2393,7 @@ export function App() {
         createCodingAgentSessionBundleDownload(bundle, false);
       }
       createCodingAgentSessionReceiptDownload(receipt);
+      await createCodingAgentImplementationEvidenceDownload(receipt);
       setRunState({
         status: source === "gateway" ? "gateway" : "local",
         message: source === "gateway"
@@ -2344,6 +2429,7 @@ export function App() {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
+      clearCodingAgentSessionReceipt();
       setRunState({
         status: "error",
         message: copy.codingBriefs.statusReceiptImportError(message)
@@ -2826,6 +2912,8 @@ export function App() {
             drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
             receiptLink={codingAgentSessionReceiptLink}
             receiptMarkdownLink={codingAgentSessionReceiptMarkdownLink}
+            implementationEvidenceLink={codingAgentImplementationEvidenceLink}
+            implementationEvidenceMarkdownLink={codingAgentImplementationEvidenceMarkdownLink}
             copy={copy.codingBriefs}
             onExport={() => void exportCodingAgentBriefs()}
             onExportMarkdown={exportCodingAgentBriefsMarkdown}

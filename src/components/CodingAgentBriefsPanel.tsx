@@ -29,6 +29,8 @@ interface CodingAgentBriefsPanelProps {
   drillMarkdownLink: { href: string; fileName: string } | null;
   receiptLink: { href: string; fileName: string } | null;
   receiptMarkdownLink: { href: string; fileName: string } | null;
+  implementationEvidenceLink: { href: string; fileName: string } | null;
+  implementationEvidenceMarkdownLink: { href: string; fileName: string } | null;
   copy: CodingAgentBriefsCopy;
   onExport: () => void;
   onExportMarkdown: () => void;
@@ -56,6 +58,8 @@ export function CodingAgentBriefsPanel({
   drillMarkdownLink,
   receiptLink,
   receiptMarkdownLink,
+  implementationEvidenceLink,
+  implementationEvidenceMarkdownLink,
   copy,
   onExport,
   onExportMarkdown,
@@ -172,6 +176,16 @@ export function CodingAgentBriefsPanel({
         {receiptMarkdownLink ? (
           <a href={receiptMarkdownLink.href} download={receiptMarkdownLink.fileName}>
             <Download size={15} /> {copy.downloadReceiptMarkdown}
+          </a>
+        ) : null}
+        {implementationEvidenceLink ? (
+          <a href={implementationEvidenceLink.href} download={implementationEvidenceLink.fileName}>
+            <Download size={15} /> {copy.downloadImplementationEvidenceJson}
+          </a>
+        ) : null}
+        {implementationEvidenceMarkdownLink ? (
+          <a href={implementationEvidenceMarkdownLink.href} download={implementationEvidenceMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadImplementationEvidenceMarkdown}
           </a>
         ) : null}
       </div>

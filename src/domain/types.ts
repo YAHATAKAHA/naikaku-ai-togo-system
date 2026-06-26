@@ -955,6 +955,52 @@ export interface CodingAgentSessionReceipt {
   };
 }
 
+export type CodingAgentImplementationEvidenceDecision =
+  | "accepted-for-handoff"
+  | "needs-evidence"
+  | "blocked";
+
+export interface CodingAgentImplementationEvidenceItem {
+  sessionId: string;
+  title: string;
+  receiptStatus: CodingAgentSessionReceiptStatus;
+  accepted: boolean;
+  changedFiles: string[];
+  commandResults: CodingAgentCommandResult[];
+  evidence: string[];
+  risks: string[];
+  missing: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentImplementationEvidence {
+  schema: "naikaku.coding-agent-implementation-evidence.v1";
+  generatedAt: string;
+  sourceSchema: CodingAgentSessionReceipt["schema"];
+  sourceDecision: CodingAgentSessionReceiptDecision;
+  decision: CodingAgentImplementationEvidenceDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentImplementationEvidenceItem[];
+  summary: {
+    total: number;
+    accepted: number;
+    needsEvidence: number;
+    blocked: number;
+    changedFiles: number;
+    commandResults: number;
+    failedCommands: number;
+    evidenceItems: number;
+    riskNotes: number;
+  };
+  honestyClaim: {
+    level: "implementation-evidence-summary";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type AuditEventType =
   | "workspace.saved"
   | "workspace.imported"
@@ -983,6 +1029,7 @@ export type AuditEventType =
   | "development.coding_sessions.drilled"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
+  | "development.coding_sessions.implementation_evidence_prepared"
   | "product.readiness.exported"
   | "product.release.exported"
   | "release.rehearsal.completed"

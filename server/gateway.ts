@@ -4,6 +4,7 @@ import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automat
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
+import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
 import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "../src/domain/codingAgentSessionReceipt";
@@ -92,6 +93,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-session-bundle",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
+          "coding-agent-implementation-evidence",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -701,6 +703,24 @@ const server = createServer(async (request, response) => {
         receipt: body.receipt
       });
       sendJson(response, 200, receipt);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/implementation-evidence") {
+      const body = await readJson<{
+        receipt?: CodingAgentSessionReceipt;
+      }>(request);
+      if (body.receipt?.schema !== "naikaku.coding-agent-session-receipt.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "receipt with schema naikaku.coding-agent-session-receipt.v1 is required."
+        });
+        return;
+      }
+      const evidence = buildCodingAgentImplementationEvidence({
+        receipt: body.receipt
+      });
+      sendJson(response, 200, evidence);
       return;
     }
 

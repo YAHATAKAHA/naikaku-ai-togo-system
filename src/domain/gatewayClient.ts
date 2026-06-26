@@ -7,6 +7,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
   CodingAgentSessionReceipt,
@@ -652,6 +653,26 @@ export async function reviewCodingAgentSessionReceiptViaGateway(
   }
 
   return (await response.json()) as CodingAgentSessionReceipt;
+}
+
+export async function createCodingAgentImplementationEvidenceViaGateway(
+  receipt: CodingAgentSessionReceipt,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/implementation-evidence`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ receipt }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent implementation evidence failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentImplementationEvidence;
 }
 
 export async function checkGatewayHealth() {

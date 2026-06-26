@@ -79,6 +79,8 @@ export interface CodingAgentBriefsCopy {
   importReceipt: string;
   downloadReceiptJson: string;
   downloadReceiptMarkdown: string;
+  downloadImplementationEvidenceJson: string;
+  downloadImplementationEvidenceMarkdown: string;
   reviewDecision: string;
   reviewNextAction: string;
   reviewReady: string;
@@ -239,6 +241,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       importReceipt: "証拠取込",
       downloadReceiptJson: "証拠JSON",
       downloadReceiptMarkdown: "証拠MD",
+      downloadImplementationEvidenceJson: "実装証拠JSON",
+      downloadImplementationEvidenceMarkdown: "実装証拠MD",
       reviewDecision: "Review判定",
       reviewNextAction: "次の対応",
       reviewReady: "全てのブリーフは代理への引き渡し前チェックを通過しました。",
@@ -379,6 +383,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       importReceipt: "Import receipt",
       downloadReceiptJson: "Receipt JSON",
       downloadReceiptMarkdown: "Receipt MD",
+      downloadImplementationEvidenceJson: "Implementation evidence JSON",
+      downloadImplementationEvidenceMarkdown: "Implementation evidence MD",
       reviewDecision: "Review decision",
       reviewNextAction: "Next action",
       reviewReady: "All briefs passed pre-handoff checks for coding agents.",
@@ -519,6 +525,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       importReceipt: "导入证据",
       downloadReceiptJson: "证据 JSON",
       downloadReceiptMarkdown: "证据 MD",
+      downloadImplementationEvidenceJson: "实现证据 JSON",
+      downloadImplementationEvidenceMarkdown: "实现证据 MD",
       reviewDecision: "审查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通过交付给编程代理前的检查。",
@@ -659,6 +667,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       importReceipt: "匯入證據",
       downloadReceiptJson: "證據 JSON",
       downloadReceiptMarkdown: "證據 MD",
+      downloadImplementationEvidenceJson: "實作證據 JSON",
+      downloadImplementationEvidenceMarkdown: "實作證據 MD",
       reviewDecision: "審查判定",
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通過交付給編程代理前的檢查。",
@@ -799,6 +809,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       importReceipt: "증거 가져오기",
       downloadReceiptJson: "증거 JSON",
       downloadReceiptMarkdown: "증거 MD",
+      downloadImplementationEvidenceJson: "구현 증거 JSON",
+      downloadImplementationEvidenceMarkdown: "구현 증거 MD",
       reviewDecision: "검토 판정",
       reviewNextAction: "다음 조치",
       reviewReady: "모든 브리프가 코딩 에이전트 인계 전 검사를 통과했습니다.",

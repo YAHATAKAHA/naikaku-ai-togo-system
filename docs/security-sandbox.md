@@ -116,6 +116,8 @@ Coding Agent Session Drills add one more rehearsal boundary before real programm
 
 Coding Agent Session Receipts are that return boundary. A receipt template tells real coding agents what evidence to submit, and the workbench can import a filled receipt for gateway-backed or local structural review. Receipt review checks the submitted shape for changed files, command exit codes, evidence artifacts, and risk notes. The review still does not inspect files or rerun commands; production handoff must attach authenticated runner transcripts and production-mode release verification before the system can claim real implementation completion.
 
+Coding Agent Implementation Evidence is the handoff summary derived from a reviewed receipt. It makes the implementation claim easier to archive and share, but it inherits the same boundary: it summarizes submitted changed files, command results, evidence artifacts, and risks without independently executing or inspecting them.
+
 ## Sandbox Capability Registry
 
 The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.

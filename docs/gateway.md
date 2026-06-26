@@ -911,10 +911,44 @@ Reviews a filled receipt against the original session bundle. The workbench uses
 }
 ```
 
-Response decisions are:
+Receipt review decisions are:
 
 - `verified`: every ready session includes changed files, passing command exit codes, evidence artifacts, and risk notes.
 - `needs-evidence`: no command failed, but required implementation evidence is still missing.
+- `blocked`: a command failed, a session is held, or production evidence is required before acceptance.
+
+### `POST /v1/development/coding-briefs/implementation-evidence`
+
+Builds a handoff summary from a reviewed coding-agent receipt. This endpoint does not execute code, inspect changed files, rerun commands, call providers, browse, deploy, send external messages, or push Git. It only converts the receipt into `naikaku.coding-agent-implementation-evidence.v1` with accepted sessions, command results, evidence artifacts, missing proof, and risk notes.
+
+```json
+{
+  "receipt": {
+    "schema": "naikaku.coding-agent-session-receipt.v1",
+    "decision": "verified"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-implementation-evidence.v1",
+  "sourceDecision": "verified",
+  "decision": "accepted-for-handoff",
+  "summary": {
+    "accepted": 8,
+    "failedCommands": 0,
+    "evidenceItems": 32
+  }
+}
+```
+
+Implementation evidence decisions are:
+
+- `accepted-for-handoff`: the reviewed receipt is structurally complete for handoff.
+- `needs-evidence`: the reviewed receipt still lacks required implementation evidence.
 - `blocked`: a command failed, a session is held, or production evidence is required before acceptance.
 
 ### `POST /v1/sandbox/check`

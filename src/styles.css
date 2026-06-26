@@ -4164,6 +4164,18 @@ meter {
     grid-template-columns: 1fr;
   }
 
+  .coding-briefs-export-row > span {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .coding-briefs-export-row button,
+  .coding-briefs-export-row a {
+    flex: 1 1 132px;
+    min-width: 132px;
+    scroll-margin-top: 340px;
+  }
+
   .operator-footer {
     padding: 0 12px 12px;
     min-width: 0;

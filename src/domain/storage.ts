@@ -4,6 +4,7 @@ import { serializeAutomationRunbook } from "./automationRunbook";
 import { appendAuditEvent as appendAuditEventRecord, serializeAuditEvents } from "./auditLog";
 import { serializeCodingAgentBriefReview } from "./codingAgentBriefReview";
 import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "./codingAgentBriefs";
+import { serializeCodingAgentImplementationEvidence, serializeCodingAgentImplementationEvidenceMarkdown } from "./codingAgentImplementationEvidence";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
 import { serializeCodingAgentSessionReceipt, serializeCodingAgentSessionReceiptMarkdown } from "./codingAgentSessionReceipt";
@@ -27,6 +28,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
   CodingAgentSessionReceipt,
@@ -444,6 +446,14 @@ export function serializeCodingAgentSessionReceiptExport(report: CodingAgentSess
 
 export function serializeCodingAgentSessionReceiptMarkdownExport(report: CodingAgentSessionReceipt) {
   return serializeCodingAgentSessionReceiptMarkdown(report);
+}
+
+export function serializeCodingAgentImplementationEvidenceExport(report: CodingAgentImplementationEvidence) {
+  return serializeCodingAgentImplementationEvidence(report);
+}
+
+export function serializeCodingAgentImplementationEvidenceMarkdownExport(report: CodingAgentImplementationEvidence) {
+  return serializeCodingAgentImplementationEvidenceMarkdown(report);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {
