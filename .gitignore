@@ -8,6 +8,7 @@ coverage
 *.tsbuildinfo
 .playwright-cli
 output/playwright
+output/coding-agent
 output/rehearsal
 output/rehearsal-drill
 output/release-drill

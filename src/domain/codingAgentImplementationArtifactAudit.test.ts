@@ -382,6 +382,7 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
     items: template.items.map((item) => {
       const session = bundle.sessions.find((candidate) => candidate.id === item.sessionId);
       if (!session) return item;
+      const evidencePrefix = session.sandboxContract.evidenceArtifactPrefix;
       return {
         ...item,
         changedFiles: [`src/${session.id}.ts`],
@@ -389,10 +390,10 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
           command,
           exitCode: 0,
           outputSummary: `${command} passed in sandbox workspace.`,
-          transcriptRef: `output/coding-agent/${session.id}/${slug(command)}.log`
+          transcriptRef: `${evidencePrefix}${slug(command)}.log`
         })),
         evidence: session.evidenceRequired.map((evidence, index) =>
-          `${evidence}: output/coding-agent/${session.id}/evidence-${index + 1}.txt`
+          `${evidence}: ${evidencePrefix}evidence-${index + 1}.txt`
         ),
         risks: ["No known remaining risks after local verification."]
       };

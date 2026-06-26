@@ -260,6 +260,10 @@ function missingEvidenceFor({
       missing.push(`Command transcript artifact reference is required: ${command}`);
     } else if (!isSafeRelativeArtifactPath(result.transcriptRef)) {
       missing.push(`Command transcript path must be a safe relative artifact path: ${command}`);
+    } else if (!isWithinSessionEvidencePrefix(result.transcriptRef, session.sandboxContract.evidenceArtifactPrefix)) {
+      missing.push(
+        `Command transcript must stay under session evidence prefix ${session.sandboxContract.evidenceArtifactPrefix}: ${command}`
+      );
     }
   }
 
@@ -279,6 +283,12 @@ function missingEvidenceFor({
     }
     if (!isSafeRelativeArtifactPath(artifactPath)) {
       missing.push(`Evidence artifact path must be a safe relative artifact path: ${artifactPath}`);
+      return;
+    }
+    if (!isWithinSessionEvidencePrefix(artifactPath, session.sandboxContract.evidenceArtifactPrefix)) {
+      missing.push(
+        `Evidence artifact must stay under session evidence prefix ${session.sandboxContract.evidenceArtifactPrefix}: ${artifactPath}`
+      );
     }
   });
 
@@ -295,6 +305,19 @@ function evidenceEntryCoversRequirement(entry: string, required: string) {
 
 function normalizeEvidenceText(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
+
+function isWithinSessionEvidencePrefix(path: string, prefix: string) {
+  return normalizeArtifactPath(path).startsWith(normalizeArtifactPrefix(prefix));
+}
+
+function normalizeArtifactPrefix(prefix: string) {
+  const normalized = normalizeArtifactPath(prefix);
+  return normalized.endsWith("/") ? normalized : `${normalized}/`;
+}
+
+function normalizeArtifactPath(path: string) {
+  return path.trim().replace(/^\.\/+/, "").replace(/\/+/g, "/");
 }
 
 function normalizeCommands(

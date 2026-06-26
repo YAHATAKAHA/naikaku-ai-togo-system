@@ -71,6 +71,7 @@ interface ReceiptDrillSummary {
   };
   valid: DrillCaseSummary;
   mismatched: DrillCaseSummary;
+  outOfScope: DrillCaseSummary;
   honestyClaim: {
     level: "local-drill";
     claim: string;
@@ -101,7 +102,6 @@ async function main() {
     bundle: context.bundle,
     board: context.board,
     outputDir,
-    outputRelativeDir,
     generatedAt: options.generatedAt,
     mismatchFirstEvidence: false
   });
@@ -110,12 +110,19 @@ async function main() {
     bundle: context.bundle,
     board: context.board,
     outputDir,
-    outputRelativeDir,
     generatedAt: options.generatedAt,
     mismatchFirstEvidence: true
   });
+  const outOfScope = await runCase({
+    name: "out-of-scope",
+    bundle: context.bundle,
+    board: context.board,
+    outputDir,
+    generatedAt: options.generatedAt,
+    outOfScopeFirstEvidence: true
+  });
 
-  assertDrillResults(valid, mismatched);
+  assertDrillResults(valid, mismatched, outOfScope);
 
   const summary: ReceiptDrillSummary = {
     schema: "naikaku.coding-agent-receipt-drill.v1",
@@ -132,12 +139,13 @@ async function main() {
     },
     valid: caseSummary(valid),
     mismatched: caseSummary(mismatched),
+    outOfScope: caseSummary(outOfScope),
     honestyClaim: {
       level: "local-drill",
       claim: "This drill creates local sandbox artifacts and verifies receipt review, implementation evidence, artifact audit, and Development Board reconciliation behavior.",
       limitations: [
         "It does not call a model provider, external coding agent, browser, deploy target, external service, or Git remote.",
-        "It proves the local evidence gates reject mismatched evidence labels; it is not production runner evidence."
+        "It proves the local evidence gates reject mismatched evidence labels and artifacts outside the session sandbox prefix; it is not production runner evidence."
       ],
       productionRequirements: [
         "Attach real coding-agent changed-file evidence before production handoff.",
@@ -193,25 +201,24 @@ async function runCase({
   bundle,
   board,
   outputDir,
-  outputRelativeDir,
   generatedAt,
-  mismatchFirstEvidence
+  mismatchFirstEvidence = false,
+  outOfScopeFirstEvidence = false
 }: {
   name: string;
   bundle: CodingAgentSessionBundle;
   board: DevelopmentBoard;
   outputDir: string;
-  outputRelativeDir: string;
   generatedAt: string;
-  mismatchFirstEvidence: boolean;
+  mismatchFirstEvidence?: boolean;
+  outOfScopeFirstEvidence?: boolean;
 }): Promise<DrillCaseResult> {
   const receipt = await completedReceiptFor({
     name,
     bundle,
-    outputDir,
-    outputRelativeDir,
     generatedAt,
-    mismatchFirstEvidence
+    mismatchFirstEvidence,
+    outOfScopeFirstEvidence
   });
   const review = reviewCodingAgentSessionReceipt({
     bundle,
@@ -254,17 +261,15 @@ async function runCase({
 async function completedReceiptFor({
   name,
   bundle,
-  outputDir,
-  outputRelativeDir,
   generatedAt,
-  mismatchFirstEvidence
+  mismatchFirstEvidence = false,
+  outOfScopeFirstEvidence = false
 }: {
   name: string;
   bundle: CodingAgentSessionBundle;
-  outputDir: string;
-  outputRelativeDir: string;
   generatedAt: string;
-  mismatchFirstEvidence: boolean;
+  mismatchFirstEvidence?: boolean;
+  outOfScopeFirstEvidence?: boolean;
 }) {
   const template = buildCodingAgentSessionReceiptTemplate({
     bundle,
@@ -285,9 +290,8 @@ async function completedReceiptFor({
       item,
       session,
       itemIndex: index,
-      outputDir,
-      outputRelativeDir,
-      mismatchEvidence: mismatchFirstEvidence && index === 0
+      mismatchEvidence: mismatchFirstEvidence && index === 0,
+      outOfScopeEvidence: outOfScopeFirstEvidence && index === 0
     }));
   }
 
@@ -302,21 +306,21 @@ async function completedReceiptItemFor({
   item,
   session,
   itemIndex,
-  outputDir,
-  outputRelativeDir,
-  mismatchEvidence
+  mismatchEvidence,
+  outOfScopeEvidence
 }: {
   name: string;
   item: CodingAgentSessionReceiptItem;
   session: CodingAgentSession;
   itemIndex: number;
-  outputDir: string;
-  outputRelativeDir: string;
   mismatchEvidence: boolean;
+  outOfScopeEvidence: boolean;
 }): Promise<CodingAgentSessionReceiptItem> {
-  const sessionPath = `${name}/artifacts/${safeSlug(item.sessionId)}`;
-  const changedFile = `${outputRelativeDir}/${sessionPath}/changed-file-${itemIndex + 1}.txt`;
-  await writeArtifact(path.join(outputDir, sessionPath, `changed-file-${itemIndex + 1}.txt`), [
+  const sessionPath = outOfScopeEvidence
+    ? `output/coding-agent/out-of-scope/${safeSlug(item.sessionId)}`
+    : `${normalizedPrefix(session.sandboxContract.evidenceArtifactPrefix)}${name}`;
+  const changedFile = `${sessionPath}/changed-file-${itemIndex + 1}.txt`;
+  await writeArtifact(path.resolve(sessionPath, `changed-file-${itemIndex + 1}.txt`), [
     `Changed files summary for ${item.sessionId}`,
     `Source item: ${item.sourceItemId || "none"}`,
     "Local coding-agent receipt drill artifact."
@@ -325,8 +329,8 @@ async function completedReceiptItemFor({
   const commandResults: CodingAgentCommandResult[] = [];
   for (let commandIndex = 0; commandIndex < session.verificationCommands.length; commandIndex += 1) {
     const command = session.verificationCommands[commandIndex];
-    const transcriptRef = `${outputRelativeDir}/${sessionPath}/transcript-${commandIndex + 1}.log`;
-    await writeArtifact(path.join(outputDir, sessionPath, `transcript-${commandIndex + 1}.log`), [
+    const transcriptRef = `${sessionPath}/transcript-${commandIndex + 1}.log`;
+    await writeArtifact(path.resolve(sessionPath, `transcript-${commandIndex + 1}.log`), [
       `command: ${command}`,
       "exit code: 0",
       "exitCode: 0",
@@ -343,8 +347,8 @@ async function completedReceiptItemFor({
   const evidence: string[] = [];
   for (let evidenceIndex = 0; evidenceIndex < session.evidenceRequired.length; evidenceIndex += 1) {
     const required = session.evidenceRequired[evidenceIndex];
-    const artifactPath = `${outputRelativeDir}/${sessionPath}/evidence-${evidenceIndex + 1}.txt`;
-    await writeArtifact(path.join(outputDir, sessionPath, `evidence-${evidenceIndex + 1}.txt`), [
+    const artifactPath = `${sessionPath}/evidence-${evidenceIndex + 1}.txt`;
+    await writeArtifact(path.resolve(sessionPath, `evidence-${evidenceIndex + 1}.txt`), [
       required,
       `Session: ${item.sessionId}`,
       "Local coding-agent receipt drill evidence artifact."
@@ -388,7 +392,7 @@ function localArtifactProbe(relativePath: string) {
   };
 }
 
-function assertDrillResults(valid: DrillCaseResult, mismatched: DrillCaseResult) {
+function assertDrillResults(valid: DrillCaseResult, mismatched: DrillCaseResult, outOfScope: DrillCaseResult) {
   assertEqual(valid.review.decision, "verified", "valid receipt review decision");
   assertEqual(valid.evidence.decision, "accepted-for-handoff", "valid implementation evidence decision");
   assertEqual(valid.audit.decision, "verified", "valid artifact audit decision");
@@ -406,6 +410,17 @@ function assertDrillResults(valid: DrillCaseResult, mismatched: DrillCaseResult)
   assertEqual(mismatched.evidence.decision, "needs-evidence", "mismatched implementation evidence decision");
   assertEqual(mismatched.audit.decision, "needs-artifacts", "mismatched artifact audit decision");
   assertEqual(mismatched.reconciliation.summary.applied, 0, "mismatched reconciliation applied count");
+
+  assertEqual(outOfScope.review.decision, "needs-evidence", "out-of-scope receipt review decision");
+  assertEqual(outOfScope.review.summary.pendingEvidence, 1, "out-of-scope pending evidence count");
+  if (!outOfScope.review.items[0].missing.some((item) =>
+    item.includes("Evidence artifact must stay under session evidence prefix")
+  )) {
+    throw new Error("Out-of-scope drill did not report evidence outside the session sandbox prefix.");
+  }
+  assertEqual(outOfScope.evidence.decision, "needs-evidence", "out-of-scope implementation evidence decision");
+  assertEqual(outOfScope.audit.decision, "needs-artifacts", "out-of-scope artifact audit decision");
+  assertEqual(outOfScope.reconciliation.summary.applied, 0, "out-of-scope reconciliation applied count");
 }
 
 function caseSummary(result: DrillCaseResult): DrillCaseSummary {
@@ -458,6 +473,15 @@ function summaryMarkdown(summary: ReceiptDrillSummary) {
     `- Implementation evidence: ${summary.mismatched.evidenceDecision}`,
     `- Artifact audit: ${summary.mismatched.artifactAuditDecision}`,
     `- Development Board applied: ${summary.mismatched.boardItemsApplied}`,
+    "",
+    "## Out-of-Scope Receipt",
+    "",
+    `- Receipt review: ${summary.outOfScope.receiptDecision}`,
+    `- Pending evidence: ${summary.outOfScope.pendingEvidence}`,
+    `- First missing evidence: ${summary.outOfScope.firstMissingEvidence || "none"}`,
+    `- Implementation evidence: ${summary.outOfScope.evidenceDecision}`,
+    `- Artifact audit: ${summary.outOfScope.artifactAuditDecision}`,
+    `- Development Board applied: ${summary.outOfScope.boardItemsApplied}`,
     "",
     "## Honesty Claim",
     "",
@@ -517,8 +541,8 @@ Options:
   --generated-at <iso>   Stable timestamp for generated artifacts.
   -h, --help             Show this help.
 
-The drill writes valid and mismatched receipt flows, then fails if the valid flow
-does not verify or if the mismatched flow is accidentally accepted.`);
+The drill writes valid, mismatched, and out-of-scope receipt flows, then fails
+if the valid flow does not verify or if either negative flow is accepted.`);
 }
 
 function printSummary(summary: ReceiptDrillSummary) {
@@ -537,6 +561,11 @@ function printSummary(summary: ReceiptDrillSummary) {
     `audit ${summary.mismatched.artifactAuditDecision}, board applied ${summary.mismatched.boardItemsApplied}`
   );
   console.log(`Mismatched first missing: ${summary.mismatched.firstMissingEvidence}`);
+  console.log(
+    `Out-of-scope: receipt ${summary.outOfScope.receiptDecision}, pending ${summary.outOfScope.pendingEvidence}, ` +
+    `audit ${summary.outOfScope.artifactAuditDecision}, board applied ${summary.outOfScope.boardItemsApplied}`
+  );
+  console.log(`Out-of-scope first missing: ${summary.outOfScope.firstMissingEvidence}`);
 }
 
 async function writeArtifact(filePath: string, content: string) {
@@ -559,6 +588,11 @@ function relativeOutputDir(outputDir: string) {
 
 function safeSlug(value: string) {
   return value.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+}
+
+function normalizedPrefix(prefix: string) {
+  const normalized = prefix.trim().replace(/^\.\/+/, "").replace(/\/+/g, "/");
+  return normalized.endsWith("/") ? normalized : `${normalized}/`;
 }
 
 function assertEqual<T>(actual: T, expected: T, label: string) {

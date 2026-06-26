@@ -46,6 +46,7 @@ export function buildVerificationManifest({
   const checks = [
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
+    codingAgentOutOfScopeCheck(codingAgentReport),
     localizationDrillCheck(localizationDrill),
     executorContractDrillCheck(executorContractDrill),
     releaseVerificationCheck(releaseVerification),
@@ -152,6 +153,35 @@ function codingAgentMismatchCheck(report: CodingAgentReceiptDrillSummary): Verif
     nextAction: ok
       ? "Keep this anti-fake drill in the release verification path."
       : "Restore evidence coverage checks so unrelated artifacts cannot satisfy receipt requirements."
+  };
+}
+
+function codingAgentOutOfScopeCheck(report: CodingAgentReceiptDrillSummary): VerificationManifestCheck {
+  const missingEvidence = report.outOfScope.firstMissingEvidence || "";
+  const ok = report.outOfScope.receiptDecision === "needs-evidence"
+    && report.outOfScope.pendingEvidence > 0
+    && report.outOfScope.evidenceDecision === "needs-evidence"
+    && report.outOfScope.artifactAuditDecision === "needs-artifacts"
+    && report.outOfScope.boardItemsApplied === 0
+    && missingEvidence.includes("session evidence prefix");
+
+  return {
+    id: "coding-agent-out-of-scope-receipt",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent evidence outside the session sandbox prefix stayed blocked and did not update the Development Board."
+      : "Out-of-scope coding-agent evidence was not blocked correctly.",
+    evidence: [
+      `Receipt: ${report.outOfScope.receiptDecision}`,
+      `Pending evidence: ${report.outOfScope.pendingEvidence}`,
+      `Implementation evidence: ${report.outOfScope.evidenceDecision}`,
+      `Artifact audit: ${report.outOfScope.artifactAuditDecision}`,
+      `Board applied: ${report.outOfScope.boardItemsApplied}`,
+      `First missing: ${report.outOfScope.firstMissingEvidence || "none"}`
+    ],
+    nextAction: ok
+      ? "Keep the sandbox-prefix receipt drill in the release verification path."
+      : "Restore session evidence-prefix checks so unrelated sandbox artifacts cannot satisfy receipt requirements."
   };
 }
 

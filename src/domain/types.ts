@@ -670,6 +670,15 @@ export interface CodingAgentReceiptDrillSummary {
     boardItemsSkipped: number;
     firstMissingEvidence: string | null;
   };
+  outOfScope: {
+    receiptDecision: string;
+    pendingEvidence: number;
+    evidenceDecision: string;
+    artifactAuditDecision: string;
+    boardItemsApplied: number;
+    boardItemsSkipped: number;
+    firstMissingEvidence: string | null;
+  };
   honestyClaim: {
     level: string;
     claim: string;

@@ -34,13 +34,14 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 7,
-      passed: 7,
+      total: 8,
+      passed: 8,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
+      "coding-agent-out-of-scope-receipt",
       "localization-drill",
       "executor-contract-drill",
       "release-verification",
@@ -72,6 +73,27 @@ describe("verification manifest", () => {
     expect(manifest.summary.failed).toBe(1);
     expect(mismatchCheck?.status).toBe("fail");
     expect(mismatchCheck?.summary).toContain("not blocked correctly");
+  });
+
+  it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
+    const codingAgentReport = codingAgentReportFixture();
+    codingAgentReport.outOfScope.boardItemsApplied = 1;
+
+    const manifest = buildVerificationManifest({
+      codingAgentReport,
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const outOfScopeCheck = manifest.checks.find((check) => check.id === "coding-agent-out-of-scope-receipt");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(outOfScopeCheck?.status).toBe("fail");
+    expect(outOfScopeCheck?.summary).toContain("not blocked correctly");
   });
 
   it("invalidates the manifest when localization drill breaks locale contract", () => {
@@ -209,6 +231,15 @@ function codingAgentReportFixture(): CodingAgentReceiptDrillSummary {
       boardItemsSkipped: 8,
       firstMissingEvidence: "Evidence artifact is required for: Changed files summary."
     },
+    outOfScope: {
+      receiptDecision: "needs-evidence",
+      pendingEvidence: 1,
+      evidenceDecision: "needs-evidence",
+      artifactAuditDecision: "needs-artifacts",
+      boardItemsApplied: 0,
+      boardItemsSkipped: 8,
+      firstMissingEvidence: "Evidence artifact must stay under session evidence prefix output/coding-agent/coding-brief-team-execution-minister-work-package/: output/coding-agent/out-of-scope/evidence-1.txt"
+    },
     honestyClaim: {
       level: "local-drill",
       claim: "Local drill.",
@@ -247,7 +278,8 @@ function localizationDrillFixture(): LocalizationDrillSummary {
       reviewReady: true,
       bundleReady: true,
       drillAssignable: true,
-      receiptNeedsEvidence: true
+      receiptNeedsEvidence: true,
+      sessionContractStable: true
     },
     failures: []
   }));

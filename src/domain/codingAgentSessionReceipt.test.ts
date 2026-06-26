@@ -108,7 +108,7 @@ describe("coding agent session receipt", () => {
     const bundle = defaultBundle();
     const submitted = completedReceiptFor(bundle);
     submitted.items[0].evidence = bundle.sessions[0].evidenceRequired.map((_, index) =>
-      `Unrelated proof ${index + 1}: output/coding-agent/${bundle.sessions[0].id}/unrelated-${index + 1}.txt`
+      `Unrelated proof ${index + 1}: ${bundle.sessions[0].sandboxContract.evidenceArtifactPrefix}unrelated-${index + 1}.txt`
     );
 
     const reviewed = reviewCodingAgentSessionReceipt({
@@ -120,6 +120,25 @@ describe("coding agent session receipt", () => {
     expect(reviewed.summary.pendingEvidence).toBe(1);
     expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact is required for: Changed files summary.");
     expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact is required for: Relevant command output with exit codes.");
+  });
+
+  it("keeps receipts pending when evidence artifacts are outside the session contract prefix", () => {
+    const bundle = defaultBundle();
+    const submitted = completedReceiptFor(bundle);
+    submitted.items[0].commandResults[0].transcriptRef = "output/coding-agent/other-session/transcript-1.log";
+    submitted.items[0].evidence = bundle.sessions[0].evidenceRequired.map((evidence, index) =>
+      `${evidence}: output/coding-agent/other-session/evidence-${index + 1}.txt`
+    );
+
+    const reviewed = reviewCodingAgentSessionReceipt({
+      bundle,
+      receipt: submitted
+    });
+
+    expect(reviewed.decision).toBe("needs-evidence");
+    expect(reviewed.summary.pendingEvidence).toBe(1);
+    expect(reviewed.items[0].missing.join(" ")).toContain("Command transcript must stay under session evidence prefix");
+    expect(reviewed.items[0].missing.join(" ")).toContain("Evidence artifact must stay under session evidence prefix");
   });
 
   it("keeps receipts pending when submitted artifact paths escape the sandbox", () => {
@@ -169,6 +188,7 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
     items: template.items.map((item) => {
       const session = bundle.sessions.find((candidate) => candidate.id === item.sessionId);
       if (!session) return item;
+      const evidencePrefix = session.sandboxContract.evidenceArtifactPrefix;
       return {
         ...item,
         changedFiles: [`src/${session.id}.ts`],
@@ -176,10 +196,10 @@ function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessi
           command,
           exitCode: 0,
           outputSummary: `${command} passed in sandbox workspace.`,
-          transcriptRef: `output/coding-agent/${session.id}/${slug(command)}.log`
+          transcriptRef: `${evidencePrefix}${slug(command)}.log`
         })),
         evidence: session.evidenceRequired.map((evidence, index) =>
-          `${evidence}: output/coding-agent/${session.id}/evidence-${index + 1}.txt`
+          `${evidence}: ${evidencePrefix}evidence-${index + 1}.txt`
         ),
         risks: ["No known remaining risks after local verification."]
       };
