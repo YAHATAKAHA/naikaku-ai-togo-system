@@ -115,6 +115,10 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
     && report.valid.receiptTemplateWritten
     && report.valid.archiveFilesWritten >= report.valid.promptFiles + 3
     && report.valid.archiveUnsafePaths === 0
+    && report.valid.archiveAuditDecision === "verified"
+    && report.valid.archiveAuditBlockers === 0
+    && report.valid.archiveMissingPromptFiles === 0
+    && report.valid.archiveUnexpectedPromptFiles === 0
     && report.valid.uniqueEvidencePrefixes === report.valid.totalItems
     && report.valid.unsafePaths === 0
     && report.productionHeld.dispatchDecision === "blocked"
@@ -123,6 +127,10 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
     && report.productionHeld.promptFilesWritten === 0
     && !report.productionHeld.receiptTemplateWritten
     && report.productionHeld.archiveUnsafePaths === 0
+    && report.productionHeld.archiveAuditDecision === "verified"
+    && report.productionHeld.archiveAuditBlockers === 0
+    && report.productionHeld.archiveMissingPromptFiles === 0
+    && report.productionHeld.archiveUnexpectedPromptFiles === 0
     && report.productionHeld.unsafePaths === 0
     && checksPassed;
 
@@ -138,11 +146,16 @@ function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): Veri
       `Valid prompts written: ${report.valid.promptFilesWritten}/${report.valid.promptFiles}`,
       `Receipt template written: ${report.valid.receiptTemplateWritten}`,
       `Valid archive files written: ${report.valid.archiveFilesWritten}`,
+      `Valid archive audit: ${report.valid.archiveAuditDecision}`,
+      `Valid archive audit blockers: ${report.valid.archiveAuditBlockers}`,
+      `Valid archive missing prompts: ${report.valid.archiveMissingPromptFiles}`,
       `Valid archive unsafe paths: ${report.valid.archiveUnsafePaths}`,
       `Valid unsafe paths: ${report.valid.unsafePaths}`,
       `Production-held decision: ${report.productionHeld.dispatchDecision}`,
       `Production-held ready items: ${report.productionHeld.readyItems}`,
       `Production-held prompts written: ${report.productionHeld.promptFilesWritten}`,
+      `Production-held archive audit: ${report.productionHeld.archiveAuditDecision}`,
+      `Production-held archive audit blockers: ${report.productionHeld.archiveAuditBlockers}`,
       `Production-held archive unsafe paths: ${report.productionHeld.archiveUnsafePaths}`,
       `Production-held receipt template written: ${report.productionHeld.receiptTemplateWritten}`
     ],

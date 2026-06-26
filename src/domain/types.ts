@@ -712,6 +712,12 @@ export interface CodingAgentDispatchDrillSummary {
     archiveFilesWritten: number;
     archiveBytes: number;
     archiveUnsafePaths: number;
+    archiveAuditDecision: string;
+    archiveAuditBlockers: number;
+    archiveAuditWarnings: number;
+    archiveMissingPromptFiles: number;
+    archiveUnexpectedPromptFiles: number;
+    archiveUnassignedHeldItems: number;
     uniqueEvidencePrefixes: number;
     unsafePaths: number;
   };
@@ -727,6 +733,12 @@ export interface CodingAgentDispatchDrillSummary {
     archiveFilesWritten: number;
     archiveBytes: number;
     archiveUnsafePaths: number;
+    archiveAuditDecision: string;
+    archiveAuditBlockers: number;
+    archiveAuditWarnings: number;
+    archiveMissingPromptFiles: number;
+    archiveUnexpectedPromptFiles: number;
+    archiveUnassignedHeldItems: number;
     unsafePaths: number;
   };
   checks: Record<string, boolean>;
@@ -1276,6 +1288,50 @@ export interface CodingAgentDispatchArchive {
   };
   honestyClaim: {
     level: "dry-run-dispatch";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type CodingAgentDispatchArchiveAuditDecision = "verified" | "needs-review" | "blocked";
+export type CodingAgentDispatchArchiveAuditCheckStatus = "pass" | "warn" | "block";
+
+export interface CodingAgentDispatchArchiveAuditCheck {
+  id: string;
+  status: CodingAgentDispatchArchiveAuditCheckStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface CodingAgentDispatchArchiveAudit {
+  schema: "naikaku.coding-agent-dispatch-archive-audit.v1";
+  generatedAt: string;
+  sourceSchema: CodingAgentDispatchArchive["schema"];
+  sourceDecision: CodingAgentDispatchDecision;
+  decision: CodingAgentDispatchArchiveAuditDecision;
+  runId?: string;
+  operatorLocale: string;
+  checks: CodingAgentDispatchArchiveAuditCheck[];
+  summary: {
+    files: number;
+    promptFiles: number;
+    receiptTemplates: number;
+    readyItems: number;
+    heldItems: number;
+    unassignedHeldItems: number;
+    unsafePaths: number;
+    duplicatePaths: number;
+    missingPromptFiles: number;
+    unexpectedPromptFiles: number;
+    missingReceiptTemplates: number;
+    blockers: number;
+    warnings: number;
+    passed: number;
+  };
+  honestyClaim: {
+    level: "dispatch-archive-audit";
     claim: string;
     limitations: string[];
     productionRequirements: string[];

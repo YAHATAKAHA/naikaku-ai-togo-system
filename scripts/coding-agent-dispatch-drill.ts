@@ -7,6 +7,11 @@ import {
   serializeCodingAgentDispatchArchive,
   serializeCodingAgentDispatchArchiveMarkdown
 } from "../src/domain/codingAgentDispatchArchive";
+import {
+  auditCodingAgentDispatchArchive,
+  serializeCodingAgentDispatchArchiveAudit,
+  serializeCodingAgentDispatchArchiveAuditMarkdown
+} from "../src/domain/codingAgentDispatchArchiveAudit";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
@@ -15,6 +20,7 @@ import { createDefaultWorkspace } from "../src/domain/storage";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type {
   CodingAgentDispatchDrillSummary,
+  CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentSessionBundle
 } from "../src/domain/types";
@@ -32,6 +38,7 @@ interface DispatchPackageWriteResult {
   archiveFilesWritten: number;
   archiveUnsafePaths: number;
   archiveBytes: number;
+  archiveAudit: CodingAgentDispatchArchiveAudit;
 }
 
 interface DispatchCaseResult {
@@ -213,6 +220,10 @@ async function writeDispatchPackage({
     manifest,
     generatedAt
   });
+  const archiveAudit = auditCodingAgentDispatchArchive({
+    archive,
+    generatedAt
+  });
   await writeFile(
     path.join(packageDir, "dispatch-archive.json"),
     `${serializeCodingAgentDispatchArchive(archive)}\n`,
@@ -221,6 +232,16 @@ async function writeDispatchPackage({
   await writeFile(
     path.join(packageDir, "dispatch-archive.md"),
     serializeCodingAgentDispatchArchiveMarkdown(archive),
+    "utf8"
+  );
+  await writeFile(
+    path.join(packageDir, "dispatch-archive-audit.json"),
+    `${serializeCodingAgentDispatchArchiveAudit(archiveAudit)}\n`,
+    "utf8"
+  );
+  await writeFile(
+    path.join(packageDir, "dispatch-archive-audit.md"),
+    serializeCodingAgentDispatchArchiveAuditMarkdown(archiveAudit),
     "utf8"
   );
 
@@ -245,7 +266,8 @@ async function writeDispatchPackage({
     receiptTemplateWritten,
     archiveFilesWritten,
     archiveUnsafePaths: archive.summary.unsafePaths,
-    archiveBytes: archive.summary.totalBytes
+    archiveBytes: archive.summary.totalBytes,
+    archiveAudit
   };
 }
 
@@ -256,6 +278,9 @@ function checksFor(valid: DispatchCaseResult, productionHeld: DispatchCaseResult
     validReceiptTemplateWritten: valid.writeResult.receiptTemplateWritten,
     validArchiveFilesWritten: valid.writeResult.archiveFilesWritten >= valid.manifest.summary.promptFiles + 3,
     validArchivePathsSafe: valid.writeResult.archiveUnsafePaths === 0,
+    validArchiveAuditVerified:
+      valid.writeResult.archiveAudit.decision === "verified" &&
+      valid.writeResult.archiveAudit.summary.blockers === 0,
     evidencePrefixesUnique:
       valid.manifest.summary.uniqueEvidencePrefixes === valid.manifest.summary.total &&
       productionHeld.manifest.summary.uniqueEvidencePrefixes === productionHeld.manifest.summary.total,
@@ -266,7 +291,10 @@ function checksFor(valid: DispatchCaseResult, productionHeld: DispatchCaseResult
       productionHeld.manifest.summary.productionHeld > 0,
     productionHeldNotWritten:
       productionHeld.writeResult.promptFilesWritten === 0 &&
-      !productionHeld.writeResult.receiptTemplateWritten
+      !productionHeld.writeResult.receiptTemplateWritten,
+    productionHeldArchiveAuditVerified:
+      productionHeld.writeResult.archiveAudit.decision === "verified" &&
+      productionHeld.writeResult.archiveAudit.summary.blockers === 0
   };
 }
 
@@ -282,6 +310,12 @@ function caseSummary(result: DispatchCaseResult): CodingAgentDispatchDrillSummar
     archiveFilesWritten: result.writeResult.archiveFilesWritten,
     archiveBytes: result.writeResult.archiveBytes,
     archiveUnsafePaths: result.writeResult.archiveUnsafePaths,
+    archiveAuditDecision: result.writeResult.archiveAudit.decision,
+    archiveAuditBlockers: result.writeResult.archiveAudit.summary.blockers,
+    archiveAuditWarnings: result.writeResult.archiveAudit.summary.warnings,
+    archiveMissingPromptFiles: result.writeResult.archiveAudit.summary.missingPromptFiles,
+    archiveUnexpectedPromptFiles: result.writeResult.archiveAudit.summary.unexpectedPromptFiles,
+    archiveUnassignedHeldItems: result.writeResult.archiveAudit.summary.unassignedHeldItems,
     uniqueEvidencePrefixes: result.manifest.summary.uniqueEvidencePrefixes,
     unsafePaths: result.manifest.summary.unsafePaths
   };
@@ -300,6 +334,12 @@ function productionHeldSummary(result: DispatchCaseResult): CodingAgentDispatchD
     archiveFilesWritten: result.writeResult.archiveFilesWritten,
     archiveBytes: result.writeResult.archiveBytes,
     archiveUnsafePaths: result.writeResult.archiveUnsafePaths,
+    archiveAuditDecision: result.writeResult.archiveAudit.decision,
+    archiveAuditBlockers: result.writeResult.archiveAudit.summary.blockers,
+    archiveAuditWarnings: result.writeResult.archiveAudit.summary.warnings,
+    archiveMissingPromptFiles: result.writeResult.archiveAudit.summary.missingPromptFiles,
+    archiveUnexpectedPromptFiles: result.writeResult.archiveAudit.summary.unexpectedPromptFiles,
+    archiveUnassignedHeldItems: result.writeResult.archiveAudit.summary.unassignedHeldItems,
     unsafePaths: result.manifest.summary.unsafePaths
   };
 }
@@ -320,6 +360,7 @@ function summaryMarkdown(summary: CodingAgentDispatchDrillSummary) {
     `- Receipt template written: ${summary.valid.receiptTemplateWritten ? "yes" : "no"}`,
     `- Archive files written: ${summary.valid.archiveFilesWritten}`,
     `- Archive bytes: ${summary.valid.archiveBytes}`,
+    `- Archive audit: ${summary.valid.archiveAuditDecision} (${summary.valid.archiveAuditBlockers} blockers)`,
     `- Unsafe paths: ${summary.valid.unsafePaths}`,
     "",
     "## Production-Held Package",
@@ -331,6 +372,7 @@ function summaryMarkdown(summary: CodingAgentDispatchDrillSummary) {
     `- Receipt template written: ${summary.productionHeld.receiptTemplateWritten ? "yes" : "no"}`,
     `- Archive files written: ${summary.productionHeld.archiveFilesWritten}`,
     `- Archive bytes: ${summary.productionHeld.archiveBytes}`,
+    `- Archive audit: ${summary.productionHeld.archiveAuditDecision} (${summary.productionHeld.archiveAuditBlockers} blockers)`,
     "",
     "## Checks",
     "",

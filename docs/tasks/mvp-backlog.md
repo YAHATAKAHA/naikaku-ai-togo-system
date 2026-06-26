@@ -29,7 +29,7 @@ This backlog is written so different contributors can work in parallel.
 - Add Coding Agent Brief Review gate that blocks incomplete prompts, missing sandbox prohibitions, missing verification commands, and production evidence overclaims before agent handoff.
 - Add Coding Agent Session Bundle export that separates ready and held coding-agent sessions with prompt files, verification commands, evidence requirements, and safety stops.
 - Add Coding Agent Session Drill that simulates assignable versus held coding-agent sessions without claiming code execution, provider calls, browser control, deploy, or Git changes.
-- Add Coding Agent Dispatch Manifest and Drill that write ready prompt packages while proving production-held sessions do not receive assignable prompt files.
+- Add Coding Agent Dispatch Manifest, Archive, Archive Audit, and Drill that write ready prompt packages while proving production-held sessions do not receive assignable prompt files.
 - Add Coding Agent Session Receipt template/import/review gate that requires changed files, command exit codes, evidence artifacts, and risk notes before accepting implementation claims.
 - Add Coding Agent Implementation Evidence export that summarizes reviewed receipts into JSON/Markdown handoff artifacts without rerunning commands.
 - Add Coding Agent Implementation Artifact Audit that checks safe local changed-file and transcript references before status reconciliation.
@@ -57,7 +57,7 @@ Acceptance:
 - Operators can review coding-agent briefs before handoff and receive a machine-readable `ready`, `needs-review`, or `blocked` decision with next actions.
 - Operators can export a coding-agent session bundle that never claims implementation happened and holds sessions when review or production evidence is incomplete.
 - Operators can run a coding-agent session drill that exports JSON/Markdown, separates `would-assign`, `needs-operator-review`, and `not-assigned`, and keeps dry-run limitations visible in every supported UI language.
-- Operators can write a local coding-agent dispatch package with prompt files and receipt templates only for ready sessions; production-held sessions remain visible but unassigned.
+- Operators can write and audit a local coding-agent dispatch package with prompt files and receipt templates only for ready sessions; production-held sessions remain visible but unassigned.
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.
 - Operators can have accepted and locally artifact-audited coding-agent implementation evidence mark matched Development Board items done while blocked, incomplete, artifact-unverified, and unmatched items remain held for review.

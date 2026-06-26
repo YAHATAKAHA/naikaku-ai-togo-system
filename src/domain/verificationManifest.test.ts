@@ -260,6 +260,12 @@ function codingAgentDispatchFixture(): CodingAgentDispatchDrillSummary {
       archiveFilesWritten: 12,
       archiveBytes: 10000,
       archiveUnsafePaths: 0,
+      archiveAuditDecision: "verified",
+      archiveAuditBlockers: 0,
+      archiveAuditWarnings: 0,
+      archiveMissingPromptFiles: 0,
+      archiveUnexpectedPromptFiles: 0,
+      archiveUnassignedHeldItems: 0,
       uniqueEvidencePrefixes: 8,
       unsafePaths: 0
     },
@@ -275,16 +281,26 @@ function codingAgentDispatchFixture(): CodingAgentDispatchDrillSummary {
       archiveFilesWritten: 3,
       archiveBytes: 2500,
       archiveUnsafePaths: 0,
+      archiveAuditDecision: "verified",
+      archiveAuditBlockers: 0,
+      archiveAuditWarnings: 0,
+      archiveMissingPromptFiles: 0,
+      archiveUnexpectedPromptFiles: 0,
+      archiveUnassignedHeldItems: 8,
       unsafePaths: 0
     },
     checks: {
       validDispatchable: true,
       validPromptFilesWritten: true,
       validReceiptTemplateWritten: true,
+      validArchiveFilesWritten: true,
+      validArchivePathsSafe: true,
+      validArchiveAuditVerified: true,
       evidencePrefixesUnique: true,
       pathsSafe: true,
       productionHeldBlocked: true,
-      productionHeldNotWritten: true
+      productionHeldNotWritten: true,
+      productionHeldArchiveAuditVerified: true
     },
     honestyClaim: {
       level: "local-drill",
