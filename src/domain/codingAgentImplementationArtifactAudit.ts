@@ -42,8 +42,9 @@ export function auditCodingAgentImplementationArtifacts({
   const probe = artifactProbe ?? pathExistsProbe(pathExists);
   const transcriptUsage = transcriptUsageFor(evidence);
   const changedFileUsage = changedFileUsageFor(evidence);
+  const evidenceArtifactUsage = evidenceArtifactUsageFor(evidence);
   const items = evidence.items.map((item) =>
-    auditItem(item, evidence, transcriptUsage, changedFileUsage, probe)
+    auditItem(item, evidence, transcriptUsage, changedFileUsage, evidenceArtifactUsage, probe)
   );
   const paths = items.flatMap((item) => item.paths);
   const summary = summarizeAudit(items, paths);
@@ -73,6 +74,7 @@ function auditItem(
   evidence: CodingAgentImplementationEvidence,
   transcriptUsage: Map<string, number>,
   changedFileUsage: Map<string, number>,
+  evidenceArtifactUsage: Map<string, number>,
   artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
 ): CodingAgentImplementationArtifactAuditItem {
   const paths: CodingAgentImplementationArtifactPath[] = [];
@@ -113,6 +115,12 @@ function auditItem(
         reason: "Evidence artifact entry did not include a path-like local artifact reference."
       });
       return;
+    }
+    const usageCount = evidenceArtifactUsage.get(artifactPath) ?? 0;
+    if (usageCount > 1) {
+      missing.push(
+        `Evidence artifact reference is reused by ${usageCount} evidence items: ${artifactPath}. Provide one artifact per required evidence item.`
+      );
     }
     paths.push(checkPath("evidence-artifact", artifactPath, artifactProbe));
   });
@@ -268,6 +276,8 @@ function summarizeAudit(
   const reusedChangedFileCounts = [...changedFileRefCounts.values()].filter((count) => count > 1);
   const evidenceArtifactRefs = paths.filter((path) => path.kind === "evidence-artifact");
   const uniqueEvidenceArtifactRefs = new Set(evidenceArtifactRefs.map((path) => path.path));
+  const evidenceArtifactRefCounts = countEvidenceArtifactRefs(paths);
+  const reusedEvidenceArtifactCounts = [...evidenceArtifactRefCounts.values()].filter((count) => count > 1);
   const transcriptContentChecked = paths.filter((path) =>
     typeof path.transcriptCommandMatched === "boolean" || typeof path.transcriptExitCodeMatched === "boolean"
   );
@@ -290,6 +300,8 @@ function summarizeAudit(
     uniqueFingerprintBytes: uniqueFingerprintBytes(paths),
     evidenceArtifactRefs: evidenceArtifactRefs.length,
     evidenceArtifactPaths: uniqueEvidenceArtifactRefs.size,
+    reusedEvidenceArtifactPaths: reusedEvidenceArtifactCounts.length,
+    reusedEvidenceArtifactRefs: reusedEvidenceArtifactCounts.reduce((total, count) => total + count - 1, 0),
     reusedTranscriptPaths: reusedTranscriptCounts.length,
     reusedTranscriptRefs: reusedTranscriptCounts.reduce((total, count) => total + count - 1, 0),
     reusedChangedFilePaths: reusedChangedFileCounts.length,
@@ -363,6 +375,18 @@ function changedFileUsageFor(evidence: CodingAgentImplementationEvidence) {
   return new Map([...usage.entries()].map(([path, sessions]) => [path, sessions.size]));
 }
 
+function evidenceArtifactUsageFor(evidence: CodingAgentImplementationEvidence) {
+  const usage = new Map<string, number>();
+  evidence.items.forEach((item) => {
+    item.evidence.forEach((entry) => {
+      const artifactPath = evidenceArtifactPathFrom(entry);
+      if (!artifactPath) return;
+      usage.set(artifactPath, (usage.get(artifactPath) ?? 0) + 1);
+    });
+  });
+  return usage;
+}
+
 function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
   const usage = new Map<string, number>();
   evidence.items.forEach((item) => {
@@ -372,6 +396,16 @@ function transcriptUsageFor(evidence: CodingAgentImplementationEvidence) {
     });
   });
   return usage;
+}
+
+function countEvidenceArtifactRefs(paths: CodingAgentImplementationArtifactPath[]) {
+  const counts = new Map<string, number>();
+  paths
+    .filter((path) => path.kind === "evidence-artifact")
+    .forEach((path) => {
+      counts.set(path.path, (counts.get(path.path) ?? 0) + 1);
+    });
+  return counts;
 }
 
 function countChangedFileRefs(paths: CodingAgentImplementationArtifactPath[]) {

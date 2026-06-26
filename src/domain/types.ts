@@ -1069,6 +1069,8 @@ export interface CodingAgentImplementationArtifactAudit {
     uniqueFingerprintBytes: number;
     evidenceArtifactRefs: number;
     evidenceArtifactPaths: number;
+    reusedEvidenceArtifactPaths: number;
+    reusedEvidenceArtifactRefs: number;
     reusedTranscriptPaths: number;
     reusedTranscriptRefs: number;
     reusedChangedFilePaths: number;

@@ -48,6 +48,8 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.uniqueFingerprintBytes).toBe(audit.summary.totalBytes);
     expect(audit.summary.evidenceArtifactRefs).toBe(evidence.items.flatMap((item) => item.evidence).length);
     expect(audit.summary.evidenceArtifactPaths).toBe(audit.summary.evidenceArtifactRefs);
+    expect(audit.summary.reusedEvidenceArtifactPaths).toBe(0);
+    expect(audit.summary.reusedEvidenceArtifactRefs).toBe(0);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
     expect(audit.summary.reusedChangedFilePaths).toBe(0);
@@ -180,6 +182,8 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.duplicatePathRefs).toBe(7);
     expect(audit.summary.evidenceArtifactRefs).toBe(32);
     expect(audit.summary.evidenceArtifactPaths).toBe(32);
+    expect(audit.summary.reusedEvidenceArtifactPaths).toBe(0);
+    expect(audit.summary.reusedEvidenceArtifactRefs).toBe(0);
     expect(audit.summary.reusedTranscriptPaths).toBe(0);
     expect(audit.summary.reusedTranscriptRefs).toBe(0);
     expect(audit.summary.reusedChangedFilePaths).toBe(1);
@@ -218,9 +222,44 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.uniqueFingerprintBytes).toBe(4515);
     expect(audit.summary.evidenceArtifactRefs).toBe(32);
     expect(audit.summary.evidenceArtifactPaths).toBe(32);
+    expect(audit.summary.reusedEvidenceArtifactPaths).toBe(0);
+    expect(audit.summary.reusedEvidenceArtifactRefs).toBe(0);
     expect(audit.summary.reusedTranscriptPaths).toBe(1);
     expect(audit.summary.reusedTranscriptRefs).toBe(15);
     expect(audit.items[0].missing.join(" ")).toContain("Transcript reference is reused by 16 command results");
+  });
+
+  it("holds reused evidence artifact references for manual review", () => {
+    const evidence = acceptedEvidenceFixture();
+    evidence.items.forEach((item) => {
+      item.evidence = item.evidence.map((entry, index) => {
+        const label = entry.split(":")[0];
+        return `${label}: output/coding-agent/shared-evidence-${index + 1}.txt`;
+      });
+    });
+
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.endsWith(".log") ? 456 : 123,
+        sha256: relativePath.endsWith(".log") ? "b".repeat(64) : "c".repeat(64),
+        modifiedAt: evidence.generatedAt
+      })
+    });
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.summary.paths).toBe(56);
+    expect(audit.summary.uniquePaths).toBe(28);
+    expect(audit.summary.duplicatePathRefs).toBe(28);
+    expect(audit.summary.evidenceArtifactRefs).toBe(32);
+    expect(audit.summary.evidenceArtifactPaths).toBe(4);
+    expect(audit.summary.reusedEvidenceArtifactPaths).toBe(4);
+    expect(audit.summary.reusedEvidenceArtifactRefs).toBe(28);
+    expect(audit.summary.reusedTranscriptRefs).toBe(0);
+    expect(audit.summary.reusedChangedFileRefs).toBe(0);
+    expect(audit.items[0].missing.join(" ")).toContain("Evidence artifact reference is reused by 8 evidence items");
   });
 
   it("rejects evidence claims that are not local artifact references", () => {
