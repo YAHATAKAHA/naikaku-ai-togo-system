@@ -18,6 +18,7 @@ This backlog is written so different contributors can work in parallel.
 - Add Release Rehearsal self-check for local end-to-end delivery simulation, remediation planning, and redaction checks.
 - Add `npm run rehearsal` and `npm run rehearsal:strict` for reproducible local and CI handoff gates.
 - Add release remediation issue draft and reviewable `gh issue create` script exports.
+- Add release drill fixtures and evidence-file inputs for strict rehearsal replay.
 - Add local audit trail panel and audit JSON export.
 - Add local Development Board with team work items, status tracking, and JSON export.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
@@ -33,6 +34,7 @@ Acceptance:
 - Operators can run a local release rehearsal that proves the cabinet, automation, evidence, release bundle, notes, remediation plan, and secret redaction path before handoff.
 - Operators and CI can rerun the rehearsal from the command line, with strict mode failing while warnings remain.
 - Operators can convert rehearsal remediation into GitHub-ready issue drafts without giving browser code GitHub credentials.
+- Operators can replay strict rehearsal with reviewed fixture evidence while keeping raw provider keys and real runner credentials out of the repo.
 - Role packages can become status-trackable work items for parallel teams.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 

@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
-import { buildProviderReadinessMatrix } from "./providerReadiness";
+import { createApprovalRecord } from "./automation";
+import { createAuditEvent } from "./auditLog";
+import { buildMemoryCandidates, createMemoryDecision } from "./memory";
+import { runCabinetMission } from "./orchestrator";
+import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./providerReadiness";
 import {
   buildReleaseRehearsalReport,
   serializeReleaseRehearsalReport,
   serializeReleaseRemediationMarkdown
 } from "./releaseRehearsal";
+import type { CabinetRole } from "./types";
 
 const workspace = {
   roles: defaultRoles,
@@ -69,4 +74,106 @@ describe("release rehearsal", () => {
     expect(markdown).not.toContain("sk-local-rehearsal-secret");
     expect(markdown).not.toContain("sessionSecret");
   });
+
+  it("can pass strict rehearsal when reviewed release-drill evidence is provided", () => {
+    const reviewedWorkspace = {
+      ...workspace,
+      roles: workspace.roles.map((role) => releaseDrillRole(role))
+    };
+    const run = runCabinetMission(reviewedWorkspace);
+    const baseReadiness = buildProviderReadinessMatrix({
+      roles: reviewedWorkspace.roles,
+      sessionSecrets: Object.fromEntries(reviewedWorkspace.roles.map((role) => [role.id, `secret-${role.id}`])),
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    });
+    const providerReadiness = buildProviderReadinessMatrix({
+      roles: reviewedWorkspace.roles,
+      savedRows: baseReadiness.rows.map((row) =>
+        createProviderReadinessCheck({
+          row,
+          ok: true,
+          secretReady: true,
+          source: "local-fallback",
+          checkedAt: "2026-06-27T00:00:00.000Z",
+          message: "Reviewed drill provider alias is ready."
+        })
+      ),
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    });
+    const approvalRecords = (run.automationActions || [])
+      .filter((action) => action.status === "needs-approval")
+      .map((action) =>
+        createApprovalRecord({
+          action,
+          decision: "approved",
+          decidedAt: "2026-06-27T00:00:00.000Z",
+          decidedBy: "release-drill-operator"
+        })
+      );
+    const auditEvents = [
+      createAuditEvent({
+        type: "cabinet.run.completed",
+        summary: "Reviewed release drill completed.",
+        severity: "success",
+        timestamp: "2026-06-27T00:00:00.000Z",
+        runId: run.id
+      })
+    ];
+    const memoryEntries = buildMemoryCandidates({
+      run,
+      createdAt: "2026-06-27T00:00:00.000Z"
+    })
+      .filter((entry) => entry.kind !== "risk")
+      .map((entry) =>
+        createMemoryDecision({
+          entry,
+          decision: "accepted",
+          decidedAt: "2026-06-27T00:00:00.000Z"
+        })
+      );
+    const report = buildReleaseRehearsalReport({
+      workspace: reviewedWorkspace,
+      providerReadiness,
+      run,
+      approvalRecords,
+      auditEvents,
+      memoryEntries,
+      secretProbeValues: ["strict-drill-secret"],
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    });
+
+    expect(report.decision).toBe("release-ready");
+    expect(report.score).toBe(100);
+    expect(report.summary.warnings).toBe(0);
+    expect(report.summary.blockers).toBe(0);
+    expect(report.summary.heldActions).toBe(0);
+    expect(report.remediation.summary.total).toBe(0);
+    expect(report.checks.every((check) => check.status === "pass")).toBe(true);
+    expect(serializeReleaseRehearsalReport(report)).not.toContain("strict-drill-secret");
+  });
 });
+
+function releaseDrillRole(role: CabinetRole): CabinetRole {
+  if (role.id === "critic") {
+    return {
+      ...role,
+      permissions: {
+        ...role.permissions,
+        canUseBrowser: true,
+        canSendNetworkRequests: true
+      }
+    };
+  }
+
+  if (role.id === "scoring-office") {
+    return {
+      ...role,
+      permissions: {
+        ...role.permissions,
+        canUseFiles: true
+      }
+    };
+  }
+
+  return role;
+}

@@ -9,11 +9,27 @@ import {
 } from "../src/domain/releaseRehearsal";
 import { buildReleaseRemediationIssueDrafts } from "../src/domain/releaseRemediationIssues";
 import { createDefaultWorkspace, parseWorkspaceExport } from "../src/domain/storage";
-import type { CabinetWorkspace, ProviderReadinessMatrix, ReleaseRehearsalReport } from "../src/domain/types";
+import type {
+  AutomationApprovalRecord,
+  AuditEvent,
+  CabinetRun,
+  CabinetWorkspace,
+  DevelopmentWorkItem,
+  MemoryEntry,
+  ProviderReadinessMatrix,
+  ReleaseRehearsalReport
+} from "../src/domain/types";
 
 interface RehearsalCliOptions {
   workspacePath?: string;
+  runPath?: string;
   providerReadinessPath?: string;
+  approvalsPath?: string;
+  auditPath?: string;
+  memoryPath?: string;
+  savedItemsPath?: string;
+  secretProbeValues: string[];
+  generatedAt?: string;
   outputDir: string;
   strict: boolean;
   noWrite: boolean;
@@ -29,19 +45,50 @@ async function main() {
   }
 
   const workspace = await loadWorkspace(options.workspacePath);
+  const run = await loadRun(options.runPath);
   const providerReadiness = await loadProviderReadiness(
     options.providerReadinessPath,
     workspace
   );
+  const approvalRecords = await loadArrayFile<AutomationApprovalRecord>(
+    options.approvalsPath,
+    "approvalRecords"
+  );
+  const auditEvents = await loadArrayFile<AuditEvent>(
+    options.auditPath,
+    "events"
+  );
+  const memoryEntries = await loadArrayFile<MemoryEntry>(
+    options.memoryPath,
+    "entries"
+  );
+  const savedItems = await loadArrayFile<DevelopmentWorkItem>(
+    options.savedItemsPath,
+    "items"
+  );
   const report = buildReleaseRehearsalReport({
     workspace,
-    providerReadiness
+    providerReadiness,
+    run,
+    approvalRecords,
+    auditEvents,
+    memoryEntries,
+    savedItems,
+    secretProbeValues: options.secretProbeValues,
+    generatedAt: options.generatedAt
   });
   const output = options.noWrite
     ? null
     : await writeReports(report, options.outputDir);
 
-  printSummary(report, output, options.strict);
+  printSummary(report, output, options.strict, {
+    run: Boolean(run),
+    approvals: approvalRecords.length,
+    audit: auditEvents.length,
+    memory: memoryEntries.length,
+    savedItems: savedItems.length,
+    secretProbes: options.secretProbeValues.length
+  });
 
   if (report.summary.blockers > 0) {
     process.exitCode = 2;
@@ -56,6 +103,7 @@ async function main() {
 function parseArgs(args: string[]): RehearsalCliOptions {
   const options: RehearsalCliOptions = {
     outputDir: "output/rehearsal",
+    secretProbeValues: [],
     strict: false,
     noWrite: false,
     help: false
@@ -85,8 +133,50 @@ function parseArgs(args: string[]): RehearsalCliOptions {
       continue;
     }
 
+    if (arg === "--run") {
+      options.runPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
     if (arg === "--provider-readiness") {
       options.providerReadinessPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--approvals") {
+      options.approvalsPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--audit") {
+      options.auditPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--memory") {
+      options.memoryPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--saved-items") {
+      options.savedItemsPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--secret-probe") {
+      options.secretProbeValues.push(requireValue(args, index, arg));
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--generated-at") {
+      options.generatedAt = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -112,6 +202,24 @@ async function loadWorkspace(workspacePath?: string): Promise<CabinetWorkspace> 
   return parseWorkspaceExport(raw);
 }
 
+async function loadRun(runPath?: string): Promise<CabinetRun | null> {
+  if (!runPath) {
+    return null;
+  }
+
+  const raw = await readFile(runPath, "utf8");
+  const parsed = JSON.parse(raw) as unknown;
+  const run = isRecord(parsed) && "run" in parsed
+    ? (parsed.run as CabinetRun)
+    : (parsed as CabinetRun);
+
+  if (!run?.id || !Array.isArray(run.artifacts) || !Array.isArray(run.logs)) {
+    throw new Error("Run file must contain a CabinetRun or { run } envelope.");
+  }
+
+  return run;
+}
+
 async function loadProviderReadiness(
   providerReadinessPath: string | undefined,
   workspace: CabinetWorkspace
@@ -128,6 +236,27 @@ async function loadProviderReadiness(
   }
 
   return parsed;
+}
+
+async function loadArrayFile<T>(
+  filePath: string | undefined,
+  envelopeKey: string
+): Promise<T[]> {
+  if (!filePath) {
+    return [];
+  }
+
+  const raw = await readFile(filePath, "utf8");
+  const parsed = JSON.parse(raw) as unknown;
+  const value = isRecord(parsed) && envelopeKey in parsed
+    ? parsed[envelopeKey]
+    : parsed;
+
+  if (!Array.isArray(value)) {
+    throw new Error(`${filePath} must contain an array or { ${envelopeKey}: [...] } envelope.`);
+  }
+
+  return value as T[];
 }
 
 async function writeReports(report: ReleaseRehearsalReport, outputDir: string) {
@@ -178,10 +307,21 @@ function printSummary(
     issueScriptPath: string;
     issueDrafts: number;
   } | null,
-  strict: boolean
+  strict: boolean,
+  inputs: {
+    run: boolean;
+    approvals: number;
+    audit: number;
+    memory: number;
+    savedItems: number;
+    secretProbes: number;
+  }
 ) {
   console.log(`Release rehearsal: ${report.decision} (${report.score}/100)`);
   console.log(`Run: ${report.runId} / ${report.sourceRun}`);
+  console.log(
+    `Inputs: ${inputs.run ? "provided run" : "simulated run"}, ${inputs.approvals} approvals, ${inputs.audit} audit events, ${inputs.memory} memory entries, ${inputs.savedItems} saved items, ${inputs.secretProbes} secret probes`
+  );
   console.log(
     `Checks: ${report.summary.passed} pass, ${report.summary.warnings} warn, ${report.summary.blockers} block`
   );
@@ -242,7 +382,14 @@ Usage:
 
 Options:
   --workspace <path>            Read a workspace JSON export instead of the default workspace.
+  --run <path>                  Read a CabinetRun JSON file or { run } envelope instead of simulating one.
   --provider-readiness <path>   Read a provider readiness JSON export.
+  --approvals <path>            Read approval records from an array or { approvalRecords } envelope.
+  --audit <path>                Read audit events from an array or { events } envelope.
+  --memory <path>               Read memory entries from an array or { entries } envelope.
+  --saved-items <path>          Read saved development items from an array or { items } envelope.
+  --secret-probe <value>        Assert this raw value does not appear in exported artifacts. Repeatable.
+  --generated-at <iso>          Use a fixed generatedAt timestamp for deterministic reports.
   --out <dir>                   Write JSON, Markdown, issue drafts, and gh script to this directory. Default: output/rehearsal
   --strict                      Exit with code 3 when warnings remain.
   --no-write                    Print results without writing report files.
@@ -253,6 +400,10 @@ Exit codes:
   2  One or more blockers detected.
   3  Strict mode detected warnings.
 `);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 main().catch((error) => {
