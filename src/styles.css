@@ -1228,6 +1228,7 @@ meter {
 .rehearsal-export-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;

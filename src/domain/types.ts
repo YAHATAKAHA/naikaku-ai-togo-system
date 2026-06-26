@@ -605,7 +605,11 @@ export interface ReleaseRehearsalReport {
 
 export type DevelopmentWorkItemStatus = "todo" | "in-progress" | "blocked" | "done";
 export type DevelopmentWorkItemPriority = "low" | "medium" | "high" | "critical";
-export type DevelopmentWorkItemSource = "team-package" | "next-iteration" | "memory-entry";
+export type DevelopmentWorkItemSource =
+  | "team-package"
+  | "next-iteration"
+  | "memory-entry"
+  | "release-remediation";
 
 export interface DevelopmentWorkItem {
   id: string;

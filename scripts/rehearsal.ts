@@ -1,11 +1,13 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "../src/domain/developmentIssues";
 import { buildProviderReadinessMatrix } from "../src/domain/providerReadiness";
 import {
   buildReleaseRehearsalReport,
   serializeReleaseRehearsalReport,
   serializeReleaseRemediationMarkdown
 } from "../src/domain/releaseRehearsal";
+import { buildReleaseRemediationIssueDrafts } from "../src/domain/releaseRemediationIssues";
 import { createDefaultWorkspace, parseWorkspaceExport } from "../src/domain/storage";
 import type { CabinetWorkspace, ProviderReadinessMatrix, ReleaseRehearsalReport } from "../src/domain/types";
 
@@ -133,26 +135,49 @@ async function writeReports(report: ReleaseRehearsalReport, outputDir: string) {
   const runSlug = report.runId.replace(/[^a-z0-9-]/gi, "-");
   const reportPath = path.join(absoluteDir, `release-rehearsal-${runSlug}.json`);
   const remediationPath = path.join(absoluteDir, `release-remediation-${runSlug}.md`);
+  const issueDraftsPath = path.join(absoluteDir, `release-remediation-issues-${runSlug}.json`);
+  const issueScriptPath = path.join(absoluteDir, `release-remediation-gh-issues-${runSlug}.sh`);
   const latestPath = path.join(absoluteDir, "release-rehearsal-latest.json");
   const latestRemediationPath = path.join(absoluteDir, "release-remediation-latest.md");
+  const latestIssueDraftsPath = path.join(absoluteDir, "release-remediation-issues-latest.json");
+  const latestIssueScriptPath = path.join(absoluteDir, "release-remediation-gh-issues-latest.sh");
   const serialized = serializeReleaseRehearsalReport(report);
   const remediation = serializeReleaseRemediationMarkdown(report);
+  const issueDrafts = buildReleaseRemediationIssueDrafts({
+    report,
+    generatedAt: report.generatedAt
+  });
+  const serializedIssueDrafts = serializeDevelopmentIssueDrafts(issueDrafts);
+  const issueScript = serializeDevelopmentIssueGhScript(issueDrafts);
 
   await mkdir(absoluteDir, { recursive: true });
   await writeFile(reportPath, serialized);
   await writeFile(remediationPath, remediation);
+  await writeFile(issueDraftsPath, serializedIssueDrafts);
+  await writeFile(issueScriptPath, issueScript, { mode: 0o755 });
   await writeFile(latestPath, serialized);
   await writeFile(latestRemediationPath, remediation);
+  await writeFile(latestIssueDraftsPath, serializedIssueDrafts);
+  await writeFile(latestIssueScriptPath, issueScript, { mode: 0o755 });
 
   return {
     reportPath,
-    remediationPath
+    remediationPath,
+    issueDraftsPath,
+    issueScriptPath,
+    issueDrafts: issueDrafts.summary.total
   };
 }
 
 function printSummary(
   report: ReleaseRehearsalReport,
-  output: { reportPath: string; remediationPath: string } | null,
+  output: {
+    reportPath: string;
+    remediationPath: string;
+    issueDraftsPath: string;
+    issueScriptPath: string;
+    issueDrafts: number;
+  } | null,
   strict: boolean
 ) {
   console.log(`Release rehearsal: ${report.decision} (${report.score}/100)`);
@@ -168,6 +193,8 @@ function printSummary(
   if (output) {
     console.log(`Report: ${output.reportPath}`);
     console.log(`Remediation: ${output.remediationPath}`);
+    console.log(`Issue drafts: ${output.issueDraftsPath} (${output.issueDrafts})`);
+    console.log(`Issue script: ${output.issueScriptPath}`);
   } else {
     console.log("Report: not written (--no-write)");
   }
@@ -216,7 +243,7 @@ Usage:
 Options:
   --workspace <path>            Read a workspace JSON export instead of the default workspace.
   --provider-readiness <path>   Read a provider readiness JSON export.
-  --out <dir>                   Write JSON and Markdown reports to this directory. Default: output/rehearsal
+  --out <dir>                   Write JSON, Markdown, issue drafts, and gh script to this directory. Default: output/rehearsal
   --strict                      Exit with code 3 when warnings remain.
   --no-write                    Print results without writing report files.
   --help                        Show this help.

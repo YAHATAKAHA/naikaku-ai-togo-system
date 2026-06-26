@@ -113,7 +113,9 @@ function issueTitle(item: DevelopmentWorkItem) {
     ? "Team"
     : item.source === "memory-entry"
       ? "Memory"
-      : "Next";
+      : item.source === "release-remediation"
+        ? "Release"
+        : "Next";
   return `[${prefix}] ${item.title}`;
 }
 

@@ -88,6 +88,7 @@ import { buildProductReadinessReport } from "./domain/productReadiness";
 import { buildProductReleaseBundle } from "./domain/productReleaseBundle";
 import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
 import { buildReleaseRehearsalReport } from "./domain/releaseRehearsal";
+import { buildReleaseRemediationIssueDrafts } from "./domain/releaseRemediationIssues";
 import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
@@ -177,6 +178,8 @@ export function App() {
   const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [releaseRehearsal, setReleaseRehearsal] = useState<ReleaseRehearsalReport | null>(null);
   const [releaseRehearsalLink, setReleaseRehearsalLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [releaseRemediationIssuesLink, setReleaseRemediationIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [releaseRemediationScriptLink, setReleaseRemediationScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -427,6 +430,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (releaseRemediationIssuesLink) {
+        URL.revokeObjectURL(releaseRemediationIssuesLink.href);
+      }
+    };
+  }, [releaseRemediationIssuesLink]);
+
+  useEffect(() => {
+    return () => {
+      if (releaseRemediationScriptLink) {
+        URL.revokeObjectURL(releaseRemediationScriptLink.href);
+      }
+    };
+  }, [releaseRemediationScriptLink]);
+
+  useEffect(() => {
+    return () => {
       if (auditLink) {
         URL.revokeObjectURL(auditLink.href);
       }
@@ -496,6 +515,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseRemediationIssuesLink(null);
+    setReleaseRemediationScriptLink(null);
     setProviderReadinessLink(null);
     setExecutorEvidenceLink(null);
     setServerLedger((current) => ({
@@ -518,6 +539,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseRemediationIssuesLink(null);
+    setReleaseRemediationScriptLink(null);
     setDevelopmentIssuesLink(null);
     setDevelopmentIssuesScriptLink(null);
   }, [run?.id, workspace]);
@@ -599,6 +622,14 @@ export function App() {
     if (releaseRehearsalLink) {
       URL.revokeObjectURL(releaseRehearsalLink.href);
       setReleaseRehearsalLink(null);
+    }
+    if (releaseRemediationIssuesLink) {
+      URL.revokeObjectURL(releaseRemediationIssuesLink.href);
+      setReleaseRemediationIssuesLink(null);
+    }
+    if (releaseRemediationScriptLink) {
+      URL.revokeObjectURL(releaseRemediationScriptLink.href);
+      setReleaseRemediationScriptLink(null);
     }
   }
 
@@ -791,6 +822,8 @@ export function App() {
     setProductReleaseNotesLink(null);
     setReleaseRehearsal(null);
     setReleaseRehearsalLink(null);
+    setReleaseRemediationIssuesLink(null);
+    setReleaseRemediationScriptLink(null);
     setDevelopmentBoardLink(null);
     setDevelopmentItems(clearDevelopmentItems());
     setDevelopmentIssuesLink(null);
@@ -854,6 +887,8 @@ export function App() {
       setProductReleaseNotesLink(null);
       setReleaseRehearsal(null);
       setReleaseRehearsalLink(null);
+      setReleaseRemediationIssuesLink(null);
+      setReleaseRemediationScriptLink(null);
       setDevelopmentBoardLink(null);
       setDevelopmentIssuesLink(null);
       setDevelopmentIssuesScriptLink(null);
@@ -1184,6 +1219,14 @@ export function App() {
       URL.revokeObjectURL(releaseRehearsalLink.href);
       setReleaseRehearsalLink(null);
     }
+    if (releaseRemediationIssuesLink) {
+      URL.revokeObjectURL(releaseRemediationIssuesLink.href);
+      setReleaseRemediationIssuesLink(null);
+    }
+    if (releaseRemediationScriptLink) {
+      URL.revokeObjectURL(releaseRemediationScriptLink.href);
+      setReleaseRemediationScriptLink(null);
+    }
 
     setRunState({
       status: "local",
@@ -1227,6 +1270,65 @@ export function App() {
         blockers: releaseRehearsal.summary.blockers,
         warnings: releaseRehearsal.summary.warnings,
         evidenceItems: releaseRehearsal.summary.evidenceItems
+      }
+    });
+  }
+
+  function exportReleaseRemediationIssues() {
+    if (!releaseRehearsal) return;
+
+    const drafts = buildReleaseRemediationIssueDrafts({
+      report: releaseRehearsal,
+      generatedAt: releaseRehearsal.generatedAt
+    });
+    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-release-remediation-issues-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.json`;
+
+    if (releaseRemediationIssuesLink) {
+      URL.revokeObjectURL(releaseRemediationIssuesLink.href);
+    }
+
+    setReleaseRemediationIssuesLink({ href: url, fileName });
+    recordAudit({
+      type: "release.rehearsal.exported",
+      severity: "info",
+      summary: "Release remediation issue drafts prepared.",
+      runId: releaseRehearsal.runId,
+      metadata: {
+        drafts: drafts.summary.total,
+        highPriority: drafts.summary.highPriority,
+        source: "release-remediation"
+      }
+    });
+  }
+
+  function exportReleaseRemediationScript() {
+    if (!releaseRehearsal) return;
+
+    const drafts = buildReleaseRemediationIssueDrafts({
+      report: releaseRehearsal,
+      generatedAt: releaseRehearsal.generatedAt
+    });
+    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], { type: "text/x-shellscript" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `naikaku-release-remediation-gh-issues-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.sh`;
+
+    if (releaseRemediationScriptLink) {
+      URL.revokeObjectURL(releaseRemediationScriptLink.href);
+    }
+
+    setReleaseRemediationScriptLink({ href: url, fileName });
+    recordAudit({
+      type: "release.rehearsal.exported",
+      severity: "info",
+      summary: "Release remediation GitHub issue script prepared.",
+      runId: releaseRehearsal.runId,
+      metadata: {
+        drafts: drafts.summary.total,
+        highPriority: drafts.summary.highPriority,
+        format: "gh-script",
+        source: "release-remediation"
       }
     });
   }
@@ -1844,8 +1946,12 @@ export function App() {
           <ReleaseRehearsalPanel
             report={releaseRehearsal}
             exportLink={releaseRehearsalLink}
+            issueDraftsLink={releaseRemediationIssuesLink}
+            issueScriptLink={releaseRemediationScriptLink}
             onRun={runReleaseRehearsal}
             onExport={exportReleaseRehearsal}
+            onExportIssueDrafts={exportReleaseRemediationIssues}
+            onExportIssueScript={exportReleaseRemediationScript}
           />
 
           <ProviderReadinessPanel

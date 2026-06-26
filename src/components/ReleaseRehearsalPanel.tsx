@@ -9,15 +9,23 @@ import type {
 interface ReleaseRehearsalPanelProps {
   report: ReleaseRehearsalReport | null;
   exportLink: { href: string; fileName: string } | null;
+  issueDraftsLink: { href: string; fileName: string } | null;
+  issueScriptLink: { href: string; fileName: string } | null;
   onRun: () => void;
   onExport: () => void;
+  onExportIssueDrafts: () => void;
+  onExportIssueScript: () => void;
 }
 
 export function ReleaseRehearsalPanel({
   report,
   exportLink,
+  issueDraftsLink,
+  issueScriptLink,
   onRun,
-  onExport
+  onExport,
+  onExportIssueDrafts,
+  onExportIssueScript
 }: ReleaseRehearsalPanelProps) {
   return (
     <section className="rehearsal-panel" data-decision={report?.decision || "idle"}>
@@ -43,9 +51,25 @@ export function ReleaseRehearsalPanel({
         <button type="button" onClick={onExport} disabled={!report}>
           <Download size={15} /> Export report
         </button>
+        <button type="button" onClick={onExportIssueDrafts} disabled={!report?.remediation.items.length}>
+          <Download size={15} /> Export issues
+        </button>
+        <button type="button" onClick={onExportIssueScript} disabled={!report?.remediation.items.length}>
+          <Download size={15} /> Export gh
+        </button>
         {exportLink ? (
           <a href={exportLink.href} download={exportLink.fileName}>
             <Download size={15} /> Download JSON
+          </a>
+        ) : null}
+        {issueDraftsLink ? (
+          <a href={issueDraftsLink.href} download={issueDraftsLink.fileName}>
+            <Download size={15} /> Download issues
+          </a>
+        ) : null}
+        {issueScriptLink ? (
+          <a href={issueScriptLink.href} download={issueScriptLink.fileName}>
+            <Download size={15} /> Download gh
           </a>
         ) : null}
       </div>
