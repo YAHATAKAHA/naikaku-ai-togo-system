@@ -951,6 +951,40 @@ Implementation evidence decisions are:
 - `needs-evidence`: the reviewed receipt still lacks required implementation evidence.
 - `blocked`: a command failed, a session is held, or production evidence is required before acceptance.
 
+### `POST /v1/development/coding-briefs/implementation-artifact-audit`
+
+Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, inspect command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file and command-transcript references are safe relative paths and exist inside the current gateway workspace.
+
+```json
+{
+  "evidence": {
+    "schema": "naikaku.coding-agent-implementation-evidence.v1",
+    "decision": "accepted-for-handoff"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-implementation-artifact-audit.v1",
+  "decision": "verified",
+  "summary": {
+    "verified": 8,
+    "verifiedPaths": 24,
+    "missingPaths": 0,
+    "unsafePaths": 0
+  }
+}
+```
+
+Artifact audit decisions are:
+
+- `verified`: every accepted item has safe, existing local changed-file and transcript references.
+- `needs-artifacts`: required references are missing, absent, or could not be checked without gateway filesystem access.
+- `blocked`: a referenced path is unsafe or implementation evidence is blocked.
+
 ### `POST /v1/sandbox/check`
 
 Checks whether a proposed action is allowed inside the current sandbox policy.

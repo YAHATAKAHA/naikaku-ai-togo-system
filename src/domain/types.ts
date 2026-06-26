@@ -1006,6 +1006,62 @@ export interface CodingAgentImplementationEvidence {
   };
 }
 
+export type CodingAgentImplementationArtifactAuditDecision =
+  | "verified"
+  | "needs-artifacts"
+  | "blocked";
+
+export type CodingAgentImplementationArtifactPathKind =
+  | "changed-file"
+  | "command-transcript";
+
+export type CodingAgentImplementationArtifactPathStatus =
+  | "verified"
+  | "missing"
+  | "unsafe"
+  | "not-checked";
+
+export interface CodingAgentImplementationArtifactPath {
+  kind: CodingAgentImplementationArtifactPathKind;
+  path: string;
+  status: CodingAgentImplementationArtifactPathStatus;
+  reason: string;
+}
+
+export interface CodingAgentImplementationArtifactAuditItem {
+  sessionId: string;
+  sourceItemId?: string;
+  title: string;
+  decision: CodingAgentImplementationArtifactAuditDecision;
+  paths: CodingAgentImplementationArtifactPath[];
+  missing: string[];
+}
+
+export interface CodingAgentImplementationArtifactAudit {
+  schema: "naikaku.coding-agent-implementation-artifact-audit.v1";
+  generatedAt: string;
+  sourceSchema: CodingAgentImplementationEvidence["schema"];
+  sourceDecision: CodingAgentImplementationEvidenceDecision;
+  decision: CodingAgentImplementationArtifactAuditDecision;
+  runId?: string;
+  items: CodingAgentImplementationArtifactAuditItem[];
+  summary: {
+    total: number;
+    verified: number;
+    needsArtifacts: number;
+    blocked: number;
+    paths: number;
+    verifiedPaths: number;
+    missingPaths: number;
+    unsafePaths: number;
+    uncheckedPaths: number;
+  };
+  honestyClaim: {
+    claim: string;
+    limitations: string[];
+  };
+}
+
 export type CodingAgentImplementationReconciliationDecision =
   | "applied"
   | "partial"
@@ -1073,6 +1129,7 @@ export type AuditEventType =
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"
+  | "development.coding_sessions.implementation_artifacts_audited"
   | "development.coding_sessions.implementation_evidence_applied"
   | "product.readiness.exported"
   | "product.release.exported"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
 import { buildCodingAgentBriefs } from "./codingAgentBriefs";
+import { auditCodingAgentImplementationArtifacts } from "./codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "./codingAgentImplementationEvidence";
 import { reconcileCodingAgentImplementationEvidence } from "./codingAgentImplementationReconciliation";
 import { buildCodingAgentSessionBundle } from "./codingAgentSessionBundle";
@@ -23,9 +24,10 @@ const workspace = {
 
 describe("coding agent implementation reconciliation", () => {
   it("marks matched todo or active development items done from accepted implementation evidence", () => {
-    const { board, evidence } = acceptedEvidenceFixture();
+    const { board, evidence, artifactAudit } = acceptedEvidenceFixture();
     const result = reconcileCodingAgentImplementationEvidence({
       evidence,
+      artifactAudit,
       items: board.items,
       generatedAt: evidence.generatedAt
     });
@@ -38,7 +40,7 @@ describe("coding agent implementation reconciliation", () => {
   });
 
   it("does not resolve blocked items automatically", () => {
-    const { board, evidence } = acceptedEvidenceFixture();
+    const { board, evidence, artifactAudit } = acceptedEvidenceFixture();
     const blocked = updateDevelopmentWorkItemStatus({
       item: board.items[0],
       status: "blocked",
@@ -47,6 +49,7 @@ describe("coding agent implementation reconciliation", () => {
     const items = [blocked, ...board.items.slice(1)];
     const result = reconcileCodingAgentImplementationEvidence({
       evidence,
+      artifactAudit,
       items,
       generatedAt: evidence.generatedAt
     });
@@ -55,6 +58,25 @@ describe("coding agent implementation reconciliation", () => {
     expect(result.reconciliation.summary.applied).toBe(board.items.length - 1);
     expect(result.updatedItems.find((item) => item.id === blocked.id)?.status).toBe("blocked");
     expect(result.reconciliation.items.find((item) => item.sourceItemId === blocked.id)?.reason).toContain("blocked");
+  });
+
+  it("does not mark work done when implementation artifacts are not locally verified", () => {
+    const { board, evidence } = acceptedEvidenceFixture();
+    const artifactAudit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt
+    });
+    const result = reconcileCodingAgentImplementationEvidence({
+      evidence,
+      artifactAudit,
+      items: board.items,
+      generatedAt: evidence.generatedAt
+    });
+
+    expect(artifactAudit.decision).toBe("needs-artifacts");
+    expect(result.reconciliation.decision).toBe("partial");
+    expect(result.reconciliation.summary.applied).toBe(0);
+    expect(result.updatedItems.every((item) => item.status !== "done")).toBe(true);
   });
 });
 
@@ -75,8 +97,13 @@ function acceptedEvidenceFixture() {
     receipt,
     generatedAt: receipt.generatedAt
   });
+  const artifactAudit = auditCodingAgentImplementationArtifacts({
+    evidence,
+    generatedAt: receipt.generatedAt,
+    pathExists: () => true
+  });
 
-  return { board, evidence };
+  return { board, evidence, artifactAudit };
 }
 
 function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessionReceipt {

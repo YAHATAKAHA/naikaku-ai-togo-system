@@ -1,5 +1,6 @@
 import { updateDevelopmentWorkItemStatus } from "./developmentBoard";
 import type {
+  CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentImplementationReconciliationDecision,
   CodingAgentImplementationReconciliation,
@@ -9,6 +10,7 @@ import type {
 
 export interface ReconcileCodingAgentImplementationEvidenceInput {
   evidence: CodingAgentImplementationEvidence;
+  artifactAudit: CodingAgentImplementationArtifactAudit;
   items: DevelopmentWorkItem[];
   generatedAt?: string;
 }
@@ -20,11 +22,13 @@ export interface ReconcileCodingAgentImplementationEvidenceResult {
 
 export function reconcileCodingAgentImplementationEvidence({
   evidence,
+  artifactAudit,
   items,
   generatedAt = new Date().toISOString()
 }: ReconcileCodingAgentImplementationEvidenceInput): ReconcileCodingAgentImplementationEvidenceResult {
   const byId = new Map(items.map((item) => [item.id, item]));
   const updatedById = new Map(items.map((item) => [item.id, item]));
+  const auditBySessionId = new Map(artifactAudit.items.map((item) => [item.sessionId, item]));
   const reconciliationItems: CodingAgentImplementationReconciliationItem[] = evidence.items.map((item) => {
     if (!item.accepted || evidence.decision !== "accepted-for-handoff") {
       return {
@@ -35,6 +39,19 @@ export function reconcileCodingAgentImplementationEvidence({
         reason: evidence.decision === "accepted-for-handoff"
           ? "Implementation evidence item was not accepted."
           : `Implementation evidence decision is ${evidence.decision}.`
+      };
+    }
+
+    const auditItem = auditBySessionId.get(item.sessionId);
+    if (auditItem?.decision !== "verified") {
+      return {
+        sessionId: item.sessionId,
+        sourceItemId: item.sourceItemId,
+        title: item.title,
+        applied: false,
+        reason: auditItem
+          ? `Implementation artifact audit is ${auditItem.decision}.`
+          : "Implementation artifact audit was not available for this session."
       };
     }
 

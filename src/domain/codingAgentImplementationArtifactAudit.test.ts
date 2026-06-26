@@ -1,0 +1,113 @@
+import { describe, expect, it } from "vitest";
+import { defaultRoles, defaultSandboxPolicy } from "../data/defaultCabinet";
+import { buildCodingAgentBriefs } from "./codingAgentBriefs";
+import { auditCodingAgentImplementationArtifacts } from "./codingAgentImplementationArtifactAudit";
+import { buildCodingAgentImplementationEvidence } from "./codingAgentImplementationEvidence";
+import { buildCodingAgentSessionBundle } from "./codingAgentSessionBundle";
+import {
+  buildCodingAgentSessionReceiptTemplate,
+  reviewCodingAgentSessionReceipt
+} from "./codingAgentSessionReceipt";
+import { buildDevelopmentBoard } from "./developmentBoard";
+import { buildTeamHandoff } from "./teamPackages";
+import type {
+  CodingAgentSessionBundle,
+  CodingAgentSessionReceipt
+} from "./types";
+
+const workspace = {
+  mission: "Build a sandbox-first multi-model AI cabinet",
+  roles: defaultRoles,
+  sandboxPolicy: defaultSandboxPolicy
+};
+
+describe("coding agent implementation artifact audit", () => {
+  it("verifies accepted implementation evidence when local artifact paths exist", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      pathExists: () => true
+    });
+
+    expect(audit.schema).toBe("naikaku.coding-agent-implementation-artifact-audit.v1");
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.verified).toBe(evidence.items.length);
+    expect(audit.summary.verifiedPaths).toBeGreaterThan(0);
+    expect(audit.honestyClaim.limitations.join(" ")).toContain("does not rerun commands");
+  });
+
+  it("holds evidence when local artifact paths cannot be checked", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt
+    });
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.summary.uncheckedPaths).toBeGreaterThan(0);
+  });
+
+  it("blocks unsafe artifact paths", () => {
+    const evidence = acceptedEvidenceFixture();
+    evidence.items[0].changedFiles = ["../secrets.env"];
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      pathExists: () => true
+    });
+
+    expect(audit.decision).toBe("blocked");
+    expect(audit.items[0].paths[0].status).toBe("unsafe");
+  });
+});
+
+function acceptedEvidenceFixture() {
+  const handoff = buildTeamHandoff({ workspace });
+  const board = buildDevelopmentBoard({ handoff });
+  const briefs = buildCodingAgentBriefs({ board, generatedAt: board.generatedAt });
+  const bundle = buildCodingAgentSessionBundle({
+    briefs,
+    generatedAt: briefs.generatedAt
+  });
+  const receipt = reviewCodingAgentSessionReceipt({
+    bundle,
+    receipt: completedReceiptFor(bundle),
+    generatedAt: bundle.generatedAt
+  });
+  return buildCodingAgentImplementationEvidence({
+    receipt,
+    generatedAt: receipt.generatedAt
+  });
+}
+
+function completedReceiptFor(bundle: CodingAgentSessionBundle): CodingAgentSessionReceipt {
+  const template = buildCodingAgentSessionReceiptTemplate({
+    bundle,
+    generatedAt: bundle.generatedAt
+  });
+
+  return {
+    ...template,
+    items: template.items.map((item) => {
+      const session = bundle.sessions.find((candidate) => candidate.id === item.sessionId);
+      if (!session) return item;
+      return {
+        ...item,
+        changedFiles: [`src/${session.id}.ts`],
+        commandResults: session.verificationCommands.map((command) => ({
+          command,
+          exitCode: 0,
+          outputSummary: `${command} passed in sandbox workspace.`,
+          transcriptRef: `output/coding-agent/${session.id}/${slug(command)}.log`
+        })),
+        evidence: session.evidenceRequired.map((evidence) => `${evidence}: attached`),
+        risks: ["No known remaining risks after local verification."]
+      };
+    })
+  };
+}
+
+function slug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}

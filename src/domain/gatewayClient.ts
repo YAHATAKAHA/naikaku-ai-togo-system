@@ -7,6 +7,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -673,6 +674,26 @@ export async function createCodingAgentImplementationEvidenceViaGateway(
   }
 
   return (await response.json()) as CodingAgentImplementationEvidence;
+}
+
+export async function auditCodingAgentImplementationArtifactsViaGateway(
+  evidence: CodingAgentImplementationEvidence,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/implementation-artifact-audit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ evidence }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent implementation artifact audit failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentImplementationArtifactAudit;
 }
 
 export async function checkGatewayHealth() {

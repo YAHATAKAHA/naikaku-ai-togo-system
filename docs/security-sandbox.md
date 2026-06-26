@@ -118,7 +118,7 @@ Coding Agent Session Receipts are that return boundary. A receipt template tells
 
 Coding Agent Implementation Evidence is the handoff summary derived from a reviewed receipt. It makes the implementation claim easier to archive and share, but it inherits the same boundary: it summarizes submitted changed files, command results, evidence artifacts, and risks without independently executing or inspecting them.
 
-Implementation evidence can reconcile back into the local Development Board only through preserved source work-item ids. The workbench marks matched, unblocked items done from accepted evidence and writes an audit event, but it does not unblock blocked items, infer missing source links, inspect artifact paths, rerun tests, push Git, or deploy. This keeps the "coding agent completed work" signal useful while still requiring real runner evidence for production claims.
+Implementation evidence can reconcile back into the local Development Board only through preserved source work-item ids and a verified local artifact audit item. The workbench checks safe relative changed-file and transcript paths, asks the local gateway to confirm those paths exist when gateway filesystem access is available, marks matched unblocked items done, and writes audit events. It does not unblock blocked items, infer missing source links, rerun tests, inspect command output truthfulness, push Git, or deploy. This keeps the "coding agent completed work" signal useful while still requiring real runner evidence for production claims.
 
 ## Sandbox Capability Registry
 

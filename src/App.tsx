@@ -93,6 +93,7 @@ import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
+import { auditCodingAgentImplementationArtifacts } from "./domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
 import { reconcileCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationReconciliation";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
@@ -117,6 +118,7 @@ import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
 import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type SupportedLocale } from "./i18n";
 import {
+  auditCodingAgentImplementationArtifactsViaGateway,
   createAutomationRunbookViaGateway,
   createCodingAgentBriefsViaGateway,
   createCodingAgentImplementationEvidenceViaGateway,
@@ -152,6 +154,7 @@ import type {
   CabinetRun,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentImplementationReconciliation,
   CodingAgentSessionBundle,
@@ -2273,19 +2276,33 @@ export function App() {
 
   async function createCodingAgentImplementationEvidenceDownload(receipt: CodingAgentSessionReceipt): Promise<{
     evidence: CodingAgentImplementationEvidence;
+    artifactAudit: CodingAgentImplementationArtifactAudit;
     reconciliation: CodingAgentImplementationReconciliation;
     source: "gateway" | "local";
     gatewayError: string | null;
+    artifactAuditSource: "gateway" | "local";
+    artifactAuditError: string | null;
   }> {
     let evidence: CodingAgentImplementationEvidence = buildCodingAgentImplementationEvidence({ receipt });
+    let artifactAudit: CodingAgentImplementationArtifactAudit | null = null;
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
+    let artifactAuditSource: "gateway" | "local" = "local";
+    let artifactAuditError: string | null = null;
 
     try {
       evidence = await createCodingAgentImplementationEvidenceViaGateway(receipt);
       source = "gateway";
     } catch (error) {
       gatewayError = error instanceof Error ? error.message : "unknown";
+    }
+
+    try {
+      artifactAudit = await auditCodingAgentImplementationArtifactsViaGateway(evidence);
+      artifactAuditSource = "gateway";
+    } catch (error) {
+      artifactAuditError = error instanceof Error ? error.message : "unknown";
+      artifactAudit = auditCodingAgentImplementationArtifacts({ evidence });
     }
 
     const blob = new Blob([serializeCodingAgentImplementationEvidenceExport(evidence)], { type: "application/json" });
@@ -2307,6 +2324,7 @@ export function App() {
     setCodingAgentImplementationEvidenceMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
     const { reconciliation, updatedItems } = reconcileCodingAgentImplementationEvidence({
       evidence,
+      artifactAudit,
       items: developmentBoard.items,
       generatedAt: evidence.generatedAt
     });
@@ -2356,6 +2374,30 @@ export function App() {
       }
     });
     recordAudit({
+      type: "development.coding_sessions.implementation_artifacts_audited",
+      severity: artifactAudit.decision === "verified"
+        ? "success"
+        : artifactAudit.decision === "needs-artifacts"
+          ? "warning"
+          : "error",
+      summary: `Coding agent implementation artifacts audited: ${artifactAudit.decision}.`,
+      runId: artifactAudit.runId,
+      metadata: {
+        decision: artifactAudit.decision,
+        total: artifactAudit.summary.total,
+        verified: artifactAudit.summary.verified,
+        needsArtifacts: artifactAudit.summary.needsArtifacts,
+        blocked: artifactAudit.summary.blocked,
+        paths: artifactAudit.summary.paths,
+        verifiedPaths: artifactAudit.summary.verifiedPaths,
+        missingPaths: artifactAudit.summary.missingPaths,
+        unsafePaths: artifactAudit.summary.unsafePaths,
+        uncheckedPaths: artifactAudit.summary.uncheckedPaths,
+        source: artifactAuditSource,
+        gatewayError: artifactAuditError
+      }
+    });
+    recordAudit({
       type: "development.coding_sessions.implementation_evidence_applied",
       severity: reconciliation.decision === "applied"
         ? "success"
@@ -2373,15 +2415,21 @@ export function App() {
         skipped: reconciliation.summary.skipped,
         blocked: reconciliation.summary.blocked,
         source,
-        gatewayError
+        gatewayError,
+        artifactAudit: artifactAudit.decision,
+        artifactAuditSource,
+        artifactAuditError
       }
     });
 
     return {
       evidence,
+      artifactAudit,
       reconciliation,
       source,
-      gatewayError
+      gatewayError,
+      artifactAuditSource,
+      artifactAuditError
     };
   }
 
@@ -2493,6 +2541,9 @@ export function App() {
         status: source === "gateway" ? "gateway" : "local",
         message: copy.codingBriefs.statusReceiptReviewApplied(
           statusMessage,
+          implementationResult.artifactAudit.decision,
+          implementationResult.artifactAudit.summary.verifiedPaths,
+          implementationResult.artifactAudit.summary.missingPaths + implementationResult.artifactAudit.summary.uncheckedPaths,
           implementationResult.reconciliation.summary.applied,
           implementationResult.reconciliation.summary.skipped
         )

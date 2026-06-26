@@ -1,9 +1,12 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { existsSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
 import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
+import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
@@ -28,6 +31,7 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionReceipt,
   DevelopmentWorkItem,
@@ -94,6 +98,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
+          "coding-agent-implementation-artifact-audit",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -724,6 +729,25 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/implementation-artifact-audit") {
+      const body = await readJson<{
+        evidence?: CodingAgentImplementationEvidence;
+      }>(request);
+      if (body.evidence?.schema !== "naikaku.coding-agent-implementation-evidence.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "evidence with schema naikaku.coding-agent-implementation-evidence.v1 is required."
+        });
+        return;
+      }
+      const audit = auditCodingAgentImplementationArtifacts({
+        evidence: body.evidence,
+        pathExists: localArtifactExists
+      });
+      sendJson(response, 200, audit);
+      return;
+    }
+
     if (request.method === "POST" && requestUrl.pathname === "/v1/sandbox/check") {
       const body = await readJson<{
         request: SandboxActionRequest;
@@ -779,6 +803,16 @@ function setCors(response: ServerResponse) {
 function sendJson(response: ServerResponse, status: number, payload: unknown) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload, null, 2));
+}
+
+function localArtifactExists(relativePath: string) {
+  const root = process.cwd();
+  const absolutePath = resolve(root, relativePath);
+  const workspaceRelativePath = relative(root, absolutePath);
+  if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
+    return false;
+  }
+  return existsSync(absolutePath);
 }
 
 async function readJson<T>(request: IncomingMessage): Promise<T> {
