@@ -21,6 +21,7 @@ import type {
   ReleaseRehearsalCategory,
   ReleaseRehearsalCheck,
   ReleaseRehearsalDecision,
+  ReleaseEvidenceClaim,
   ReleaseRehearsalReport,
   ReleaseRehearsalStatus,
   ReleaseRemediationItem,
@@ -129,6 +130,13 @@ export function buildReleaseRehearsalReport({
     releaseNotes,
     secretProbeValues
   });
+  const evidenceClaim = buildEvidenceClaim({
+    evidenceBundle,
+    sourceRun,
+    approvalRecords,
+    auditEvents,
+    providerReadiness
+  });
   const checks: ReleaseRehearsalCheck[] = [
     cabinetRunCheck(rehearsalRun, sourceRun),
     providerReadinessCheck(providerReadiness),
@@ -167,6 +175,7 @@ export function buildReleaseRehearsalReport({
     sourceRun,
     decision,
     score: rehearsalScore(summary.blockers, summary.warnings),
+    evidenceClaim,
     checks,
     remediation: {
       items: remediationItems,
@@ -200,7 +209,17 @@ export function serializeReleaseRemediationMarkdown(report: ReleaseRehearsalRepo
     `Run: ${report.runId}`,
     `Decision: ${report.decision}`,
     `Score: ${report.score}/100`,
+    `Evidence claim: ${report.evidenceClaim.level}`,
     `Generated: ${report.generatedAt}`,
+    "",
+    "## Evidence Claim",
+    report.evidenceClaim.claim,
+    "",
+    "Limitations:",
+    ...report.evidenceClaim.limitations.map((item) => `- ${item}`),
+    "",
+    "Production requirements:",
+    ...report.evidenceClaim.productionRequirements.map((item) => `- ${item}`),
     "",
     "## Summary",
     `- Items: ${report.remediation.summary.total}`,
@@ -224,6 +243,46 @@ export function serializeReleaseRemediationMarkdown(report: ReleaseRehearsalRepo
         ])
       : ["- None"])
   ].join("\n");
+}
+
+function buildEvidenceClaim({
+  evidenceBundle,
+  sourceRun,
+  approvalRecords,
+  auditEvents,
+  providerReadiness
+}: {
+  evidenceBundle: ReturnType<typeof buildExecutorEvidenceBundle>;
+  sourceRun: ReleaseRehearsalReport["sourceRun"];
+  approvalRecords: AutomationApprovalRecord[];
+  auditEvents: AuditEvent[];
+  providerReadiness: ProviderReadinessMatrix;
+}): ReleaseEvidenceClaim {
+  const dryRunLimitations = [
+    "Executor evidence was produced by the dry-run simulator; shell, browser, desktop, and MCP actions were not actually executed.",
+    sourceRun === "simulated"
+      ? "The cabinet run was simulated locally rather than produced by live provider calls."
+      : "The cabinet run was provided as input and was not re-executed by the rehearsal command.",
+    providerReadiness.summary.ready === providerReadiness.summary.enabled
+      ? "Provider readiness proves exported aliases were reviewed; raw provider secrets still remain outside the artifact."
+      : "Provider readiness is incomplete and must be reviewed before release handoff."
+  ];
+
+  return {
+    level: evidenceBundle.mode === "dry-run" ? "dry-run" : "production",
+    claim: evidenceBundle.mode === "dry-run"
+      ? `Dry-run release gate evidence covers ${evidenceBundle.summary.steps} executor steps, ${evidenceBundle.summary.evidenceItems} evidence items, ${approvalRecords.length} approval records, and ${auditEvents.length} audit events.`
+      : `Production runner evidence covers ${evidenceBundle.summary.steps} executor steps and ${evidenceBundle.summary.evidenceItems} evidence items.`,
+    limitations: evidenceBundle.mode === "dry-run"
+      ? dryRunLimitations
+      : ["Production evidence still requires operator review before external handoff."],
+    productionRequirements: [
+      "Attach authenticated runner identities instead of fixture or browser-local operator names.",
+      "Replace dry-run placeholders with real runner screenshots, terminal transcripts, artifact manifests, desktop frames, or MCP request logs.",
+      "Store approvals, executor evidence, and audit events in an authenticated append-only server ledger.",
+      "Run provider readiness with server-side session secrets without exporting raw keys."
+    ]
+  };
 }
 
 function buildRemediationItems(checks: ReleaseRehearsalCheck[]): ReleaseRemediationItem[] {

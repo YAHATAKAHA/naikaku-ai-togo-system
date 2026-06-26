@@ -34,6 +34,10 @@ describe("release rehearsal", () => {
     expect(report.artifacts.evidenceSchema).toBe("naikaku.executor-evidence.v1");
     expect(report.artifacts.bundleBytes).toBeGreaterThan(1000);
     expect(report.artifacts.notesBytes).toBeGreaterThan(500);
+    expect(report.evidenceClaim.level).toBe("dry-run");
+    expect(report.evidenceClaim.claim).toContain("Dry-run release gate evidence");
+    expect(report.evidenceClaim.limitations.some((item) => item.includes("not actually executed"))).toBe(true);
+    expect(report.evidenceClaim.productionRequirements.length).toBeGreaterThan(0);
     expect(report.summary.total).toBe(report.checks.length);
     expect(report.summary.evidenceItems).toBeGreaterThan(0);
     expect(report.remediation.summary.total).toBe(report.summary.warnings + report.summary.blockers);
@@ -71,6 +75,8 @@ describe("release rehearsal", () => {
     expect(serialized).not.toContain("sk-local-rehearsal-secret");
     expect(serialized).not.toContain("sessionSecret");
     expect(markdown).toContain("# Naikaku Release Remediation Plan");
+    expect(markdown).toContain("## Evidence Claim");
+    expect(markdown).toContain("Evidence claim: dry-run");
     expect(markdown).not.toContain("sk-local-rehearsal-secret");
     expect(markdown).not.toContain("sessionSecret");
   });
@@ -144,6 +150,8 @@ describe("release rehearsal", () => {
 
     expect(report.decision).toBe("release-ready");
     expect(report.score).toBe(100);
+    expect(report.evidenceClaim.level).toBe("dry-run");
+    expect(report.evidenceClaim.limitations[0]).toContain("dry-run simulator");
     expect(report.summary.warnings).toBe(0);
     expect(report.summary.blockers).toBe(0);
     expect(report.summary.heldActions).toBe(0);

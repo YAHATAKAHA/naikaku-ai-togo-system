@@ -44,7 +44,7 @@ export function ReleaseRehearsalPanel({
       </div>
 
       <div className="rehearsal-export-row">
-        <span>{report ? `${report.sourceRun} / ${report.artifacts.evidenceItems} evidence` : "Local dry-run rehearsal"}</span>
+        <span>{report ? `${report.sourceRun} / ${report.evidenceClaim.level} / ${report.artifacts.evidenceItems} evidence` : "Local dry-run rehearsal"}</span>
         <button type="button" onClick={onRun}>
           <Play size={15} /> Run rehearsal
         </button>
@@ -81,6 +81,12 @@ export function ReleaseRehearsalPanel({
             <Metric label="Notes" value={`${Math.round(report.artifacts.notesBytes / 1024)} KB`} />
             <Metric label="Runner" value={`${report.artifacts.runnerSteps} ready`} />
             <Metric label="Held" value={`${report.artifacts.heldActions}`} />
+          </div>
+
+          <div className="rehearsal-claim">
+            <strong>{report.evidenceClaim.level} evidence claim</strong>
+            <p>{report.evidenceClaim.claim}</p>
+            <small>{report.evidenceClaim.limitations[0]}</small>
           </div>
 
           {report.remediation.items.length ? (

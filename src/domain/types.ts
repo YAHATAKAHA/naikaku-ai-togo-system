@@ -557,6 +557,15 @@ export interface ReleaseRemediationItem {
   verificationCommand: string;
 }
 
+export type ReleaseEvidenceClaimLevel = "dry-run" | "production";
+
+export interface ReleaseEvidenceClaim {
+  level: ReleaseEvidenceClaimLevel;
+  claim: string;
+  limitations: string[];
+  productionRequirements: string[];
+}
+
 export interface ReleaseRehearsalReport {
   schema: "naikaku.release-rehearsal.v1";
   generatedAt: string;
@@ -565,6 +574,7 @@ export interface ReleaseRehearsalReport {
   sourceRun: "provided" | "simulated";
   decision: ReleaseRehearsalDecision;
   score: number;
+  evidenceClaim: ReleaseEvidenceClaim;
   checks: ReleaseRehearsalCheck[];
   remediation: {
     items: ReleaseRemediationItem[];

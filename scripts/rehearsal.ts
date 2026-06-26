@@ -328,6 +328,7 @@ function printSummary(
   console.log(
     `Artifacts: ${report.summary.releaseArtifacts} release, ${report.summary.evidenceItems} evidence, ${report.summary.readyActions} ready actions, ${report.summary.heldActions} held actions`
   );
+  console.log(`Evidence claim: ${report.evidenceClaim.level} - ${report.evidenceClaim.claim}`);
   console.log(`Secret leak detected: ${report.summary.secretLeakDetected ? "yes" : "no"}`);
 
   if (output) {

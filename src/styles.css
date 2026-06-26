@@ -1304,6 +1304,30 @@ meter {
   overflow-wrap: anywhere;
 }
 
+.rehearsal-claim {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 10px;
+}
+
+.rehearsal-claim strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.rehearsal-claim p,
+.rehearsal-claim small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .rehearsal-remediation {
   display: grid;
   gap: 8px;
