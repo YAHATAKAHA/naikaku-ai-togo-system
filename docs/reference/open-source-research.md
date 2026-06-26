@@ -2,6 +2,8 @@
 
 These projects inform Naikaku's direction. The repository does not copy their code; it uses them as product and architecture references.
 
+Naikaku's position is narrower and stricter than a general autonomous computer-use agent: it treats browser, desktop, shell, and MCP control as executor capabilities that must pass through cabinet roles, sandbox policy, operator-visible evidence, and local artifact fingerprints before work is accepted.
+
 ## OpenClaw
 
 Repository: https://github.com/openclaw/openclaw

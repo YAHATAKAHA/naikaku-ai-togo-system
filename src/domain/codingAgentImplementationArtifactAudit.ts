@@ -12,15 +12,25 @@ import type {
 export interface AuditCodingAgentImplementationArtifactsInput {
   evidence: CodingAgentImplementationEvidence;
   generatedAt?: string;
+  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult;
   pathExists?: (relativePath: string) => boolean;
+}
+
+export interface CodingAgentArtifactProbeResult {
+  exists: boolean;
+  bytes?: number;
+  sha256?: string;
+  modifiedAt?: string;
 }
 
 export function auditCodingAgentImplementationArtifacts({
   evidence,
   generatedAt = new Date().toISOString(),
+  artifactProbe,
   pathExists
 }: AuditCodingAgentImplementationArtifactsInput): CodingAgentImplementationArtifactAudit {
-  const items = evidence.items.map((item) => auditItem(item, evidence, pathExists));
+  const probe = artifactProbe ?? pathExistsProbe(pathExists);
+  const items = evidence.items.map((item) => auditItem(item, evidence, probe));
   const paths = items.flatMap((item) => item.paths);
   const summary = {
     total: items.length,
@@ -31,7 +41,9 @@ export function auditCodingAgentImplementationArtifacts({
     verifiedPaths: paths.filter((path) => path.status === "verified").length,
     missingPaths: paths.filter((path) => path.status === "missing").length,
     unsafePaths: paths.filter((path) => path.status === "unsafe").length,
-    uncheckedPaths: paths.filter((path) => path.status === "not-checked").length
+    uncheckedPaths: paths.filter((path) => path.status === "not-checked").length,
+    fingerprintedPaths: paths.filter((path) => Boolean(path.sha256)).length,
+    totalBytes: paths.reduce((total, path) => total + (path.bytes ?? 0), 0)
   };
 
   return {
@@ -46,7 +58,7 @@ export function auditCodingAgentImplementationArtifacts({
     honestyClaim: {
       claim: "This audit checks local coding-agent artifact references before updating development-board status.",
       limitations: [
-        "It verifies local path safety and, when a gateway supplies filesystem access, local path existence.",
+        "It verifies local path safety and, when a gateway supplies filesystem access, local path existence plus optional sha256 and byte fingerprints.",
         "It does not rerun commands or prove command output contents are truthful.",
         "It does not verify remote workspaces, external repositories, deploy targets, model calls, or Git remotes."
       ]
@@ -57,7 +69,7 @@ export function auditCodingAgentImplementationArtifacts({
 function auditItem(
   item: CodingAgentImplementationEvidenceItem,
   evidence: CodingAgentImplementationEvidence,
-  pathExists?: (relativePath: string) => boolean
+  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
 ): CodingAgentImplementationArtifactAuditItem {
   const paths: CodingAgentImplementationArtifactPath[] = [];
   const missing: string[] = [];
@@ -71,7 +83,7 @@ function auditItem(
   }
 
   item.changedFiles.forEach((path) => {
-    paths.push(checkPath("changed-file", path, pathExists));
+    paths.push(checkPath("changed-file", path, artifactProbe));
   });
 
   item.commandResults.forEach((result) => {
@@ -84,7 +96,7 @@ function auditItem(
       return;
     }
 
-    paths.push(checkPath("command-transcript", result.transcriptRef, pathExists));
+    paths.push(checkPath("command-transcript", result.transcriptRef, artifactProbe));
   });
 
   return {
@@ -100,7 +112,7 @@ function auditItem(
 function checkPath(
   kind: CodingAgentImplementationArtifactPathKind,
   path: string,
-  pathExists?: (relativePath: string) => boolean
+  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
 ): CodingAgentImplementationArtifactPath {
   if (!path.trim()) {
     return {
@@ -120,7 +132,7 @@ function checkPath(
     };
   }
 
-  if (!pathExists) {
+  if (!artifactProbe) {
     return {
       kind,
       path,
@@ -129,19 +141,43 @@ function checkPath(
     };
   }
 
-  return pathExists(path)
-    ? {
-        kind,
-        path,
-        status: "verified",
-        reason: "Artifact path exists in the local sandbox workspace."
-      }
-    : {
-        kind,
-        path,
-        status: "missing",
-        reason: "Artifact path was not found in the local sandbox workspace."
-      };
+  let probeResult: CodingAgentArtifactProbeResult;
+  try {
+    probeResult = artifactProbe(path);
+  } catch (error) {
+    return {
+      kind,
+      path,
+      status: "missing",
+      reason: `Artifact path probe failed: ${error instanceof Error ? error.message : "unknown error"}.`
+    };
+  }
+
+  if (!probeResult.exists) {
+    return {
+      kind,
+      path,
+      status: "missing",
+      reason: "Artifact path was not found in the local sandbox workspace."
+    };
+  }
+
+  return {
+    kind,
+    path,
+    status: "verified",
+    reason: "Artifact path exists in the local sandbox workspace.",
+    bytes: probeResult.bytes,
+    sha256: probeResult.sha256,
+    modifiedAt: probeResult.modifiedAt
+  };
+}
+
+function pathExistsProbe(pathExists?: (relativePath: string) => boolean) {
+  if (!pathExists) return undefined;
+  return (relativePath: string): CodingAgentArtifactProbeResult => ({
+    exists: pathExists(relativePath)
+  });
 }
 
 function itemDecision(

@@ -22,7 +22,7 @@ Localization is not just translation. Every locale must preserve the operational
 - Verify: release rehearsal and verification gates distinguish dry-run evidence from production evidence.
 - Govern: operators must see approvals, blockers, warnings, secret boundaries, and next actions clearly.
 
-This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion.
+This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion. In every locale, the default mental model is "Japanese-led AI cabinet that can program under governance," not a generic chat interface.
 
 ## Implementation Contract
 
@@ -34,7 +34,7 @@ This is the same direction as a coding agent workbench: the system should help u
 
 ## Current Coverage
 
-The current foundation covers the top operator shell, language selector, mission header, Release Rehearsal / Release Verification panel, Coding Agent Briefs panel, Coding Agent Brief Review controls/results, Coding Agent Session Bundle controls/results, Coding Agent Session Drill controls/results, Coding Agent Session Receipt template/import/review results, Coding Agent Implementation Evidence downloads, local artifact audit status, and Development Board reconciliation status after evidence import. Older panels still contain English strings and should be migrated incrementally without changing their data contracts.
+The current foundation covers the top operator shell, language selector, mission header, Release Rehearsal / Release Verification panel, Coding Agent Briefs panel, Coding Agent Brief Review controls/results, Coding Agent Session Bundle controls/results, Coding Agent Session Drill controls/results, Coding Agent Session Receipt template/import/review results, Coding Agent Implementation Evidence downloads, local artifact audit status, artifact fingerprint audit metadata, and Development Board reconciliation status after evidence import. Older panels still contain English strings and should be migrated incrementally without changing their data contracts.
 
 ## Completion Gate
 

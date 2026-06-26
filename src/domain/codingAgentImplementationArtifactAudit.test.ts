@@ -24,17 +24,44 @@ const workspace = {
 describe("coding agent implementation artifact audit", () => {
   it("verifies accepted implementation evidence when local artifact paths exist", () => {
     const evidence = acceptedEvidenceFixture();
+    const sha256 = "a".repeat(64);
     const audit = auditCodingAgentImplementationArtifacts({
       evidence,
       generatedAt: evidence.generatedAt,
-      pathExists: () => true
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256,
+        modifiedAt: evidence.generatedAt
+      })
     });
 
     expect(audit.schema).toBe("naikaku.coding-agent-implementation-artifact-audit.v1");
     expect(audit.decision).toBe("verified");
     expect(audit.summary.verified).toBe(evidence.items.length);
     expect(audit.summary.verifiedPaths).toBeGreaterThan(0);
+    expect(audit.summary.fingerprintedPaths).toBe(audit.summary.verifiedPaths);
+    expect(audit.summary.totalBytes).toBeGreaterThan(0);
+    expect(audit.items[0].paths[0]).toMatchObject({
+      status: "verified",
+      sha256,
+      modifiedAt: evidence.generatedAt
+    });
     expect(audit.honestyClaim.limitations.join(" ")).toContain("does not rerun commands");
+  });
+
+  it("keeps legacy path existence checks compatible without fingerprints", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      pathExists: () => true
+    });
+
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.verifiedPaths).toBeGreaterThan(0);
+    expect(audit.summary.fingerprintedPaths).toBe(0);
+    expect(audit.summary.totalBytes).toBe(0);
   });
 
   it("holds evidence when local artifact paths cannot be checked", () => {

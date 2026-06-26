@@ -47,7 +47,8 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 3. Bring your own model. Every role can use a different provider, model, endpoint, and secret alias.
 4. Split work cleanly. UI, orchestration, providers, sandbox runners, memory, and audit can be developed in parallel.
 5. Japanese first, multilingual by design. Japanese is the default operator language, with English, Simplified Chinese, Traditional Chinese, and Korean as first-class UI locales.
-6. Craft matters. The system should feel deliberate, readable, inspectable, and calm under pressure.
+6. Programmable under governance. Coding-agent work should move through briefs, receipts, local artifact fingerprints, and release gates before the board marks anything complete.
+7. Craft matters. The system should feel deliberate, readable, inspectable, and calm under pressure.
 
 ## Quick Start
 

@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { defaultMission, defaultRoles, defaultSandboxPolicy, executorProfiles } from "../src/data/defaultCabinet";
 import { buildAutomationPlan, buildExecutorHandoff } from "../src/domain/automation";
@@ -742,7 +743,7 @@ const server = createServer(async (request, response) => {
       }
       const audit = auditCodingAgentImplementationArtifacts({
         evidence: body.evidence,
-        pathExists: localArtifactExists
+        artifactProbe: localArtifactProbe
       });
       sendJson(response, 200, audit);
       return;
@@ -805,14 +806,29 @@ function sendJson(response: ServerResponse, status: number, payload: unknown) {
   response.end(JSON.stringify(payload, null, 2));
 }
 
-function localArtifactExists(relativePath: string) {
+function localArtifactProbe(relativePath: string) {
   const root = process.cwd();
   const absolutePath = resolve(root, relativePath);
   const workspaceRelativePath = relative(root, absolutePath);
   if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
-    return false;
+    return { exists: false };
   }
-  return existsSync(absolutePath);
+  if (!existsSync(absolutePath)) {
+    return { exists: false };
+  }
+
+  const stats = statSync(absolutePath);
+  if (!stats.isFile()) {
+    return { exists: false };
+  }
+
+  const content = readFileSync(absolutePath);
+  return {
+    exists: true,
+    bytes: stats.size,
+    sha256: createHash("sha256").update(content).digest("hex"),
+    modifiedAt: stats.mtime.toISOString()
+  };
 }
 
 async function readJson<T>(request: IncomingMessage): Promise<T> {

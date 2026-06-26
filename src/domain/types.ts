@@ -1026,6 +1026,9 @@ export interface CodingAgentImplementationArtifactPath {
   path: string;
   status: CodingAgentImplementationArtifactPathStatus;
   reason: string;
+  bytes?: number;
+  sha256?: string;
+  modifiedAt?: string;
 }
 
 export interface CodingAgentImplementationArtifactAuditItem {
@@ -1055,6 +1058,8 @@ export interface CodingAgentImplementationArtifactAudit {
     missingPaths: number;
     unsafePaths: number;
     uncheckedPaths: number;
+    fingerprintedPaths: number;
+    totalBytes: number;
   };
   honestyClaim: {
     claim: string;

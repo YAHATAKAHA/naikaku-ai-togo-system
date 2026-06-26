@@ -260,6 +260,7 @@ export function App() {
 
   useEffect(() => {
     saveLocale(locale);
+    document.documentElement.lang = htmlLang(locale);
   }, [locale]);
 
   const selectedRole = useMemo(
@@ -2393,6 +2394,8 @@ export function App() {
         missingPaths: artifactAudit.summary.missingPaths,
         unsafePaths: artifactAudit.summary.unsafePaths,
         uncheckedPaths: artifactAudit.summary.uncheckedPaths,
+        fingerprintedPaths: artifactAudit.summary.fingerprintedPaths,
+        totalBytes: artifactAudit.summary.totalBytes,
         source: artifactAuditSource,
         gatewayError: artifactAuditError
       }
