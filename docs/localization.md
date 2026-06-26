@@ -1,6 +1,6 @@
 # Localization Strategy
 
-Naikaku AI Togo is Japanese-first. Japanese is the default operator language because the product is positioned for a Japan-led release, while English, Simplified Chinese, Traditional Chinese, and Korean are first-class supported locales.
+Naikaku AI Togo is Japanese-first. Japanese is the default and primary operator language because the product is positioned for a Japan-led release, while English, Simplified Chinese, Traditional Chinese, and Korean are first-class supported locales.
 
 ## Supported Locales
 
@@ -22,7 +22,7 @@ Localization is not just translation. Every locale must preserve the operational
 - Verify: release rehearsal and verification gates distinguish dry-run evidence from production evidence.
 - Govern: operators must see approvals, blockers, warnings, secret boundaries, and next actions clearly.
 
-This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion. In every locale, the default mental model is "Japanese-led AI cabinet that can program under governance," not a generic chat interface.
+This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion. In every locale, the default mental model is "Japanese-led AI cabinet that can program under governance," not a generic chat interface. Localized copy must reinforce that the cabinet can think, program, operate approved sandbox tools, and audit itself as one governed loop.
 
 ## Implementation Contract
 

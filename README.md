@@ -4,6 +4,10 @@ Japan-born multi-model AI cabinet system for planning, execution, critique, supe
 
 Naikaku is an operator workbench for teams that want multiple AI roles to cooperate like a cabinet: one mission enters, specialized ministers reason over it, controlled tools execute it, auditors challenge it, and a scoring office decides whether the result is ready or needs another cycle.
 
+## Core Direction
+
+Naikaku's north star is a Japan-first governed coding cabinet. It should feel closer to a careful Codex-style operator bench than a generic chatbot: cabinet roles plan software work, generate implementation briefs, run only approved sandbox actions, import completion receipts, verify local artifacts, and then update the Development Board. Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported as first-class locales. OpenClaw-style computer control, desktop sandboxes, browser automation, shell runners, and MCP tools should plug in as governed executor profiles, not as unbounded host power.
+
 ## What Exists Now
 
 - A React/Vite TypeScript workbench.
@@ -92,6 +96,7 @@ npm run coding-agent:drill # self-simulate valid and mismatched coding-agent rec
 npm run verification:manifest # aggregate receipt drill and release verification evidence
 npm run release:verify # run coding-agent and release drills, then verify dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
+npm run verify:all # run tests, build, dry-run verification, production negative gate, and diff check
 npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
@@ -106,6 +111,8 @@ npm run preview   # preview the production build
 `npm run verification:manifest` reads the latest coding-agent receipt drill summary and release verification report, then writes `naikaku.verification-manifest.v1` to `output/verification/verification-manifest-latest.json`. The manifest fails if the valid coding-agent receipt does not apply all board items, if the mismatched receipt updates any board item, if release verification fails, or if the dry-run versus production boundary is unclear.
 
 `npm run release:verify` first runs the coding-agent receipt drill, then the release rehearsal drill, then turns the latest drill rehearsal into `naikaku.release-verification.v1`, and finally writes the verification manifest. It fails if coding-agent evidence gates accept mismatched evidence, if warnings, blockers, schema drift, or secret leakage are present, if the release verification cannot pass for dry-run scope, or if the manifest cannot prove both local gates. The workbench panel and local gateway expose the same release verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
+
+`npm run verify:all` is the recommended local and CI gate. It runs unit/domain tests, the production build, `npm run release:verify`, confirms `npm run release:verify:production` returns code 4, and finishes with `git diff --check`. CI should reuse the same command so local and remote verification share one contract.
 
 ## Repository Map
 

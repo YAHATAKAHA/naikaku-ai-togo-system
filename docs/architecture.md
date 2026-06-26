@@ -2,6 +2,10 @@
 
 Naikaku AI Togo System is designed as a cabinet-style automation platform. It separates decision roles from execution tools so the product can grow without turning into an unsafe monolithic agent.
 
+## Product Direction
+
+The product should stay centered on the user's core idea: a Japanese-led AI cabinet that can program, operate sandboxed computers, and verify its own work without pretending that dry-run evidence is production evidence. Multilingual support is part of the operating surface, not a separate translation layer: Japanese is designed first, then English, Simplified Chinese, Traditional Chinese, and Korean mirror the same cabinet concepts while preserving stable schemas, commands, paths, provider aliases, and evidence artifacts. Codex-like implementation agents fit into the system as governed workers that receive reviewed briefs and return receipts; OpenClaw-style computer-use runners fit as executor profiles that must pass policy, approval, logging, and release gates.
+
 ## Core Modules
 
 ```text
@@ -142,6 +146,8 @@ The report gives a score, decision, and gate list. Gates are grouped into role A
 `ReleaseVerificationReport` is the machine gate after rehearsal. It validates a rehearsal report into `naikaku.release-verification.v1`, checking schema, clear rehearsal gates, secret redaction, explicit evidence claims, and optional production evidence. The workbench panel, local gateway, and CLI share the same verifier and can export the verification JSON for review. Dry-run verification can pass for sandbox drill scope. Production verification fails with `not-production-ready` until the evidence claim is upgraded from dry-run to production, which prevents a 100/100 drill from being treated as a real external handoff.
 
 `VerificationManifest` is the CLI-level aggregation gate for local self-simulation. It reads the coding-agent receipt drill summary and the release verification report, then writes `naikaku.verification-manifest.v1`. The manifest checks that the valid coding-agent receipt applied all Development Board items, the mismatched receipt applied none, release verification passed, and the dry-run versus production boundary remains explicit. It does not replace the underlying drill or verification reports; it points to them so operators and CI can review one summary without losing source evidence.
+
+`VerifyAll` is the combined local and CI verification entrypoint. It runs unit/domain tests, production build, dry-run release verification with the coding-agent receipt drill and verification manifest, then confirms production verification still returns code 4 for dry-run evidence. This keeps the "good drill passes, production claim still blocked" invariant visible in one command.
 
 ## Localization
 

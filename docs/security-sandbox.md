@@ -2,6 +2,8 @@
 
 Naikaku treats computer control as a privileged capability. The default posture is sandbox-first and approval-first.
 
+This is how Codex-like programming and OpenClaw-style computer control fit the product direction: agents may plan, edit, test, browse, or operate desktops only through explicit executor profiles, with policy decisions, human approval where needed, runner identity, local artifacts, and release verification attached before the cabinet accepts the work as complete.
+
 ## Executor Profiles
 
 ### Browser Sandbox
@@ -104,7 +106,7 @@ Generated evidence bundles are also upserted into the local evidence ledger and 
 
 Release rehearsal reports include an `evidenceClaim` object so a passing sandbox drill cannot be mistaken for production runner proof. In the current implementation the claim level is `dry-run`; it explicitly states that no shell, browser, desktop, or MCP action was actually executed, then lists the runner identity, real artifact, append-only ledger, and server-side provider-readiness requirements needed for production handoff.
 
-The release verifier makes that boundary executable. The workbench panel, local gateway, and `npm run release:verify` accept clean coding-agent receipt and release dry-run drills as sandbox evidence, then write a verification manifest that records both gates. `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. This gives CI and operators a hard stop between "the drills work" and "real computer-control backends are safe to release."
+The release verifier makes that boundary executable. The workbench panel, local gateway, and `npm run release:verify` accept clean coding-agent receipt and release dry-run drills as sandbox evidence, then write a verification manifest that records both gates. `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. `npm run verify:all` treats that code 4 as the expected negative gate after tests, build, and dry-run verification pass, and CI should run the same command. This gives CI and operators a hard stop between "the drills work" and "real computer-control backends are safe to release."
 
 Coding Agent Briefs extend the same boundary to programming agents. They convert development work items into reviewable prompts that tell an implementation agent what to build, which verification commands to run, which executor boundary applies, and which actions are forbidden. The brief explicitly prohibits raw-secret export, unreviewed Git push, production deploys, remote deletes, purchases, and external message sends. It is a handoff artifact, not proof that implementation has happened.
 
