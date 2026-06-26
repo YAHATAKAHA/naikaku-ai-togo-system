@@ -8,6 +8,7 @@ import type {
   CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
+  CodingAgentRunnerSelfTestDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
@@ -18,6 +19,7 @@ const inputs = {
   codingAgentDispatchDrill: "output/coding-agent-dispatch-drill/summary.json",
   codingAgentDispatchSimulation: "output/coding-agent-dispatch-simulation/summary.json",
   codingAgentRunnerManifest: "output/coding-agent-runner-manifest/summary.json",
+  codingAgentRunnerSelfTest: "output/coding-agent-runner-self-test/summary.json",
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
   executorContractDrill: "output/executor-contract-drill/summary.json",
@@ -31,6 +33,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -43,14 +46,15 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 11,
-      passed: 11,
+      total: 12,
+      passed: 12,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
       "coding-agent-dispatch-drill",
       "coding-agent-dispatch-simulation",
       "coding-agent-runner-manifest",
+      "coding-agent-runner-self-test",
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
       "coding-agent-out-of-scope-receipt",
@@ -64,6 +68,7 @@ describe("verification manifest", () => {
     expect(manifest.source.codingAgentDispatchGeneratedAt).toBe("2026-06-27T00:01:00.000Z");
     expect(manifest.source.codingAgentDispatchSimulationGeneratedAt).toBe("2026-06-27T00:02:00.000Z");
     expect(manifest.source.codingAgentRunnerManifestGeneratedAt).toBe("2026-06-27T00:03:00.000Z");
+    expect(manifest.source.codingAgentRunnerSelfTestGeneratedAt).toBe("2026-06-27T00:04:00.000Z");
     expect(manifest.source.executorProfiles).toContain("desktop-vm");
     expect(manifest.source.productionBoundaryExitCode).toBe(4);
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
@@ -77,6 +82,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -102,6 +108,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill,
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -127,6 +134,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation,
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -152,6 +160,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation,
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -177,6 +186,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation,
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -202,6 +212,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest,
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -218,6 +229,32 @@ describe("verification manifest", () => {
     expect(runnerCheck?.evidence).toContain("Receipt draft paths: 7");
   });
 
+  it("invalidates the manifest when runner self-test claims executed commands", () => {
+    const codingAgentRunnerSelfTest = codingAgentRunnerSelfTestFixture();
+    codingAgentRunnerSelfTest.valid.notExecutedCommands = 15;
+    codingAgentRunnerSelfTest.checks.commandsNotExecuted = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const selfTestCheck = manifest.checks.find((check) => check.id === "coding-agent-runner-self-test");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(selfTestCheck?.status).toBe("fail");
+    expect(selfTestCheck?.evidence).toContain("Not-executed commands: 15");
+  });
+
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
     const codingAgentReport = codingAgentReportFixture();
     codingAgentReport.outOfScope.boardItemsApplied = 1;
@@ -226,6 +263,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -252,6 +290,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
@@ -280,6 +319,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
@@ -304,6 +344,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorDrill,
@@ -328,6 +369,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -370,6 +412,7 @@ describe("verification manifest", () => {
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
       codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -573,6 +616,60 @@ function codingAgentRunnerManifestFixture(): CodingAgentRunnerManifestDrillSumma
   };
 }
 
+function codingAgentRunnerSelfTestFixture(): CodingAgentRunnerSelfTestDrillSummary {
+  return {
+    schema: "naikaku.coding-agent-runner-self-test-drill.v1",
+    generatedAt: "2026-06-27T00:04:00.000Z",
+    outputDir: "output/coding-agent-runner-self-test",
+    operatorLocale: "ja",
+    source: {
+      runnerManifestDecision: "runner-ready",
+      readyTasks: 8,
+      runnerTasks: 8,
+      receiptDraftPaths: 8
+    },
+    valid: {
+      decision: "self-test-ready",
+      wouldRun: 8,
+      held: 0,
+      blocked: 0,
+      simulatedActions: 32,
+      pendingCommands: 16,
+      notExecutedCommands: 16,
+      expectedEvidenceArtifacts: 24,
+      receiptDraftPaths: 8,
+      unsafePaths: 0,
+      stopConditions: 88
+    },
+    productionHeld: {
+      decision: "needs-review",
+      wouldRun: 0,
+      held: 8,
+      blocked: 0,
+      notExecutedCommands: 16,
+      receiptDraftPaths: 0,
+      unsafePaths: 0
+    },
+    checks: {
+      validSelfTestReady: true,
+      wouldRunMatchesReceiptDrafts: true,
+      commandsNotExecuted: true,
+      simulatedActionsAttached: true,
+      safePaths: true,
+      stopConditionsPreserved: true,
+      noExecutionClaim: true,
+      productionHeldNotRun: true,
+      productionHeldNoReceiptDraftPaths: true
+    },
+    honestyClaim: {
+      level: "local-runner-self-test",
+      claim: "Local runner self-test drill.",
+      limitations: ["No implementation work was executed."],
+      productionRequirements: ["Attach real coding-agent receipts."]
+    }
+  };
+}
+
 function codingAgentReportFixture(): CodingAgentReceiptDrillSummary {
   return {
     schema: "naikaku.coding-agent-receipt-drill.v1",
@@ -642,6 +739,7 @@ function localizationDrillFixture(): LocalizationDrillSummary {
     archiveAuditDecision: "verified",
     simulationDecision: "ready-for-real-agent",
     runnerManifestDecision: "runner-ready",
+    runnerSelfTestDecision: "self-test-ready",
     receiptDecision: "needs-evidence",
     readySessions: 8,
     heldSessions: 0,
@@ -652,6 +750,8 @@ function localizationDrillFixture(): LocalizationDrillSummary {
     simulationReceiptDrafts: 8,
     runnerReadyTasks: 8,
     runnerTasks: 8,
+    runnerSelfTestWouldRun: 8,
+    runnerSelfTestNotExecutedCommands: 16,
     pendingReceiptItems: 8,
     checks: {
       localeIsCarried: true,
@@ -661,6 +761,7 @@ function localizationDrillFixture(): LocalizationDrillSummary {
       archiveAuditVerified: true,
       simulationContractStable: true,
       runnerManifestContractStable: true,
+      runnerSelfTestContractStable: true,
       copyReady: true,
       reviewReady: true,
       bundleReady: true,
@@ -688,6 +789,8 @@ function localizationDrillFixture(): LocalizationDrillSummary {
       simulationReceiptDrafts: 40,
       runnerReadyTasks: 40,
       runnerTasks: 40,
+      runnerSelfTestWouldRun: 40,
+      runnerSelfTestNotExecutedCommands: 80,
       pendingReceiptItems: 40
     },
     honestyClaim: {

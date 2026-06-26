@@ -11,6 +11,7 @@ import type {
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
+  CodingAgentRunnerSelfTest,
   CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -680,6 +681,26 @@ export async function createCodingAgentRunnerManifestViaGateway(
   }
 
   return (await response.json()) as CodingAgentRunnerManifest;
+}
+
+export async function createCodingAgentRunnerSelfTestViaGateway(
+  manifest: CodingAgentRunnerManifest,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-self-test`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ manifest }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent runner self-test failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentRunnerSelfTest;
 }
 
 export async function createCodingAgentSessionReceiptTemplateViaGateway(

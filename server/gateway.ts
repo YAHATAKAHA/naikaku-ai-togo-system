@@ -10,6 +10,7 @@ import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
+import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
@@ -39,6 +40,7 @@ import type {
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
+  CodingAgentRunnerSelfTest,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -107,6 +109,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-dispatch-manifest",
           "coding-agent-dispatch-simulation",
           "coding-agent-runner-manifest",
+          "coding-agent-runner-self-test",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
@@ -753,6 +756,24 @@ const server = createServer(async (request, response) => {
         receiptDraftPaths: body.receiptDraftPaths || {}
       });
       sendJson(response, 200, manifest);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-self-test") {
+      const body = await readJson<{
+        manifest?: CodingAgentRunnerManifest;
+      }>(request);
+      if (body.manifest?.schema !== "naikaku.coding-agent-runner-manifest.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "manifest with schema naikaku.coding-agent-runner-manifest.v1 is required."
+        });
+        return;
+      }
+      const report: CodingAgentRunnerSelfTest = buildCodingAgentRunnerSelfTest({
+        manifest: body.manifest
+      });
+      sendJson(response, 200, report);
       return;
     }
 

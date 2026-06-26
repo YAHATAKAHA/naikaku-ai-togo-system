@@ -834,6 +834,48 @@ export interface CodingAgentRunnerManifestDrillSummary {
   };
 }
 
+export interface CodingAgentRunnerSelfTestDrillSummary {
+  schema: "naikaku.coding-agent-runner-self-test-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    runnerManifestDecision: string;
+    readyTasks: number;
+    runnerTasks: number;
+    receiptDraftPaths: number;
+  };
+  valid: {
+    decision: string;
+    wouldRun: number;
+    held: number;
+    blocked: number;
+    simulatedActions: number;
+    pendingCommands: number;
+    notExecutedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  productionHeld: {
+    decision: string;
+    wouldRun: number;
+    held: number;
+    blocked: number;
+    notExecutedCommands: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -862,6 +904,9 @@ export interface LocalizationDrillSummary {
     runnerManifestDecision: string;
     runnerReadyTasks: number;
     runnerTasks: number;
+    runnerSelfTestDecision: string;
+    runnerSelfTestWouldRun: number;
+    runnerSelfTestNotExecutedCommands: number;
     pendingReceiptItems: number;
     checks: Record<string, boolean>;
     failures: string[];
@@ -877,6 +922,8 @@ export interface LocalizationDrillSummary {
     simulationReceiptDrafts: number;
     runnerReadyTasks: number;
     runnerTasks: number;
+    runnerSelfTestWouldRun: number;
+    runnerSelfTestNotExecutedCommands: number;
     pendingReceiptItems: number;
   };
   honestyClaim: {
@@ -974,6 +1021,7 @@ export interface VerificationManifest {
     codingAgentDispatchDrill: string;
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
+    codingAgentRunnerSelfTest: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -984,6 +1032,7 @@ export interface VerificationManifest {
     codingAgentDispatchGeneratedAt: string;
     codingAgentDispatchSimulationGeneratedAt: string;
     codingAgentRunnerManifestGeneratedAt: string;
+    codingAgentRunnerSelfTestGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
@@ -1589,6 +1638,81 @@ export interface CodingAgentRunnerManifest {
   };
 }
 
+export type CodingAgentRunnerSelfTestDecision =
+  | "self-test-ready"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentRunnerSelfTestItemStatus =
+  | "would-run"
+  | "held"
+  | "blocked";
+
+export interface CodingAgentRunnerSelfTestCommand {
+  command: string;
+  transcriptRef: string | null;
+  status: "not-executed";
+  exitCode: null;
+  evidenceNote: string;
+}
+
+export interface CodingAgentRunnerSelfTestItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  runnerId: string;
+  manifestTaskStatus: CodingAgentRunnerTaskStatus;
+  selfTestStatus: CodingAgentRunnerSelfTestItemStatus;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  evidenceArtifactPrefix: string;
+  commands: CodingAgentRunnerSelfTestCommand[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  simulatedActions: string[];
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentRunnerSelfTest {
+  schema: "naikaku.coding-agent-runner-self-test.v1";
+  generatedAt: string;
+  mode: "local-runner-self-test";
+  sourceSchema: CodingAgentRunnerManifest["schema"];
+  sourceDecision: CodingAgentRunnerManifestDecision;
+  decision: CodingAgentRunnerSelfTestDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentRunnerSelfTestItem[];
+  summary: {
+    total: number;
+    wouldRun: number;
+    held: number;
+    blocked: number;
+    readyRunnerTasks: number;
+    simulatedActions: number;
+    pendingCommands: number;
+    notExecutedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  honestyClaim: {
+    level: "local-runner-self-test";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type CodingAgentSessionReceiptDecision = "verified" | "needs-evidence" | "blocked";
 export type CodingAgentSessionReceiptStatus =
   | "verified"
@@ -1841,6 +1965,7 @@ export type AuditEventType =
   | "development.coding_sessions.dispatch_audited"
   | "development.coding_sessions.dispatch_simulated"
   | "development.coding_sessions.runner_manifest_prepared"
+  | "development.coding_sessions.runner_self_test_completed"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"

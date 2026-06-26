@@ -3,6 +3,7 @@ import type {
   CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
+  CodingAgentRunnerSelfTestDrillSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
   LocalizationDrillSummary,
@@ -25,6 +26,7 @@ export interface BuildVerificationManifestInput {
   codingAgentDispatchDrill: CodingAgentDispatchDrillSummary;
   codingAgentDispatchSimulation: CodingAgentDispatchSimulationSummary;
   codingAgentRunnerManifest: CodingAgentRunnerManifestDrillSummary;
+  codingAgentRunnerSelfTest: CodingAgentRunnerSelfTestDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -35,6 +37,7 @@ export interface BuildVerificationManifestInput {
     codingAgentDispatchDrill: string;
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
+    codingAgentRunnerSelfTest: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -47,6 +50,7 @@ export function buildVerificationManifest({
   codingAgentDispatchDrill,
   codingAgentDispatchSimulation,
   codingAgentRunnerManifest,
+  codingAgentRunnerSelfTest,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -59,6 +63,7 @@ export function buildVerificationManifest({
     codingAgentDispatchCheck(codingAgentDispatchDrill),
     codingAgentSimulationCheck(codingAgentDispatchSimulation),
     codingAgentRunnerManifestCheck(codingAgentRunnerManifest),
+    codingAgentRunnerSelfTestCheck(codingAgentRunnerSelfTest),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -80,6 +85,7 @@ export function buildVerificationManifest({
       codingAgentDispatchGeneratedAt: codingAgentDispatchDrill.generatedAt,
       codingAgentDispatchSimulationGeneratedAt: codingAgentDispatchSimulation.generatedAt,
       codingAgentRunnerManifestGeneratedAt: codingAgentRunnerManifest.generatedAt,
+      codingAgentRunnerSelfTestGeneratedAt: codingAgentRunnerSelfTest.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -102,7 +108,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner self-test, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -215,6 +221,56 @@ function codingAgentRunnerManifestCheck(report: CodingAgentRunnerManifestDrillSu
     nextAction: ok
       ? "Keep the runner manifest summary attached before releasing tasks to governed coding-agent runners."
       : "Restore runner manifest gating so only verified-ready pending drafts become runner tasks."
+  };
+}
+
+function codingAgentRunnerSelfTestCheck(report: CodingAgentRunnerSelfTestDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-runner-self-test-drill.v1"
+    && report.source.runnerManifestDecision === "runner-ready"
+    && report.source.readyTasks > 0
+    && report.source.runnerTasks === report.source.readyTasks
+    && report.source.receiptDraftPaths === report.source.readyTasks
+    && report.valid.decision === "self-test-ready"
+    && report.valid.wouldRun === report.source.runnerTasks
+    && report.valid.blocked === 0
+    && report.valid.pendingCommands > 0
+    && report.valid.notExecutedCommands === report.valid.pendingCommands
+    && report.valid.expectedEvidenceArtifacts > 0
+    && report.valid.receiptDraftPaths === report.valid.wouldRun
+    && report.valid.unsafePaths === 0
+    && report.valid.stopConditions >= report.valid.wouldRun
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.wouldRun === 0
+    && report.productionHeld.receiptDraftPaths === 0
+    && report.productionHeld.unsafePaths === 0
+    && checksPassed;
+
+  return {
+    id: "coding-agent-runner-self-test",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent runner self-test consumed runner manifests without executing commands or queuing production-held tasks."
+      : "Coding-agent runner self-test did not preserve non-execution or production-held runner boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Runner manifest decision: ${report.source.runnerManifestDecision}`,
+      `Source runner tasks: ${report.source.runnerTasks}`,
+      `Source receipt draft paths: ${report.source.receiptDraftPaths}`,
+      `Self-test decision: ${report.valid.decision}`,
+      `Would run: ${report.valid.wouldRun}`,
+      `Pending commands: ${report.valid.pendingCommands}`,
+      `Not-executed commands: ${report.valid.notExecutedCommands}`,
+      `Expected evidence artifacts: ${report.valid.expectedEvidenceArtifacts}`,
+      `Receipt draft paths: ${report.valid.receiptDraftPaths}`,
+      `Unsafe paths: ${report.valid.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held would-run: ${report.productionHeld.wouldRun}`,
+      `Production-held receipt draft paths: ${report.productionHeld.receiptDraftPaths}`
+    ],
+    nextAction: ok
+      ? "Keep the runner self-test summary attached before handing manifests to governed coding-agent runners."
+      : "Restore runner self-test so it only preflights contracts and never claims completed execution."
   };
 }
 
@@ -377,9 +433,13 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     locale.runnerManifestDecision === "runner-ready" &&
     locale.runnerReadyTasks === locale.dispatchReady &&
     locale.runnerTasks === locale.dispatchReady &&
+    locale.runnerSelfTestDecision === "self-test-ready" &&
+    locale.runnerSelfTestWouldRun === locale.runnerTasks &&
+    locale.runnerSelfTestNotExecutedCommands > 0 &&
     Boolean(locale.checks.archiveAuditVerified) &&
     Boolean(locale.checks.simulationContractStable) &&
-    Boolean(locale.checks.runnerManifestContractStable)
+    Boolean(locale.checks.runnerManifestContractStable) &&
+    Boolean(locale.checks.runnerSelfTestContractStable)
   );
   const ok = report.schema === "naikaku.localization-drill.v1"
     && report.defaultLocale === "ja"
@@ -390,6 +450,8 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     && report.summary.simulationReceiptDrafts === report.summary.dispatchReady
     && report.summary.runnerReadyTasks === report.summary.dispatchReady
     && report.summary.runnerTasks === report.summary.dispatchReady
+    && report.summary.runnerSelfTestWouldRun === report.summary.runnerTasks
+    && report.summary.runnerSelfTestNotExecutedCommands > 0
     && report.summary.simulationReadyForAgent > 0
     && simulationContractsPassed
     && checksPassed;
@@ -413,6 +475,8 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Simulation receipt drafts: ${report.summary.simulationReceiptDrafts}`,
       `Runner ready tasks: ${report.summary.runnerReadyTasks}`,
       `Runner tasks: ${report.summary.runnerTasks}`,
+      `Runner self-test would-run: ${report.summary.runnerSelfTestWouldRun}`,
+      `Runner self-test not-executed commands: ${report.summary.runnerSelfTestNotExecutedCommands}`,
       `Pending receipt items: ${report.summary.pendingReceiptItems}`,
       `Session contract stable: ${report.locales.every((locale) => Boolean(locale.checks.sessionContractStable)) ? "yes" : "no"}`,
       `Simulation and runner contract stable: ${simulationContractsPassed ? "yes" : "no"}`

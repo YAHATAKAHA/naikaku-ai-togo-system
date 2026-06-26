@@ -75,6 +75,8 @@ import {
   serializeCodingAgentDispatchSimulationMarkdownExport,
   serializeCodingAgentRunnerManifestExport,
   serializeCodingAgentRunnerManifestMarkdownExport,
+  serializeCodingAgentRunnerSelfTestExport,
+  serializeCodingAgentRunnerSelfTestMarkdownExport,
   serializeCodingAgentSessionBundleExport,
   serializeCodingAgentSessionBundleMarkdownExport,
   serializeCodingAgentSessionDrillExport,
@@ -108,6 +110,7 @@ import { auditCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArc
 import { buildCodingAgentDispatchManifest } from "./domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "./domain/codingAgentDispatchSimulation";
 import { buildCodingAgentRunnerManifest } from "./domain/codingAgentRunnerManifest";
+import { buildCodingAgentRunnerSelfTest } from "./domain/codingAgentRunnerSelfTest";
 import { auditCodingAgentImplementationArtifacts } from "./domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
 import { reconcileCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationReconciliation";
@@ -139,6 +142,7 @@ import {
   createCodingAgentDispatchManifestViaGateway,
   createCodingAgentDispatchSimulationViaGateway,
   createCodingAgentRunnerManifestViaGateway,
+  createCodingAgentRunnerSelfTestViaGateway,
   createCodingAgentImplementationEvidenceViaGateway,
   createCodingAgentSessionBundleViaGateway,
   createCodingAgentSessionDrillViaGateway,
@@ -175,6 +179,7 @@ import type {
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
+  CodingAgentRunnerSelfTest,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentImplementationArtifactAudit,
@@ -274,6 +279,9 @@ export function App() {
   const [codingAgentRunnerManifest, setCodingAgentRunnerManifest] = useState<CodingAgentRunnerManifest | null>(null);
   const [codingAgentRunnerManifestLink, setCodingAgentRunnerManifestLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentRunnerManifestMarkdownLink, setCodingAgentRunnerManifestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerSelfTest, setCodingAgentRunnerSelfTest] = useState<CodingAgentRunnerSelfTest | null>(null);
+  const [codingAgentRunnerSelfTestLink, setCodingAgentRunnerSelfTestLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerSelfTestMarkdownLink, setCodingAgentRunnerSelfTestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrill, setCodingAgentSessionDrill] = useState<CodingAgentSessionDrillReport | null>(null);
   const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrillMarkdownLink, setCodingAgentSessionDrillMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -712,6 +720,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentRunnerSelfTestLink) {
+        URL.revokeObjectURL(codingAgentRunnerSelfTestLink.href);
+      }
+    };
+  }, [codingAgentRunnerSelfTestLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentRunnerSelfTestMarkdownLink) {
+        URL.revokeObjectURL(codingAgentRunnerSelfTestMarkdownLink.href);
+      }
+    };
+  }, [codingAgentRunnerSelfTestMarkdownLink]);
+
+  useEffect(() => {
+    return () => {
       if (codingAgentSessionDrillLink) {
         URL.revokeObjectURL(codingAgentSessionDrillLink.href);
       }
@@ -1020,6 +1044,7 @@ export function App() {
     setCodingAgentDispatchArchiveAudit(null);
     setCodingAgentDispatchSimulation(null);
     setCodingAgentRunnerManifest(null);
+    setCodingAgentRunnerSelfTest(null);
     if (codingAgentDispatchManifestLink) {
       URL.revokeObjectURL(codingAgentDispatchManifestLink.href);
       setCodingAgentDispatchManifestLink(null);
@@ -1059,6 +1084,14 @@ export function App() {
     if (codingAgentRunnerManifestMarkdownLink) {
       URL.revokeObjectURL(codingAgentRunnerManifestMarkdownLink.href);
       setCodingAgentRunnerManifestMarkdownLink(null);
+    }
+    if (codingAgentRunnerSelfTestLink) {
+      URL.revokeObjectURL(codingAgentRunnerSelfTestLink.href);
+      setCodingAgentRunnerSelfTestLink(null);
+    }
+    if (codingAgentRunnerSelfTestMarkdownLink) {
+      URL.revokeObjectURL(codingAgentRunnerSelfTestMarkdownLink.href);
+      setCodingAgentRunnerSelfTestMarkdownLink(null);
     }
   }
 
@@ -2522,6 +2555,26 @@ export function App() {
     setCodingAgentRunnerManifestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  function createCodingAgentRunnerSelfTestDownload(report: CodingAgentRunnerSelfTest) {
+    const blob = new Blob([serializeCodingAgentRunnerSelfTestExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentRunnerSelfTestMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-runner-self-test-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-runner-self-test-${runSlug}-${report.operatorLocale}.md`;
+
+    if (codingAgentRunnerSelfTestLink) {
+      URL.revokeObjectURL(codingAgentRunnerSelfTestLink.href);
+    }
+    if (codingAgentRunnerSelfTestMarkdownLink) {
+      URL.revokeObjectURL(codingAgentRunnerSelfTestMarkdownLink.href);
+    }
+
+    setCodingAgentRunnerSelfTestLink({ href: url, fileName });
+    setCodingAgentRunnerSelfTestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
   function receiptDraftPathsForSimulation(report: CodingAgentDispatchSimulation) {
     return Object.fromEntries(report.items
       .filter((item) => item.receiptDraft)
@@ -2586,6 +2639,19 @@ export function App() {
     } catch (error) {
       runnerManifestGatewayError = error instanceof Error ? error.message : "unknown";
     }
+    let runnerSelfTest = buildCodingAgentRunnerSelfTest({
+      manifest: runnerManifest,
+      generatedAt: runnerManifest.generatedAt
+    });
+    let runnerSelfTestSource: "gateway" | "local" = "local";
+    let runnerSelfTestGatewayError: string | null = null;
+
+    try {
+      runnerSelfTest = await createCodingAgentRunnerSelfTestViaGateway(runnerManifest);
+      runnerSelfTestSource = "gateway";
+    } catch (error) {
+      runnerSelfTestGatewayError = error instanceof Error ? error.message : "unknown";
+    }
 
     setCodingAgentBriefReview(bundle.review);
     setCodingAgentSessionBundle(bundle);
@@ -2596,6 +2662,7 @@ export function App() {
     setCodingAgentDispatchArchiveAudit(archiveAudit);
     setCodingAgentDispatchSimulation(simulation);
     setCodingAgentRunnerManifest(runnerManifest);
+    setCodingAgentRunnerSelfTest(runnerSelfTest);
     if (!codingAgentSessionBundle) {
       createCodingAgentSessionBundleDownload(bundle, false);
     }
@@ -2607,6 +2674,7 @@ export function App() {
     createCodingAgentDispatchArchiveAuditDownload(archiveAudit);
     createCodingAgentDispatchSimulationDownload(simulation);
     createCodingAgentRunnerManifestDownload(runnerManifest);
+    createCodingAgentRunnerSelfTestDownload(runnerSelfTest);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -2645,6 +2713,8 @@ export function App() {
         dispatchSimulationBlocked: simulation.summary.blocked,
         runnerManifest: runnerManifest.decision,
         runnerTasks: runnerManifest.summary.runnerTasks,
+        runnerSelfTest: runnerSelfTest.decision,
+        runnerSelfTestWouldRun: runnerSelfTest.summary.wouldRun,
         unsafePaths: manifest.summary.unsafePaths,
         source,
         gatewayError
@@ -2706,6 +2776,24 @@ export function App() {
         unsafePaths: runnerManifest.summary.unsafePaths,
         source: runnerManifestSource,
         gatewayError: runnerManifestGatewayError
+      }
+    });
+    recordAudit({
+      type: "development.coding_sessions.runner_self_test_completed",
+      severity: runnerSelfTest.decision === "self-test-ready" ? "success" : runnerSelfTest.decision === "needs-review" ? "warning" : "error",
+      summary: `Coding agent runner self-test completed: ${runnerSelfTest.decision}.`,
+      runId: runnerSelfTest.runId,
+      metadata: {
+        wouldRun: runnerSelfTest.summary.wouldRun,
+        held: runnerSelfTest.summary.held,
+        blocked: runnerSelfTest.summary.blocked,
+        pendingCommands: runnerSelfTest.summary.pendingCommands,
+        notExecutedCommands: runnerSelfTest.summary.notExecutedCommands,
+        expectedEvidenceArtifacts: runnerSelfTest.summary.expectedEvidenceArtifacts,
+        receiptDraftPaths: runnerSelfTest.summary.receiptDraftPaths,
+        unsafePaths: runnerSelfTest.summary.unsafePaths,
+        source: runnerSelfTestSource,
+        gatewayError: runnerSelfTestGatewayError
       }
     });
   }
@@ -3520,6 +3608,7 @@ export function App() {
             dispatchArchiveAudit={codingAgentDispatchArchiveAudit}
             dispatchSimulation={codingAgentDispatchSimulation}
             runnerManifest={codingAgentRunnerManifest}
+            runnerSelfTest={codingAgentRunnerSelfTest}
             sessionDrill={codingAgentSessionDrill}
             sessionReceipt={codingAgentSessionReceipt}
             exportLink={codingAgentBriefsLink}
@@ -3537,6 +3626,8 @@ export function App() {
             dispatchSimulationMarkdownLink={codingAgentDispatchSimulationMarkdownLink}
             runnerManifestLink={codingAgentRunnerManifestLink}
             runnerManifestMarkdownLink={codingAgentRunnerManifestMarkdownLink}
+            runnerSelfTestLink={codingAgentRunnerSelfTestLink}
+            runnerSelfTestMarkdownLink={codingAgentRunnerSelfTestMarkdownLink}
             drillLink={codingAgentSessionDrillLink}
             drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
             receiptLink={codingAgentSessionReceiptLink}

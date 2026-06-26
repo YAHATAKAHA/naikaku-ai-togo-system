@@ -957,6 +957,42 @@ Response:
 
 Ready tasks require safe prompt paths, safe receipt draft paths, pending command results, expected evidence paths, and stop conditions. Held or production-evidence-held sessions must remain out of the runner task queue.
 
+### `POST /v1/development/coding-briefs/runner-self-test`
+
+Consumes a runner manifest and simulates the local runner preflight contract. This endpoint does not read prompt file contents, execute commands, open browsers, control desktops, call MCP tools, call providers, edit files, commit, push, deploy, or claim implementation evidence. It only reports whether a governed runner could consume the manifest and which tasks would stay held or blocked.
+
+```json
+{
+  "manifest": {
+    "schema": "naikaku.coding-agent-runner-manifest.v1",
+    "decision": "runner-ready",
+    "items": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-runner-self-test.v1",
+  "mode": "local-runner-self-test",
+  "decision": "self-test-ready",
+  "summary": {
+    "wouldRun": 8,
+    "notExecutedCommands": 16,
+    "receiptDraftPaths": 8,
+    "unsafePaths": 0
+  },
+  "honestyClaim": {
+    "level": "local-runner-self-test",
+    "claim": "This self-test simulates runner preflight consumption of a coding-agent runner manifest without executing implementation work."
+  }
+}
+```
+
+The response must keep command exit codes null and command status `not-executed`. A self-test-ready decision means the runner contract is consumable, not that a coding agent has completed the task.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

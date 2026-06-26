@@ -84,6 +84,8 @@ export interface CodingAgentBriefsCopy {
   downloadDispatchSimulationMarkdown: string;
   downloadRunnerManifestJson: string;
   downloadRunnerManifestMarkdown: string;
+  downloadRunnerSelfTestJson: string;
+  downloadRunnerSelfTestMarkdown: string;
   downloadDrillJson: string;
   downloadDrillMarkdown: string;
   receiptTemplate: string;
@@ -122,6 +124,9 @@ export interface CodingAgentBriefsCopy {
   runnerManifest: string;
   runnerManifestDecisionLabel: (decision: string) => string;
   runnerManifestSummary: (readyTasks: number, runnerTasks: number, blockedTasks: number) => string;
+  runnerSelfTest: string;
+  runnerSelfTestDecisionLabel: (decision: string) => string;
+  runnerSelfTestSummary: (wouldRun: number, notExecutedCommands: number, blockedTasks: number) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -293,6 +298,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadRunnerManifestJson: "Runner JSON",
       downloadRunnerManifestMarkdown: "Runner MD",
+      downloadRunnerSelfTestJson: "Self-test JSON",
+      downloadRunnerSelfTestMarkdown: "Self-test MD",
       downloadDrillJson: "演習JSON",
       downloadDrillMarkdown: "演習MD",
       receiptTemplate: "証拠雛形",
@@ -331,6 +338,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerManifest: "Runnerマニフェスト",
       runnerManifestDecisionLabel: jaRunnerManifestDecision,
       runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks}件準備 / Runner ${runnerTasks}件 / ブロック ${blockedTasks}件`,
+      runnerSelfTest: "Runner自己検証",
+      runnerSelfTestDecisionLabel: jaRunnerSelfTestDecision,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
       drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
@@ -472,6 +482,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadRunnerManifestJson: "Runner JSON",
       downloadRunnerManifestMarkdown: "Runner MD",
+      downloadRunnerSelfTestJson: "Self-test JSON",
+      downloadRunnerSelfTestMarkdown: "Self-test MD",
       downloadDrillJson: "Drill JSON",
       downloadDrillMarkdown: "Drill MD",
       receiptTemplate: "Receipt template",
@@ -510,6 +522,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerManifest: "Runner manifest",
       runnerManifestDecisionLabel: enRunnerManifestDecision,
       runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} ready / ${runnerTasks} runner tasks / ${blockedTasks} blocked`,
+      runnerSelfTest: "Runner self-test",
+      runnerSelfTestDecisionLabel: enRunnerSelfTestDecision,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
       drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
@@ -651,6 +666,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchSimulationMarkdown: "模拟 MD",
       downloadRunnerManifestJson: "Runner JSON",
       downloadRunnerManifestMarkdown: "Runner MD",
+      downloadRunnerSelfTestJson: "自测 JSON",
+      downloadRunnerSelfTestMarkdown: "自测 MD",
       downloadDrillJson: "演练 JSON",
       downloadDrillMarkdown: "演练 MD",
       receiptTemplate: "证据模板",
@@ -689,6 +706,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerManifest: "Runner 清单",
       runnerManifestDecisionLabel: zhHansRunnerManifestDecision,
       runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} 可交付 / ${runnerTasks} runner 任务 / ${blockedTasks} 阻塞`,
+      runnerSelfTest: "Runner 自测",
+      runnerSelfTestDecisionLabel: zhHansRunnerSelfTestDecision,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
@@ -830,6 +850,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchSimulationMarkdown: "模擬 MD",
       downloadRunnerManifestJson: "Runner JSON",
       downloadRunnerManifestMarkdown: "Runner MD",
+      downloadRunnerSelfTestJson: "自測 JSON",
+      downloadRunnerSelfTestMarkdown: "自測 MD",
       downloadDrillJson: "演練 JSON",
       downloadDrillMarkdown: "演練 MD",
       receiptTemplate: "證據範本",
@@ -868,6 +890,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerManifest: "Runner 清單",
       runnerManifestDecisionLabel: zhHantRunnerManifestDecision,
       runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} 可交付 / ${runnerTasks} runner 任務 / ${blockedTasks} 阻塞`,
+      runnerSelfTest: "Runner 自測",
+      runnerSelfTestDecisionLabel: zhHantRunnerSelfTestDecision,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
@@ -1009,6 +1034,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadRunnerManifestJson: "Runner JSON",
       downloadRunnerManifestMarkdown: "Runner MD",
+      downloadRunnerSelfTestJson: "자체 검증 JSON",
+      downloadRunnerSelfTestMarkdown: "자체 검증 MD",
       downloadDrillJson: "모의실행 JSON",
       downloadDrillMarkdown: "모의실행 MD",
       receiptTemplate: "증거 템플릿",
@@ -1047,6 +1074,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerManifest: "Runner 매니페스트",
       runnerManifestDecisionLabel: koRunnerManifestDecision,
       runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks}개 준비 / Runner 작업 ${runnerTasks}개 / 차단 ${blockedTasks}개`,
+      runnerSelfTest: "Runner 자체 검증",
+      runnerSelfTestDecisionLabel: koRunnerSelfTestDecision,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
       drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
@@ -1194,6 +1224,13 @@ function jaRunnerManifestDecision(decision: string) {
   return decision;
 }
 
+function jaRunnerSelfTestDecision(decision: string) {
+  if (decision === "self-test-ready") return "自己検証済み";
+  if (decision === "needs-review") return "要確認";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function jaCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "割当可";
   if (decision === "held") return "保留";
@@ -1253,6 +1290,13 @@ function enDispatchSimulationDecision(decision: string) {
 
 function enRunnerManifestDecision(decision: string) {
   if (decision === "runner-ready") return "runner ready";
+  if (decision === "needs-review") return "needs review";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enRunnerSelfTestDecision(decision: string) {
+  if (decision === "self-test-ready") return "self-test ready";
   if (decision === "needs-review") return "needs review";
   if (decision === "blocked") return "blocked";
   return decision;
@@ -1331,6 +1375,13 @@ function zhHansDispatchSimulationDecision(decision: string) {
 
 function zhHansRunnerManifestDecision(decision: string) {
   if (decision === "runner-ready") return "Runner 就绪";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansRunnerSelfTestDecision(decision: string) {
+  if (decision === "self-test-ready") return "自测通过";
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
@@ -1421,6 +1472,13 @@ function zhHantRunnerManifestDecision(decision: string) {
   return decision;
 }
 
+function zhHantRunnerSelfTestDecision(decision: string) {
+  if (decision === "self-test-ready") return "自測通過";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function zhHantCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "可分配";
   if (decision === "held") return "保留";
@@ -1501,6 +1559,13 @@ function koDispatchSimulationDecision(decision: string) {
 
 function koRunnerManifestDecision(decision: string) {
   if (decision === "runner-ready") return "Runner 준비";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koRunnerSelfTestDecision(decision: string) {
+  if (decision === "self-test-ready") return "자체 검증 완료";
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;
