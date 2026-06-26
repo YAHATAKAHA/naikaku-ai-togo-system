@@ -1,5 +1,6 @@
 import type {
   CodingAgentDispatchDrillSummary,
+  CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
@@ -21,6 +22,7 @@ const expectedExecutorProfiles: ExecutorProfileId[] = [
 
 export interface BuildVerificationManifestInput {
   codingAgentDispatchDrill: CodingAgentDispatchDrillSummary;
+  codingAgentDispatchSimulation: CodingAgentDispatchSimulationSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -29,6 +31,7 @@ export interface BuildVerificationManifestInput {
   generatedAt?: string;
   inputs: {
     codingAgentDispatchDrill: string;
+    codingAgentDispatchSimulation: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -39,6 +42,7 @@ export interface BuildVerificationManifestInput {
 
 export function buildVerificationManifest({
   codingAgentDispatchDrill,
+  codingAgentDispatchSimulation,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -49,6 +53,7 @@ export function buildVerificationManifest({
 }: BuildVerificationManifestInput): VerificationManifest {
   const checks = [
     codingAgentDispatchCheck(codingAgentDispatchDrill),
+    codingAgentSimulationCheck(codingAgentDispatchSimulation),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -68,6 +73,7 @@ export function buildVerificationManifest({
     inputs,
     source: {
       codingAgentDispatchGeneratedAt: codingAgentDispatchDrill.generatedAt,
+      codingAgentDispatchSimulationGeneratedAt: codingAgentDispatchSimulation.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -90,7 +96,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -103,6 +109,52 @@ export function buildVerificationManifest({
 
 export function serializeVerificationManifest(manifest: VerificationManifest) {
   return JSON.stringify(manifest, null, 2);
+}
+
+function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-dispatch-simulation.v1"
+    && report.source.dispatchDecision === "dispatchable"
+    && report.source.archiveAuditDecision === "verified"
+    && report.source.readyItems > 0
+    && report.simulation.decision === "ready-for-real-agent"
+    && report.simulation.readyForAgent === report.source.readyItems
+    && report.simulation.blocked === 0
+    && report.simulation.receiptDraftItems === report.source.readyItems
+    && report.simulation.plannedCommands > 0
+    && report.simulation.expectedEvidenceArtifacts > 0
+    && report.simulation.unsafePaths === 0
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.readyForAgent === 0
+    && report.productionHeld.promptFiles === 0
+    && report.productionHeld.receiptDraftItems === 0
+    && checksPassed;
+
+  return {
+    id: "coding-agent-dispatch-simulation",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent dispatch simulation prepared receipt drafts for ready sessions and kept production-held sessions unassigned."
+      : "Coding-agent dispatch simulation did not preserve ready, receipt-draft, or production-held boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Dispatch decision: ${report.source.dispatchDecision}`,
+      `Archive audit: ${report.source.archiveAuditDecision}`,
+      `Simulation decision: ${report.simulation.decision}`,
+      `Ready for real agent: ${report.simulation.readyForAgent}/${report.source.readyItems}`,
+      `Receipt draft items: ${report.simulation.receiptDraftItems}`,
+      `Planned commands: ${report.simulation.plannedCommands}`,
+      `Expected evidence artifacts: ${report.simulation.expectedEvidenceArtifacts}`,
+      `Unsafe paths: ${report.simulation.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held ready: ${report.productionHeld.readyForAgent}`,
+      `Production-held prompt files: ${report.productionHeld.promptFiles}`,
+      `Production-held receipt drafts: ${report.productionHeld.receiptDraftItems}`
+    ],
+    nextAction: ok
+      ? "Keep the dispatch simulation summary attached before handing prompts to real coding agents."
+      : "Restore dispatch simulation so it creates pending receipt drafts only for verified ready sessions."
+  };
 }
 
 function codingAgentDispatchCheck(report: CodingAgentDispatchDrillSummary): VerificationManifestCheck {

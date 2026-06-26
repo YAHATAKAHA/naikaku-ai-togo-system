@@ -9,6 +9,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchManifestItem,
+  CodingAgentDispatchSimulation,
   CodingAgentSession,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillItem,
@@ -25,6 +26,7 @@ interface CodingAgentBriefsPanelProps {
   dispatchManifest: CodingAgentDispatchManifest | null;
   dispatchArchive: CodingAgentDispatchArchive | null;
   dispatchArchiveAudit: CodingAgentDispatchArchiveAudit | null;
+  dispatchSimulation: CodingAgentDispatchSimulation | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
   sessionReceipt: CodingAgentSessionReceipt | null;
   exportLink: { href: string; fileName: string } | null;
@@ -38,6 +40,8 @@ interface CodingAgentBriefsPanelProps {
   dispatchArchiveMarkdownLink: { href: string; fileName: string } | null;
   dispatchArchiveAuditLink: { href: string; fileName: string } | null;
   dispatchArchiveAuditMarkdownLink: { href: string; fileName: string } | null;
+  dispatchSimulationLink: { href: string; fileName: string } | null;
+  dispatchSimulationMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
   drillMarkdownLink: { href: string; fileName: string } | null;
   receiptLink: { href: string; fileName: string } | null;
@@ -64,6 +68,7 @@ export function CodingAgentBriefsPanel({
   dispatchManifest,
   dispatchArchive,
   dispatchArchiveAudit,
+  dispatchSimulation,
   sessionDrill,
   sessionReceipt,
   exportLink,
@@ -77,6 +82,8 @@ export function CodingAgentBriefsPanel({
   dispatchArchiveMarkdownLink,
   dispatchArchiveAuditLink,
   dispatchArchiveAuditMarkdownLink,
+  dispatchSimulationLink,
+  dispatchSimulationMarkdownLink,
   drillLink,
   drillMarkdownLink,
   receiptLink,
@@ -225,6 +232,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadDispatchArchiveAuditMarkdown}
           </a>
         ) : null}
+        {dispatchSimulationLink ? (
+          <a href={dispatchSimulationLink.href} download={dispatchSimulationLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchSimulationJson}
+          </a>
+        ) : null}
+        {dispatchSimulationMarkdownLink ? (
+          <a href={dispatchSimulationMarkdownLink.href} download={dispatchSimulationMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadDispatchSimulationMarkdown}
+          </a>
+        ) : null}
         {receiptLink ? (
           <a href={receiptLink.href} download={receiptLink.fileName}>
             <Download size={15} /> {copy.downloadReceiptJson}
@@ -264,6 +281,7 @@ export function CodingAgentBriefsPanel({
           manifest={dispatchManifest}
           archive={dispatchArchive}
           archiveAudit={dispatchArchiveAudit}
+          simulation={dispatchSimulation}
           copy={copy}
         />
       ) : null}
@@ -362,11 +380,13 @@ function CodingAgentDispatchManifestReport({
   manifest,
   archive,
   archiveAudit,
+  simulation,
   copy
 }: {
   manifest: CodingAgentDispatchManifest;
   archive: CodingAgentDispatchArchive | null;
   archiveAudit: CodingAgentDispatchArchiveAudit | null;
+  simulation: CodingAgentDispatchSimulation | null;
   copy: CodingAgentBriefsCopy;
 }) {
   const heldItem = firstHeldDispatchItem(manifest.items);
@@ -401,6 +421,16 @@ function CodingAgentDispatchManifestReport({
             archiveAudit.summary.passed,
             archiveAudit.summary.warnings,
             archiveAudit.summary.blockers
+          )}</span>
+        </div>
+      ) : null}
+      {simulation ? (
+        <div>
+          <strong>{copy.dispatchSimulation}: {copy.dispatchSimulationDecisionLabel(simulation.decision)}</strong>
+          <span>{copy.dispatchSimulationSummary(
+            simulation.summary.readyForAgent,
+            simulation.summary.held,
+            simulation.summary.blocked
           )}</span>
         </div>
       ) : null}

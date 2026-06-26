@@ -5,6 +5,7 @@ import {
 } from "./verificationManifest";
 import type {
   CodingAgentDispatchDrillSummary,
+  CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
@@ -14,6 +15,7 @@ import type {
 
 const inputs = {
   codingAgentDispatchDrill: "output/coding-agent-dispatch-drill/summary.json",
+  codingAgentDispatchSimulation: "output/coding-agent-dispatch-simulation/summary.json",
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
   executorContractDrill: "output/executor-contract-drill/summary.json",
@@ -25,6 +27,7 @@ describe("verification manifest", () => {
   it("aggregates passing local drill and release verification gates", () => {
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -37,12 +40,13 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 9,
-      passed: 9,
+      total: 10,
+      passed: 10,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
       "coding-agent-dispatch-drill",
+      "coding-agent-dispatch-simulation",
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
       "coding-agent-out-of-scope-receipt",
@@ -54,6 +58,7 @@ describe("verification manifest", () => {
     ]);
     expect(manifest.source.localizationLocales).toEqual(["ja", "en", "zh-Hans", "zh-Hant", "ko"]);
     expect(manifest.source.codingAgentDispatchGeneratedAt).toBe("2026-06-27T00:01:00.000Z");
+    expect(manifest.source.codingAgentDispatchSimulationGeneratedAt).toBe("2026-06-27T00:02:00.000Z");
     expect(manifest.source.executorProfiles).toContain("desktop-vm");
     expect(manifest.source.productionBoundaryExitCode).toBe(4);
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
@@ -65,6 +70,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -88,6 +94,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill,
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -104,12 +111,37 @@ describe("verification manifest", () => {
     expect(dispatchCheck?.summary).toContain("did not preserve");
   });
 
+  it("invalidates the manifest when production-held dispatch simulation creates receipt drafts", () => {
+    const codingAgentDispatchSimulation = codingAgentDispatchSimulationFixture();
+    codingAgentDispatchSimulation.productionHeld.receiptDraftItems = 1;
+    codingAgentDispatchSimulation.checks.productionHeldNoReceiptDrafts = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const simulationCheck = manifest.checks.find((check) => check.id === "coding-agent-dispatch-simulation");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(simulationCheck?.status).toBe("fail");
+    expect(simulationCheck?.summary).toContain("did not preserve");
+  });
+
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
     const codingAgentReport = codingAgentReportFixture();
     codingAgentReport.outOfScope.boardItemsApplied = 1;
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -134,6 +166,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
@@ -156,6 +189,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorDrill,
@@ -178,6 +212,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -218,6 +253,7 @@ describe("verification manifest", () => {
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
@@ -307,6 +343,58 @@ function codingAgentDispatchFixture(): CodingAgentDispatchDrillSummary {
       claim: "Local dispatch drill.",
       limitations: ["No production runner evidence."],
       productionRequirements: ["Attach production runner evidence."]
+    }
+  };
+}
+
+function codingAgentDispatchSimulationFixture(): CodingAgentDispatchSimulationSummary {
+  return {
+    schema: "naikaku.coding-agent-dispatch-simulation.v1",
+    generatedAt: "2026-06-27T00:02:00.000Z",
+    outputDir: "output/coding-agent-dispatch-simulation",
+    operatorLocale: "ja",
+    source: {
+      dispatchDecision: "dispatchable",
+      archiveAuditDecision: "verified",
+      readyItems: 8,
+      heldItems: 0,
+      promptFiles: 8,
+      receiptTemplates: 1
+    },
+    simulation: {
+      decision: "ready-for-real-agent",
+      readyForAgent: 8,
+      held: 0,
+      blocked: 0,
+      plannedCommands: 16,
+      expectedEvidenceArtifacts: 24,
+      receiptDraftItems: 8,
+      unsafePaths: 0
+    },
+    productionHeld: {
+      decision: "needs-review",
+      readyForAgent: 0,
+      held: 8,
+      blocked: 0,
+      promptFiles: 0,
+      receiptDraftItems: 0
+    },
+    checks: {
+      validDispatchable: true,
+      validSimulationReady: true,
+      receiptDraftsCreated: true,
+      plannedCommandsCovered: true,
+      evidenceArtifactsCovered: true,
+      pathsSafe: true,
+      noExecutionClaim: true,
+      productionHeldNotReady: true,
+      productionHeldNoReceiptDrafts: true
+    },
+    honestyClaim: {
+      level: "local-drill",
+      claim: "Local dispatch simulation.",
+      limitations: ["No implementation work was executed."],
+      productionRequirements: ["Attach real coding-agent receipts."]
     }
   };
 }

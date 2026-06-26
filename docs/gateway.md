@@ -874,6 +874,50 @@ Response:
 
 If the bundle is held for review or production evidence, the manifest stays `held` or `blocked`; held items do not receive prompt paths or receipt-template paths. This prevents dry-run packages from becoming accidental implementation assignments.
 
+### `POST /v1/development/coding-briefs/dispatch-simulation`
+
+Self-simulates the next coding-agent execution handoff from a dispatch manifest and optional archive audit. This endpoint does not execute code, run shell commands, inspect files, call providers, open browsers, write implementation artifacts, deploy, send external messages, commit, or push Git. It prepares pending receipt drafts only for ready sessions and keeps held sessions visible but unassigned.
+
+```json
+{
+  "manifest": {
+    "schema": "naikaku.coding-agent-dispatch-manifest.v1",
+    "decision": "dispatchable",
+    "items": []
+  },
+  "archiveAudit": {
+    "schema": "naikaku.coding-agent-dispatch-archive-audit.v1",
+    "decision": "verified"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-dispatch-simulation.v1",
+  "mode": "local-simulation",
+  "decision": "ready-for-real-agent",
+  "dispatchDecision": "dispatchable",
+  "archiveAuditDecision": "verified",
+  "summary": {
+    "total": 8,
+    "readyForAgent": 8,
+    "held": 0,
+    "blocked": 0,
+    "receiptDraftItems": 8,
+    "unsafePaths": 0
+  },
+  "honestyClaim": {
+    "level": "local-dispatch-simulation",
+    "claim": "This report simulates the next coding-agent execution handoff from a dispatch manifest without executing implementation work."
+  }
+}
+```
+
+If the archive audit is blocked, ready sessions stay blocked. If a session is held for review or production evidence, the simulation must not create a receipt draft for it. A ready simulation still means only that the handoff is prepared; a completed receipt and artifact audit are required before implementation can be claimed.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

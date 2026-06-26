@@ -71,6 +71,8 @@ import {
   serializeCodingAgentDispatchArchiveMarkdownExport,
   serializeCodingAgentDispatchManifestExport,
   serializeCodingAgentDispatchManifestMarkdownExport,
+  serializeCodingAgentDispatchSimulationExport,
+  serializeCodingAgentDispatchSimulationMarkdownExport,
   serializeCodingAgentSessionBundleExport,
   serializeCodingAgentSessionBundleMarkdownExport,
   serializeCodingAgentSessionDrillExport,
@@ -102,6 +104,7 @@ import { buildCodingAgentBriefs } from "./domain/codingAgentBriefs";
 import { buildCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArchive";
 import { auditCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArchiveAudit";
 import { buildCodingAgentDispatchManifest } from "./domain/codingAgentDispatchManifest";
+import { buildCodingAgentDispatchSimulation } from "./domain/codingAgentDispatchSimulation";
 import { auditCodingAgentImplementationArtifacts } from "./domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationEvidence";
 import { reconcileCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationReconciliation";
@@ -131,6 +134,7 @@ import {
   createAutomationRunbookViaGateway,
   createCodingAgentBriefsViaGateway,
   createCodingAgentDispatchManifestViaGateway,
+  createCodingAgentDispatchSimulationViaGateway,
   createCodingAgentImplementationEvidenceViaGateway,
   createCodingAgentSessionBundleViaGateway,
   createCodingAgentSessionDrillViaGateway,
@@ -165,6 +169,7 @@ import type {
   CodingAgentDispatchArchive,
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
+  CodingAgentDispatchSimulation,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
   CodingAgentImplementationArtifactAudit,
@@ -258,6 +263,9 @@ export function App() {
   const [codingAgentDispatchArchiveAudit, setCodingAgentDispatchArchiveAudit] = useState<CodingAgentDispatchArchiveAudit | null>(null);
   const [codingAgentDispatchArchiveAuditLink, setCodingAgentDispatchArchiveAuditLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentDispatchArchiveAuditMarkdownLink, setCodingAgentDispatchArchiveAuditMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchSimulation, setCodingAgentDispatchSimulation] = useState<CodingAgentDispatchSimulation | null>(null);
+  const [codingAgentDispatchSimulationLink, setCodingAgentDispatchSimulationLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchSimulationMarkdownLink, setCodingAgentDispatchSimulationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrill, setCodingAgentSessionDrill] = useState<CodingAgentSessionDrillReport | null>(null);
   const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentSessionDrillMarkdownLink, setCodingAgentSessionDrillMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -664,6 +672,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentDispatchSimulationLink) {
+        URL.revokeObjectURL(codingAgentDispatchSimulationLink.href);
+      }
+    };
+  }, [codingAgentDispatchSimulationLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentDispatchSimulationMarkdownLink) {
+        URL.revokeObjectURL(codingAgentDispatchSimulationMarkdownLink.href);
+      }
+    };
+  }, [codingAgentDispatchSimulationMarkdownLink]);
+
+  useEffect(() => {
+    return () => {
       if (codingAgentSessionDrillLink) {
         URL.revokeObjectURL(codingAgentSessionDrillLink.href);
       }
@@ -970,6 +994,7 @@ export function App() {
     setCodingAgentDispatchManifest(null);
     setCodingAgentDispatchArchive(null);
     setCodingAgentDispatchArchiveAudit(null);
+    setCodingAgentDispatchSimulation(null);
     if (codingAgentDispatchManifestLink) {
       URL.revokeObjectURL(codingAgentDispatchManifestLink.href);
       setCodingAgentDispatchManifestLink(null);
@@ -993,6 +1018,14 @@ export function App() {
     if (codingAgentDispatchArchiveAuditMarkdownLink) {
       URL.revokeObjectURL(codingAgentDispatchArchiveAuditMarkdownLink.href);
       setCodingAgentDispatchArchiveAuditMarkdownLink(null);
+    }
+    if (codingAgentDispatchSimulationLink) {
+      URL.revokeObjectURL(codingAgentDispatchSimulationLink.href);
+      setCodingAgentDispatchSimulationLink(null);
+    }
+    if (codingAgentDispatchSimulationMarkdownLink) {
+      URL.revokeObjectURL(codingAgentDispatchSimulationMarkdownLink.href);
+      setCodingAgentDispatchSimulationMarkdownLink(null);
     }
   }
 
@@ -2416,6 +2449,26 @@ export function App() {
     setCodingAgentDispatchArchiveAuditMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  function createCodingAgentDispatchSimulationDownload(report: CodingAgentDispatchSimulation) {
+    const blob = new Blob([serializeCodingAgentDispatchSimulationExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentDispatchSimulationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-dispatch-simulation-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-dispatch-simulation-${runSlug}-${report.operatorLocale}.md`;
+
+    if (codingAgentDispatchSimulationLink) {
+      URL.revokeObjectURL(codingAgentDispatchSimulationLink.href);
+    }
+    if (codingAgentDispatchSimulationMarkdownLink) {
+      URL.revokeObjectURL(codingAgentDispatchSimulationMarkdownLink.href);
+    }
+
+    setCodingAgentDispatchSimulationLink({ href: url, fileName });
+    setCodingAgentDispatchSimulationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
   async function exportCodingAgentDispatchManifest() {
     const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
@@ -2442,6 +2495,20 @@ export function App() {
       archive,
       generatedAt: manifest.generatedAt
     });
+    let simulation = buildCodingAgentDispatchSimulation({
+      manifest,
+      archiveAudit,
+      generatedAt: manifest.generatedAt
+    });
+    let simulationSource: "gateway" | "local" = "local";
+    let simulationGatewayError: string | null = null;
+
+    try {
+      simulation = await createCodingAgentDispatchSimulationViaGateway(manifest, archiveAudit);
+      simulationSource = "gateway";
+    } catch (error) {
+      simulationGatewayError = error instanceof Error ? error.message : "unknown";
+    }
 
     setCodingAgentBriefReview(bundle.review);
     setCodingAgentSessionBundle(bundle);
@@ -2450,6 +2517,7 @@ export function App() {
     setCodingAgentDispatchManifest(manifest);
     setCodingAgentDispatchArchive(archive);
     setCodingAgentDispatchArchiveAudit(archiveAudit);
+    setCodingAgentDispatchSimulation(simulation);
     if (!codingAgentSessionBundle) {
       createCodingAgentSessionBundleDownload(bundle, false);
     }
@@ -2459,6 +2527,7 @@ export function App() {
     createCodingAgentDispatchManifestDownload(manifest);
     createCodingAgentDispatchArchiveDownload(archive);
     createCodingAgentDispatchArchiveAuditDownload(archiveAudit);
+    createCodingAgentDispatchSimulationDownload(simulation);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -2492,6 +2561,9 @@ export function App() {
         archiveBytes: archive.summary.totalBytes,
         archiveAudit: archiveAudit.decision,
         archiveAuditBlockers: archiveAudit.summary.blockers,
+        dispatchSimulation: simulation.decision,
+        dispatchSimulationReady: simulation.summary.readyForAgent,
+        dispatchSimulationBlocked: simulation.summary.blocked,
         unsafePaths: manifest.summary.unsafePaths,
         source,
         gatewayError
@@ -2517,6 +2589,24 @@ export function App() {
         blockers: archiveAudit.summary.blockers,
         warnings: archiveAudit.summary.warnings,
         passed: archiveAudit.summary.passed
+      }
+    });
+    recordAudit({
+      type: "development.coding_sessions.dispatch_simulated",
+      severity: simulation.decision === "ready-for-real-agent" ? "success" : simulation.decision === "needs-review" ? "warning" : "error",
+      summary: `Coding agent dispatch simulation completed: ${simulation.decision}.`,
+      runId: simulation.runId,
+      metadata: {
+        readyForAgent: simulation.summary.readyForAgent,
+        held: simulation.summary.held,
+        blocked: simulation.summary.blocked,
+        plannedCommands: simulation.summary.plannedCommands,
+        expectedEvidenceArtifacts: simulation.summary.expectedEvidenceArtifacts,
+        receiptDraftItems: simulation.summary.receiptDraftItems,
+        unsafePaths: simulation.summary.unsafePaths,
+        archiveAuditBlockers: simulation.summary.archiveAuditBlockers,
+        source: simulationSource,
+        gatewayError: simulationGatewayError
       }
     });
   }
@@ -3329,6 +3419,7 @@ export function App() {
             dispatchManifest={codingAgentDispatchManifest}
             dispatchArchive={codingAgentDispatchArchive}
             dispatchArchiveAudit={codingAgentDispatchArchiveAudit}
+            dispatchSimulation={codingAgentDispatchSimulation}
             sessionDrill={codingAgentSessionDrill}
             sessionReceipt={codingAgentSessionReceipt}
             exportLink={codingAgentBriefsLink}
@@ -3342,6 +3433,8 @@ export function App() {
             dispatchArchiveMarkdownLink={codingAgentDispatchArchiveMarkdownLink}
             dispatchArchiveAuditLink={codingAgentDispatchArchiveAuditLink}
             dispatchArchiveAuditMarkdownLink={codingAgentDispatchArchiveAuditMarkdownLink}
+            dispatchSimulationLink={codingAgentDispatchSimulationLink}
+            dispatchSimulationMarkdownLink={codingAgentDispatchSimulationMarkdownLink}
             drillLink={codingAgentSessionDrillLink}
             drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
             receiptLink={codingAgentSessionReceiptLink}

@@ -10,6 +10,7 @@ coverage
 output/playwright
 output/coding-agent
 output/coding-agent-dispatch-drill
+output/coding-agent-dispatch-simulation
 output/rehearsal
 output/rehearsal-drill
 output/release-drill

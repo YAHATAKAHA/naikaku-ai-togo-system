@@ -80,6 +80,8 @@ export interface CodingAgentBriefsCopy {
   downloadDispatchArchiveMarkdown: string;
   downloadDispatchArchiveAuditJson: string;
   downloadDispatchArchiveAuditMarkdown: string;
+  downloadDispatchSimulationJson: string;
+  downloadDispatchSimulationMarkdown: string;
   downloadDrillJson: string;
   downloadDrillMarkdown: string;
   receiptTemplate: string;
@@ -112,6 +114,9 @@ export interface CodingAgentBriefsCopy {
   dispatchArchiveAudit: string;
   dispatchAuditDecisionLabel: (decision: string) => string;
   dispatchAuditSummary: (passed: number, warnings: number, blockers: number) => string;
+  dispatchSimulation: string;
+  dispatchSimulationDecisionLabel: (decision: string) => string;
+  dispatchSimulationSummary: (ready: number, held: number, blocked: number) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -279,6 +284,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDispatchArchiveAuditJson: "Audit JSON",
       downloadDispatchArchiveAuditMarkdown: "Audit MD",
+      downloadDispatchSimulationJson: "Simulation JSON",
+      downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadDrillJson: "演習JSON",
       downloadDrillMarkdown: "演習MD",
       receiptTemplate: "証拠雛形",
@@ -311,6 +318,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchArchiveAudit: "Archive監査",
       dispatchAuditDecisionLabel: jaDispatchArchiveAuditDecision,
       dispatchAuditSummary: (passed, warnings, blockers) => `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
+      dispatchSimulation: "実行Simulation",
+      dispatchSimulationDecisionLabel: jaDispatchSimulationDecision,
+      dispatchSimulationSummary: (ready, held, blocked) => `${ready} ready / ${held} held / ${blocked} block`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
       drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
@@ -448,6 +458,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDispatchArchiveAuditJson: "Audit JSON",
       downloadDispatchArchiveAuditMarkdown: "Audit MD",
+      downloadDispatchSimulationJson: "Simulation JSON",
+      downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadDrillJson: "Drill JSON",
       downloadDrillMarkdown: "Drill MD",
       receiptTemplate: "Receipt template",
@@ -480,6 +492,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchArchiveAudit: "Archive audit",
       dispatchAuditDecisionLabel: enDispatchArchiveAuditDecision,
       dispatchAuditSummary: (passed, warnings, blockers) => `${passed} passed / ${warnings} warnings / ${blockers} blockers`,
+      dispatchSimulation: "Execution simulation",
+      dispatchSimulationDecisionLabel: enDispatchSimulationDecision,
+      dispatchSimulationSummary: (ready, held, blocked) => `${ready} ready / ${held} held / ${blocked} blocked`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
       drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
@@ -617,6 +632,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchArchiveMarkdown: "归档 MD",
       downloadDispatchArchiveAuditJson: "审计 JSON",
       downloadDispatchArchiveAuditMarkdown: "审计 MD",
+      downloadDispatchSimulationJson: "模拟 JSON",
+      downloadDispatchSimulationMarkdown: "模拟 MD",
       downloadDrillJson: "演练 JSON",
       downloadDrillMarkdown: "演练 MD",
       receiptTemplate: "证据模板",
@@ -649,6 +666,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchArchiveAudit: "归档审计",
       dispatchAuditDecisionLabel: zhHansDispatchArchiveAuditDecision,
       dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
+      dispatchSimulation: "执行模拟",
+      dispatchSimulationDecisionLabel: zhHansDispatchSimulationDecision,
+      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
@@ -786,6 +806,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchArchiveMarkdown: "歸檔 MD",
       downloadDispatchArchiveAuditJson: "稽核 JSON",
       downloadDispatchArchiveAuditMarkdown: "稽核 MD",
+      downloadDispatchSimulationJson: "模擬 JSON",
+      downloadDispatchSimulationMarkdown: "模擬 MD",
       downloadDrillJson: "演練 JSON",
       downloadDrillMarkdown: "演練 MD",
       receiptTemplate: "證據範本",
@@ -818,6 +840,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchArchiveAudit: "歸檔稽核",
       dispatchAuditDecisionLabel: zhHantDispatchArchiveAuditDecision,
       dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
+      dispatchSimulation: "執行模擬",
+      dispatchSimulationDecisionLabel: zhHantDispatchSimulationDecision,
+      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
@@ -955,6 +980,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadDispatchArchiveMarkdown: "Archive MD",
       downloadDispatchArchiveAuditJson: "Audit JSON",
       downloadDispatchArchiveAuditMarkdown: "Audit MD",
+      downloadDispatchSimulationJson: "Simulation JSON",
+      downloadDispatchSimulationMarkdown: "Simulation MD",
       downloadDrillJson: "모의실행 JSON",
       downloadDrillMarkdown: "모의실행 MD",
       receiptTemplate: "증거 템플릿",
@@ -987,6 +1014,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       dispatchArchiveAudit: "Archive 감사",
       dispatchAuditDecisionLabel: koDispatchArchiveAuditDecision,
       dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 통과 / 경고 ${warnings}개 / 차단 ${blockers}개`,
+      dispatchSimulation: "실행 Simulation",
+      dispatchSimulationDecisionLabel: koDispatchSimulationDecision,
+      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 준비 / 보류 ${held}개 / 차단 ${blocked}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
       drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
@@ -1120,6 +1150,13 @@ function jaDispatchArchiveAuditDecision(decision: string) {
   return decision;
 }
 
+function jaDispatchSimulationDecision(decision: string) {
+  if (decision === "ready-for-real-agent") return "実行準備済み";
+  if (decision === "needs-review") return "要確認";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function jaCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "割当可";
   if (decision === "held") return "保留";
@@ -1165,6 +1202,13 @@ function enCodingDispatchDecision(decision: string) {
 
 function enDispatchArchiveAuditDecision(decision: string) {
   if (decision === "verified") return "verified";
+  if (decision === "needs-review") return "needs review";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enDispatchSimulationDecision(decision: string) {
+  if (decision === "ready-for-real-agent") return "ready for real agent";
   if (decision === "needs-review") return "needs review";
   if (decision === "blocked") return "blocked";
   return decision;
@@ -1229,6 +1273,13 @@ function zhHansCodingDispatchDecision(decision: string) {
 
 function zhHansDispatchArchiveAuditDecision(decision: string) {
   if (decision === "verified") return "已确认";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansDispatchSimulationDecision(decision: string) {
+  if (decision === "ready-for-real-agent") return "可交付真实代理";
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
@@ -1305,6 +1356,13 @@ function zhHantDispatchArchiveAuditDecision(decision: string) {
   return decision;
 }
 
+function zhHantDispatchSimulationDecision(decision: string) {
+  if (decision === "ready-for-real-agent") return "可交付真實代理";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function zhHantCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "可分配";
   if (decision === "held") return "保留";
@@ -1371,6 +1429,13 @@ function koCodingDispatchDecision(decision: string) {
 
 function koDispatchArchiveAuditDecision(decision: string) {
   if (decision === "verified") return "확인됨";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koDispatchSimulationDecision(decision: string) {
+  if (decision === "ready-for-real-agent") return "실제 에이전트 준비";
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;

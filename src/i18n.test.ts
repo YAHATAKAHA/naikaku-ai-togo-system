@@ -42,8 +42,10 @@ describe("i18n", () => {
       expect(copy.codingBriefs.downloadDispatchJson).toBeTruthy();
       expect(copy.codingBriefs.downloadDispatchArchiveJson).toBeTruthy();
       expect(copy.codingBriefs.downloadDispatchArchiveAuditJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadDispatchSimulationJson).toBeTruthy();
       expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).toBeTruthy();
       expect(copy.codingBriefs.dispatchAuditDecisionLabel("verified")).toBeTruthy();
+      expect(copy.codingBriefs.dispatchSimulationDecisionLabel("ready-for-real-agent")).toBeTruthy();
       if (locale !== "en") {
         expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).not.toBe("dispatchable");
       }
@@ -51,6 +53,7 @@ describe("i18n", () => {
       expect(copy.codingBriefs.dispatchArchiveSummary(4, 2, 512)).toBeTruthy();
       expect(copy.codingBriefs.dispatchUnassignedHeld(1)).toBeTruthy();
       expect(copy.codingBriefs.dispatchAuditSummary(6, 1, 0)).toBeTruthy();
+      expect(copy.codingBriefs.dispatchSimulationSummary(8, 0, 0)).toBeTruthy();
       expect(copy.codingBriefs.receiptTemplate).toBeTruthy();
       expect(copy.codingBriefs.drillReady).toBeTruthy();
     }

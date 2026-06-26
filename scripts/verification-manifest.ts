@@ -6,6 +6,7 @@ import {
 } from "../src/domain/verificationManifest";
 import type {
   CodingAgentDispatchDrillSummary,
+  CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
@@ -16,6 +17,7 @@ import type {
 
 interface VerificationManifestOptions {
   codingAgentDispatchPath: string;
+  codingAgentSimulationPath: string;
   codingAgentReportPath: string;
   localizationDrillPath: string;
   executorContractDrillPath: string;
@@ -35,6 +37,7 @@ async function main() {
   }
 
   const codingAgentDispatchDrill = await loadCodingAgentDispatchDrill(options.codingAgentDispatchPath);
+  const codingAgentDispatchSimulation = await loadCodingAgentDispatchSimulation(options.codingAgentSimulationPath);
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
@@ -42,6 +45,7 @@ async function main() {
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
     codingAgentDispatchDrill,
+    codingAgentDispatchSimulation,
     codingAgentReport,
     localizationDrill,
     executorContractDrill,
@@ -50,6 +54,7 @@ async function main() {
     generatedAt: options.generatedAt,
     inputs: {
       codingAgentDispatchDrill: options.codingAgentDispatchPath,
+      codingAgentDispatchSimulation: options.codingAgentSimulationPath,
       codingAgentReceiptDrill: options.codingAgentReportPath,
       localizationDrill: options.localizationDrillPath,
       executorContractDrill: options.executorContractDrillPath,
@@ -78,6 +83,14 @@ async function loadCodingAgentDispatchDrill(reportPath: string): Promise<CodingA
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentDispatchDrillSummary;
   if (parsed.schema !== "naikaku.coding-agent-dispatch-drill.v1") {
     throw new Error("Coding-agent dispatch drill must use schema naikaku.coding-agent-dispatch-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadCodingAgentDispatchSimulation(reportPath: string): Promise<CodingAgentDispatchSimulationSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentDispatchSimulationSummary;
+  if (parsed.schema !== "naikaku.coding-agent-dispatch-simulation.v1") {
+    throw new Error("Coding-agent dispatch simulation must use schema naikaku.coding-agent-dispatch-simulation.v1.");
   }
   return parsed;
 }
@@ -135,6 +148,7 @@ function printSummary(manifest: VerificationManifest, outputPath: string) {
 function parseArgs(args: string[]): VerificationManifestOptions {
   const options: VerificationManifestOptions = {
     codingAgentDispatchPath: "output/coding-agent-dispatch-drill/summary.json",
+    codingAgentSimulationPath: "output/coding-agent-dispatch-simulation/summary.json",
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
     localizationDrillPath: "output/localization-drill/summary.json",
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
@@ -160,6 +174,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-dispatch") {
       options.codingAgentDispatchPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--coding-agent-simulation") {
+      options.codingAgentSimulationPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -223,6 +243,8 @@ Usage:
 Options:
   --coding-agent-dispatch <path>
                                   Read coding-agent dispatch drill summary.
+  --coding-agent-simulation <path>
+                                  Read coding-agent dispatch simulation summary.
   --coding-agent-report <path>   Read coding-agent receipt drill summary.
   --localization-drill <path>    Read localization drill summary.
   --executor-contract-drill <path>

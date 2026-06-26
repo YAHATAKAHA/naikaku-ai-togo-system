@@ -7,6 +7,7 @@ import { serializeCodingAgentBriefs, serializeCodingAgentBriefsMarkdown } from "
 import { serializeCodingAgentDispatchArchive, serializeCodingAgentDispatchArchiveMarkdown } from "./codingAgentDispatchArchive";
 import { serializeCodingAgentDispatchArchiveAudit, serializeCodingAgentDispatchArchiveAuditMarkdown } from "./codingAgentDispatchArchiveAudit";
 import { serializeCodingAgentDispatchManifest, serializeCodingAgentDispatchManifestMarkdown } from "./codingAgentDispatchManifest";
+import { serializeCodingAgentDispatchSimulation, serializeCodingAgentDispatchSimulationMarkdown } from "./codingAgentDispatchSimulation";
 import { serializeCodingAgentImplementationEvidence, serializeCodingAgentImplementationEvidenceMarkdown } from "./codingAgentImplementationEvidence";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
@@ -34,6 +35,7 @@ import type {
   CodingAgentDispatchArchive,
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
+  CodingAgentDispatchSimulation,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -460,6 +462,14 @@ export function serializeCodingAgentDispatchArchiveAuditExport(audit: CodingAgen
 
 export function serializeCodingAgentDispatchArchiveAuditMarkdownExport(audit: CodingAgentDispatchArchiveAudit) {
   return serializeCodingAgentDispatchArchiveAuditMarkdown(audit);
+}
+
+export function serializeCodingAgentDispatchSimulationExport(report: CodingAgentDispatchSimulation) {
+  return serializeCodingAgentDispatchSimulation(report);
+}
+
+export function serializeCodingAgentDispatchSimulationMarkdownExport(report: CodingAgentDispatchSimulation) {
+  return serializeCodingAgentDispatchSimulationMarkdown(report);
 }
 
 export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessionDrillReport) {

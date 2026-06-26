@@ -8,6 +8,7 @@ import { buildAutomationRunbook } from "../src/domain/automationRunbook";
 import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefReview";
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
+import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
@@ -33,7 +34,9 @@ import type {
   CabinetWorkspace,
   CodingAgentBriefReviewReport,
   CodingAgentBriefs,
+  CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
+  CodingAgentDispatchSimulation,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -100,6 +103,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-brief-review",
           "coding-agent-session-bundle",
           "coding-agent-dispatch-manifest",
+          "coding-agent-dispatch-simulation",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
@@ -697,6 +701,35 @@ const server = createServer(async (request, response) => {
         drill: body.drill?.schema === "naikaku.coding-agent-session-drill.v1" ? body.drill : null
       });
       sendJson(response, 200, manifest);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/dispatch-simulation") {
+      const body = await readJson<{
+        manifest?: CodingAgentDispatchManifest;
+        archiveAudit?: CodingAgentDispatchArchiveAudit;
+      }>(request);
+      if (body.manifest?.schema !== "naikaku.coding-agent-dispatch-manifest.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "manifest with schema naikaku.coding-agent-dispatch-manifest.v1 is required."
+        });
+        return;
+      }
+      if (body.archiveAudit && body.archiveAudit.schema !== "naikaku.coding-agent-dispatch-archive-audit.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "archiveAudit must use schema naikaku.coding-agent-dispatch-archive-audit.v1."
+        });
+        return;
+      }
+      const simulation: CodingAgentDispatchSimulation = buildCodingAgentDispatchSimulation({
+        manifest: body.manifest,
+        archiveAudit: body.archiveAudit?.schema === "naikaku.coding-agent-dispatch-archive-audit.v1"
+          ? body.archiveAudit
+          : null
+      });
+      sendJson(response, 200, simulation);
       return;
     }
 

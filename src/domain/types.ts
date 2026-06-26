@@ -750,6 +750,46 @@ export interface CodingAgentDispatchDrillSummary {
   };
 }
 
+export interface CodingAgentDispatchSimulationSummary {
+  schema: "naikaku.coding-agent-dispatch-simulation.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    dispatchDecision: string;
+    archiveAuditDecision: string;
+    readyItems: number;
+    heldItems: number;
+    promptFiles: number;
+    receiptTemplates: number;
+  };
+  simulation: {
+    decision: string;
+    readyForAgent: number;
+    held: number;
+    blocked: number;
+    plannedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftItems: number;
+    unsafePaths: number;
+  };
+  productionHeld: {
+    decision: string;
+    readyForAgent: number;
+    held: number;
+    blocked: number;
+    promptFiles: number;
+    receiptDraftItems: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -877,6 +917,7 @@ export interface VerificationManifest {
   decision: VerificationManifestDecision;
   inputs: {
     codingAgentDispatchDrill: string;
+    codingAgentDispatchSimulation: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -885,6 +926,7 @@ export interface VerificationManifest {
   };
   source: {
     codingAgentDispatchGeneratedAt: string;
+    codingAgentDispatchSimulationGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
@@ -1338,6 +1380,85 @@ export interface CodingAgentDispatchArchiveAudit {
   };
 }
 
+export type CodingAgentDispatchSimulationDecision =
+  | "ready-for-real-agent"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentDispatchSimulationItemStatus =
+  | "ready-for-agent"
+  | "held"
+  | "blocked";
+
+export interface CodingAgentDispatchSimulationReceiptDraft {
+  sessionId: string;
+  receiptTemplatePath: string | null;
+  changedFiles: string[];
+  commandResults: CodingAgentCommandResult[];
+  evidence: string[];
+  risks: string[];
+  missing: string[];
+}
+
+export interface CodingAgentDispatchSimulationItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  dispatchStatus: CodingAgentDispatchItemStatus;
+  simulationStatus: CodingAgentDispatchSimulationItemStatus;
+  executorProfileId: ExecutorProfileId;
+  promptPath: string | null;
+  receiptTemplatePath: string | null;
+  evidenceArtifactPrefix: string;
+  plannedSteps: string[];
+  verificationCommands: string[];
+  expectedTranscriptRefs: string[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  receiptDraft: CodingAgentDispatchSimulationReceiptDraft | null;
+  safetyStops: string[];
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentDispatchSimulation {
+  schema: "naikaku.coding-agent-dispatch-simulation.v1";
+  generatedAt: string;
+  mode: "local-simulation";
+  sourceSchema: CodingAgentDispatchManifest["schema"];
+  archiveAuditSchema?: CodingAgentDispatchArchiveAudit["schema"];
+  dispatchDecision: CodingAgentDispatchDecision;
+  archiveAuditDecision?: CodingAgentDispatchArchiveAuditDecision;
+  decision: CodingAgentDispatchSimulationDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentDispatchSimulationItem[];
+  summary: {
+    total: number;
+    readyForAgent: number;
+    held: number;
+    blocked: number;
+    plannedCommands: number;
+    expectedEvidenceArtifacts: number;
+    receiptDraftItems: number;
+    unsafePaths: number;
+    archiveAuditBlockers: number;
+    archiveAuditWarnings: number;
+  };
+  honestyClaim: {
+    level: "local-dispatch-simulation";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type CodingAgentSessionReceiptDecision = "verified" | "needs-evidence" | "blocked";
 export type CodingAgentSessionReceiptStatus =
   | "verified"
@@ -1588,6 +1709,7 @@ export type AuditEventType =
   | "development.coding_sessions.drilled"
   | "development.coding_sessions.dispatch_prepared"
   | "development.coding_sessions.dispatch_audited"
+  | "development.coding_sessions.dispatch_simulated"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"
