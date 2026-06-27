@@ -89,6 +89,11 @@ a {
   padding: clamp(54px, 8vw, 104px) clamp(20px, 5vw, 72px) 58px;
 }
 
+.compact-hero {
+  grid-template-columns: minmax(0, 1fr);
+  padding-bottom: 42px;
+}
+
 .hero > *,
 .split > *,
 .cards > *,
@@ -277,6 +282,32 @@ h3 {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.7;
+}
+
+.tag-list {
+  display: flex;
+  max-width: 900px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-list a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--white);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 680;
+  text-decoration: none;
+}
+
+.tag-list a:hover {
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .release-card {

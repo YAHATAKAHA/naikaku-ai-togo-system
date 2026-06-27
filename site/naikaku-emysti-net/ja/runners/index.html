@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mac ランナー接続 | Naikaku AI 統合システム</title>
+    <meta name="description" content="Naikaku AI 統合システムのランナー接続方針。Codex CLI、Claude Code、OpenHands、OpenClaw 系ツール、Hammerspoon などを監督付きで扱う境界設計。" />
+    <link rel="canonical" href="https://naikaku.emysti.net/ja/runners/" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/ja/"><span class="mark">内</span><span>Naikaku AI 統合システム</span></a>
+      <nav class="nav-links" aria-label="Naikaku navigation">
+        <a href="/ja/download/">ダウンロード</a>
+        <a href="/ja/api-gateway/">API Gateway</a>
+        <a href="/ja/runners/">ランナー</a>
+        <a href="/ja/use-cases/">用途別</a>
+        <a href="/ja/developers/">開発者向け</a>
+        <a href="/ja/license/">ライセンス</a>
+      </nav>
+    </header>
+    <main>
+      <div class="crumbs"><a href="/ja/">Naikaku</a> / ランナー接続</div>
+      <section class="hero compact-hero">
+        <div>
+          <p class="eyebrow">Mac · CLI ランナー · 明示承認</p>
+          <h1>既存ツールを、監督付き runner として扱う。</h1>
+          <p class="lead">
+            Naikaku は Codex CLI、Claude Code、OpenHands、OpenClaw 系ツール、Hammerspoon などを
+            直接置き換えるものではありません。既存の CLI やローカル自動化を、権限確認、実行記録、証拠レビューの後ろに置くための統合層です。
+          </p>
+        </div>
+      </section>
+      <section class="band white">
+        <div class="cards">
+          <article class="card accent-blue">
+            <h3>実行前の準備確認</h3>
+            <p>runner の種類、作業ディレクトリ、許可されたコマンド、ネットワーク利用、成果物の置き場所を先に確認します。</p>
+          </article>
+          <article class="card accent-green">
+            <h3>実行ログと証拠</h3>
+            <p>コマンド、終了コード、出力要約、変更ファイル、スクリーンショットなどを記録し、後からレビューできる形にします。</p>
+          </article>
+          <article class="card accent-gold">
+            <h3>危険操作は明示承認</h3>
+            <p>本番 deploy、Git push、外部送信、購入、広い PC 操作は自動で通さず、承認ゲートと根拠を求めます。</p>
+          </article>
+        </div>
+      </section>
+      <section class="band">
+        <div class="section-head">
+          <h2>接続対象の考え方。</h2>
+          <p class="body-copy">
+            外部プロジェクトを勝手に取り込むのではなく、各ツールのライセンスと使い方を尊重します。
+            Naikaku 側は runner adapter、権限プリセット、証拠レビュー、内閣ロールの判断ログを担当します。
+          </p>
+        </div>
+        <div class="topic-grid">
+          <a class="topic-card accent-blue" href="/ja/developers/">
+            <h3>adapter を書く</h3>
+            <p>コマンドラインツールを Naikaku の実行契約に合わせるための貢献入口。</p>
+          </a>
+          <a class="topic-card accent-green" href="/ja/api-gateway/">
+            <h3>モデルを分ける</h3>
+            <p>監督役、批評役、実行役に別 provider や別 model を割り当てる考え方。</p>
+          </a>
+          <a class="topic-card accent-red" href="/ja/download/">
+            <h3>ローカルで試す</h3>
+            <p>まずは開発者向け preview を落として、証拠付きの smoke test から始めます。</p>
+          </a>
+        </div>
+      </section>
+    </main>
+    <footer>Copyright 2026 合同会社EMYSTI · <a href="/ja/">Naikaku</a></footer>
+  </body>
+</html>
