@@ -834,6 +834,47 @@ export interface CodingAgentRunnerManifestDrillSummary {
   };
 }
 
+export interface CodingAgentRunnerInvocationDrillSummary {
+  schema: "naikaku.coding-agent-runner-invocation-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    runnerManifestDecision: string;
+    readyTasks: number;
+    runnerTasks: number;
+    receiptDraftPaths: number;
+  };
+  valid: {
+    decision: string;
+    readyInvocations: number;
+    heldInvocations: number;
+    blockedInvocations: number;
+    invocationFiles: number;
+    commandContracts: number;
+    receiptDraftPaths: number;
+    expectedEvidenceArtifacts: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  productionHeld: {
+    decision: string;
+    readyInvocations: number;
+    heldInvocations: number;
+    blockedInvocations: number;
+    invocationFiles: number;
+    receiptDraftPaths: number;
+    unsafePaths: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface CodingAgentRunnerSelfTestDrillSummary {
   schema: "naikaku.coding-agent-runner-self-test-drill.v1";
   generatedAt: string;
@@ -946,6 +987,7 @@ export interface LocalizationDrillSummary {
     archiveAuditDecision: string;
     simulationDecision: string;
     receiptDecision: string;
+    runnerInvocationDecision: string;
     readySessions: number;
     heldSessions: number;
     wouldAssign: number;
@@ -956,6 +998,8 @@ export interface LocalizationDrillSummary {
     runnerManifestDecision: string;
     runnerReadyTasks: number;
     runnerTasks: number;
+    runnerInvocationReadyInvocations: number;
+    runnerInvocationFiles: number;
     runnerSelfTestDecision: string;
     runnerSelfTestWouldRun: number;
     runnerSelfTestNotExecutedCommands: number;
@@ -974,6 +1018,8 @@ export interface LocalizationDrillSummary {
     simulationReceiptDrafts: number;
     runnerReadyTasks: number;
     runnerTasks: number;
+    runnerInvocationReadyInvocations: number;
+    runnerInvocationFiles: number;
     runnerSelfTestWouldRun: number;
     runnerSelfTestNotExecutedCommands: number;
     pendingReceiptItems: number;
@@ -1073,6 +1119,7 @@ export interface VerificationManifest {
     codingAgentDispatchDrill: string;
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
+    codingAgentRunnerInvocation: string;
     codingAgentRunnerSelfTest: string;
     codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
@@ -1085,6 +1132,7 @@ export interface VerificationManifest {
     codingAgentDispatchGeneratedAt: string;
     codingAgentDispatchSimulationGeneratedAt: string;
     codingAgentRunnerManifestGeneratedAt: string;
+    codingAgentRunnerInvocationGeneratedAt: string;
     codingAgentRunnerSelfTestGeneratedAt: string;
     codingAgentSandboxRunnerGeneratedAt: string;
     codingAgentGeneratedAt: string;
@@ -1686,6 +1734,94 @@ export interface CodingAgentRunnerManifest {
   };
   honestyClaim: {
     level: "runner-handoff-planning";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type CodingAgentRunnerInvocationPackageDecision =
+  | "package-ready"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentRunnerInvocationItemStatus =
+  | "invocation-ready"
+  | "held"
+  | "blocked";
+
+export interface CodingAgentRunnerInvocationCommand {
+  command: string;
+  transcriptRef: string | null;
+  status: "pending-real-execution";
+  exitCode: null;
+}
+
+export interface CodingAgentRunnerInvocationItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  runnerId: string;
+  manifestTaskStatus: CodingAgentRunnerTaskStatus;
+  invocationStatus: CodingAgentRunnerInvocationItemStatus;
+  invocationPath: string | null;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  receiptTemplatePath: string | null;
+  evidenceArtifactPrefix: string;
+  plannedSteps: string[];
+  commands: CodingAgentRunnerInvocationCommand[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  runnerInstructions: string[];
+  stopConditions: string[];
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentRunnerInvocationFile {
+  schema: "naikaku.coding-agent-runner-invocation.v1";
+  generatedAt: string;
+  packageSchema: "naikaku.coding-agent-runner-invocation-package.v1";
+  packageDecision: CodingAgentRunnerInvocationPackageDecision;
+  operatorLocale: string;
+  runId?: string;
+  item: CodingAgentRunnerInvocationItem;
+  honestyClaim: CodingAgentRunnerInvocationPackage["honestyClaim"];
+}
+
+export interface CodingAgentRunnerInvocationPackage {
+  schema: "naikaku.coding-agent-runner-invocation-package.v1";
+  generatedAt: string;
+  mode: "runner-invocation-package";
+  sourceSchema: CodingAgentRunnerManifest["schema"];
+  sourceDecision: CodingAgentRunnerManifestDecision;
+  decision: CodingAgentRunnerInvocationPackageDecision;
+  runId?: string;
+  operatorLocale: string;
+  invocationBasePath: string;
+  items: CodingAgentRunnerInvocationItem[];
+  summary: {
+    total: number;
+    readyInvocations: number;
+    heldInvocations: number;
+    blockedInvocations: number;
+    invocationFiles: number;
+    commandContracts: number;
+    receiptDraftPaths: number;
+    expectedEvidenceArtifacts: number;
+    unsafePaths: number;
+    stopConditions: number;
+  };
+  honestyClaim: {
+    level: "runner-invocation-package";
     claim: string;
     limitations: string[];
     productionRequirements: string[];

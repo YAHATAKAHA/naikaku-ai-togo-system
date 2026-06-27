@@ -8,6 +8,7 @@ import type {
   CodingAgentDispatchDrillSummary,
   CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
+  CodingAgentRunnerInvocationDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
@@ -22,6 +23,7 @@ interface VerificationManifestOptions {
   codingAgentDispatchPath: string;
   codingAgentSimulationPath: string;
   codingAgentRunnerManifestPath: string;
+  codingAgentRunnerInvocationPath: string;
   codingAgentRunnerSelfTestPath: string;
   codingAgentSandboxRunnerPath: string;
   codingAgentReportPath: string;
@@ -45,6 +47,7 @@ async function main() {
   const codingAgentDispatchDrill = await loadCodingAgentDispatchDrill(options.codingAgentDispatchPath);
   const codingAgentDispatchSimulation = await loadCodingAgentDispatchSimulation(options.codingAgentSimulationPath);
   const codingAgentRunnerManifest = await loadCodingAgentRunnerManifest(options.codingAgentRunnerManifestPath);
+  const codingAgentRunnerInvocation = await loadCodingAgentRunnerInvocation(options.codingAgentRunnerInvocationPath);
   const codingAgentRunnerSelfTest = await loadCodingAgentRunnerSelfTest(options.codingAgentRunnerSelfTestPath);
   const codingAgentSandboxRunner = await loadCodingAgentSandboxRunner(options.codingAgentSandboxRunnerPath);
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
@@ -56,6 +59,7 @@ async function main() {
     codingAgentDispatchDrill,
     codingAgentDispatchSimulation,
     codingAgentRunnerManifest,
+    codingAgentRunnerInvocation,
     codingAgentRunnerSelfTest,
     codingAgentSandboxRunner,
     codingAgentReport,
@@ -68,6 +72,7 @@ async function main() {
       codingAgentDispatchDrill: options.codingAgentDispatchPath,
       codingAgentDispatchSimulation: options.codingAgentSimulationPath,
       codingAgentRunnerManifest: options.codingAgentRunnerManifestPath,
+      codingAgentRunnerInvocation: options.codingAgentRunnerInvocationPath,
       codingAgentRunnerSelfTest: options.codingAgentRunnerSelfTestPath,
       codingAgentSandboxRunner: options.codingAgentSandboxRunnerPath,
       codingAgentReceiptDrill: options.codingAgentReportPath,
@@ -114,6 +119,14 @@ async function loadCodingAgentRunnerManifest(reportPath: string): Promise<Coding
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentRunnerManifestDrillSummary;
   if (parsed.schema !== "naikaku.coding-agent-runner-manifest-drill.v1") {
     throw new Error("Coding-agent runner manifest must use schema naikaku.coding-agent-runner-manifest-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadCodingAgentRunnerInvocation(reportPath: string): Promise<CodingAgentRunnerInvocationDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentRunnerInvocationDrillSummary;
+  if (parsed.schema !== "naikaku.coding-agent-runner-invocation-drill.v1") {
+    throw new Error("Coding-agent runner invocation must use schema naikaku.coding-agent-runner-invocation-drill.v1.");
   }
   return parsed;
 }
@@ -189,6 +202,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     codingAgentDispatchPath: "output/coding-agent-dispatch-drill/summary.json",
     codingAgentSimulationPath: "output/coding-agent-dispatch-simulation/summary.json",
     codingAgentRunnerManifestPath: "output/coding-agent-runner-manifest/summary.json",
+    codingAgentRunnerInvocationPath: "output/coding-agent-runner-invocation/summary.json",
     codingAgentRunnerSelfTestPath: "output/coding-agent-runner-self-test/summary.json",
     codingAgentSandboxRunnerPath: "output/coding-agent-sandbox-runner/summary.json",
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
@@ -228,6 +242,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-runner-manifest") {
       options.codingAgentRunnerManifestPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--coding-agent-runner-invocation") {
+      options.codingAgentRunnerInvocationPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -307,6 +327,8 @@ Options:
                                   Read coding-agent dispatch simulation summary.
   --coding-agent-runner-manifest <path>
                                   Read coding-agent runner manifest summary.
+  --coding-agent-runner-invocation <path>
+                                  Read coding-agent runner invocation summary.
   --coding-agent-runner-self-test <path>
                                   Read coding-agent runner self-test summary.
   --coding-agent-sandbox-runner <path>

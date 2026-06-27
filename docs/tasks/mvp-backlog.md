@@ -30,6 +30,7 @@ This backlog is written so different contributors can work in parallel.
 - Add Coding Agent Session Bundle export that separates ready and held coding-agent sessions with prompt files, verification commands, evidence requirements, and safety stops.
 - Add Coding Agent Session Drill that simulates assignable versus held coding-agent sessions without claiming code execution, provider calls, browser control, deploy, or Git changes.
 - Add Coding Agent Dispatch Manifest, Archive, Archive Audit, and Drill that write ready prompt packages while proving production-held sessions do not receive assignable prompt files.
+- Add Coding Agent Runner Invocation packages that write one governed JSON/Markdown file per ready runner task while production-held sessions receive zero executable invocation files.
 - Add Coding Agent Session Receipt template/import/review gate that requires changed files, command exit codes, evidence artifacts, and risk notes before accepting implementation claims.
 - Add Coding Agent Implementation Evidence export that summarizes reviewed receipts into JSON/Markdown handoff artifacts without rerunning commands.
 - Add Coding Agent Implementation Artifact Audit that checks safe local changed-file and transcript references before status reconciliation.
@@ -58,6 +59,7 @@ Acceptance:
 - Operators can export a coding-agent session bundle that never claims implementation happened and holds sessions when review or production evidence is incomplete.
 - Operators can run a coding-agent session drill that exports JSON/Markdown, separates `would-assign`, `needs-operator-review`, and `not-assigned`, and keeps dry-run limitations visible in every supported UI language.
 - Operators can write and audit a local coding-agent dispatch package with prompt files and receipt templates only for ready sessions; production-held sessions remain visible but unassigned.
+- Operators can write runner invocation files for ready coding-agent tasks while held and production-held tasks remain visible but unpackaged.
 - Operators can run a coding-agent sandbox runner drill that executes only allowlisted local verification commands, writes transcripts/evidence/receipt/audit artifacts, and keeps the result separate from Development Board completion.
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.
