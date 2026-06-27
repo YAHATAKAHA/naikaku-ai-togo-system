@@ -42,6 +42,8 @@ interface OpenSourceMvpCheckSummary {
     gatewayEvidenceVerified: boolean;
     configuredPresetBridgePassed: boolean;
     configuredPresetEvidenceVerified: boolean;
+    taskEntryPassed: boolean;
+    taskEntryEvidenceVerified: boolean;
     runnerKitPassed: boolean;
     runnerKitEvidenceVerified: boolean;
     fixtureCodingLoopPassed: boolean;
@@ -51,10 +53,12 @@ interface OpenSourceMvpCheckSummary {
   evidence: {
     gatewayAutoWorkSummary: string;
     configuredPresetBridgeSummary: string;
+    taskEntrySummary: string;
     runnerKitSummary: string;
     fixtureCodingLoopSummary: string;
     gatewayAutoWork: GatewayAutoWorkEvidence;
     configuredPresetBridge: ConfiguredPresetBridgeEvidence;
+    taskEntry: TaskEntryEvidence;
     runnerKit: RunnerKitEvidence;
     fixtureCodingLoop: FixtureCodingLoopEvidence;
   };
@@ -96,6 +100,16 @@ interface ConfiguredPresetBridgeEvidence {
   acceptedEvidence: number;
   verifiedArtifactPaths: number;
   adapterReviewDecision: string | null;
+  allChecksPassed: boolean;
+}
+
+interface TaskEntryEvidence {
+  summaryReadable: boolean;
+  mode: string | null;
+  handoffPrepared: boolean;
+  handoffTaskFiles: number;
+  externalRunnerStarted: boolean;
+  completion: boolean;
   allChecksPassed: boolean;
 }
 
@@ -249,6 +263,27 @@ function buildSteps({
       proves: "A server-style configured preset id can launch a fixed local CLI adapter without accepting arbitrary browser shell input."
     },
     {
+      id: "task-entry",
+      label: "Operator task entry",
+      command: npmCommand,
+      args: [
+        "run",
+        "naikaku:task",
+        "--",
+        "--mission",
+        "Task entry smoke: prepare a governed engineering run",
+        "--locale",
+        "ja",
+        "--out",
+        path.join(outputDir, "task-entry"),
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z",
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      proves: "A user can enter one mission through the short Naikaku task CLI and receive supervised handoff output without overclaiming completion."
+    },
+    {
       id: "runner-kit",
       label: "External runner wrapper kit",
       command: npmCommand,
@@ -333,6 +368,7 @@ function buildSummary({
     "configured-preset-bridge",
     "summary.json"
   ));
+  const taskEntryEvidence = readTaskEntryEvidence(path.join(outputDir, "task-entry", "summary.json"));
   const runnerKitEvidence = readRunnerKitEvidence(path.join(outputDir, "runner-kit", "summary.json"));
   const fixtureEvidence = readFixtureEvidence(path.join(outputDir, "fixture-coding-loop", "summary.json"));
   const gatewayEvidenceVerified = gatewayEvidence.summaryReadable &&
@@ -352,6 +388,13 @@ function buildSummary({
     configuredPresetEvidence.verifiedArtifactPaths >= 1 &&
     configuredPresetEvidence.adapterReviewDecision === "verified" &&
     configuredPresetEvidence.allChecksPassed;
+  const taskEntryEvidenceVerified = taskEntryEvidence.summaryReadable &&
+    taskEntryEvidence.mode === "prepare" &&
+    taskEntryEvidence.handoffPrepared &&
+    taskEntryEvidence.handoffTaskFiles >= 1 &&
+    !taskEntryEvidence.externalRunnerStarted &&
+    !taskEntryEvidence.completion &&
+    taskEntryEvidence.allChecksPassed;
   const runnerKitEvidenceVerified = runnerKitEvidence.summaryReadable &&
     runnerKitEvidence.wrapperWritten &&
     runnerKitEvidence.presetValid &&
@@ -378,6 +421,8 @@ function buildSummary({
     gatewayEvidenceVerified,
     configuredPresetBridgePassed: byId.get("configured-preset-bridge")?.passed === true,
     configuredPresetEvidenceVerified,
+    taskEntryPassed: byId.get("task-entry")?.passed === true,
+    taskEntryEvidenceVerified,
     runnerKitPassed: byId.get("runner-kit")?.passed === true,
     runnerKitEvidenceVerified,
     fixtureCodingLoopPassed: byId.get("fixture-coding-loop")?.passed === true,
@@ -385,6 +430,7 @@ function buildSummary({
     allPassed: results.every((result) => result.passed) &&
       gatewayEvidenceVerified &&
       configuredPresetEvidenceVerified &&
+      taskEntryEvidenceVerified &&
       runnerKitEvidenceVerified &&
       fixturePatchVerified
   };
@@ -398,15 +444,17 @@ function buildSummary({
     evidence: {
       gatewayAutoWorkSummary: relativePath(path.join(outputDir, "gateway-auto-work", "summary.json")),
       configuredPresetBridgeSummary: relativePath(path.join(outputDir, "configured-preset-bridge", "summary.json")),
+      taskEntrySummary: relativePath(path.join(outputDir, "task-entry", "summary.json")),
       runnerKitSummary: relativePath(path.join(outputDir, "runner-kit", "summary.json")),
       fixtureCodingLoopSummary: relativePath(path.join(outputDir, "fixture-coding-loop", "summary.json")),
       gatewayAutoWork: gatewayEvidence,
       configuredPresetBridge: configuredPresetEvidence,
+      taskEntry: taskEntryEvidence,
       runnerKit: runnerKitEvidence,
       fixtureCodingLoop: fixtureEvidence
     },
     claimBoundary: [
-      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
+      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
       "It does not prove a real OpenClaw/OpenHands/Hermes run, arbitrary desktop control, production deployment, Git push, or completion of real backlog work.",
       "External CLI runners should be invoked as governed adapters that return Naikaku receipts and evidence, not as unbounded host automation."
     ]
@@ -468,6 +516,34 @@ function readConfiguredPresetBridgeEvidence(filePath: string): ConfiguredPresetB
     acceptedEvidence: numberOrZero(counts.acceptedEvidence),
     verifiedArtifactPaths: numberOrZero(counts.verifiedArtifactPaths),
     adapterReviewDecision: stringOrNull(parsed?.decisions?.adapterReview),
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
+function readTaskEntryEvidence(filePath: string): TaskEntryEvidence {
+  const parsed = readJsonIfExists<{
+    mode?: unknown;
+    counts?: {
+      handoffTaskFiles?: unknown;
+    };
+    claims?: {
+      handoffPrepared?: unknown;
+      externalRunnerStarted?: unknown;
+      completion?: unknown;
+    };
+    checks?: Record<string, unknown>;
+  }>(filePath);
+  const counts = parsed?.counts || {};
+  const claims = parsed?.claims || {};
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    mode: stringOrNull(parsed?.mode),
+    handoffPrepared: claims.handoffPrepared === true,
+    handoffTaskFiles: numberOrZero(counts.handoffTaskFiles),
+    externalRunnerStarted: claims.externalRunnerStarted === true,
+    completion: claims.completion === true,
     allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
   };
 }
@@ -614,8 +690,8 @@ function printHelp() {
     "  -h, --help           Show this help.",
     "",
     "The check builds the app, runs targeted MVP tests, exercises the gateway auto-work endpoint,",
-    "runs a configured CLI preset bridge, generates a local runner wrapper kit, and runs the fixture",
-    "coding loop that patches a generated repository and verifies receipts/evidence."
+    "runs a configured CLI preset bridge, proves the one-mission task entry, generates a local runner",
+    "wrapper kit, and runs the fixture coding loop that patches a generated repository and verifies receipts/evidence."
   ].join("\n"));
 }
 
@@ -645,6 +721,8 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- gateway evidence: ${summary.checks.gatewayEvidenceVerified ? "pass" : "fail"}`,
     `- configured preset bridge: ${summary.checks.configuredPresetBridgePassed ? "pass" : "fail"}`,
     `- configured preset evidence: ${summary.checks.configuredPresetEvidenceVerified ? "pass" : "fail"}`,
+    `- task entry: ${summary.checks.taskEntryPassed ? "pass" : "fail"}`,
+    `- task entry evidence: ${summary.checks.taskEntryEvidenceVerified ? "pass" : "fail"}`,
     `- runner kit: ${summary.checks.runnerKitPassed ? "pass" : "fail"}`,
     `- runner kit evidence: ${summary.checks.runnerKitEvidenceVerified ? "pass" : "fail"}`,
     `- fixture coding loop: ${summary.checks.fixtureCodingLoopPassed ? "pass" : "fail"}`,
@@ -668,6 +746,8 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- gateway receipts/evidence/artifacts: ${summary.evidence.gatewayAutoWork.importedReceipts} / ${summary.evidence.gatewayAutoWork.acceptedEvidence} / ${summary.evidence.gatewayAutoWork.verifiedArtifactPaths}`,
     `- configured preset bridge summary: ${summary.evidence.configuredPresetBridgeSummary}`,
     `- configured preset jobs/receipts/evidence/artifacts: ${summary.evidence.configuredPresetBridge.adapterCompletedJobs} / ${summary.evidence.configuredPresetBridge.importedReceipts} / ${summary.evidence.configuredPresetBridge.acceptedEvidence} / ${summary.evidence.configuredPresetBridge.verifiedArtifactPaths}`,
+    `- task entry summary: ${summary.evidence.taskEntrySummary}`,
+    `- task entry mode/handoff/completion: ${summary.evidence.taskEntry.mode || "unknown"} / ${summary.evidence.taskEntry.handoffTaskFiles} / ${summary.evidence.taskEntry.completion ? "claimed" : "not-claimed"}`,
     `- runner kit summary: ${summary.evidence.runnerKitSummary}`,
     `- runner kit receipts/evidence/artifacts: ${summary.evidence.runnerKit.smokeImportedReceipts} / ${summary.evidence.runnerKit.smokeAcceptedEvidence} / ${summary.evidence.runnerKit.smokeVerifiedArtifactPaths}`,
     `- fixture coding loop summary: ${summary.evidence.fixtureCodingLoopSummary}`,
