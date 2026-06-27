@@ -221,6 +221,7 @@ a.secondary-button {
 .ledger-panel,
 .team-panel,
 .development-panel,
+.engineering-launchpad-panel,
 .issues-panel,
 .memory-panel,
 .sandbox-panel,
@@ -433,6 +434,193 @@ a.secondary-button {
   color: var(--red);
 }
 
+.engineering-launchpad-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.engineering-launchpad-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  gap: 16px;
+  align-items: start;
+}
+
+.engineering-launchpad-header span,
+.engineering-launchpad-state small {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent-2);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engineering-launchpad-header h2 {
+  margin: 8px 0 0;
+  font-size: 22px;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+.engineering-launchpad-header p {
+  max-width: 840px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.engineering-launchpad-state {
+  min-height: 76px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 12px;
+}
+
+.engineering-launchpad-state small {
+  color: var(--muted);
+}
+
+.engineering-launchpad-state strong {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.engineering-launchpad-panel[data-state="ready-to-run"] .engineering-launchpad-state,
+.engineering-launchpad-panel[data-state="runner-verified"] .engineering-launchpad-state {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.engineering-launchpad-panel[data-state="runner-needs-review"] .engineering-launchpad-state {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.engineering-launchpad-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.engineering-launchpad-metrics span {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: var(--muted);
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.engineering-action-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 8px;
+}
+
+.engineering-action-row button {
+  min-height: 32px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.engineering-action-row button:nth-child(3),
+.engineering-action-row button:nth-child(5) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.engineering-action-row button:disabled {
+  border-color: var(--line);
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.engineering-flow-grid,
+.engineering-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+  gap: 8px;
+}
+
+.engineering-permission-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.engineering-flow-step,
+.engineering-permission-card {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 11px;
+}
+
+.engineering-flow-step[data-ready="true"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.engineering-flow-step strong,
+.engineering-permission-card strong {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.engineering-flow-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.42;
+}
+
+.engineering-permission-card ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 17px;
+}
+
+.engineering-permission-card li {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
 .mission-panel,
 .automation-panel,
 .runbook-panel,
@@ -440,6 +628,7 @@ a.secondary-button {
 .team-panel,
 .ledger-panel,
 .development-panel,
+.engineering-launchpad-panel,
 .issues-panel,
 .memory-panel,
 .sandbox-panel {
@@ -4119,6 +4308,14 @@ meter {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .engineering-flow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .engineering-permission-grid {
+    grid-template-columns: 1fr;
+  }
+
   .operator-footer {
     grid-template-columns: 1fr;
   }
@@ -4147,8 +4344,16 @@ meter {
     min-height: auto;
   }
 
+  .center-column {
+    order: -1;
+  }
+
   .mission-header {
     display: grid;
+  }
+
+  .engineering-launchpad-header {
+    grid-template-columns: 1fr;
   }
 
   .mission-header h1 {
@@ -4167,6 +4372,9 @@ meter {
   .team-package-grid,
   .development-item-list,
   .coding-briefs-list,
+  .engineering-flow-grid,
+  .engineering-launchpad-metrics,
+  .engineering-permission-grid,
   .issues-draft-list,
   .memory-candidate-grid,
   .sandbox-grid,
@@ -4211,6 +4419,7 @@ meter {
   .team-export-row,
   .development-export-row,
   .coding-briefs-export-row,
+  .engineering-action-row,
   .issues-export-row,
   .memory-export-row,
   .executor-result-heading,

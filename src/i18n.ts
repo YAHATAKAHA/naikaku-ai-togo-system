@@ -53,6 +53,33 @@ export interface ReleaseRehearsalCopy {
   };
 }
 
+export interface EngineeringLaunchpadCopy {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  stateLabel: string;
+  metricsLabel: string;
+  state: (state: string) => string;
+  roles: (count: number) => string;
+  briefs: (total: number, implementable: number) => string;
+  sessions: (ready: number, held: number) => string;
+  runner: (tasks: number, decision: string) => string;
+  focusMission: string;
+  runCabinet: string;
+  preparePack: string;
+  preflight: string;
+  runSandbox: string;
+  exportIssues: string;
+  steps: Array<{
+    title: string;
+    body: string;
+  }>;
+  permissionGroups: Array<{
+    title: string;
+    items: string[];
+  }>;
+}
+
 export interface CodingAgentBriefsCopy {
   title: string;
   total: (count: number) => string;
@@ -228,6 +255,7 @@ export interface AppCopy {
   releaseVerificationFallback: (errorMessage?: string) => string;
   releaseVerificationStatus: (decision: string, failed: number) => string;
   releaseRehearsal: ReleaseRehearsalCopy;
+  engineeringLaunchpad: EngineeringLaunchpadCopy;
   codingBriefs: CodingAgentBriefsCopy;
 }
 
@@ -293,6 +321,75 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `リリース演習 ${jaRehearsalDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
     releaseVerificationFallback: (errorMessage) => `ゲートウェイ検証を利用できないため、ローカル検証を使用しました。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `リリース検証 ${jaVerificationDecision(decision)}: 失敗 ${failed}件。`,
+    engineeringLaunchpad: {
+      kicker: "Mac工程起動台",
+      title: "ここから監督役とコーディング代理を開始",
+      subtitle: "ミッションを書き、内閣で分解し、監督用ブリーフと runner 起動パッケージを作り、許可された Mac ローカル操作だけを実行します。",
+      stateLabel: "状態",
+      metricsLabel: "Engineering launch metrics",
+      state: jaEngineeringLaunchState,
+      roles: (count) => `${count}役割`,
+      briefs: (total, implementable) => `${implementable}/${total}実装候補`,
+      sessions: (ready, held) => `${ready} ready / ${held} held`,
+      runner: (tasks, decision) => `${tasks} runner / ${jaRunnerSelfTestDecision(decision)}`,
+      focusMission: "入力欄へ",
+      runCabinet: "内閣で分解",
+      preparePack: "工程組を準備",
+      preflight: "権限確認",
+      runSandbox: "ローカル実行",
+      exportIssues: "Issue script",
+      steps: [
+        {
+          title: "1. ミッション入力",
+          body: "作らせたい機能、対象リポジトリ、制約、検証コマンドを mission brief に入れます。"
+        },
+        {
+          title: "2. 監督役で分解",
+          body: "内閣を実行すると複数ロールが計画、批評、実行境界、証拠要求を分けます。"
+        },
+        {
+          title: "3. 工程パック作成",
+          body: "各 coding agent 用の prompt、receipt、runner invocation、intake、自検を一括生成します。"
+        },
+        {
+          title: "4. Mac 権限確認",
+          body: "preflight が許可コマンド、証拠パス、危険操作、保留 session を実行前に止めます。"
+        },
+        {
+          title: "5. 証拠付き実行",
+          body: "local gateway がある時だけ sandbox runner がテストを実行し、transcript と証拠を返します。"
+        }
+      ],
+      permissionGroups: [
+        {
+          title: "今使う最小権限",
+          items: [
+            "選択したリポジトリ配下の読み書き",
+            "output/ 配下への transcript と証拠保存",
+            "許可済み shell: npm run test / npm run build",
+            "Git 状態確認: status / diff の読み取り"
+          ]
+        },
+        {
+          title: "Mac版で追加する権限",
+          items: [
+            "Browser runner: ブラウザ自動化プロファイル",
+            "Desktop runner: Accessibility と Screen Recording",
+            "MCP runner: 明示 allowlist のツールだけ",
+            "Git push、deploy、外部送信は人間承認"
+          ]
+        },
+        {
+          title: "デフォルトで渡さないもの",
+          items: [
+            "ホスト全体の秘密情報",
+            "無制限のコンピュータ操作",
+            "本番 deploy 権限",
+            "承認なしの GitHub 書き込み"
+          ]
+        }
+      ]
+    },
     codingBriefs: {
       title: "コーディング代理ブリーフ",
       total: (count) => `${count}件`,
@@ -503,6 +600,75 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `Release rehearsal ${decision}: ${blockers} blockers, ${warnings} warnings.`,
     releaseVerificationFallback: (errorMessage) => `Gateway release verification unavailable; used local verifier.${errorMessage ? ` ${errorMessage}` : ""}`,
     releaseVerificationStatus: (decision, failed) => `Release verification ${decision}: ${failed} failed checks.`,
+    engineeringLaunchpad: {
+      kicker: "Mac engineering launchpad",
+      title: "Start supervised coding agents here",
+      subtitle: "Write the mission, split it through the cabinet, prepare supervisor briefs and runner packages, then execute only approved local Mac actions.",
+      stateLabel: "State",
+      metricsLabel: "Engineering launch metrics",
+      state: enEngineeringLaunchState,
+      roles: (count) => `${count} role${count === 1 ? "" : "s"}`,
+      briefs: (total, implementable) => `${implementable}/${total} implementation briefs`,
+      sessions: (ready, held) => `${ready} ready / ${held} held`,
+      runner: (tasks, decision) => `${tasks} runner / ${enRunnerSelfTestDecision(decision)}`,
+      focusMission: "Go to input",
+      runCabinet: "Split by cabinet",
+      preparePack: "Prepare agents",
+      preflight: "Check permission",
+      runSandbox: "Run local sandbox",
+      exportIssues: "Issue script",
+      steps: [
+        {
+          title: "1. Enter the mission",
+          body: "Put the feature, repository target, constraints, and verification commands in the mission brief."
+        },
+        {
+          title: "2. Split supervision",
+          body: "Run the cabinet so roles separate planning, critique, execution boundaries, and evidence requirements."
+        },
+        {
+          title: "3. Prepare the agent pack",
+          body: "Generate prompts, receipts, runner invocations, intake audit, and self-test for coding agents."
+        },
+        {
+          title: "4. Check Mac permissions",
+          body: "Preflight blocks unsafe commands, bad artifact paths, and held sessions before execution starts."
+        },
+        {
+          title: "5. Execute with evidence",
+          body: "When the local gateway is running, the sandbox runner executes tests and returns transcripts and evidence."
+        }
+      ],
+      permissionGroups: [
+        {
+          title: "Minimum used now",
+          items: [
+            "Read/write inside the selected repository",
+            "Write transcripts and evidence under output/",
+            "Allowlisted shell: npm run test / npm run build",
+            "Git status/diff read access"
+          ]
+        },
+        {
+          title: "Mac app additions",
+          items: [
+            "Browser runner: browser automation profile",
+            "Desktop runner: Accessibility and Screen Recording",
+            "MCP runner: explicit tool allowlist only",
+            "Git push, deploy, and external send require human approval"
+          ]
+        },
+        {
+          title: "Never default-granted",
+          items: [
+            "Host-wide secrets",
+            "Unbounded computer control",
+            "Production deploy permission",
+            "Unapproved GitHub writes"
+          ]
+        }
+      ]
+    },
     codingBriefs: {
       title: "Coding agent briefs",
       total: (count) => `${count} briefs`,
@@ -713,6 +879,75 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `发布演练 ${zhHansRehearsalDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
     releaseVerificationFallback: (errorMessage) => `网关验证不可用，已使用本地验证。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `发布验证 ${zhHansVerificationDecision(decision)}：${failed} 个失败检查。`,
+    engineeringLaunchpad: {
+      kicker: "Mac 工程启动台",
+      title: "从这里启动监督组和编程代理",
+      subtitle: "先写任务，再让内阁拆分监督，生成 agent brief 和 runner 包，最后只执行被允许的本地 Mac 操作。",
+      stateLabel: "状态",
+      metricsLabel: "工程启动指标",
+      state: zhHansEngineeringLaunchState,
+      roles: (count) => `${count} 个角色`,
+      briefs: (total, implementable) => `${implementable}/${total} 个实现 brief`,
+      sessions: (ready, held) => `${ready} ready / ${held} held`,
+      runner: (tasks, decision) => `${tasks} runner / ${zhHansRunnerSelfTestDecision(decision)}`,
+      focusMission: "去输入",
+      runCabinet: "内阁拆分",
+      preparePack: "准备工程组",
+      preflight: "权限检查",
+      runSandbox: "本地沙箱运行",
+      exportIssues: "Issue 脚本",
+      steps: [
+        {
+          title: "1. 输入任务",
+          body: "把要做的功能、仓库目标、限制条件、验证命令写进 mission brief。"
+        },
+        {
+          title: "2. 监督拆分",
+          body: "运行内阁，让多个角色分开做计划、批评、执行边界和证据要求。"
+        },
+        {
+          title: "3. 生成工程包",
+          body: "一次生成 prompt、receipt、runner invocation、接收审查和自测。"
+        },
+        {
+          title: "4. Mac 权限检查",
+          body: "preflight 在执行前拦截危险命令、错误证据路径和被保留的 session。"
+        },
+        {
+          title: "5. 带证据执行",
+          body: "本地 gateway 运行时，sandbox runner 才会执行测试并返回 transcript 和证据。"
+        }
+      ],
+      permissionGroups: [
+        {
+          title: "现在使用的最小权限",
+          items: [
+            "所选仓库内的读写权限",
+            "在 output/ 下写入 transcript 和证据",
+            "允许的 shell: npm run test / npm run build",
+            "Git status/diff 读取权限"
+          ]
+        },
+        {
+          title: "Mac 版可追加能力",
+          items: [
+            "Browser runner: 浏览器自动化配置",
+            "Desktop runner: 辅助功能和屏幕录制权限",
+            "MCP runner: 仅显式 allowlist 工具",
+            "Git push、deploy、外部发送都需要人工批准"
+          ]
+        },
+        {
+          title: "默认不给的权限",
+          items: [
+            "整台主机的秘密信息",
+            "无限制电脑控制",
+            "生产部署权限",
+            "未批准的 GitHub 写入"
+          ]
+        }
+      ]
+    },
     codingBriefs: {
       title: "编程代理 brief",
       total: (count) => `${count} 个 brief`,
@@ -923,6 +1158,75 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `發布演練 ${zhHantRehearsalDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
     releaseVerificationFallback: (errorMessage) => `閘道驗證不可用，已使用本地驗證。${errorMessage || ""}`,
     releaseVerificationStatus: (decision, failed) => `發布驗證 ${zhHantVerificationDecision(decision)}：${failed} 個失敗檢查。`,
+    engineeringLaunchpad: {
+      kicker: "Mac 工程啟動台",
+      title: "從這裡啟動監督組和編程代理",
+      subtitle: "先寫任務，再讓內閣拆分監督，生成 agent brief 和 runner 包，最後只執行被允許的本地 Mac 操作。",
+      stateLabel: "狀態",
+      metricsLabel: "工程啟動指標",
+      state: zhHantEngineeringLaunchState,
+      roles: (count) => `${count} 個角色`,
+      briefs: (total, implementable) => `${implementable}/${total} 個實作 brief`,
+      sessions: (ready, held) => `${ready} ready / ${held} held`,
+      runner: (tasks, decision) => `${tasks} runner / ${zhHantRunnerSelfTestDecision(decision)}`,
+      focusMission: "去輸入",
+      runCabinet: "內閣拆分",
+      preparePack: "準備工程組",
+      preflight: "權限檢查",
+      runSandbox: "本地沙箱執行",
+      exportIssues: "Issue 腳本",
+      steps: [
+        {
+          title: "1. 輸入任務",
+          body: "把要做的功能、倉庫目標、限制條件、驗證命令寫進 mission brief。"
+        },
+        {
+          title: "2. 監督拆分",
+          body: "執行內閣，讓多個角色分開做計畫、批評、執行邊界和證據要求。"
+        },
+        {
+          title: "3. 生成工程包",
+          body: "一次生成 prompt、receipt、runner invocation、接收審查和自測。"
+        },
+        {
+          title: "4. Mac 權限檢查",
+          body: "preflight 在執行前攔截危險命令、錯誤證據路徑和被保留的 session。"
+        },
+        {
+          title: "5. 帶證據執行",
+          body: "本地 gateway 執行時，sandbox runner 才會執行測試並返回 transcript 和證據。"
+        }
+      ],
+      permissionGroups: [
+        {
+          title: "現在使用的最小權限",
+          items: [
+            "所選倉庫內的讀寫權限",
+            "在 output/ 下寫入 transcript 和證據",
+            "允許的 shell: npm run test / npm run build",
+            "Git status/diff 讀取權限"
+          ]
+        },
+        {
+          title: "Mac 版可追加能力",
+          items: [
+            "Browser runner: 瀏覽器自動化設定",
+            "Desktop runner: 輔助功能和螢幕錄製權限",
+            "MCP runner: 僅明確 allowlist 工具",
+            "Git push、deploy、外部傳送都需要人工批准"
+          ]
+        },
+        {
+          title: "預設不給的權限",
+          items: [
+            "整台主機的秘密資訊",
+            "無限制電腦控制",
+            "生產部署權限",
+            "未批准的 GitHub 寫入"
+          ]
+        }
+      ]
+    },
     codingBriefs: {
       title: "編程代理 brief",
       total: (count) => `${count} 個 brief`,
@@ -1133,6 +1437,75 @@ const copies: Record<SupportedLocale, AppCopy> = {
     releaseRehearsalStatus: (decision, blockers, warnings) => `릴리스 리허설 ${koRehearsalDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
     releaseVerificationFallback: (errorMessage) => `게이트웨이 검증을 사용할 수 없어 로컬 검증을 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
     releaseVerificationStatus: (decision, failed) => `릴리스 검증 ${koVerificationDecision(decision)}: 실패 ${failed}개.`,
+    engineeringLaunchpad: {
+      kicker: "Mac 엔지니어링 런치패드",
+      title: "여기서 감독 역할과 코딩 에이전트를 시작",
+      subtitle: "미션을 작성하고 내각으로 분해한 뒤 agent brief와 runner 패키지를 만들고, 허용된 로컬 Mac 동작만 실행합니다.",
+      stateLabel: "상태",
+      metricsLabel: "엔지니어링 시작 지표",
+      state: koEngineeringLaunchState,
+      roles: (count) => `${count}개 역할`,
+      briefs: (total, implementable) => `${implementable}/${total}개 구현 brief`,
+      sessions: (ready, held) => `${ready} ready / ${held} held`,
+      runner: (tasks, decision) => `${tasks} runner / ${koRunnerSelfTestDecision(decision)}`,
+      focusMission: "입력으로 이동",
+      runCabinet: "내각으로 분해",
+      preparePack: "엔지니어링 준비",
+      preflight: "권한 확인",
+      runSandbox: "로컬 샌드박스 실행",
+      exportIssues: "Issue script",
+      steps: [
+        {
+          title: "1. 미션 입력",
+          body: "만들 기능, 대상 저장소, 제한 조건, 검증 명령을 mission brief에 넣습니다."
+        },
+        {
+          title: "2. 감독 분해",
+          body: "내각을 실행해 여러 역할이 계획, 비평, 실행 경계, 증거 요구를 나눕니다."
+        },
+        {
+          title: "3. 엔지니어링 패키지 생성",
+          body: "prompt, receipt, runner invocation, intake 감사, self-test를 한 번에 만듭니다."
+        },
+        {
+          title: "4. Mac 권한 확인",
+          body: "preflight가 위험 명령, 잘못된 증거 경로, 보류 session을 실행 전에 막습니다."
+        },
+        {
+          title: "5. 증거와 함께 실행",
+          body: "로컬 gateway가 실행 중일 때만 sandbox runner가 테스트를 실행하고 transcript와 증거를 반환합니다."
+        }
+      ],
+      permissionGroups: [
+        {
+          title: "현재 쓰는 최소 권한",
+          items: [
+            "선택한 저장소 내부 읽기/쓰기",
+            "output/ 아래 transcript와 증거 쓰기",
+            "허용된 shell: npm run test / npm run build",
+            "Git status/diff 읽기 권한"
+          ]
+        },
+        {
+          title: "Mac 앱 추가 권한",
+          items: [
+            "Browser runner: 브라우저 자동화 프로필",
+            "Desktop runner: 손쉬운 사용과 화면 기록",
+            "MCP runner: 명시 allowlist 도구만",
+            "Git push, deploy, 외부 전송은 사람 승인 필요"
+          ]
+        },
+        {
+          title: "기본 제공하지 않는 권한",
+          items: [
+            "호스트 전체 비밀값",
+            "무제한 컴퓨터 제어",
+            "운영 deploy 권한",
+            "승인 없는 GitHub 쓰기"
+          ]
+        }
+      ]
+    },
     codingBriefs: {
       title: "코딩 에이전트 브리프",
       total: (count) => `${count}개`,
@@ -1894,4 +2267,54 @@ function koCodingReceiptStatus(status: string) {
   if (status === "failed") return "실패";
   if (status === "held") return "보류";
   return status;
+}
+
+function jaEngineeringLaunchState(state: string) {
+  if (state === "needs-mission") return "入力待ち";
+  if (state === "cabinet-ready") return "内閣結果あり";
+  if (state === "runner-ready") return "工程組準備済み";
+  if (state === "ready-to-run") return "ローカル実行可";
+  if (state === "runner-verified") return "証拠付き検証済み";
+  if (state === "runner-needs-review") return "レビュー要";
+  return state;
+}
+
+function enEngineeringLaunchState(state: string) {
+  if (state === "needs-mission") return "waiting for input";
+  if (state === "cabinet-ready") return "cabinet ready";
+  if (state === "runner-ready") return "agent pack ready";
+  if (state === "ready-to-run") return "ready to run";
+  if (state === "runner-verified") return "evidence verified";
+  if (state === "runner-needs-review") return "needs review";
+  return state;
+}
+
+function zhHansEngineeringLaunchState(state: string) {
+  if (state === "needs-mission") return "等待输入";
+  if (state === "cabinet-ready") return "内阁已拆分";
+  if (state === "runner-ready") return "工程组已准备";
+  if (state === "ready-to-run") return "可本地运行";
+  if (state === "runner-verified") return "证据已验证";
+  if (state === "runner-needs-review") return "需要审查";
+  return state;
+}
+
+function zhHantEngineeringLaunchState(state: string) {
+  if (state === "needs-mission") return "等待輸入";
+  if (state === "cabinet-ready") return "內閣已拆分";
+  if (state === "runner-ready") return "工程組已準備";
+  if (state === "ready-to-run") return "可本地執行";
+  if (state === "runner-verified") return "證據已驗證";
+  if (state === "runner-needs-review") return "需要審查";
+  return state;
+}
+
+function koEngineeringLaunchState(state: string) {
+  if (state === "needs-mission") return "입력 대기";
+  if (state === "cabinet-ready") return "내각 준비됨";
+  if (state === "runner-ready") return "엔지니어링 준비됨";
+  if (state === "ready-to-run") return "로컬 실행 가능";
+  if (state === "runner-verified") return "증거 검증됨";
+  if (state === "runner-needs-review") return "검토 필요";
+  return state;
 }

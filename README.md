@@ -32,6 +32,7 @@ Naikaku's north star is a Japan-first governed coding cabinet. It should feel cl
 - Team work package generation so each role can split provider, executor, safety, memory, and UI work into parallel handoffs.
 - Role workspace scaffold script export that creates per-role README, `.env.example`, task list, runner notes, and security notes for separate teams.
 - Development Board that converts role packages, next-loop tasks, and accepted memory into status-trackable work items for separate teams.
+- Engineering Launchpad in the main workspace that shows where to enter the task, run the supervising cabinet, prepare coding-agent runner packages, check Mac permissions, run the local sandbox, and export GitHub issue scripts from one visible flow.
 - Coding Agent Briefs export that turns development work items into sandboxed Codex-like implementation prompts with verification commands, prohibited actions, and release-gate evidence requirements.
 - Coding Agent Brief Review gate that checks generated implementation prompts for schema completeness, sandbox prohibitions, required verification commands, and dry-run versus production evidence truthfulness before handoff.
 - Coding Agent Session Bundle export that packages reviewed briefs into ready/held coding-agent sessions with prompt files, verification commands, evidence checklists, structured sandbox contracts, safety stops, and explicit no-execution boundaries.
@@ -70,7 +71,7 @@ npm install
 npm run dev
 ```
 
-Then open the local Vite URL and try the default mission. Use the right inspector to change role provider settings and the center workspace to run a cabinet cycle.
+Then open the local Vite URL and try the default mission. The center column now starts with the Engineering Launchpad: use "Go to input" to edit the mission, "Split by cabinet" to create supervised work, "Prepare agents" to build the coding-agent runner package, "Check permission" to preflight Mac-local execution, and "Run local sandbox" after the gateway is running. Use the right inspector to change role provider settings.
 
 For the local JSON gateway:
 

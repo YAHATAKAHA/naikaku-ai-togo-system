@@ -25,6 +25,7 @@ import { AutomationRunbookPanel } from "./components/AutomationRunbookPanel";
 import { CodingAgentBriefsPanel } from "./components/CodingAgentBriefsPanel";
 import { DevelopmentBoardPanel } from "./components/DevelopmentBoardPanel";
 import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
+import { EngineeringLaunchpad } from "./components/EngineeringLaunchpad";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
@@ -3955,6 +3956,16 @@ export function App() {
     clearProductReadinessDownload();
   }
 
+  function focusMissionBrief() {
+    const missionInput = document.getElementById("mission");
+    missionInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+    missionInput?.focus();
+  }
+
+  async function prepareEngineeringPackFromLaunchpad() {
+    await exportCodingAgentDispatchManifest();
+  }
+
   return (
     <main className="app-shell" lang={htmlLang(locale)}>
       <header className="topbar">
@@ -4046,6 +4057,26 @@ export function App() {
               <strong>{run?.score.decision || copy.notRun}</strong>
             </div>
           </section>
+
+          <EngineeringLaunchpad
+            copy={copy.engineeringLaunchpad}
+            activeRoles={activeRoles.length}
+            run={run}
+            briefs={codingAgentBriefs}
+            sessionBundle={codingAgentSessionBundle}
+            runnerManifest={codingAgentRunnerManifest}
+            runnerSelfTest={codingAgentRunnerSelfTest}
+            sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
+            sandboxRunnerReport={codingAgentSandboxRunnerReport}
+            issueDrafts={developmentIssueDrafts}
+            runStatus={runState.status}
+            onFocusMission={focusMissionBrief}
+            onRunCabinet={() => void runCabinet()}
+            onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
+            onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}
+            onRunSandbox={() => void runCodingAgentSandboxRunnerFromWorkbench()}
+            onExportIssueScript={exportDevelopmentIssueScript}
+          />
 
           <MissionControl
             mission={workspace.mission}

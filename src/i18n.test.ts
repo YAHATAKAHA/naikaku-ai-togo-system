@@ -36,6 +36,12 @@ describe("i18n", () => {
       expect(copy.language).toBeTruthy();
       expect(copy.missionTitle).toBeTruthy();
       expect(copy.runCabinet).toBeTruthy();
+      expect(copy.engineeringLaunchpad.title).toBeTruthy();
+      expect(copy.engineeringLaunchpad.state("ready-to-run")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.steps).toHaveLength(5);
+      expect(copy.engineeringLaunchpad.permissionGroups.length).toBeGreaterThanOrEqual(3);
+      expect(copy.engineeringLaunchpad.preparePack).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runSandbox).toBeTruthy();
       expect(copy.releaseRehearsal.title).toBeTruthy();
       expect(copy.codingBriefs.title).toBeTruthy();
       expect(copy.codingBriefs.dispatchManifest).toBeTruthy();
