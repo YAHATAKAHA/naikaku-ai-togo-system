@@ -13,10 +13,12 @@ npm run gateway
 Run checks before pushing:
 
 ```bash
-npm run test
-npm run build
-npm audit --audit-level=low
+npm run ci:open-source
 ```
+
+`ci:open-source` runs the contributor-facing MVP gate, the full unit suite, and a Git whitespace check. The MVP gate builds the app, exercises the gateway auto-work path, verifies a configured CLI preset bridge, generates and smokes the local runner wrapper kit, and proves the fixture coding loop can fail, patch, pass, and return receipt/evidence/artifact audit output.
+
+The GitHub Actions workflow template is in `docs/ci/open-source-mvp-ci.yml`. Maintainers can copy it to `.github/workflows/ci.yml` with a workflow-scoped GitHub token when repository Actions should enforce this gate automatically.
 
 ## Work Streams
 
@@ -35,6 +37,7 @@ npm audit --audit-level=low
 - Keep PRs tied to one work stream when possible.
 - Add or update tests for orchestration, storage, provider, and sandbox policy changes.
 - Include screenshots for UI changes on desktop and one mobile viewport.
+- For external runner or automation changes, include a passing `npm run open-source:mvp-check` or explain why the narrower `npm run engineering:runner-kit` / `npm run engineering:auto-work-smoke` evidence is enough.
 
 ## Safety Rules
 
@@ -50,7 +53,7 @@ A change is ready when:
 
 - Tests pass.
 - Build passes.
-- Dependency audit is clean at low severity.
+- `npm run ci:open-source` passes locally or in CI.
 - UI changes are browser-checked.
 - New automation behavior has an audit trail or a documented placeholder.
 - Security-sensitive behavior has policy tests or a written risk note.

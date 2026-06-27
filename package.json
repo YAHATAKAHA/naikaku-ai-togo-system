@@ -43,6 +43,7 @@
     "release:verify": "npm run localization:drill && npm run executor:drill && npm run sandbox:capabilities && npm run security:red-team && npm run runner-auth:drill && npm run coding-agent:dispatch && npm run coding-agent:simulate && npm run coding-agent:runner-manifest && npm run coding-agent:runner-invocation && npm run coding-agent:runner-intake && npm run coding-agent:runner-self-test && npm run coding-agent:runner-lease && npm run coding-agent:sandbox-runner && npm run coding-agent:engineering-sim && npm run coding-agent:drill && npm run rehearsal:drill && tsx scripts/verify-release.ts --report output/rehearsal-drill/release-rehearsal-latest.json --out output/rehearsal-drill/release-verification-latest.json && npm run production:boundary && npm run verification:manifest",
     "release:verify:production": "tsx scripts/verify-release.ts --report output/rehearsal-drill/release-rehearsal-latest.json --require-production --out output/rehearsal-drill/release-verification-production-latest.json",
     "verify:all": "tsx scripts/verify-all.ts",
+    "ci:open-source": "npm run open-source:mvp-check && npm run test && git diff --check",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "preview": "vite preview"

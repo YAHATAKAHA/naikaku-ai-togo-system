@@ -86,6 +86,14 @@ npm run open-source:mvp-check
 
 It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
 
+For the local gate intended for GitHub Actions and pull request review:
+
+```bash
+npm run ci:open-source
+```
+
+The workflow template is saved at `docs/ci/open-source-mvp-ci.yml`. Copy it to `.github/workflows/ci.yml` with a GitHub token that has `workflow` scope when you are ready to enable repository Actions.
+
 To build a local wrapper kit for an external CLI runner:
 
 ```bash
@@ -286,6 +294,7 @@ npm run verification:manifest # aggregate localization, executor, sandbox capabi
 npm run release:verify # run all local drills, then verify dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
 npm run verify:all # run tests, build, gateway smoke, engineering sim, auto-work smoke, dry-run verification, production negative gate, and diff check
+npm run ci:open-source # run the contributor-facing MVP automation gate, full tests, and git diff whitespace check
 npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
