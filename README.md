@@ -78,6 +78,14 @@ npm run dev
 
 Then open the local Vite URL and try the default mission. The center column now starts with the Engineering Launchpad: use "Go to input" to edit the mission, "Check runners" to detect local command-line adapters, "Split by cabinet" to create supervised work, "Prepare agents" to build the coding-agent runner package, "Check permission" to preflight Mac-local execution, and "Run local sandbox" after the gateway is running. Use the right inspector to change role provider settings.
 
+To answer "does this actually automate anything?" from a fresh checkout, run the open-source MVP check first:
+
+```bash
+npm run open-source:mvp-check
+```
+
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+
 For the local JSON gateway:
 
 ```bash
@@ -241,6 +249,7 @@ npm run engineering:adapters # write the external runner adapter registry for Op
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
+npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fixture coding loop in one contributor-facing check
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit
@@ -261,6 +270,8 @@ npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
 ```
+
+`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
 
 `npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, remediation plan, remediation issue drafts, and redaction checks. It exits non-zero for blockers and writes JSON, Markdown, issue draft, and reviewable `gh issue create` script artifacts under `output/rehearsal`. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 

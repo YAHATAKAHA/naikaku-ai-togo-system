@@ -24,6 +24,7 @@
     "engineering:auto-work": "tsx scripts/engineering-auto-work.ts",
     "engineering:auto-work-gateway-smoke": "tsx scripts/engineering-auto-work-gateway-smoke.ts --out output/engineering-auto-work-gateway-smoke",
     "engineering:auto-work-smoke": "npm run engineering:auto-work -- --mission \"Open-source smoke: run one external CLI adapter and import its receipt\" --locale zh-Hans --out output/engineering-auto-work --runner-preset fixture --timeout-ms 60000 --generated-at 2026-06-27T00:00:00.000Z",
+    "open-source:mvp-check": "tsx scripts/open-source-mvp-check.ts",
     "engineering:handoff": "tsx scripts/engineering-handoff.ts --input output/engineering-simulate --out output/engineering-handoff",
     "engineering:mvp": "tsx scripts/engineering-mvp.ts --out output/engineering-mvp",
     "engineering:review-adapter-run": "tsx scripts/engineering-review-adapter-run.ts",

@@ -26,6 +26,7 @@ output/engineering-adapters
 output/engineering-auto-work*
 output/engineering-handoff
 output/engineering-mvp
+output/open-source-mvp-check
 output/engineering-simulate
 output/engineering-simulate-smoke
 output/engineering-run-local
