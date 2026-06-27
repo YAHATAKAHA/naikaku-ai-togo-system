@@ -8,6 +8,7 @@ import type {
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
+  CodingAgentEngineeringSelfSimulationSummary,
   ExecutorContractDrillSummary,
   ExecutorProfileId,
   LocalizationDrillSummary,
@@ -38,6 +39,7 @@ export interface BuildVerificationManifestInput {
   codingAgentRunnerSelfTest: CodingAgentRunnerSelfTestDrillSummary;
   codingAgentRunnerLease: CodingAgentRunnerLeaseDrillSummary;
   codingAgentSandboxRunner: CodingAgentSandboxRunnerDrillSummary;
+  codingAgentEngineeringSelfSimulation: CodingAgentEngineeringSelfSimulationSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
@@ -56,6 +58,7 @@ export interface BuildVerificationManifestInput {
     codingAgentRunnerSelfTest: string;
     codingAgentRunnerLease: string;
     codingAgentSandboxRunner: string;
+    codingAgentEngineeringSelfSimulation: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -76,6 +79,7 @@ export function buildVerificationManifest({
   codingAgentRunnerSelfTest,
   codingAgentRunnerLease,
   codingAgentSandboxRunner,
+  codingAgentEngineeringSelfSimulation,
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
@@ -96,6 +100,7 @@ export function buildVerificationManifest({
     codingAgentRunnerSelfTestCheck(codingAgentRunnerSelfTest),
     codingAgentRunnerLeaseCheck(codingAgentRunnerLease),
     codingAgentSandboxRunnerCheck(codingAgentSandboxRunner),
+    codingAgentEngineeringSelfSimulationCheck(codingAgentEngineeringSelfSimulation),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
     codingAgentOutOfScopeCheck(codingAgentReport),
@@ -125,6 +130,7 @@ export function buildVerificationManifest({
       codingAgentRunnerSelfTestGeneratedAt: codingAgentRunnerSelfTest.generatedAt,
       codingAgentRunnerLeaseGeneratedAt: codingAgentRunnerLease.generatedAt,
       codingAgentSandboxRunnerGeneratedAt: codingAgentSandboxRunner.generatedAt,
+      codingAgentEngineeringSelfSimulationGeneratedAt: codingAgentEngineeringSelfSimulation.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
@@ -153,7 +159,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, runner auth, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, runner lease, sandbox runner, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, runner auth, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, runner lease, sandbox runner, engineering self-simulation, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -166,6 +172,76 @@ export function buildVerificationManifest({
 
 export function serializeVerificationManifest(manifest: VerificationManifest) {
   return JSON.stringify(manifest, null, 2);
+}
+
+function codingAgentEngineeringSelfSimulationCheck(
+  report: CodingAgentEngineeringSelfSimulationSummary
+): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const fixtureBoundaryClear = report.honestyClaim.level === "fixture-engineering-self-simulation"
+    && report.honestyClaim.limitations.some((item) => item.includes("deterministic fixture work"))
+    && report.honestyClaim.limitations.some((item) => item.includes("does not call model providers"))
+    && report.honestyClaim.limitations.some((item) => item.includes("modifies only generated files"));
+  const ok = report.schema === "naikaku.coding-agent-engineering-self-simulation.v1"
+    && report.fixture.baselineTestExitCode !== 0
+    && report.fixture.finalTestExitCode === 0
+    && report.fixture.changedFile.startsWith(`${report.outputDir}/fixture-workspace/`)
+    && report.fixture.diffArtifact.startsWith(`${report.outputDir}/session/`)
+    && report.fixture.baselineTranscript.startsWith(`${report.outputDir}/session/`)
+    && report.fixture.finalTranscript.startsWith(`${report.outputDir}/session/`)
+    && report.fixture.gitStatus.includes("src/cabinetScore.mjs")
+    && report.receipt.decision === "verified"
+    && report.receipt.verified === 1
+    && report.receipt.pendingEvidence === 0
+    && report.receipt.failed === 0
+    && report.evidence.decision === "accepted-for-handoff"
+    && report.evidence.accepted === 1
+    && report.evidence.changedFiles === 1
+    && report.evidence.commandResults === 1
+    && report.artifactAudit.decision === "verified"
+    && report.artifactAudit.verifiedPaths >= 4
+    && report.artifactAudit.missingPaths === 0
+    && report.artifactAudit.unsafePaths === 0
+    && report.artifactAudit.transcriptContentMismatches === 0
+    && report.artifactAudit.worktreeCheckedChangedFiles === 1
+    && report.artifactAudit.worktreeChangedFiles === 1
+    && report.artifactAudit.worktreeUnchangedFiles === 0
+    && checksPassed
+    && fixtureBoundaryClear;
+
+  return {
+    id: "coding-agent-engineering-self-simulation",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent engineering self-simulation patched a fixture workspace, reran its test, and verified receipt, artifact, transcript, and worktree evidence without claiming real backlog completion."
+      : "Coding-agent engineering self-simulation did not prove the fixture edit-test-receipt-artifact loop or lost its honesty boundary.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Output: ${report.outputDir}`,
+      `Fixture workspace: ${report.fixture.workspacePath}`,
+      `Changed file: ${report.fixture.changedFile}`,
+      `Baseline test exit: ${report.fixture.baselineTestExitCode}`,
+      `Final test exit: ${report.fixture.finalTestExitCode}`,
+      `Git status: ${report.fixture.gitStatus || "clean"}`,
+      `Receipt decision: ${report.receipt.decision}`,
+      `Receipt verified: ${report.receipt.verified}`,
+      `Implementation evidence: ${report.evidence.decision}`,
+      `Evidence accepted: ${report.evidence.accepted}`,
+      `Artifact audit: ${report.artifactAudit.decision}`,
+      `Verified paths: ${report.artifactAudit.verifiedPaths}`,
+      `Missing paths: ${report.artifactAudit.missingPaths}`,
+      `Unsafe paths: ${report.artifactAudit.unsafePaths}`,
+      `Transcript mismatches: ${report.artifactAudit.transcriptContentMismatches}`,
+      `Worktree checked changed files: ${report.artifactAudit.worktreeCheckedChangedFiles}`,
+      `Worktree changed files: ${report.artifactAudit.worktreeChangedFiles}`,
+      `Worktree unchanged files: ${report.artifactAudit.worktreeUnchangedFiles}`,
+      `Checks passed: ${checksPassed ? "yes" : "no"}`,
+      `Fixture boundary clear: ${fixtureBoundaryClear ? "yes" : "no"}`
+    ],
+    nextAction: ok
+      ? "Keep the engineering self-simulation summary attached as fixture engineering-loop evidence; replace it with real governed runner receipts for real backlog work."
+      : "Restore the fixture engineering self-simulation so it proves fail-before, pass-after, receipt review, artifact audit, and Git worktree evidence while keeping fixture limitations explicit."
+  };
 }
 
 function codingAgentSimulationCheck(report: CodingAgentDispatchSimulationSummary): VerificationManifestCheck {

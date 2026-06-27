@@ -14,6 +14,7 @@ import type {
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
+  CodingAgentEngineeringSelfSimulationSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
@@ -33,6 +34,7 @@ interface VerificationManifestOptions {
   codingAgentRunnerSelfTestPath: string;
   codingAgentRunnerLeasePath: string;
   codingAgentSandboxRunnerPath: string;
+  codingAgentEngineeringSelfSimulationPath: string;
   codingAgentReportPath: string;
   localizationDrillPath: string;
   executorContractDrillPath: string;
@@ -62,6 +64,9 @@ async function main() {
   const codingAgentRunnerSelfTest = await loadCodingAgentRunnerSelfTest(options.codingAgentRunnerSelfTestPath);
   const codingAgentRunnerLease = await loadCodingAgentRunnerLease(options.codingAgentRunnerLeasePath);
   const codingAgentSandboxRunner = await loadCodingAgentSandboxRunner(options.codingAgentSandboxRunnerPath);
+  const codingAgentEngineeringSelfSimulation = await loadCodingAgentEngineeringSelfSimulation(
+    options.codingAgentEngineeringSelfSimulationPath
+  );
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
@@ -79,6 +84,7 @@ async function main() {
     codingAgentRunnerSelfTest,
     codingAgentRunnerLease,
     codingAgentSandboxRunner,
+    codingAgentEngineeringSelfSimulation,
     codingAgentReport,
     localizationDrill,
     executorContractDrill,
@@ -97,6 +103,7 @@ async function main() {
       codingAgentRunnerSelfTest: options.codingAgentRunnerSelfTestPath,
       codingAgentRunnerLease: options.codingAgentRunnerLeasePath,
       codingAgentSandboxRunner: options.codingAgentSandboxRunnerPath,
+      codingAgentEngineeringSelfSimulation: options.codingAgentEngineeringSelfSimulationPath,
       codingAgentReceiptDrill: options.codingAgentReportPath,
       localizationDrill: options.localizationDrillPath,
       executorContractDrill: options.executorContractDrillPath,
@@ -188,6 +195,16 @@ async function loadCodingAgentSandboxRunner(reportPath: string): Promise<CodingA
   return parsed;
 }
 
+async function loadCodingAgentEngineeringSelfSimulation(
+  reportPath: string
+): Promise<CodingAgentEngineeringSelfSimulationSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentEngineeringSelfSimulationSummary;
+  if (parsed.schema !== "naikaku.coding-agent-engineering-self-simulation.v1") {
+    throw new Error("Coding-agent engineering self-simulation must use schema naikaku.coding-agent-engineering-self-simulation.v1.");
+  }
+  return parsed;
+}
+
 async function loadLocalizationDrill(reportPath: string): Promise<LocalizationDrillSummary> {
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as LocalizationDrillSummary;
   if (parsed.schema !== "naikaku.localization-drill.v1") {
@@ -272,6 +289,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     codingAgentRunnerSelfTestPath: "output/coding-agent-runner-self-test/summary.json",
     codingAgentRunnerLeasePath: "output/coding-agent-runner-lease/summary.json",
     codingAgentSandboxRunnerPath: "output/coding-agent-sandbox-runner/summary.json",
+    codingAgentEngineeringSelfSimulationPath: "output/coding-agent-engineering-self-simulation/summary.json",
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
     localizationDrillPath: "output/localization-drill/summary.json",
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
@@ -342,6 +360,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-sandbox-runner") {
       options.codingAgentSandboxRunnerPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--coding-agent-engineering-self-simulation") {
+      options.codingAgentEngineeringSelfSimulationPath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -437,6 +461,8 @@ Options:
                                   Read coding-agent runner lease summary.
   --coding-agent-sandbox-runner <path>
                                   Read coding-agent sandbox runner summary.
+  --coding-agent-engineering-self-simulation <path>
+                                  Read coding-agent engineering self-simulation summary.
   --coding-agent-report <path>   Read coding-agent receipt drill summary.
   --localization-drill <path>    Read localization drill summary.
   --executor-contract-drill <path>

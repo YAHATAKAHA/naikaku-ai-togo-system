@@ -13,6 +13,7 @@ import type {
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
+  CodingAgentEngineeringSelfSimulationSummary,
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
@@ -31,6 +32,7 @@ const inputs = {
   codingAgentRunnerSelfTest: "output/coding-agent-runner-self-test/summary.json",
   codingAgentRunnerLease: "output/coding-agent-runner-lease/summary.json",
   codingAgentSandboxRunner: "output/coding-agent-sandbox-runner/summary.json",
+  codingAgentEngineeringSelfSimulation: "output/coding-agent-engineering-self-simulation/summary.json",
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
   executorContractDrill: "output/executor-contract-drill/summary.json",
@@ -59,6 +61,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -67,8 +70,8 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 19,
-      passed: 19,
+      total: 20,
+      passed: 20,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
@@ -80,6 +83,7 @@ describe("verification manifest", () => {
       "coding-agent-runner-self-test",
       "coding-agent-runner-lease",
       "coding-agent-sandbox-runner",
+      "coding-agent-engineering-self-simulation",
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
       "coding-agent-out-of-scope-receipt",
@@ -101,6 +105,7 @@ describe("verification manifest", () => {
     expect(manifest.source.codingAgentRunnerSelfTestGeneratedAt).toBe("2026-06-27T00:04:00.000Z");
     expect(manifest.source.codingAgentRunnerLeaseGeneratedAt).toBe("2026-06-27T00:04:30.000Z");
     expect(manifest.source.codingAgentSandboxRunnerGeneratedAt).toBe("2026-06-27T00:05:00.000Z");
+    expect(manifest.source.codingAgentEngineeringSelfSimulationGeneratedAt).toBe("2026-06-27T00:05:30.000Z");
     expect(manifest.source.sandboxCapabilityGeneratedAt).toBe("2026-06-27T00:03:30.000Z");
     expect(manifest.source.securityRedTeamGeneratedAt).toBe("2026-06-27T00:03:40.000Z");
     expect(manifest.source.runnerAuthGeneratedAt).toBe("2026-06-27T00:03:50.000Z");
@@ -132,6 +137,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -165,6 +171,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -198,6 +205,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -231,6 +239,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -264,6 +273,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -297,6 +307,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -330,6 +341,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -363,6 +375,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -396,6 +409,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -431,6 +445,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -464,6 +479,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -498,6 +514,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -531,6 +548,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -566,6 +584,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -576,6 +595,43 @@ describe("verification manifest", () => {
     expect(manifest.summary.failed).toBe(1);
     expect(sandboxRunnerCheck?.status).toBe("fail");
     expect(sandboxRunnerCheck?.evidence).toContain("Security preflight blocked security commands: 0");
+  });
+
+  it("invalidates the manifest when engineering self-simulation does not verify the fixture worktree change", () => {
+    const codingAgentEngineeringSelfSimulation = codingAgentEngineeringSelfSimulationFixture();
+    codingAgentEngineeringSelfSimulation.artifactAudit.worktreeChangedFiles = 0;
+    codingAgentEngineeringSelfSimulation.artifactAudit.worktreeUnchangedFiles = 1;
+    codingAgentEngineeringSelfSimulation.checks.changedFileWorktreeVerified = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentEngineeringSelfSimulation,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const engineeringCheck = manifest.checks.find((check) =>
+      check.id === "coding-agent-engineering-self-simulation"
+    );
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(engineeringCheck?.status).toBe("fail");
+    expect(engineeringCheck?.evidence).toContain("Worktree changed files: 0");
   });
 
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
@@ -598,6 +654,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -632,6 +689,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -668,6 +726,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -700,6 +759,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -732,6 +792,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -774,6 +835,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill,
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -819,6 +881,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill,
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -852,6 +915,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill,
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -902,6 +966,7 @@ describe("verification manifest", () => {
       securityRedTeamDrill: securityRedTeamDrillFixture(),
       runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
+      codingAgentEngineeringSelfSimulation: codingAgentEngineeringSelfSimulationFixture(),
       releaseVerification,
       generatedAt: "2026-06-27T00:10:00.000Z",
       inputs
@@ -1411,6 +1476,70 @@ function codingAgentSandboxRunnerFixture(): CodingAgentSandboxRunnerDrillSummary
       claim: "Local sandbox runner drill.",
       limitations: ["It does not implement product backlog work."],
       productionRequirements: ["Attach real coding-agent receipts."]
+    }
+  };
+}
+
+function codingAgentEngineeringSelfSimulationFixture(): CodingAgentEngineeringSelfSimulationSummary {
+  return {
+    schema: "naikaku.coding-agent-engineering-self-simulation.v1",
+    generatedAt: "2026-06-27T00:05:30.000Z",
+    outputDir: "output/coding-agent-engineering-self-simulation",
+    operatorLocale: "ja",
+    fixture: {
+      workspacePath: "output/coding-agent-engineering-self-simulation/fixture-workspace",
+      changedFile: "output/coding-agent-engineering-self-simulation/fixture-workspace/src/cabinetScore.mjs",
+      baselineTestExitCode: 1,
+      finalTestExitCode: 0,
+      diffArtifact: "output/coding-agent-engineering-self-simulation/session/fixture-diff.patch",
+      baselineTranscript: "output/coding-agent-engineering-self-simulation/session/baseline-test.log",
+      finalTranscript: "output/coding-agent-engineering-self-simulation/session/final-test.log",
+      gitStatus: "M src/cabinetScore.mjs"
+    },
+    receipt: {
+      decision: "verified",
+      verified: 1,
+      pendingEvidence: 0,
+      failed: 0
+    },
+    evidence: {
+      decision: "accepted-for-handoff",
+      accepted: 1,
+      changedFiles: 1,
+      commandResults: 1
+    },
+    artifactAudit: {
+      decision: "verified",
+      verifiedPaths: 5,
+      missingPaths: 0,
+      unsafePaths: 0,
+      transcriptContentMismatches: 0,
+      worktreeCheckedChangedFiles: 1,
+      worktreeChangedFiles: 1,
+      worktreeUnchangedFiles: 0
+    },
+    checks: {
+      baselineTestFailedBeforePatch: true,
+      finalTestPassedAfterPatch: true,
+      fixtureGitShowsChangedFile: true,
+      receiptReviewVerified: true,
+      implementationEvidenceAccepted: true,
+      artifactAuditVerified: true,
+      changedFileWorktreeVerified: true,
+      transcriptContentMatched: true,
+      evidenceArtifactsFingerprinted: true,
+      noUnsafeArtifactPaths: true,
+      fixtureBoundaryClear: true
+    },
+    honestyClaim: {
+      level: "fixture-engineering-self-simulation",
+      claim: "Fixture engineering self-simulation.",
+      limitations: [
+        "It is deterministic fixture work, not a claim that Naikaku autonomously completed a real product backlog item.",
+        "It does not call model providers, browse, control the desktop, call MCP tools, deploy, commit, push, or contact external services.",
+        "It modifies only generated files under the configured output directory."
+      ],
+      productionRequirements: ["Attach real model-run prompts, diffs, transcripts, and risk notes for production coding-agent work."]
     }
   };
 }

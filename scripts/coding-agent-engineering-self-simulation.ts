@@ -11,6 +11,7 @@ import {
 } from "../src/domain/codingAgentSessionReceipt";
 import type {
   CodingAgentCommandResult,
+  CodingAgentEngineeringSelfSimulationSummary,
   CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -38,52 +39,6 @@ interface CommandExecution {
 interface GitCommandResult {
   exitCode: number;
   output: string;
-}
-
-interface EngineeringSelfSimulationSummary {
-  schema: "naikaku.coding-agent-engineering-self-simulation.v1";
-  generatedAt: string;
-  outputDir: string;
-  operatorLocale: string;
-  fixture: {
-    workspacePath: string;
-    changedFile: string;
-    baselineTestExitCode: number;
-    finalTestExitCode: number;
-    diffArtifact: string;
-    baselineTranscript: string;
-    finalTranscript: string;
-    gitStatus: string;
-  };
-  receipt: {
-    decision: string;
-    verified: number;
-    pendingEvidence: number;
-    failed: number;
-  };
-  evidence: {
-    decision: string;
-    accepted: number;
-    changedFiles: number;
-    commandResults: number;
-  };
-  artifactAudit: {
-    decision: string;
-    verifiedPaths: number;
-    missingPaths: number;
-    unsafePaths: number;
-    transcriptContentMismatches: number;
-    worktreeCheckedChangedFiles: number;
-    worktreeChangedFiles: number;
-    worktreeUnchangedFiles: number;
-  };
-  checks: Record<string, boolean>;
-  honestyClaim: {
-    level: "fixture-engineering-self-simulation";
-    claim: string;
-    limitations: string[];
-    productionRequirements: string[];
-  };
 }
 
 async function main() {
@@ -398,7 +353,7 @@ function buildSummary({
   receiptReview: CodingAgentSessionReceipt;
   evidence: CodingAgentImplementationEvidence;
   artifactAudit: CodingAgentImplementationArtifactAudit;
-}): EngineeringSelfSimulationSummary {
+}): CodingAgentEngineeringSelfSimulationSummary {
   const checks = {
     baselineTestFailedBeforePatch: baseline.exitCode !== 0,
     finalTestPassedAfterPatch: final.exitCode === 0,
@@ -668,7 +623,7 @@ function truncateOutput(output: string) {
   return `${output.slice(0, max)}\n[truncated ${output.length - max} characters]`;
 }
 
-function summaryMarkdown(summary: EngineeringSelfSimulationSummary) {
+function summaryMarkdown(summary: CodingAgentEngineeringSelfSimulationSummary) {
   return [
     "# Coding Agent Engineering Self-Simulation",
     "",
@@ -707,7 +662,7 @@ function summaryMarkdown(summary: EngineeringSelfSimulationSummary) {
   ].join("\n");
 }
 
-function printSummary(summary: EngineeringSelfSimulationSummary) {
+function printSummary(summary: CodingAgentEngineeringSelfSimulationSummary) {
   const passed = Object.values(summary.checks).filter(Boolean).length;
   const failed = Object.values(summary.checks).length - passed;
 

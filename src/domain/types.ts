@@ -1159,6 +1159,52 @@ export interface CodingAgentSandboxRunnerDrillSummary {
   };
 }
 
+export interface CodingAgentEngineeringSelfSimulationSummary {
+  schema: "naikaku.coding-agent-engineering-self-simulation.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  fixture: {
+    workspacePath: string;
+    changedFile: string;
+    baselineTestExitCode: number;
+    finalTestExitCode: number;
+    diffArtifact: string;
+    baselineTranscript: string;
+    finalTranscript: string;
+    gitStatus: string;
+  };
+  receipt: {
+    decision: string;
+    verified: number;
+    pendingEvidence: number;
+    failed: number;
+  };
+  evidence: {
+    decision: string;
+    accepted: number;
+    changedFiles: number;
+    commandResults: number;
+  };
+  artifactAudit: {
+    decision: string;
+    verifiedPaths: number;
+    missingPaths: number;
+    unsafePaths: number;
+    transcriptContentMismatches: number;
+    worktreeCheckedChangedFiles: number;
+    worktreeChangedFiles: number;
+    worktreeUnchangedFiles: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface RunnerAuthDrillSummary {
   schema: "naikaku.runner-auth-drill.v1";
   generatedAt: string;
@@ -1464,6 +1510,7 @@ export interface VerificationManifest {
     codingAgentRunnerSelfTest: string;
     codingAgentRunnerLease: string;
     codingAgentSandboxRunner: string;
+    codingAgentEngineeringSelfSimulation: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
@@ -1482,6 +1529,7 @@ export interface VerificationManifest {
     codingAgentRunnerSelfTestGeneratedAt: string;
     codingAgentRunnerLeaseGeneratedAt: string;
     codingAgentSandboxRunnerGeneratedAt: string;
+    codingAgentEngineeringSelfSimulationGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
