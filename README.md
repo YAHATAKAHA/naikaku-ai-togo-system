@@ -16,7 +16,7 @@ Naikaku's north star is a Japan-first governed coding cabinet. It should feel cl
 - Custom role creation, role duplication, and editable ministry/stage/risk settings for parallel feature teams.
 - A local automation pipeline for planning, execution, critique, supervision, scoring, and iteration.
 - A sandbox-first computer-use model with Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate executor profiles.
-- Sandbox Capability matrix that maps each executor profile to representative actions, approval gates, runner contracts, and required evidence before real computer-use runners are attached.
+- Sandbox Capability matrix that maps each executor profile to representative actions, approval gates, runner readiness checks, blocked reasons, runner contracts, and required evidence before real computer-use runners are attached.
 - Local-only configuration persistence that deliberately strips raw API secrets before saving.
 - Browser-to-gateway run path with local fallback when the gateway is offline.
 - Product Readiness gate that scores role APIs, automation, sandbox safety, parallel development artifacts, evidence, and memory review before handoff.
@@ -74,7 +74,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner self-test, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner intake audit, coding agent runner self-test, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, set:
 

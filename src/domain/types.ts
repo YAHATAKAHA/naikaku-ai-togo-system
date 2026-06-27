@@ -114,6 +114,7 @@ export interface ExecutorProfile {
 }
 
 export type SandboxCapabilityStatus = "dry-run-ready" | "needs-approval" | "blocked";
+export type SandboxCapabilityReadinessCheckStatus = "pass" | "warn" | "block";
 
 export interface SandboxCapabilityAction {
   action: string;
@@ -124,6 +125,24 @@ export interface SandboxCapabilityAction {
   approvalRequired: boolean;
   reason: string;
   auditTags: string[];
+}
+
+export interface SandboxCapabilityReadinessCheck {
+  id: string;
+  label: string;
+  status: SandboxCapabilityReadinessCheckStatus;
+  summary: string;
+  evidence: string[];
+  nextAction: string;
+}
+
+export interface SandboxCapabilityRunnerReadiness {
+  decision: SandboxCapabilityStatus;
+  checks: SandboxCapabilityReadinessCheck[];
+  requiredApprovals: string[];
+  blockedReasons: string[];
+  supportedEvidenceArtifacts: string[];
+  nextAction: string;
 }
 
 export interface SandboxCapabilityCard {
@@ -138,6 +157,7 @@ export interface SandboxCapabilityCard {
     roleId: string;
     roleName: string;
   }>;
+  runnerReadiness: SandboxCapabilityRunnerReadiness;
   actions: SandboxCapabilityAction[];
   status: SandboxCapabilityStatus;
   riskNotes: string[];
@@ -155,6 +175,12 @@ export interface SandboxCapabilityRegistry {
     blocked: number;
     approvalActions: number;
     blockedActions: number;
+    readinessChecks: number;
+    passedReadinessChecks: number;
+    warningReadinessChecks: number;
+    blockedReadinessChecks: number;
+    requiredApprovals: number;
+    evidenceArtifacts: number;
     killSwitchArmed: boolean;
   };
 }

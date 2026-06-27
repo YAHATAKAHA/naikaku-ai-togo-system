@@ -23,6 +23,11 @@ export function SandboxCapabilityPanel({ registry }: SandboxCapabilityPanelProps
         <span data-status="ready">{registry.summary.dryRunReady} dry-run</span>
         <span data-status="approval">{registry.summary.needsApproval} gated</span>
         <span data-status="blocked">{registry.summary.blocked} blocked</span>
+        <span data-status="ready">{registry.summary.passedReadinessChecks} checks pass</span>
+        <span data-status="approval">{registry.summary.warningReadinessChecks} checks warn</span>
+        <span data-status="blocked">{registry.summary.blockedReadinessChecks} checks block</span>
+        <span data-status="approval">{registry.summary.requiredApprovals} approvals</span>
+        <span data-status="ready">{registry.summary.evidenceArtifacts} evidence</span>
         <span data-status={registry.summary.killSwitchArmed ? "ready" : "blocked"}>
           {registry.summary.killSwitchArmed ? "kill switch armed" : "kill switch open"}
         </span>
@@ -52,7 +57,7 @@ function CapabilityCard({ card }: { card: SandboxCapabilityCard }) {
 
       <div className="capability-meta">
         <span>{card.rolesUsingProfile.length ? roleNames(card) : "no active role"}</span>
-        <span>{card.evidenceRequired.join(" / ")}</span>
+        <span>{card.runnerReadiness.supportedEvidenceArtifacts.join(" / ")}</span>
       </div>
 
       <div className="capability-action-list">
@@ -61,9 +66,18 @@ function CapabilityCard({ card }: { card: SandboxCapabilityCard }) {
         ))}
       </div>
 
+      <div className="capability-check-list">
+        {card.runnerReadiness.checks.slice(0, 3).map((check) => (
+          <div key={`${card.profileId}-${check.id}`} className="capability-check-row" data-status={check.status}>
+            <strong>{check.label}</strong>
+            <span>{check.summary}</span>
+          </div>
+        ))}
+      </div>
+
       <div className="capability-note-row">
         <ShieldCheck size={14} />
-        <span>{card.riskNotes[0]}</span>
+        <span>{card.runnerReadiness.nextAction}</span>
       </div>
     </article>
   );
@@ -89,9 +103,12 @@ function StatusChip({ status }: { status: SandboxCapabilityCard["status"] }) {
   );
 }
 
-function statusLabel(status: SandboxCapabilityCard["status"] | SandboxCapabilityAction["status"]) {
+function statusLabel(status: string) {
   if (status === "dry-run-ready") return "dry-run";
   if (status === "needs-approval") return "approval";
+  if (status === "pass") return "pass";
+  if (status === "warn") return "warn";
+  if (status === "block") return "block";
   return status;
 }
 

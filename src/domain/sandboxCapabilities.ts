@@ -6,6 +6,8 @@ import type {
   RiskLevel,
   SandboxCapabilityAction,
   SandboxCapabilityCard,
+  SandboxCapabilityReadinessCheck,
+  SandboxCapabilityRunnerReadiness,
   SandboxCapabilityRegistry,
   SandboxCapabilityStatus,
   SandboxPolicy
@@ -164,6 +166,13 @@ function buildCapabilityCard({
       roleName: role.name
     }));
   const status = capabilityStatus(actions, sandboxPolicy.killSwitchArmed);
+  const runnerReadiness = buildRunnerReadiness({
+    profile,
+    actions,
+    status,
+    rolesUsingProfile,
+    sandboxPolicy
+  });
 
   return {
     profileId: profile.id,
@@ -174,9 +183,10 @@ function buildCapabilityCard({
     runnerContract: runnerContracts[profile.id],
     evidenceRequired: evidenceByProfile[profile.id],
     rolesUsingProfile,
+    runnerReadiness,
     actions,
     status,
-    riskNotes: riskNotes(profile.id, status, rolesUsingProfile.length)
+    riskNotes: riskNotes(profile.id, runnerReadiness, rolesUsingProfile.length)
   };
 }
 
@@ -235,12 +245,111 @@ function capabilityStatus(
   return "dry-run-ready";
 }
 
+function buildRunnerReadiness({
+  profile,
+  actions,
+  status,
+  rolesUsingProfile,
+  sandboxPolicy
+}: {
+  profile: ExecutorProfile;
+  actions: SandboxCapabilityAction[];
+  status: SandboxCapabilityStatus;
+  rolesUsingProfile: SandboxCapabilityCard["rolesUsingProfile"];
+  sandboxPolicy: SandboxPolicy;
+}): SandboxCapabilityRunnerReadiness {
+  const requiredApprovals = actions
+    .filter((action) => action.status === "needs-approval")
+    .map((action) => `${action.action}: ${action.reason}`);
+  const blockedReasons = actions
+    .filter((action) => action.status === "blocked")
+    .map((action) => `${action.action}: ${action.reason}`);
+  const checks: SandboxCapabilityReadinessCheck[] = [
+    {
+      id: "kill-switch",
+      label: "Kill switch",
+      status: sandboxPolicy.killSwitchArmed ? "pass" : "block",
+      summary: sandboxPolicy.killSwitchArmed
+        ? "Global kill switch is armed for controlled sandbox execution."
+        : "Global kill switch is open, so no runner handoff is allowed.",
+      evidence: [`killSwitchArmed=${sandboxPolicy.killSwitchArmed}`],
+      nextAction: sandboxPolicy.killSwitchArmed
+        ? "Keep the kill switch visible before runner handoff."
+        : "Arm the kill switch before any runner handoff."
+    },
+    {
+      id: "role-coverage",
+      label: "Role coverage",
+      status: rolesUsingProfile.length > 0 ? "pass" : "warn",
+      summary: rolesUsingProfile.length > 0
+        ? `${rolesUsingProfile.length} enabled role(s) route to this profile.`
+        : "No enabled role currently routes to this profile.",
+      evidence: rolesUsingProfile.map((role) => `${role.roleId}:${role.roleName}`),
+      nextAction: rolesUsingProfile.length > 0
+        ? "Keep role routing explicit in the cabinet workspace."
+        : "Assign a role to this profile before treating it as live runner capacity."
+    },
+    {
+      id: "policy-actions",
+      label: "Policy actions",
+      status: blockedReasons.length > 0 ? "block" : requiredApprovals.length > 0 ? "warn" : "pass",
+      summary: `${actions.length} representative action(s), ${requiredApprovals.length} approval gate(s), ${blockedReasons.length} blocker(s).`,
+      evidence: actions.map((action) => `${action.action}:${action.status}`),
+      nextAction: blockedReasons.length > 0
+        ? "Resolve blocked representative actions before enabling this runner profile."
+        : requiredApprovals.length > 0
+          ? "Keep exact-payload approval records attached for gated actions."
+          : "Representative actions are policy-ready for dry-run handoff."
+    },
+    {
+      id: "evidence-contract",
+      label: "Evidence contract",
+      status: evidenceByProfile[profile.id].length > 0 ? "pass" : "block",
+      summary: `${evidenceByProfile[profile.id].length} evidence artifact type(s) required for this runner.`,
+      evidence: evidenceByProfile[profile.id],
+      nextAction: "Require these artifacts before accepting runner completion evidence."
+    },
+    {
+      id: "isolation-contract",
+      label: "Isolation contract",
+      status: profile.controls.length > 0 && profile.isolation.trim().length > 0 ? "pass" : "block",
+      summary: profile.isolation,
+      evidence: profile.controls,
+      nextAction: "Keep the isolation contract visible in every runner handoff."
+    }
+  ];
+
+  return {
+    decision: status,
+    checks,
+    requiredApprovals,
+    blockedReasons,
+    supportedEvidenceArtifacts: evidenceByProfile[profile.id],
+    nextAction: runnerReadinessNextAction(status, requiredApprovals.length, blockedReasons.length)
+  };
+}
+
+function runnerReadinessNextAction(
+  status: SandboxCapabilityStatus,
+  requiredApprovals: number,
+  blockedReasons: number
+) {
+  if (status === "blocked" || blockedReasons > 0) {
+    return "Fix blocked checks before a real runner can consume this profile.";
+  }
+  if (status === "needs-approval" || requiredApprovals > 0) {
+    return "Collect exact human approval and evidence artifacts before executing gated actions.";
+  }
+  return "Profile is ready for dry-run runner handoff with evidence capture.";
+}
+
 function riskNotes(
   profileId: ExecutorProfileId,
-  status: SandboxCapabilityStatus,
+  runnerReadiness: SandboxCapabilityRunnerReadiness,
   roleCount: number
 ) {
   const notes: string[] = [];
+  const status = runnerReadiness.decision;
 
   if (roleCount === 0) {
     notes.push("No enabled role currently routes to this profile.");
@@ -260,6 +369,10 @@ function riskNotes(
 
   if (profileId === "shell-container") {
     notes.push("Shell commands require scoped mounts and an empty environment by default.");
+  }
+
+  if (runnerReadiness.requiredApprovals.length > 0) {
+    notes.push(`${runnerReadiness.requiredApprovals.length} action(s) require exact approval records.`);
   }
 
   return notes.length ? notes : ["Representative actions are dry-run ready under current policy."];
@@ -285,6 +398,18 @@ function summarizeCards(
     blockedActions:
       summary.blockedActions +
       card.actions.filter((action) => action.status === "blocked").length,
+    readinessChecks: summary.readinessChecks + card.runnerReadiness.checks.length,
+    passedReadinessChecks:
+      summary.passedReadinessChecks +
+      card.runnerReadiness.checks.filter((check) => check.status === "pass").length,
+    warningReadinessChecks:
+      summary.warningReadinessChecks +
+      card.runnerReadiness.checks.filter((check) => check.status === "warn").length,
+    blockedReadinessChecks:
+      summary.blockedReadinessChecks +
+      card.runnerReadiness.checks.filter((check) => check.status === "block").length,
+    requiredApprovals: summary.requiredApprovals + card.runnerReadiness.requiredApprovals.length,
+    evidenceArtifacts: summary.evidenceArtifacts + card.runnerReadiness.supportedEvidenceArtifacts.length,
     killSwitchArmed
   }), {
     profiles: 0,
@@ -294,6 +419,12 @@ function summarizeCards(
     blocked: 0,
     approvalActions: 0,
     blockedActions: 0,
+    readinessChecks: 0,
+    passedReadinessChecks: 0,
+    warningReadinessChecks: 0,
+    blockedReadinessChecks: 0,
+    requiredApprovals: 0,
+    evidenceArtifacts: 0,
     killSwitchArmed
   });
 }

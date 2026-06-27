@@ -136,9 +136,9 @@ The Executor Contract Drill adds the same honesty boundary to computer-use runne
 
 ## Sandbox Capability Registry
 
-The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
+The workbench now derives a `naikaku.sandbox-capabilities.v1` registry from the active roles, executor profiles, and sandbox policy. Each profile card lists representative actions, policy status, runner readiness checks, required approvals, blocked reasons, runner contract, evidence requirements, role coverage, and risk notes. This makes OpenClaw-style local control, E2B-style desktop sandboxes, Browser Use-style harnesses, and MCP tool runners pluggable without letting them bypass Naikaku policy.
 
-The registry is a preflight and implementation contract. It does not grant runtime permission by itself. Real runners must still consume `ExecutorHandoff.readyActions`, enforce server-side allowlists, emit the required evidence, and stop when the kill switch or approval gate blocks an action.
+The registry is a preflight and implementation contract. It does not grant runtime permission by itself. Real runners must still consume `ExecutorHandoff.readyActions`, enforce server-side allowlists, satisfy the readiness checks, emit the required evidence, and stop when the kill switch or approval gate blocks an action.
 
 Team package exports use provider aliases and role configuration only. They are intended for parallel development handoff and must not contain raw session secrets.
 

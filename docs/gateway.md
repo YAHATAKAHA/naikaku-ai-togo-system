@@ -1401,7 +1401,7 @@ Checks whether a proposed action is allowed inside the current sandbox policy.
 
 ### `POST /v1/sandbox/capabilities`
 
-Builds the executor capability registry for the current roles and sandbox policy. This endpoint does not execute actions. It evaluates representative actions for Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate, then returns runner contracts, evidence requirements, role coverage, and policy status.
+Builds the executor capability registry for the current roles and sandbox policy. This endpoint does not execute actions. It evaluates representative actions for Browser Sandbox, Desktop VM, Shell Container, MCP Proxy, and Human Approval Gate, then returns runner contracts, readiness checks, approval requirements, blocked reasons, evidence requirements, role coverage, and policy status.
 
 ```json
 {
@@ -1423,9 +1423,35 @@ Response:
     "blocked": 0,
     "approvalActions": 7,
     "blockedActions": 1,
+    "readinessChecks": 25,
+    "passedReadinessChecks": 20,
+    "warningReadinessChecks": 4,
+    "blockedReadinessChecks": 1,
+    "requiredApprovals": 7,
+    "evidenceArtifacts": 15,
     "killSwitchArmed": true
   },
-  "cards": []
+  "cards": [
+    {
+      "profileId": "browser-sandbox",
+      "runnerReadiness": {
+        "decision": "needs-approval",
+        "requiredApprovals": [
+          "submit_form: Action is allowed only after human approval."
+        ],
+        "blockedReasons": [],
+        "supportedEvidenceArtifacts": ["Screenshot", "URL log", "DOM action replay"],
+        "checks": [
+          {
+            "id": "policy-actions",
+            "status": "warn",
+            "summary": "2 representative action(s), 1 approval gate(s), 0 blocker(s)."
+          }
+        ],
+        "nextAction": "Collect exact human approval and evidence artifacts before executing gated actions."
+      }
+    }
+  ]
 }
 ```
 

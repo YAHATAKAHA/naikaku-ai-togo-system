@@ -2229,7 +2229,7 @@ meter {
 
 .capability-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -2364,7 +2364,8 @@ meter {
 }
 
 .capability-meta,
-.capability-action-list {
+.capability-action-list,
+.capability-check-list {
   display: grid;
   gap: 7px;
 }
@@ -2374,16 +2375,43 @@ meter {
 }
 
 .capability-meta span,
-.capability-action-row {
+.capability-action-row,
+.capability-check-row {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: white;
   padding: 8px;
 }
 
-.capability-action-row strong {
+.capability-action-row strong,
+.capability-check-row strong {
   font-size: 12px;
   line-height: 1.35;
+}
+
+.capability-check-row {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.capability-check-row[data-status="pass"] {
+  border-color: #b9dfd1;
+}
+
+.capability-check-row[data-status="warn"] {
+  border-color: #f3d19c;
+}
+
+.capability-check-row[data-status="block"] {
+  border-color: #f2b8b2;
+}
+
+.capability-check-row span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .capability-note-row {

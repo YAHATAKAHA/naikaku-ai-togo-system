@@ -18,6 +18,8 @@ describe("sandbox capability registry", () => {
     expect(registry.cards).toHaveLength(executorProfiles.length);
     expect(registry.summary.profiles).toBe(executorProfiles.length);
     expect(registry.summary.rolesCovered).toBe(defaultRoles.length);
+    expect(registry.summary.readinessChecks).toBe(executorProfiles.length * 5);
+    expect(registry.summary.evidenceArtifacts).toBe(15);
   });
 
   it("evaluates representative actions against the current sandbox policy", () => {
@@ -32,8 +34,15 @@ describe("sandbox capability registry", () => {
     expect(browser?.actions.find((action) => action.action === "open_url")?.status).toBe("allowed");
     expect(browser?.actions.find((action) => action.action === "submit_form")?.status).toBe("needs-approval");
     expect(human?.actions.find((action) => action.action === "deploy_production")?.status).toBe("blocked");
+    expect(browser?.runnerReadiness.decision).toBe("needs-approval");
+    expect(browser?.runnerReadiness.requiredApprovals.some((item) => item.includes("submit_form"))).toBe(true);
+    expect(browser?.runnerReadiness.supportedEvidenceArtifacts).toContain("DOM action replay");
+    expect(browser?.runnerReadiness.checks.find((check) => check.id === "policy-actions")?.status).toBe("warn");
+    expect(human?.runnerReadiness.blockedReasons.some((item) => item.includes("deploy_production"))).toBe(true);
     expect(registry.summary.approvalActions).toBeGreaterThan(0);
     expect(registry.summary.blockedActions).toBeGreaterThan(0);
+    expect(registry.summary.requiredApprovals).toBeGreaterThan(0);
+    expect(registry.summary.warningReadinessChecks).toBeGreaterThan(0);
   });
 
   it("marks every capability blocked when the kill switch is not armed", () => {
@@ -48,7 +57,11 @@ describe("sandbox capability registry", () => {
 
     expect(registry.summary.killSwitchArmed).toBe(false);
     expect(registry.summary.blocked).toBe(executorProfiles.length);
+    expect(registry.summary.blockedReadinessChecks).toBeGreaterThanOrEqual(executorProfiles.length);
     expect(registry.cards.every((card) => card.status === "blocked")).toBe(true);
+    expect(registry.cards.every((card) =>
+      card.runnerReadiness.checks.find((check) => check.id === "kill-switch")?.status === "block"
+    )).toBe(true);
   });
 
   it("keeps internal schemes outside the network allowlist requirement", () => {
@@ -75,9 +88,12 @@ describe("sandbox capability registry", () => {
     });
     const exported = serializeSandboxCapabilityRegistry(registry);
     const parsed = JSON.parse(exported) as { schema: string; cards: unknown[] };
+    const firstCard = parsed.cards[0] as { runnerReadiness?: { checks?: unknown[]; supportedEvidenceArtifacts?: string[] } };
 
     expect(parsed.schema).toBe("naikaku.sandbox-capabilities.v1");
     expect(parsed.cards).toHaveLength(executorProfiles.length);
+    expect(firstCard.runnerReadiness?.checks?.length).toBeGreaterThan(0);
+    expect(firstCard.runnerReadiness?.supportedEvidenceArtifacts?.length).toBeGreaterThan(0);
     expect(exported).not.toContain("sessionSecret");
   });
 });

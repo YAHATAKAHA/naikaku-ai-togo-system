@@ -34,7 +34,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Product Readiness gate with exportable blocker/warning evidence across role APIs, automation, sandbox policy, parallel development, audit, and memory.
 - Product Release Bundle export for a single safe handoff artifact containing release manifest and current workbench evidence.
 - Sandbox policy editing.
-- Sandbox Capability matrix with one card per executor profile, representative action policy results, runner contracts, evidence requirements, and role coverage.
+- Sandbox Capability matrix with one card per executor profile, representative action policy results, runner readiness checks, blocked reasons, approval requirements, runner contracts, evidence requirements, and role coverage.
 - Run artifacts, logs, and score cards.
 - Automation queue review with allowed, approval-required, and blocked action proposals.
 - Automation Runbook panel and export for runner commands, evidence requirements, verification gates, and rollback notes derived from executor-ready actions.
