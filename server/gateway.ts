@@ -27,6 +27,7 @@ import { buildReleaseVerification } from "../src/domain/releaseVerification";
 import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
+import { runCodingAgentSandboxRunner } from "./codingAgentSandboxRunner";
 import type {
   AutomationApprovalRecord,
   AuditEvent,
@@ -41,6 +42,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerResult,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -110,6 +112,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-dispatch-simulation",
           "coding-agent-runner-manifest",
           "coding-agent-runner-self-test",
+          "coding-agent-sandbox-runner",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
@@ -774,6 +777,42 @@ const server = createServer(async (request, response) => {
         manifest: body.manifest
       });
       sendJson(response, 200, report);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/sandbox-runner") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
+      const body = await readJson<{
+        selfTest?: CodingAgentRunnerSelfTest;
+        bundle?: CodingAgentSessionBundle;
+        timeoutMs?: number;
+      }>(request);
+      if (body.selfTest?.schema !== "naikaku.coding-agent-runner-self-test.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "selfTest with schema naikaku.coding-agent-runner-self-test.v1 is required."
+        });
+        return;
+      }
+      if (body.bundle?.schema !== "naikaku.coding-agent-session-bundle.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      const result: CodingAgentSandboxRunnerResult = await runCodingAgentSandboxRunner({
+        selfTest: body.selfTest,
+        bundle: body.bundle,
+        timeoutMs: typeof body.timeoutMs === "number" ? body.timeoutMs : undefined
+      });
+      sendJson(response, 200, {
+        ...result,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode
+      });
       return;
     }
 

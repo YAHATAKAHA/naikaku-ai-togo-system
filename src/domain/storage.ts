@@ -10,6 +10,10 @@ import { serializeCodingAgentDispatchManifest, serializeCodingAgentDispatchManif
 import { serializeCodingAgentDispatchSimulation, serializeCodingAgentDispatchSimulationMarkdown } from "./codingAgentDispatchSimulation";
 import { serializeCodingAgentRunnerManifest, serializeCodingAgentRunnerManifestMarkdown } from "./codingAgentRunnerManifest";
 import { serializeCodingAgentRunnerSelfTest, serializeCodingAgentRunnerSelfTestMarkdown } from "./codingAgentRunnerSelfTest";
+import {
+  serializeCodingAgentSandboxRunnerReport,
+  serializeCodingAgentSandboxRunnerReportMarkdown
+} from "./codingAgentSandboxRunner";
 import { serializeCodingAgentImplementationEvidence, serializeCodingAgentImplementationEvidenceMarkdown } from "./codingAgentImplementationEvidence";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
@@ -40,6 +44,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerReport,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillReport,
@@ -490,6 +495,14 @@ export function serializeCodingAgentRunnerSelfTestExport(report: CodingAgentRunn
 
 export function serializeCodingAgentRunnerSelfTestMarkdownExport(report: CodingAgentRunnerSelfTest) {
   return serializeCodingAgentRunnerSelfTestMarkdown(report);
+}
+
+export function serializeCodingAgentSandboxRunnerReportExport(report: CodingAgentSandboxRunnerReport) {
+  return serializeCodingAgentSandboxRunnerReport(report);
+}
+
+export function serializeCodingAgentSandboxRunnerReportMarkdownExport(report: CodingAgentSandboxRunnerReport) {
+  return serializeCodingAgentSandboxRunnerReportMarkdown(report);
 }
 
 export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessionDrillReport) {

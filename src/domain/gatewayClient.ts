@@ -12,6 +12,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerResult,
   CodingAgentImplementationArtifactAudit,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -701,6 +702,28 @@ export async function createCodingAgentRunnerSelfTestViaGateway(
   }
 
   return (await response.json()) as CodingAgentRunnerSelfTest;
+}
+
+export async function runCodingAgentSandboxRunnerViaGateway(
+  selfTest: CodingAgentRunnerSelfTest,
+  bundle: CodingAgentSessionBundle,
+  timeoutMs?: number,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/sandbox-runner`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ selfTest, bundle, timeoutMs }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent sandbox runner failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentSandboxRunnerResult;
 }
 
 export async function createCodingAgentSessionReceiptTemplateViaGateway(

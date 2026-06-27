@@ -45,11 +45,15 @@ describe("i18n", () => {
       expect(copy.codingBriefs.downloadDispatchSimulationJson).toBeTruthy();
       expect(copy.codingBriefs.downloadRunnerManifestJson).toBeTruthy();
       expect(copy.codingBriefs.downloadRunnerSelfTestJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadSandboxRunnerJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadSandboxRunnerMarkdown).toBeTruthy();
+      expect(copy.codingBriefs.runSandboxRunner).toBeTruthy();
       expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).toBeTruthy();
       expect(copy.codingBriefs.dispatchAuditDecisionLabel("verified")).toBeTruthy();
       expect(copy.codingBriefs.dispatchSimulationDecisionLabel("ready-for-real-agent")).toBeTruthy();
       expect(copy.codingBriefs.runnerManifestDecisionLabel("runner-ready")).toBeTruthy();
       expect(copy.codingBriefs.runnerSelfTestDecisionLabel("self-test-ready")).toBeTruthy();
+      expect(copy.codingBriefs.sandboxRunnerDecisionLabel("sandbox-runner-verified")).toBeTruthy();
       if (locale !== "en") {
         expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).not.toBe("dispatchable");
       }
@@ -60,6 +64,9 @@ describe("i18n", () => {
       expect(copy.codingBriefs.dispatchSimulationSummary(8, 0, 0)).toBeTruthy();
       expect(copy.codingBriefs.runnerManifestSummary(8, 8, 0)).toBeTruthy();
       expect(copy.codingBriefs.runnerSelfTestSummary(8, 16, 0)).toBeTruthy();
+      expect(copy.codingBriefs.sandboxRunnerSummary(8, 2, 16)).toBeTruthy();
+      expect(copy.codingBriefs.statusSandboxRunnerGateway("sandbox-runner-verified", 8, 2, 16)).toBeTruthy();
+      expect(copy.codingBriefs.statusSandboxRunnerUnavailable("offline")).toBeTruthy();
       expect(copy.codingBriefs.receiptTemplate).toBeTruthy();
       expect(copy.codingBriefs.drillReady).toBeTruthy();
     }

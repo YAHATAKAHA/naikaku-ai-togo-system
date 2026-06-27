@@ -1767,6 +1767,99 @@ export interface CodingAgentRunnerSelfTest {
   };
 }
 
+export type CodingAgentSandboxRunnerDecision =
+  | "sandbox-runner-verified"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentSandboxRunnerItemStatus =
+  | "executed"
+  | "held"
+  | "blocked"
+  | "failed";
+
+export type CodingAgentSandboxRunnerCommandStatus =
+  | "executed"
+  | "blocked"
+  | "skipped";
+
+export interface CodingAgentSandboxRunnerCommandResult extends CodingAgentCommandResult {
+  status: CodingAgentSandboxRunnerCommandStatus;
+  durationMs?: number;
+}
+
+export interface CodingAgentSandboxRunnerReportItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  selfTestStatus: CodingAgentRunnerSelfTestItemStatus;
+  runStatus: CodingAgentSandboxRunnerItemStatus;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  evidenceArtifactPrefix: string;
+  changedFileSummaryPath: string | null;
+  commandResults: CodingAgentSandboxRunnerCommandResult[];
+  evidence: string[];
+  risks: string[];
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentSandboxRunnerReport {
+  schema: "naikaku.coding-agent-sandbox-runner.v1";
+  generatedAt: string;
+  mode: "local-sandbox-runner-drill";
+  sourceSchema: CodingAgentRunnerSelfTest["schema"];
+  sourceDecision: CodingAgentRunnerSelfTestDecision;
+  decision: CodingAgentSandboxRunnerDecision;
+  runId?: string;
+  operatorLocale: string;
+  items: CodingAgentSandboxRunnerReportItem[];
+  summary: {
+    total: number;
+    executedTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    commandResults: number;
+    processExecutions: number;
+    failedCommands: number;
+    blockedCommands: number;
+    transcriptFilesWritten: number;
+    changedFileSummaries: number;
+    evidenceArtifacts: number;
+    unsafePaths: number;
+  };
+  honestyClaim: {
+    level: "local-sandbox-runner-drill";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export interface CodingAgentSandboxRunnerResult {
+  schema: "naikaku.coding-agent-sandbox-runner-result.v1";
+  generatedAt: string;
+  report: CodingAgentSandboxRunnerReport;
+  submittedReceipt: CodingAgentSessionReceipt;
+  receiptReview: CodingAgentSessionReceipt;
+  implementationEvidence: CodingAgentImplementationEvidence;
+  artifactAudit: CodingAgentImplementationArtifactAudit;
+  gatewayRunnerId?: string;
+  authMode?: string;
+  honestyClaim: {
+    level: "local-sandbox-runner-drill";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type CodingAgentSessionReceiptDecision = "verified" | "needs-evidence" | "blocked";
 export type CodingAgentSessionReceiptStatus =
   | "verified"
@@ -2020,6 +2113,7 @@ export type AuditEventType =
   | "development.coding_sessions.dispatch_simulated"
   | "development.coding_sessions.runner_manifest_prepared"
   | "development.coding_sessions.runner_self_test_completed"
+  | "development.coding_sessions.sandbox_runner_completed"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"

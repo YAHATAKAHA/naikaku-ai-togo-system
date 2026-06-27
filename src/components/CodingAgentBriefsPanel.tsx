@@ -12,6 +12,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerReport,
   CodingAgentSession,
   CodingAgentSessionBundle,
   CodingAgentSessionDrillItem,
@@ -31,6 +32,7 @@ interface CodingAgentBriefsPanelProps {
   dispatchSimulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
+  sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
   sessionReceipt: CodingAgentSessionReceipt | null;
   exportLink: { href: string; fileName: string } | null;
@@ -50,6 +52,8 @@ interface CodingAgentBriefsPanelProps {
   runnerManifestMarkdownLink: { href: string; fileName: string } | null;
   runnerSelfTestLink: { href: string; fileName: string } | null;
   runnerSelfTestMarkdownLink: { href: string; fileName: string } | null;
+  sandboxRunnerLink: { href: string; fileName: string } | null;
+  sandboxRunnerMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
   drillMarkdownLink: { href: string; fileName: string } | null;
   receiptLink: { href: string; fileName: string } | null;
@@ -65,6 +69,7 @@ interface CodingAgentBriefsPanelProps {
   onExportProductionSession: () => void;
   onExportDispatchManifest: () => void;
   onRunSessionDrill: () => void;
+  onRunSandboxRunner: () => void;
   onCreateSessionReceipt: () => void;
   onImportSessionReceipt: (file: File) => void;
 }
@@ -79,6 +84,7 @@ export function CodingAgentBriefsPanel({
   dispatchSimulation,
   runnerManifest,
   runnerSelfTest,
+  sandboxRunnerReport,
   sessionDrill,
   sessionReceipt,
   exportLink,
@@ -98,6 +104,8 @@ export function CodingAgentBriefsPanel({
   runnerManifestMarkdownLink,
   runnerSelfTestLink,
   runnerSelfTestMarkdownLink,
+  sandboxRunnerLink,
+  sandboxRunnerMarkdownLink,
   drillLink,
   drillMarkdownLink,
   receiptLink,
@@ -113,6 +121,7 @@ export function CodingAgentBriefsPanel({
   onExportProductionSession,
   onExportDispatchManifest,
   onRunSessionDrill,
+  onRunSandboxRunner,
   onCreateSessionReceipt,
   onImportSessionReceipt
 }: CodingAgentBriefsPanelProps) {
@@ -167,6 +176,13 @@ export function CodingAgentBriefsPanel({
         </button>
         <button type="button" onClick={onExportDispatchManifest} disabled={!briefs.briefs.length}>
           <PackageCheck size={15} /> {copy.dispatchManifest}
+        </button>
+        <button
+          type="button"
+          onClick={onRunSandboxRunner}
+          disabled={!runnerSelfTest || runnerSelfTest.decision !== "self-test-ready"}
+        >
+          <PlayCircle size={15} /> {copy.runSandboxRunner}
         </button>
         <button type="button" onClick={onCreateSessionReceipt} disabled={!briefs.briefs.length}>
           <ClipboardCheck size={15} /> {copy.receiptTemplate}
@@ -276,6 +292,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadRunnerSelfTestMarkdown}
           </a>
         ) : null}
+        {sandboxRunnerLink ? (
+          <a href={sandboxRunnerLink.href} download={sandboxRunnerLink.fileName}>
+            <Download size={15} /> {copy.downloadSandboxRunnerJson}
+          </a>
+        ) : null}
+        {sandboxRunnerMarkdownLink ? (
+          <a href={sandboxRunnerMarkdownLink.href} download={sandboxRunnerMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadSandboxRunnerMarkdown}
+          </a>
+        ) : null}
         {receiptLink ? (
           <a href={receiptLink.href} download={receiptLink.fileName}>
             <Download size={15} /> {copy.downloadReceiptJson}
@@ -318,6 +344,7 @@ export function CodingAgentBriefsPanel({
           simulation={dispatchSimulation}
           runnerManifest={runnerManifest}
           runnerSelfTest={runnerSelfTest}
+          sandboxRunnerReport={sandboxRunnerReport}
           copy={copy}
         />
       ) : null}
@@ -419,6 +446,7 @@ function CodingAgentDispatchManifestReport({
   simulation,
   runnerManifest,
   runnerSelfTest,
+  sandboxRunnerReport,
   copy
 }: {
   manifest: CodingAgentDispatchManifest;
@@ -427,6 +455,7 @@ function CodingAgentDispatchManifestReport({
   simulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
+  sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
   copy: CodingAgentBriefsCopy;
 }) {
   const heldItem = firstHeldDispatchItem(manifest.items);
@@ -491,6 +520,16 @@ function CodingAgentDispatchManifestReport({
             runnerSelfTest.summary.wouldRun,
             runnerSelfTest.summary.notExecutedCommands,
             runnerSelfTest.summary.blocked
+          )}</span>
+        </div>
+      ) : null}
+      {sandboxRunnerReport ? (
+        <div>
+          <strong>{copy.sandboxRunner}: {copy.sandboxRunnerDecisionLabel(sandboxRunnerReport.decision)}</strong>
+          <span>{copy.sandboxRunnerSummary(
+            sandboxRunnerReport.summary.executedTasks,
+            sandboxRunnerReport.summary.processExecutions,
+            sandboxRunnerReport.summary.commandResults
           )}</span>
         </div>
       ) : null}

@@ -993,6 +993,62 @@ Response:
 
 The response must keep command exit codes null and command status `not-executed`. A self-test-ready decision means the runner contract is consumable, not that a coding agent has completed the task.
 
+### `POST /v1/development/coding-briefs/sandbox-runner`
+
+Consumes a ready runner self-test and the matching session bundle, then executes only the gateway's local sandbox-runner allowlist. Today that allowlist is `npm run test` and `npm run build`. The endpoint writes session-scoped transcripts, changed-file summary placeholders, evidence artifacts, a submitted receipt, receipt review, implementation evidence, and artifact audit. It does not call a model, implement backlog work, browse, control desktops, call MCP tools, call providers, deploy, commit, push, or claim production evidence.
+
+If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+
+```json
+{
+  "selfTest": {
+    "schema": "naikaku.coding-agent-runner-self-test.v1",
+    "decision": "self-test-ready",
+    "items": []
+  },
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1",
+    "decision": "ready",
+    "sessions": []
+  },
+  "timeoutMs": 120000
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-sandbox-runner-result.v1",
+  "report": {
+    "schema": "naikaku.coding-agent-sandbox-runner.v1",
+    "mode": "local-sandbox-runner-drill",
+    "decision": "sandbox-runner-verified",
+    "summary": {
+      "executedTasks": 8,
+      "processExecutions": 2,
+      "commandResults": 16,
+      "failedCommands": 0,
+      "blockedCommands": 0
+    }
+  },
+  "receiptReview": {
+    "schema": "naikaku.coding-agent-session-receipt.v1"
+  },
+  "implementationEvidence": {
+    "schema": "naikaku.coding-agent-implementation-evidence.v1"
+  },
+  "artifactAudit": {
+    "schema": "naikaku.coding-agent-implementation-artifact-audit.v1"
+  },
+  "honestyClaim": {
+    "level": "local-sandbox-runner-drill"
+  }
+}
+```
+
+A `sandbox-runner-verified` decision proves the local command/evidence/receipt/audit plumbing can run inside the current workspace. It must not be treated as proof that feature implementation work was done by a real coding agent.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

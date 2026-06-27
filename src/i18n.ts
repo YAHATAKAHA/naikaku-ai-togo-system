@@ -86,6 +86,9 @@ export interface CodingAgentBriefsCopy {
   downloadRunnerManifestMarkdown: string;
   downloadRunnerSelfTestJson: string;
   downloadRunnerSelfTestMarkdown: string;
+  runSandboxRunner: string;
+  downloadSandboxRunnerJson: string;
+  downloadSandboxRunnerMarkdown: string;
   downloadDrillJson: string;
   downloadDrillMarkdown: string;
   receiptTemplate: string;
@@ -127,6 +130,9 @@ export interface CodingAgentBriefsCopy {
   runnerSelfTest: string;
   runnerSelfTestDecisionLabel: (decision: string) => string;
   runnerSelfTestSummary: (wouldRun: number, notExecutedCommands: number, blockedTasks: number) => string;
+  sandboxRunner: string;
+  sandboxRunnerDecisionLabel: (decision: string) => string;
+  sandboxRunnerSummary: (executedTasks: number, processExecutions: number, commandResults: number) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -159,6 +165,8 @@ export interface CodingAgentBriefsCopy {
   statusSessionLocal: (decision: string, ready: number, held: number, errorMessage?: string) => string;
   statusDispatchGateway: (decision: string, ready: number, held: number, promptFiles: number) => string;
   statusDispatchLocal: (decision: string, ready: number, held: number, promptFiles: number, errorMessage?: string) => string;
+  statusSandboxRunnerGateway: (decision: string, executedTasks: number, processExecutions: number, commandResults: number) => string;
+  statusSandboxRunnerUnavailable: (errorMessage?: string) => string;
   statusDrillGateway: (decision: string, wouldAssign: number, notAssigned: number) => string;
   statusDrillLocal: (decision: string, wouldAssign: number, notAssigned: number, errorMessage?: string) => string;
   statusReceiptGateway: (decision: string, verified: number, pending: number, failed: number) => string;
@@ -300,6 +308,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
+      runSandboxRunner: "Sandbox実行",
+      downloadSandboxRunnerJson: "Sandbox Runner JSON",
+      downloadSandboxRunnerMarkdown: "Sandbox Runner MD",
       downloadDrillJson: "演習JSON",
       downloadDrillMarkdown: "演習MD",
       receiptTemplate: "証拠雛形",
@@ -341,6 +352,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner自己検証",
       runnerSelfTestDecisionLabel: jaRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
+      sandboxRunner: "Sandbox Runner",
+      sandboxRunnerDecisionLabel: jaSandboxRunnerDecision,
+      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}件実行 / プロセス ${processExecutions}件 / 結果 ${commandResults}件`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
       drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
@@ -373,6 +387,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `ローカルで Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${jaSandboxRunnerDecision(decision)}: 実行 ${executedTasks}件、プロセス ${processExecutions}件、結果 ${commandResults}件。`,
+      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner はローカル gateway が必要です。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `Session演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。`,
       statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `ローカルで session 演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptGateway: (decision, verified, pending, failed) => `証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
@@ -484,6 +500,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
+      runSandboxRunner: "Run sandbox",
+      downloadSandboxRunnerJson: "Sandbox runner JSON",
+      downloadSandboxRunnerMarkdown: "Sandbox runner MD",
       downloadDrillJson: "Drill JSON",
       downloadDrillMarkdown: "Drill MD",
       receiptTemplate: "Receipt template",
@@ -525,6 +544,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner self-test",
       runnerSelfTestDecisionLabel: enRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
+      sandboxRunner: "Sandbox runner",
+      sandboxRunnerDecisionLabel: enSandboxRunnerDecision,
+      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} executed / ${processExecutions} processes / ${commandResults} command results`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
       drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
@@ -557,6 +579,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `Coding dispatch package ${enCodingDispatchDecision(decision)}: ${ready} ready, ${held} held, ${promptFiles} prompts.`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `Coding dispatch package completed locally: ${enCodingDispatchDecision(decision)}, ${ready} ready, ${held} held, ${promptFiles} prompts.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox runner ${enSandboxRunnerDecision(decision)}: ${executedTasks} executed, ${processExecutions} processes, ${commandResults} command results.`,
+      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox runner requires the local gateway.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `Coding session drill ${enCodingDrillDecision(decision)}: ${wouldAssign} assign, ${notAssigned} stopped.`,
       statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `Coding session drill completed locally: ${enCodingDrillDecision(decision)}, ${wouldAssign} assign, ${notAssigned} stopped.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptGateway: (decision, verified, pending, failed) => `Coding receipt template ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
@@ -668,6 +692,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "自测 JSON",
       downloadRunnerSelfTestMarkdown: "自测 MD",
+      runSandboxRunner: "运行沙箱",
+      downloadSandboxRunnerJson: "沙箱 Runner JSON",
+      downloadSandboxRunnerMarkdown: "沙箱 Runner MD",
       downloadDrillJson: "演练 JSON",
       downloadDrillMarkdown: "演练 MD",
       receiptTemplate: "证据模板",
@@ -709,6 +736,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 自测",
       runnerSelfTestDecisionLabel: zhHansRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
+      sandboxRunner: "沙箱 Runner",
+      sandboxRunnerDecisionLabel: zhHansSandboxRunnerDecision,
+      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已执行 / ${processExecutions} 个进程 / ${commandResults} 条命令结果`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
@@ -741,6 +771,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `编程代理 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHansSandboxRunnerDecision(decision)}：执行 ${executedTasks} 项，进程 ${processExecutions} 个，命令结果 ${commandResults} 条。`,
+      statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `编程代理 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
       statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusReceiptGateway: (decision, verified, pending, failed) => `编程代理证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
@@ -852,6 +884,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "自測 JSON",
       downloadRunnerSelfTestMarkdown: "自測 MD",
+      runSandboxRunner: "執行沙箱",
+      downloadSandboxRunnerJson: "沙箱 Runner JSON",
+      downloadSandboxRunnerMarkdown: "沙箱 Runner MD",
       downloadDrillJson: "演練 JSON",
       downloadDrillMarkdown: "演練 MD",
       receiptTemplate: "證據範本",
@@ -893,6 +928,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 自測",
       runnerSelfTestDecisionLabel: zhHantRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
+      sandboxRunner: "沙箱 Runner",
+      sandboxRunnerDecisionLabel: zhHantSandboxRunnerDecision,
+      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已執行 / ${processExecutions} 個程序 / ${commandResults} 條命令結果`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
@@ -925,6 +963,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `編程代理 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHantSandboxRunnerDecision(decision)}：執行 ${executedTasks} 項，程序 ${processExecutions} 個，命令結果 ${commandResults} 條。`,
+      statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `編程代理 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
       statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusReceiptGateway: (decision, verified, pending, failed) => `編程代理證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
@@ -1036,6 +1076,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "자체 검증 JSON",
       downloadRunnerSelfTestMarkdown: "자체 검증 MD",
+      runSandboxRunner: "Sandbox 실행",
+      downloadSandboxRunnerJson: "Sandbox Runner JSON",
+      downloadSandboxRunnerMarkdown: "Sandbox Runner MD",
       downloadDrillJson: "모의실행 JSON",
       downloadDrillMarkdown: "모의실행 MD",
       receiptTemplate: "증거 템플릿",
@@ -1077,6 +1120,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 자체 검증",
       runnerSelfTestDecisionLabel: koRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
+      sandboxRunner: "Sandbox Runner",
+      sandboxRunnerDecisionLabel: koSandboxRunnerDecision,
+      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}개 실행 / 프로세스 ${processExecutions}개 / 명령 결과 ${commandResults}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
       drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
@@ -1109,6 +1155,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `코딩 에이전트 dispatch package ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `로컬에서 dispatch package 완료 ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${koSandboxRunnerDecision(decision)}: 실행 ${executedTasks}개, 프로세스 ${processExecutions}개, 명령 결과 ${commandResults}개.`,
+      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner에는 로컬 gateway가 필요합니다.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `코딩 에이전트 session 모의실행 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.`,
       statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `로컬에서 session 모의실행 완료 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusReceiptGateway: (decision, verified, pending, failed) => `코딩 에이전트 증거 템플릿 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
@@ -1231,6 +1279,13 @@ function jaRunnerSelfTestDecision(decision: string) {
   return decision;
 }
 
+function jaSandboxRunnerDecision(decision: string) {
+  if (decision === "sandbox-runner-verified") return "Sandbox検証済み";
+  if (decision === "needs-review") return "要確認";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function jaCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "割当可";
   if (decision === "held") return "保留";
@@ -1297,6 +1352,13 @@ function enRunnerManifestDecision(decision: string) {
 
 function enRunnerSelfTestDecision(decision: string) {
   if (decision === "self-test-ready") return "self-test ready";
+  if (decision === "needs-review") return "needs review";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enSandboxRunnerDecision(decision: string) {
+  if (decision === "sandbox-runner-verified") return "sandbox verified";
   if (decision === "needs-review") return "needs review";
   if (decision === "blocked") return "blocked";
   return decision;
@@ -1382,6 +1444,13 @@ function zhHansRunnerManifestDecision(decision: string) {
 
 function zhHansRunnerSelfTestDecision(decision: string) {
   if (decision === "self-test-ready") return "自测通过";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansSandboxRunnerDecision(decision: string) {
+  if (decision === "sandbox-runner-verified") return "沙箱已验证";
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
@@ -1479,6 +1548,13 @@ function zhHantRunnerSelfTestDecision(decision: string) {
   return decision;
 }
 
+function zhHantSandboxRunnerDecision(decision: string) {
+  if (decision === "sandbox-runner-verified") return "沙箱已驗證";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function zhHantCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "可分配";
   if (decision === "held") return "保留";
@@ -1566,6 +1642,13 @@ function koRunnerManifestDecision(decision: string) {
 
 function koRunnerSelfTestDecision(decision: string) {
   if (decision === "self-test-ready") return "자체 검증 완료";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koSandboxRunnerDecision(decision: string) {
+  if (decision === "sandbox-runner-verified") return "Sandbox 검증 완료";
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;
