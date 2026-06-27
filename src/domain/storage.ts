@@ -8,6 +8,7 @@ import { serializeCodingAgentDispatchArchive, serializeCodingAgentDispatchArchiv
 import { serializeCodingAgentDispatchArchiveAudit, serializeCodingAgentDispatchArchiveAuditMarkdown } from "./codingAgentDispatchArchiveAudit";
 import { serializeCodingAgentDispatchManifest, serializeCodingAgentDispatchManifestMarkdown } from "./codingAgentDispatchManifest";
 import { serializeCodingAgentDispatchSimulation, serializeCodingAgentDispatchSimulationMarkdown } from "./codingAgentDispatchSimulation";
+import { serializeCodingAgentRunnerIntakeAudit, serializeCodingAgentRunnerIntakeAuditMarkdown } from "./codingAgentRunnerIntakeAudit";
 import {
   serializeCodingAgentRunnerInvocationPackage,
   serializeCodingAgentRunnerInvocationPackageMarkdown
@@ -50,6 +51,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
@@ -505,6 +507,14 @@ export function serializeCodingAgentRunnerInvocationExport(report: CodingAgentRu
 
 export function serializeCodingAgentRunnerInvocationMarkdownExport(report: CodingAgentRunnerInvocationPackage) {
   return serializeCodingAgentRunnerInvocationPackageMarkdown(report);
+}
+
+export function serializeCodingAgentRunnerIntakeExport(report: CodingAgentRunnerIntakeAudit) {
+  return serializeCodingAgentRunnerIntakeAudit(report);
+}
+
+export function serializeCodingAgentRunnerIntakeMarkdownExport(report: CodingAgentRunnerIntakeAudit) {
+  return serializeCodingAgentRunnerIntakeAuditMarkdown(report);
 }
 
 export function serializeCodingAgentRunnerSelfTestExport(report: CodingAgentRunnerSelfTest) {

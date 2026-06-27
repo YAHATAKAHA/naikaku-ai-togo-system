@@ -86,6 +86,8 @@ export interface CodingAgentBriefsCopy {
   downloadRunnerManifestMarkdown: string;
   downloadRunnerInvocationJson: string;
   downloadRunnerInvocationMarkdown: string;
+  downloadRunnerIntakeJson: string;
+  downloadRunnerIntakeMarkdown: string;
   downloadRunnerSelfTestJson: string;
   downloadRunnerSelfTestMarkdown: string;
   sandboxRunnerPreflight: string;
@@ -135,6 +137,9 @@ export interface CodingAgentBriefsCopy {
   runnerInvocation: string;
   runnerInvocationDecisionLabel: (decision: string) => string;
   runnerInvocationSummary: (readyInvocations: number, invocationFiles: number, blockedInvocations: number) => string;
+  runnerIntake: string;
+  runnerIntakeDecisionLabel: (decision: string) => string;
+  runnerIntakeSummary: (acceptedIntakes: number, invocationFiles: number, blockedIntakes: number) => string;
   runnerSelfTest: string;
   runnerSelfTestDecisionLabel: (decision: string) => string;
   runnerSelfTestSummary: (wouldRun: number, notExecutedCommands: number, blockedTasks: number) => string;
@@ -321,6 +326,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerInvocationJson: "起動パッケージJSON",
       downloadRunnerInvocationMarkdown: "起動パッケージMD",
+      downloadRunnerIntakeJson: "受入監査JSON",
+      downloadRunnerIntakeMarkdown: "受入監査MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
       sandboxRunnerPreflight: "Sandbox確認",
@@ -370,6 +377,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerInvocation: "Runner起動パッケージ",
       runnerInvocationDecisionLabel: jaRunnerInvocationDecision,
       runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations}件準備済み / 起動ファイル ${invocationFiles}件 / ブロック ${blockedInvocations}件`,
+      runnerIntake: "Runner受入監査",
+      runnerIntakeDecisionLabel: jaRunnerIntakeDecision,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes}件受入 / 起動ファイル ${invocationFiles}件 / ブロック ${blockedIntakes}件`,
       runnerSelfTest: "Runner自己検証",
       runnerSelfTestDecisionLabel: jaRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
@@ -526,6 +536,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerInvocationJson: "Invocation JSON",
       downloadRunnerInvocationMarkdown: "Invocation MD",
+      downloadRunnerIntakeJson: "Intake JSON",
+      downloadRunnerIntakeMarkdown: "Intake MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
       sandboxRunnerPreflight: "Sandbox check",
@@ -575,6 +587,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerInvocation: "Runner invocation",
       runnerInvocationDecisionLabel: enRunnerInvocationDecision,
       runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} ready / ${invocationFiles} invocation files / ${blockedInvocations} blocked`,
+      runnerIntake: "Runner intake",
+      runnerIntakeDecisionLabel: enRunnerIntakeDecision,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} accepted / ${invocationFiles} invocation files / ${blockedIntakes} blocked`,
       runnerSelfTest: "Runner self-test",
       runnerSelfTestDecisionLabel: enRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
@@ -731,6 +746,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerInvocationJson: "调用包 JSON",
       downloadRunnerInvocationMarkdown: "调用包 MD",
+      downloadRunnerIntakeJson: "接收审查 JSON",
+      downloadRunnerIntakeMarkdown: "接收审查 MD",
       downloadRunnerSelfTestJson: "自测 JSON",
       downloadRunnerSelfTestMarkdown: "自测 MD",
       sandboxRunnerPreflight: "沙箱检查",
@@ -780,6 +797,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerInvocation: "Runner 调用包",
       runnerInvocationDecisionLabel: zhHansRunnerInvocationDecision,
       runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} 个已准备 / ${invocationFiles} 个调用文件 / ${blockedInvocations} 个阻塞`,
+      runnerIntake: "Runner 接收审查",
+      runnerIntakeDecisionLabel: zhHansRunnerIntakeDecision,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} 个已接收 / ${invocationFiles} 个调用文件 / ${blockedIntakes} 个阻塞`,
       runnerSelfTest: "Runner 自测",
       runnerSelfTestDecisionLabel: zhHansRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
@@ -936,6 +956,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerInvocationJson: "呼叫包 JSON",
       downloadRunnerInvocationMarkdown: "呼叫包 MD",
+      downloadRunnerIntakeJson: "接收審查 JSON",
+      downloadRunnerIntakeMarkdown: "接收審查 MD",
       downloadRunnerSelfTestJson: "自測 JSON",
       downloadRunnerSelfTestMarkdown: "自測 MD",
       sandboxRunnerPreflight: "沙箱檢查",
@@ -985,6 +1007,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerInvocation: "Runner 呼叫包",
       runnerInvocationDecisionLabel: zhHantRunnerInvocationDecision,
       runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} 個已準備 / ${invocationFiles} 個呼叫檔 / ${blockedInvocations} 個阻塞`,
+      runnerIntake: "Runner 接收審查",
+      runnerIntakeDecisionLabel: zhHantRunnerIntakeDecision,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} 個已接收 / ${invocationFiles} 個呼叫檔 / ${blockedIntakes} 個阻塞`,
       runnerSelfTest: "Runner 自測",
       runnerSelfTestDecisionLabel: zhHantRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
@@ -1141,6 +1166,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerInvocationJson: "호출 JSON",
       downloadRunnerInvocationMarkdown: "호출 MD",
+      downloadRunnerIntakeJson: "수락 감사 JSON",
+      downloadRunnerIntakeMarkdown: "수락 감사 MD",
       downloadRunnerSelfTestJson: "자체 검증 JSON",
       downloadRunnerSelfTestMarkdown: "자체 검증 MD",
       sandboxRunnerPreflight: "Sandbox 확인",
@@ -1190,6 +1217,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerInvocation: "Runner 호출 패키지",
       runnerInvocationDecisionLabel: koRunnerInvocationDecision,
       runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations}개 준비 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedInvocations}개`,
+      runnerIntake: "Runner 수락 감사",
+      runnerIntakeDecisionLabel: koRunnerIntakeDecision,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes}개 수락 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedIntakes}개`,
       runnerSelfTest: "Runner 자체 검증",
       runnerSelfTestDecisionLabel: koRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
@@ -1357,6 +1387,13 @@ function jaRunnerInvocationDecision(decision: string) {
   return decision;
 }
 
+function jaRunnerIntakeDecision(decision: string) {
+  if (decision === "accepted-for-runner") return "Runner受入済み";
+  if (decision === "needs-review") return "要確認";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function jaRunnerSelfTestDecision(decision: string) {
   if (decision === "self-test-ready") return "自己検証済み";
   if (decision === "needs-review") return "要確認";
@@ -1444,6 +1481,13 @@ function enRunnerManifestDecision(decision: string) {
 
 function enRunnerInvocationDecision(decision: string) {
   if (decision === "package-ready") return "package ready";
+  if (decision === "needs-review") return "needs review";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enRunnerIntakeDecision(decision: string) {
+  if (decision === "accepted-for-runner") return "accepted for runner";
   if (decision === "needs-review") return "needs review";
   if (decision === "blocked") return "blocked";
   return decision;
@@ -1550,6 +1594,13 @@ function zhHansRunnerManifestDecision(decision: string) {
 
 function zhHansRunnerInvocationDecision(decision: string) {
   if (decision === "package-ready") return "调用包就绪";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansRunnerIntakeDecision(decision: string) {
+  if (decision === "accepted-for-runner") return "已接收给 Runner";
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
@@ -1668,6 +1719,13 @@ function zhHantRunnerInvocationDecision(decision: string) {
   return decision;
 }
 
+function zhHantRunnerIntakeDecision(decision: string) {
+  if (decision === "accepted-for-runner") return "已接收給 Runner";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function zhHantRunnerSelfTestDecision(decision: string) {
   if (decision === "self-test-ready") return "自測通過";
   if (decision === "needs-review") return "需審查";
@@ -1776,6 +1834,13 @@ function koRunnerManifestDecision(decision: string) {
 
 function koRunnerInvocationDecision(decision: string) {
   if (decision === "package-ready") return "호출 패키지 준비";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koRunnerIntakeDecision(decision: string) {
+  if (decision === "accepted-for-runner") return "Runner 수락 완료";
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;

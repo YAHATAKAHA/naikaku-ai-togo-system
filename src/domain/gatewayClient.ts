@@ -10,6 +10,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
@@ -720,6 +721,26 @@ export async function createCodingAgentRunnerInvocationViaGateway(
   }
 
   return (await response.json()) as CodingAgentRunnerInvocationPackage;
+}
+
+export async function createCodingAgentRunnerIntakeViaGateway(
+  invocationPackage: CodingAgentRunnerInvocationPackage,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-intake`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ invocationPackage }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent runner intake failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentRunnerIntakeAudit;
 }
 
 export async function createCodingAgentRunnerSelfTestViaGateway(

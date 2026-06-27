@@ -9,6 +9,7 @@ import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefRevie
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerIntakeAudit } from "../src/domain/codingAgentRunnerIntakeAudit";
 import { buildCodingAgentRunnerInvocationPackage } from "../src/domain/codingAgentRunnerInvocation";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
@@ -42,6 +43,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
@@ -116,6 +118,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-dispatch-simulation",
           "coding-agent-runner-manifest",
           "coding-agent-runner-invocation",
+          "coding-agent-runner-intake-audit",
           "coding-agent-runner-self-test",
           "coding-agent-sandbox-runner-preflight",
           "coding-agent-sandbox-runner",
@@ -785,6 +788,24 @@ const server = createServer(async (request, response) => {
         invocationBasePath: body.invocationBasePath
       });
       sendJson(response, 200, invocationPackage);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-intake") {
+      const body = await readJson<{
+        invocationPackage?: CodingAgentRunnerInvocationPackage;
+      }>(request);
+      if (body.invocationPackage?.schema !== "naikaku.coding-agent-runner-invocation-package.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "invocationPackage with schema naikaku.coding-agent-runner-invocation-package.v1 is required."
+        });
+        return;
+      }
+      const audit: CodingAgentRunnerIntakeAudit = buildCodingAgentRunnerIntakeAudit({
+        invocationPackage: body.invocationPackage
+      });
+      sendJson(response, 200, audit);
       return;
     }
 

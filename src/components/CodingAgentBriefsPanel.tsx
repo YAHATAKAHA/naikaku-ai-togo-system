@@ -10,6 +10,7 @@ import type {
   CodingAgentDispatchManifest,
   CodingAgentDispatchManifestItem,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
@@ -34,6 +35,7 @@ interface CodingAgentBriefsPanelProps {
   dispatchSimulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerInvocation: CodingAgentRunnerInvocationPackage | null;
+  runnerIntake: CodingAgentRunnerIntakeAudit | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
   sandboxRunnerPreflight: CodingAgentSandboxRunnerPreflight | null;
   sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
@@ -56,6 +58,8 @@ interface CodingAgentBriefsPanelProps {
   runnerManifestMarkdownLink: { href: string; fileName: string } | null;
   runnerInvocationLink: { href: string; fileName: string } | null;
   runnerInvocationMarkdownLink: { href: string; fileName: string } | null;
+  runnerIntakeLink: { href: string; fileName: string } | null;
+  runnerIntakeMarkdownLink: { href: string; fileName: string } | null;
   runnerSelfTestLink: { href: string; fileName: string } | null;
   runnerSelfTestMarkdownLink: { href: string; fileName: string } | null;
   sandboxRunnerPreflightLink: { href: string; fileName: string } | null;
@@ -93,6 +97,7 @@ export function CodingAgentBriefsPanel({
   dispatchSimulation,
   runnerManifest,
   runnerInvocation,
+  runnerIntake,
   runnerSelfTest,
   sandboxRunnerPreflight,
   sandboxRunnerReport,
@@ -115,6 +120,8 @@ export function CodingAgentBriefsPanel({
   runnerManifestMarkdownLink,
   runnerInvocationLink,
   runnerInvocationMarkdownLink,
+  runnerIntakeLink,
+  runnerIntakeMarkdownLink,
   runnerSelfTestLink,
   runnerSelfTestMarkdownLink,
   sandboxRunnerPreflightLink,
@@ -315,6 +322,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadRunnerInvocationMarkdown}
           </a>
         ) : null}
+        {runnerIntakeLink ? (
+          <a href={runnerIntakeLink.href} download={runnerIntakeLink.fileName}>
+            <Download size={15} /> {copy.downloadRunnerIntakeJson}
+          </a>
+        ) : null}
+        {runnerIntakeMarkdownLink ? (
+          <a href={runnerIntakeMarkdownLink.href} download={runnerIntakeMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadRunnerIntakeMarkdown}
+          </a>
+        ) : null}
         {runnerSelfTestLink ? (
           <a href={runnerSelfTestLink.href} download={runnerSelfTestLink.fileName}>
             <Download size={15} /> {copy.downloadRunnerSelfTestJson}
@@ -387,6 +404,7 @@ export function CodingAgentBriefsPanel({
           simulation={dispatchSimulation}
           runnerManifest={runnerManifest}
           runnerInvocation={runnerInvocation}
+          runnerIntake={runnerIntake}
           runnerSelfTest={runnerSelfTest}
           sandboxRunnerPreflight={sandboxRunnerPreflight}
           sandboxRunnerReport={sandboxRunnerReport}
@@ -491,6 +509,7 @@ function CodingAgentDispatchManifestReport({
   simulation,
   runnerManifest,
   runnerInvocation,
+  runnerIntake,
   runnerSelfTest,
   sandboxRunnerPreflight,
   sandboxRunnerReport,
@@ -502,6 +521,7 @@ function CodingAgentDispatchManifestReport({
   simulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerInvocation: CodingAgentRunnerInvocationPackage | null;
+  runnerIntake: CodingAgentRunnerIntakeAudit | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
   sandboxRunnerPreflight: CodingAgentSandboxRunnerPreflight | null;
   sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
@@ -569,6 +589,16 @@ function CodingAgentDispatchManifestReport({
             runnerInvocation.summary.readyInvocations,
             runnerInvocation.summary.invocationFiles,
             runnerInvocation.summary.blockedInvocations
+          )}</span>
+        </div>
+      ) : null}
+      {runnerIntake ? (
+        <div>
+          <strong>{copy.runnerIntake}: {copy.runnerIntakeDecisionLabel(runnerIntake.decision)}</strong>
+          <span>{copy.runnerIntakeSummary(
+            runnerIntake.summary.acceptedIntakes,
+            runnerIntake.summary.invocationFiles,
+            runnerIntake.summary.blockedIntakes
           )}</span>
         </div>
       ) : null}
