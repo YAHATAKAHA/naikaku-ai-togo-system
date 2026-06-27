@@ -82,9 +82,12 @@ interface EngineeringLaunchpadProps {
     result: EngineeringCodexSmokeGatewayResponse | null;
   };
   guidedCycleState: {
-    status: "idle" | "running" | "completed" | "error";
+    status: "idle" | "running" | "completed" | "blocked" | "error";
     message: string;
+    cyclesCompleted: number;
+    maxCycles: number;
   };
+  guidedCycleMaxRuns: number;
   runnerReadinessState: {
     status: "idle" | "loading" | "ready" | "error";
     message: string;
@@ -100,6 +103,7 @@ interface EngineeringLaunchpadProps {
   onAutoWorkPresetChange: (preset: EngineeringAutoWorkGatewayPreset) => void;
   onAutoWorkAdapterReadyChange: (ready: boolean) => void;
   onAutoWorkWorktreeChange: (worktree: string) => void;
+  onGuidedCycleMaxRunsChange: (maxRuns: number) => void;
   onRefreshRunnerReadiness: () => void;
   onEnableRunnerPresetTemplate: (templateId: string) => void;
   onFocusMission: () => void;
@@ -147,6 +151,7 @@ export function EngineeringLaunchpad({
   autoWorkState,
   codexSmokeState,
   guidedCycleState,
+  guidedCycleMaxRuns,
   runnerReadinessState,
   runnerPresets,
   runnerPresetTemplates,
@@ -155,6 +160,7 @@ export function EngineeringLaunchpad({
   onAutoWorkPresetChange,
   onAutoWorkAdapterReadyChange,
   onAutoWorkWorktreeChange,
+  onGuidedCycleMaxRunsChange,
   onRefreshRunnerReadiness,
   onEnableRunnerPresetTemplate,
   onFocusMission,
@@ -191,6 +197,7 @@ export function EngineeringLaunchpad({
     guidedCycleState.status === "running" ||
     runStatus === "running";
   const runnerReadinessReport = runnerReadinessState.report;
+  const guidedCycleOptions = [1, 2, 3];
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
     !["prepared", "fixture", "openhands"].includes(preset.id)
@@ -333,6 +340,19 @@ export function EngineeringLaunchpad({
               placeholder="."
             />
           </label>
+          <label>
+            <span>{copy.guidedCycleLimitLabel}</span>
+            <select
+              value={guidedCycleMaxRuns}
+              onChange={(event) => onGuidedCycleMaxRunsChange(Number(event.target.value))}
+            >
+              {guidedCycleOptions.map((count) => (
+                <option value={count} key={count}>
+                  {copy.guidedCycleLimitOption(count)}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="engineering-auto-work-check">
             <input
               type="checkbox"
@@ -375,6 +395,9 @@ export function EngineeringLaunchpad({
         <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>
         <div className="engineering-auto-work-result">
           <strong>{guidedCycleState.message || copy.guidedCycleIdle}</strong>
+          {guidedCycleState.status !== "idle" ? (
+            <span>{copy.guidedCycleSummary(guidedCycleState.cyclesCompleted, guidedCycleState.maxCycles)}</span>
+          ) : null}
           <strong>{autoWorkState.message || copy.autoWorkIdle}</strong>
           {autoWorkState.result ? (
             <>

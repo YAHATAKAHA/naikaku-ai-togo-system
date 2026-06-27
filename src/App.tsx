@@ -139,6 +139,7 @@ import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
 import { buildEngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
+import { decideGuidedCycleContinuation } from "./domain/guidedEngineeringCycle";
 import { buildEngineeringLaunchProfile } from "./domain/engineeringLaunchProfile";
 import { buildEngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
 import { buildEngineeringMacRunnerContract } from "./domain/engineeringMacRunnerContract";
@@ -256,6 +257,11 @@ import type {
 import type { CabinetRunMode } from "./domain/types";
 
 type AuditEventInput = Parameters<typeof createAuditEvent>[0];
+type EngineeringGuidedCycleStatus = "idle" | "running" | "completed" | "blocked" | "error";
+
+function guidedCycleMaxRuns(value: number) {
+  return Math.max(1, Math.min(3, Math.trunc(Number.isFinite(value) ? value : 1)));
+}
 
 interface ServerLedgerState {
   status: "idle" | "loading" | "ready" | "error";
@@ -381,12 +387,17 @@ export function App() {
     message: "",
     result: null
   });
+  const [engineeringGuidedCycleMaxRuns, setEngineeringGuidedCycleMaxRuns] = useState(1);
   const [engineeringGuidedCycleState, setEngineeringGuidedCycleState] = useState<{
-    status: "idle" | "running" | "completed" | "error";
+    status: EngineeringGuidedCycleStatus;
     message: string;
+    cyclesCompleted: number;
+    maxCycles: number;
   }>({
     status: "idle",
-    message: ""
+    message: "",
+    cyclesCompleted: 0,
+    maxCycles: 1
   });
   const [engineeringRunnerReadinessState, setEngineeringRunnerReadinessState] = useState<{
     status: "idle" | "loading" | "ready" | "error";
@@ -4633,54 +4644,119 @@ export function App() {
 
   async function runEngineeringGuidedCycleFromLaunchpad() {
     const mission = workspace.mission.trim();
+    const maxCycles = guidedCycleMaxRuns(engineeringGuidedCycleMaxRuns);
+    let cyclesCompleted = 0;
 
     if (!mission) {
       setEngineeringGuidedCycleState({
         status: "error",
-        message: copy.engineeringLaunchpad.autoWorkMissionRequired
+        message: copy.engineeringLaunchpad.autoWorkMissionRequired,
+        cyclesCompleted: 0,
+        maxCycles
       });
       return;
     }
 
-    setEngineeringGuidedCycleState({
-      status: "running",
-      message: copy.engineeringLaunchpad.guidedCycleStarting
-    });
-
-    const cabinetRun = await runCabinet();
-    setEngineeringGuidedCycleState({
-      status: "running",
-      message: copy.engineeringLaunchpad.guidedCycleExecuting
-    });
-
-    const codexSmoke = await runEngineeringCodexSmokeFromLaunchpad();
-    if (!codexSmoke?.ok) {
+    for (let cycle = 1; cycle <= maxCycles; cycle += 1) {
       setEngineeringGuidedCycleState({
-        status: "error",
-        message: copy.engineeringLaunchpad.guidedCycleFailed
+        status: "running",
+        message: copy.engineeringLaunchpad.guidedCycleStarting(cycle, maxCycles),
+        cyclesCompleted,
+        maxCycles
       });
-      return;
-    }
 
-    setEngineeringGuidedCycleState({
-      status: "completed",
-      message: copy.engineeringLaunchpad.guidedCycleCompleted(
-        cabinetRun.score.decision,
-        codexSmoke.outputDir
-      )
-    });
-    recordAudit({
-      type: "development.engineering_guided_cycle.completed",
-      severity: "success",
-      summary: "Guided engineering cycle completed cabinet vote and governed Codex execution.",
-      runId: cabinetRun.id,
-      metadata: {
-        cabinetDecision: cabinetRun.score.decision,
-        codexOutputDir: codexSmoke.outputDir,
-        codexChecksPass: codexSmoke.checks.pass,
-        codexChecksFail: codexSmoke.checks.fail
+      const cabinetRun = await runCabinet();
+      if (cabinetRun.score.decision === "block") {
+        setEngineeringGuidedCycleState({
+          status: "blocked",
+          message: copy.engineeringLaunchpad.guidedCycleBlocked(cycle, maxCycles, cabinetRun.score.decision),
+          cyclesCompleted,
+          maxCycles
+        });
+        recordAudit({
+          type: "development.engineering_guided_cycle.stopped",
+          severity: "warning",
+          summary: "Guided engineering cycle stopped before execution by cabinet decision.",
+          runId: cabinetRun.id,
+          metadata: {
+            cycle,
+            maxCycles,
+            cabinetDecision: cabinetRun.score.decision,
+            stopReason: "cabinet-blocked"
+          }
+        });
+        return;
       }
-    });
+
+      setEngineeringGuidedCycleState({
+        status: "running",
+        message: copy.engineeringLaunchpad.guidedCycleExecuting(cycle, maxCycles),
+        cyclesCompleted,
+        maxCycles
+      });
+
+      const codexSmoke = await runEngineeringCodexSmokeFromLaunchpad();
+      const continuation = decideGuidedCycleContinuation({
+        cabinetDecision: cabinetRun.score.decision,
+        executionOk: Boolean(codexSmoke?.ok),
+        cycle,
+        maxCycles
+      });
+
+      if (!codexSmoke?.ok) {
+        setEngineeringGuidedCycleState({
+          status: "error",
+          message: copy.engineeringLaunchpad.guidedCycleFailed(cycle, maxCycles),
+          cyclesCompleted,
+          maxCycles
+        });
+        recordAudit({
+          type: "development.engineering_guided_cycle.stopped",
+          severity: "error",
+          summary: "Guided engineering cycle stopped after execution evidence failed.",
+          runId: cabinetRun.id,
+          metadata: {
+            cycle,
+            maxCycles,
+            cabinetDecision: cabinetRun.score.decision,
+            stopReason: continuation.stopReason
+          }
+        });
+        return;
+      }
+
+      cyclesCompleted = cycle;
+
+      if (!continuation.shouldContinue) {
+        setEngineeringGuidedCycleState({
+          status: "completed",
+          message: copy.engineeringLaunchpad.guidedCycleCompleted(
+            cyclesCompleted,
+            maxCycles,
+            cabinetRun.score.decision,
+            codexSmoke.outputDir
+          ),
+          cyclesCompleted,
+          maxCycles
+        });
+        recordAudit({
+          type: "development.engineering_guided_cycle.completed",
+          severity: "success",
+          summary: "Guided engineering cycle completed cabinet vote and governed Codex execution.",
+          runId: cabinetRun.id,
+          metadata: {
+            cycle,
+            maxCycles,
+            stopReason: continuation.stopReason,
+            cabinetDecision: cabinetRun.score.decision,
+            codexOutputDir: codexSmoke.outputDir,
+            codexChecksPass: codexSmoke.checks.pass,
+            codexChecksFail: codexSmoke.checks.fail
+          }
+        });
+        return;
+      }
+    }
   }
 
   async function refreshEngineeringRunnerReadinessFromLaunchpad() {
@@ -4913,6 +4989,7 @@ export function App() {
             autoWorkState={engineeringAutoWorkState}
             codexSmokeState={engineeringCodexSmokeState}
             guidedCycleState={engineeringGuidedCycleState}
+            guidedCycleMaxRuns={engineeringGuidedCycleMaxRuns}
             runnerReadinessState={engineeringRunnerReadinessState}
             runnerPresets={engineeringRunnerPresets}
             runnerPresetTemplates={engineeringRunnerPresetTemplates}
@@ -4921,6 +4998,7 @@ export function App() {
             onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
             onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
             onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
+            onGuidedCycleMaxRunsChange={(maxRuns) => setEngineeringGuidedCycleMaxRuns(guidedCycleMaxRuns(maxRuns))}
             onRefreshRunnerReadiness={() => void refreshEngineeringRunnerReadinessFromLaunchpad()}
             onEnableRunnerPresetTemplate={(templateId) => void enableEngineeringRunnerPresetTemplateFromLaunchpad(templateId)}
             onFocusMission={focusMissionBrief}

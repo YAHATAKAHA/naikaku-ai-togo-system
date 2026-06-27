@@ -89,13 +89,17 @@ export interface EngineeringLaunchpadCopy {
   autoWorkSelfTesting: string;
   autoWorkCodexSmoke: string;
   autoWorkCodexSmoking: string;
+  guidedCycleLimitLabel: string;
+  guidedCycleLimitOption: (count: number) => string;
   guidedCycleRun: string;
   guidedCycleRunning: string;
   guidedCycleIdle: string;
-  guidedCycleStarting: string;
-  guidedCycleExecuting: string;
-  guidedCycleCompleted: (decision: string, outputDir: string) => string;
-  guidedCycleFailed: string;
+  guidedCycleStarting: (cycle: number, total: number) => string;
+  guidedCycleExecuting: (cycle: number, total: number) => string;
+  guidedCycleCompleted: (cycles: number, total: number, decision: string, outputDir: string) => string;
+  guidedCycleBlocked: (cycle: number, total: number, decision: string) => string;
+  guidedCycleFailed: (cycle: number, total: number) => string;
+  guidedCycleSummary: (cycles: number, total: number) => string;
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
   autoWorkOpenHandsNeedsReady: string;
@@ -554,14 +558,19 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "Codex に小工程を任せる",
       autoWorkCodexSmoking: "Codex 実行中",
+      guidedCycleLimitLabel: "継続上限",
+      guidedCycleLimitOption: (count) => `${count} 周まで`,
       guidedCycleRun: "投票して実行",
       guidedCycleRunning: "会議と実行中",
       guidedCycleIdle: "一括サイクルはまだ開始していません。",
-      guidedCycleStarting: "内閣で投票し、実行可否を決めています。",
-      guidedCycleExecuting: "内閣結果を受けて Codex 実行に進んでいます。",
-      guidedCycleCompleted: (decision, outputDir) =>
-        `一括サイクル完了: 内閣 ${decision}、実行証拠 ${outputDir}。`,
-      guidedCycleFailed: "一括サイクルは途中で停止しました。上の結果と証拠を確認してください。",
+      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 周: 内閣で投票し、実行可否を決めています。`,
+      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 周: 内閣結果を受けて Codex 実行に進んでいます。`,
+      guidedCycleCompleted: (cycles, total, decision, outputDir) =>
+        `一括サイクル完了: ${cycles}/${total} 周、内閣 ${decision}、実行証拠 ${outputDir}。`,
+      guidedCycleBlocked: (cycle, total, decision) =>
+        `第 ${cycle}/${total} 周で停止: 内閣 ${decision}。実行せず監査結果を確認してください。`,
+      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 周で停止: 実行証拠の取得に失敗しました。`,
+      guidedCycleSummary: (cycles, total) => `継続 ${cycles}/${total} 周`,
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
       autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
@@ -1029,14 +1038,19 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "Self-testing",
       autoWorkCodexSmoke: "Let Codex handle a tiny job",
       autoWorkCodexSmoking: "Codex running",
+      guidedCycleLimitLabel: "Auto loops",
+      guidedCycleLimitOption: (count) => `Up to ${count}`,
       guidedCycleRun: "Vote and execute",
       guidedCycleRunning: "Voting and running",
       guidedCycleIdle: "The one-click cycle has not started yet.",
-      guidedCycleStarting: "The cabinet is voting before execution.",
-      guidedCycleExecuting: "Cabinet result is ready; starting the Codex execution proof.",
-      guidedCycleCompleted: (decision, outputDir) =>
-        `One-click cycle completed: cabinet ${decision}, evidence ${outputDir}.`,
-      guidedCycleFailed: "The one-click cycle stopped. Review the result and evidence above.",
+      guidedCycleStarting: (cycle, total) => `Cycle ${cycle}/${total}: the cabinet is voting before execution.`,
+      guidedCycleExecuting: (cycle, total) => `Cycle ${cycle}/${total}: starting the Codex execution proof.`,
+      guidedCycleCompleted: (cycles, total, decision, outputDir) =>
+        `One-click cycle completed: ${cycles}/${total} cycles, cabinet ${decision}, evidence ${outputDir}.`,
+      guidedCycleBlocked: (cycle, total, decision) =>
+        `Stopped at cycle ${cycle}/${total}: cabinet ${decision}. Review the audit before execution.`,
+      guidedCycleFailed: (cycle, total) => `Stopped at cycle ${cycle}/${total}: execution evidence failed.`,
+      guidedCycleSummary: (cycles, total) => `${cycles}/${total} cycles`,
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
       autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
@@ -1504,14 +1518,19 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自测中",
       autoWorkCodexSmoke: "让 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 执行中",
+      guidedCycleLimitLabel: "自动轮数",
+      guidedCycleLimitOption: (count) => `最多 ${count} 轮`,
       guidedCycleRun: "投票并执行",
       guidedCycleRunning: "投票和执行中",
       guidedCycleIdle: "一键循环还没有开始。",
-      guidedCycleStarting: "内阁正在投票，决定是否执行。",
-      guidedCycleExecuting: "内阁结果已出，正在启动 Codex 执行证明。",
-      guidedCycleCompleted: (decision, outputDir) =>
-        `一键循环完成：内阁 ${decision}，证据 ${outputDir}。`,
-      guidedCycleFailed: "一键循环中途停止。请查看上面的结果和证据。",
+      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 轮：内阁正在投票，决定是否执行。`,
+      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 轮：内阁结果已出，正在启动 Codex 执行证明。`,
+      guidedCycleCompleted: (cycles, total, decision, outputDir) =>
+        `一键循环完成：${cycles}/${total} 轮，内阁 ${decision}，证据 ${outputDir}。`,
+      guidedCycleBlocked: (cycle, total, decision) =>
+        `第 ${cycle}/${total} 轮停止：内阁 ${decision}。请先看审计结果，不继续执行。`,
+      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 轮停止：执行证据获取失败。`,
+      guidedCycleSummary: (cycles, total) => `已继续 ${cycles}/${total} 轮`,
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
@@ -1979,14 +1998,19 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "讓 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 執行中",
+      guidedCycleLimitLabel: "自動輪數",
+      guidedCycleLimitOption: (count) => `最多 ${count} 輪`,
       guidedCycleRun: "投票並執行",
       guidedCycleRunning: "投票和執行中",
       guidedCycleIdle: "一鍵循環還沒有開始。",
-      guidedCycleStarting: "內閣正在投票，決定是否執行。",
-      guidedCycleExecuting: "內閣結果已出，正在啟動 Codex 執行證明。",
-      guidedCycleCompleted: (decision, outputDir) =>
-        `一鍵循環完成：內閣 ${decision}，證據 ${outputDir}。`,
-      guidedCycleFailed: "一鍵循環中途停止。請查看上面的結果和證據。",
+      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 輪：內閣正在投票，決定是否執行。`,
+      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 輪：內閣結果已出，正在啟動 Codex 執行證明。`,
+      guidedCycleCompleted: (cycles, total, decision, outputDir) =>
+        `一鍵循環完成：${cycles}/${total} 輪，內閣 ${decision}，證據 ${outputDir}。`,
+      guidedCycleBlocked: (cycle, total, decision) =>
+        `第 ${cycle}/${total} 輪停止：內閣 ${decision}。請先看審計結果，不繼續執行。`,
+      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 輪停止：執行證據取得失敗。`,
+      guidedCycleSummary: (cycles, total) => `已繼續 ${cycles}/${total} 輪`,
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
@@ -2454,14 +2478,19 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "자체 테스트 중",
       autoWorkCodexSmoke: "Codex에 작은 작업 맡기기",
       autoWorkCodexSmoking: "Codex 실행 중",
+      guidedCycleLimitLabel: "자동 반복",
+      guidedCycleLimitOption: (count) => `최대 ${count}회`,
       guidedCycleRun: "투표 후 실행",
       guidedCycleRunning: "투표 및 실행 중",
       guidedCycleIdle: "원클릭 사이클은 아직 시작되지 않았습니다.",
-      guidedCycleStarting: "내각이 실행 전 투표 중입니다.",
-      guidedCycleExecuting: "내각 결과가 준비되어 Codex 실행 증명을 시작합니다.",
-      guidedCycleCompleted: (decision, outputDir) =>
-        `원클릭 사이클 완료: 내각 ${decision}, 증거 ${outputDir}.`,
-      guidedCycleFailed: "원클릭 사이클이 중간에 멈췄습니다. 위 결과와 증거를 확인하세요.",
+      guidedCycleStarting: (cycle, total) => `${cycle}/${total}회차: 내각이 실행 전 투표 중입니다.`,
+      guidedCycleExecuting: (cycle, total) => `${cycle}/${total}회차: Codex 실행 증명을 시작합니다.`,
+      guidedCycleCompleted: (cycles, total, decision, outputDir) =>
+        `원클릭 사이클 완료: ${cycles}/${total}회, 내각 ${decision}, 증거 ${outputDir}.`,
+      guidedCycleBlocked: (cycle, total, decision) =>
+        `${cycle}/${total}회차에서 중지: 내각 ${decision}. 감사 결과를 먼저 확인하세요.`,
+      guidedCycleFailed: (cycle, total) => `${cycle}/${total}회차에서 중지: 실행 증거 수집에 실패했습니다.`,
+      guidedCycleSummary: (cycles, total) => `${cycles}/${total}회 진행`,
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
       autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
