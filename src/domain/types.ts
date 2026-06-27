@@ -1114,6 +1114,46 @@ export interface CodingAgentSandboxRunnerDrillSummary {
   };
 }
 
+export interface RunnerAuthDrillSummary {
+  schema: "naikaku.runner-auth-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  source: {
+    executorProfiles: ExecutorProfileId[];
+    scopedCredentials: number;
+    sharedTokenConfigured: boolean;
+  };
+  cases: Array<{
+    id: string;
+    passed: boolean;
+    decisionOk: boolean;
+    status: number;
+    mode: string;
+    runnerId: string | null;
+    allowedExecutorProfiles: ExecutorProfileId[];
+    allExecutorProfiles: boolean;
+    tokenFingerprint?: string;
+    canUseRequestedProfile?: boolean;
+    canUseDeniedProfile?: boolean;
+    auditTags: string[];
+  }>;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    scopedCredentials: number;
+    activeScopedCredentials: number;
+    expiredScopedCredentials: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface LocalizationDrillSummary {
   schema: "naikaku.localization-drill.v1";
   generatedAt: string;
@@ -1370,6 +1410,7 @@ export interface VerificationManifest {
     executorContractDrill: string;
     sandboxCapabilityDrill: string;
     securityRedTeamDrill: string;
+    runnerAuthDrill: string;
     productionBoundaryDrill: string;
     releaseVerification: string;
   };
@@ -1386,12 +1427,14 @@ export interface VerificationManifest {
     executorContractGeneratedAt: string;
     sandboxCapabilityGeneratedAt: string;
     securityRedTeamGeneratedAt: string;
+    runnerAuthGeneratedAt: string;
     productionBoundaryGeneratedAt: string;
     releaseVerificationGeneratedAt: string;
     localizationLocales: string[];
     executorProfiles: ExecutorProfileId[];
     sandboxCapabilityProfiles: ExecutorProfileId[];
     securityRedTeamCases: number;
+    runnerAuthScopedCredentials: number;
     productionBoundaryExitCode: number;
     releaseRunId: string;
     releaseScope: string;

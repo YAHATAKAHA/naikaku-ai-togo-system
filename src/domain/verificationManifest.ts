@@ -12,6 +12,7 @@ import type {
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
+  RunnerAuthDrillSummary,
   SandboxCapabilityDrillSummary,
   SecurityRedTeamDrillSummary,
   VerificationManifest,
@@ -40,6 +41,7 @@ export interface BuildVerificationManifestInput {
   executorContractDrill: ExecutorContractDrillSummary;
   sandboxCapabilityDrill: SandboxCapabilityDrillSummary;
   securityRedTeamDrill: SecurityRedTeamDrillSummary;
+  runnerAuthDrill: RunnerAuthDrillSummary;
   productionBoundaryDrill: ProductionBoundaryDrillSummary;
   releaseVerification: ReleaseVerificationReport;
   generatedAt?: string;
@@ -56,6 +58,7 @@ export interface BuildVerificationManifestInput {
     executorContractDrill: string;
     sandboxCapabilityDrill: string;
     securityRedTeamDrill: string;
+    runnerAuthDrill: string;
     productionBoundaryDrill: string;
     releaseVerification: string;
   };
@@ -74,6 +77,7 @@ export function buildVerificationManifest({
   executorContractDrill,
   sandboxCapabilityDrill,
   securityRedTeamDrill,
+  runnerAuthDrill,
   productionBoundaryDrill,
   releaseVerification,
   generatedAt = new Date().toISOString(),
@@ -94,6 +98,7 @@ export function buildVerificationManifest({
     executorContractDrillCheck(executorContractDrill),
     sandboxCapabilityDrillCheck(sandboxCapabilityDrill),
     securityRedTeamDrillCheck(securityRedTeamDrill),
+    runnerAuthDrillCheck(runnerAuthDrill),
     releaseVerificationCheck(releaseVerification),
     dryRunBoundaryCheck(releaseVerification),
     productionBoundaryDrillCheck(productionBoundaryDrill)
@@ -119,12 +124,14 @@ export function buildVerificationManifest({
       executorContractGeneratedAt: executorContractDrill.generatedAt,
       sandboxCapabilityGeneratedAt: sandboxCapabilityDrill.generatedAt,
       securityRedTeamGeneratedAt: securityRedTeamDrill.generatedAt,
+      runnerAuthGeneratedAt: runnerAuthDrill.generatedAt,
       productionBoundaryGeneratedAt: productionBoundaryDrill.generatedAt,
       releaseVerificationGeneratedAt: releaseVerification.generatedAt,
       localizationLocales: localizationDrill.locales.map((locale) => locale.locale),
       executorProfiles: executorContractDrill.profiles.map((profile) => profile.profileId),
       sandboxCapabilityProfiles: sandboxCapabilityDrill.profiles.map((profile) => profile.profileId),
       securityRedTeamCases: securityRedTeamDrill.summary.cases,
+      runnerAuthScopedCredentials: runnerAuthDrill.summary.scopedCredentials,
       productionBoundaryExitCode: productionBoundaryDrill.observedExitCode,
       releaseRunId: releaseVerification.sourceRunId,
       releaseScope: releaseVerification.scope
@@ -140,7 +147,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, runner auth, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -873,6 +880,66 @@ function securityRedTeamDrillCheck(report: SecurityRedTeamDrillSummary): Verific
     nextAction: ok
       ? "Keep the red-team drill attached before connecting real computer-use runners to external content."
       : "Restore prompt-injection, credential, control-plane, Git/deploy, external-send, and high-impact gates before runner handoff."
+  };
+}
+
+function runnerAuthDrillCheck(report: RunnerAuthDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const caseIds = report.cases.map((item) => item.id);
+  const requiredCases = [
+    "development-open-visible",
+    "shared-token-legacy-compatible",
+    "scoped-shell-runner-limited",
+    "scoped-hash-token-accepted",
+    "expired-scoped-runner-rejected",
+    "malformed-scoped-config-fails-closed"
+  ];
+  const scopedShell = report.cases.find((item) => item.id === "scoped-shell-runner-limited");
+  const hashRunner = report.cases.find((item) => item.id === "scoped-hash-token-accepted");
+  const expiredRunner = report.cases.find((item) => item.id === "expired-scoped-runner-rejected");
+  const malformed = report.cases.find((item) => item.id === "malformed-scoped-config-fails-closed");
+  const ok = report.schema === "naikaku.runner-auth-drill.v1"
+    && report.summary.total >= requiredCases.length
+    && report.summary.passed === report.summary.total
+    && report.summary.failed === 0
+    && report.summary.scopedCredentials >= 3
+    && report.summary.activeScopedCredentials >= 2
+    && report.summary.expiredScopedCredentials >= 1
+    && requiredCases.every((caseId) => caseIds.includes(caseId))
+    && scopedShell?.decisionOk === true
+    && scopedShell?.allExecutorProfiles === false
+    && scopedShell?.allowedExecutorProfiles.includes("shell-container") === true
+    && scopedShell?.canUseRequestedProfile === true
+    && scopedShell?.canUseDeniedProfile === false
+    && hashRunner?.decisionOk === true
+    && Boolean(hashRunner.tokenFingerprint)
+    && expiredRunner?.decisionOk === false
+    && expiredRunner.auditTags.includes("credential-expired")
+    && malformed?.mode === "misconfigured"
+    && malformed.decisionOk === false
+    && checksPassed;
+
+  return {
+    id: "runner-auth-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Runner auth drill proved legacy token compatibility, scoped runner credentials, token-hash acceptance, profile limits, expiry rejection, and fail-closed malformed config."
+      : "Runner auth drill did not preserve scoped credential, rotation, or fail-closed boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Cases: ${report.summary.passed}/${report.summary.total}`,
+      `Scoped credentials: ${report.summary.scopedCredentials}`,
+      `Active scoped credentials: ${report.summary.activeScopedCredentials}`,
+      `Expired scoped credentials: ${report.summary.expiredScopedCredentials}`,
+      `Scoped shell runner profiles: ${scopedShell?.allowedExecutorProfiles.join(", ") || "missing"}`,
+      `Scoped shell denied other profile: ${scopedShell?.canUseDeniedProfile === false ? "yes" : "no"}`,
+      `Hash credential fingerprint present: ${hashRunner?.tokenFingerprint ? "yes" : "no"}`,
+      `Expired credential rejected: ${expiredRunner?.auditTags.includes("credential-expired") ? "yes" : "no"}`,
+      `Malformed config mode: ${malformed?.mode || "missing"}`
+    ],
+    nextAction: ok
+      ? "Keep the runner auth drill attached before connecting real runner services."
+      : "Restore per-runner scoped credentials and fail-closed auth before executor handoff."
   };
 }
 

@@ -16,6 +16,7 @@ import type {
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
+  RunnerAuthDrillSummary,
   SandboxCapabilityDrillSummary,
   SecurityRedTeamDrillSummary
 } from "./types";
@@ -33,6 +34,7 @@ const inputs = {
   executorContractDrill: "output/executor-contract-drill/summary.json",
   sandboxCapabilityDrill: "output/sandbox-capability-drill/summary.json",
   securityRedTeamDrill: "output/security-red-team-drill/summary.json",
+  runnerAuthDrill: "output/runner-auth-drill/summary.json",
   productionBoundaryDrill: "output/verification/production-boundary-latest.json",
   releaseVerification: "output/rehearsal-drill/release-verification-latest.json"
 };
@@ -52,6 +54,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -61,8 +64,8 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 17,
-      passed: 17,
+      total: 18,
+      passed: 18,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
@@ -80,6 +83,7 @@ describe("verification manifest", () => {
       "executor-contract-drill",
       "sandbox-capability-drill",
       "security-red-team-drill",
+      "runner-auth-drill",
       "release-verification",
       "dry-run-boundary",
       "production-boundary-drill"
@@ -94,9 +98,11 @@ describe("verification manifest", () => {
     expect(manifest.source.codingAgentSandboxRunnerGeneratedAt).toBe("2026-06-27T00:05:00.000Z");
     expect(manifest.source.sandboxCapabilityGeneratedAt).toBe("2026-06-27T00:03:30.000Z");
     expect(manifest.source.securityRedTeamGeneratedAt).toBe("2026-06-27T00:03:40.000Z");
+    expect(manifest.source.runnerAuthGeneratedAt).toBe("2026-06-27T00:03:50.000Z");
     expect(manifest.source.executorProfiles).toContain("desktop-vm");
     expect(manifest.source.sandboxCapabilityProfiles).toContain("shell-container");
     expect(manifest.source.securityRedTeamCases).toBe(8);
+    expect(manifest.source.runnerAuthScopedCredentials).toBe(3);
     expect(manifest.source.productionBoundaryExitCode).toBe(4);
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
   });
@@ -118,6 +124,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -149,6 +156,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -180,6 +188,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -211,6 +220,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -242,6 +252,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -273,6 +284,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -304,6 +316,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -335,6 +348,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -366,6 +380,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -399,6 +414,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -430,6 +446,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -461,6 +478,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -494,6 +512,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -524,6 +543,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -556,6 +576,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -590,6 +611,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -620,6 +642,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorDrill,
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -650,6 +673,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill,
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -690,6 +714,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill,
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -700,6 +725,40 @@ describe("verification manifest", () => {
     expect(manifest.decision).toBe("invalid");
     expect(securityCheck?.status).toBe("fail");
     expect(securityCheck?.summary).toContain("did not prove");
+  });
+
+  it("invalidates the manifest when runner auth scope is not enforced", () => {
+    const runnerAuthDrill = runnerAuthDrillFixture();
+    const scopedShell = runnerAuthDrill.cases.find((item) => item.id === "scoped-shell-runner-limited");
+    if (!scopedShell) throw new Error("Missing scoped shell runner auth fixture.");
+    scopedShell.allExecutorProfiles = true;
+    scopedShell.canUseDeniedProfile = true;
+    runnerAuthDrill.checks.scopedShellRunnerLimited = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill,
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const runnerAuthCheck = manifest.checks.find((check) => check.id === "runner-auth-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(runnerAuthCheck?.status).toBe("fail");
+    expect(runnerAuthCheck?.evidence).toContain("Scoped shell denied other profile: no");
   });
 
   it("invalidates the manifest when production boundary exit code is not observed", () => {
@@ -720,6 +779,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill,
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -768,6 +828,7 @@ describe("verification manifest", () => {
       executorContractDrill: executorContractDrillFixture(),
       sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification,
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -1499,6 +1560,135 @@ function sandboxCapabilityDrillFixture(): SandboxCapabilityDrillSummary {
       claim: "Local sandbox capability drill.",
       limitations: ["No real runner controlled."],
       productionRequirements: ["Attach production runner evidence."]
+    }
+  };
+}
+
+function runnerAuthDrillFixture(): RunnerAuthDrillSummary {
+  const executorProfiles = [
+    "browser-sandbox",
+    "desktop-vm",
+    "shell-container",
+    "mcp-proxy",
+    "human-approval"
+  ] as const;
+
+  return {
+    schema: "naikaku.runner-auth-drill.v1",
+    generatedAt: "2026-06-27T00:03:50.000Z",
+    outputDir: "output/runner-auth-drill",
+    source: {
+      executorProfiles: [...executorProfiles],
+      scopedCredentials: 3,
+      sharedTokenConfigured: true
+    },
+    cases: [
+      {
+        id: "development-open-visible",
+        passed: true,
+        decisionOk: true,
+        status: 200,
+        mode: "development-open",
+        runnerId: "anonymous-dev-runner",
+        allowedExecutorProfiles: [...executorProfiles],
+        allExecutorProfiles: true,
+        canUseRequestedProfile: true,
+        canUseDeniedProfile: true,
+        auditTags: ["runner-auth", "development-open"]
+      },
+      {
+        id: "shared-token-legacy-compatible",
+        passed: true,
+        decisionOk: true,
+        status: 200,
+        mode: "shared-token-required",
+        runnerId: "legacy-runner-01",
+        allowedExecutorProfiles: [...executorProfiles],
+        allExecutorProfiles: true,
+        tokenFingerprint: "sha256:3f8d6b6a3d6b",
+        canUseRequestedProfile: true,
+        canUseDeniedProfile: true,
+        auditTags: ["runner-auth", "shared-token-accepted", "legacy-runner-01"]
+      },
+      {
+        id: "scoped-shell-runner-limited",
+        passed: true,
+        decisionOk: true,
+        status: 200,
+        mode: "scoped-credentials-required",
+        runnerId: "shell-runner-01",
+        allowedExecutorProfiles: ["shell-container"],
+        allExecutorProfiles: false,
+        tokenFingerprint: "sha256:7d8523e64c31",
+        canUseRequestedProfile: true,
+        canUseDeniedProfile: false,
+        auditTags: ["runner-auth", "scoped-token-accepted", "shell-runner-01"]
+      },
+      {
+        id: "scoped-hash-token-accepted",
+        passed: true,
+        decisionOk: true,
+        status: 200,
+        mode: "scoped-credentials-required",
+        runnerId: "browser-runner-01",
+        allowedExecutorProfiles: ["browser-sandbox"],
+        allExecutorProfiles: false,
+        tokenFingerprint: "sha256:9c0574318b9b",
+        canUseRequestedProfile: true,
+        canUseDeniedProfile: false,
+        auditTags: ["runner-auth", "scoped-token-accepted", "browser-runner-01"]
+      },
+      {
+        id: "expired-scoped-runner-rejected",
+        passed: true,
+        decisionOk: false,
+        status: 401,
+        mode: "scoped-credentials-required",
+        runnerId: "expired-runner-01",
+        allowedExecutorProfiles: [],
+        allExecutorProfiles: false,
+        tokenFingerprint: "sha256:e03aa12f2c8c",
+        canUseRequestedProfile: false,
+        canUseDeniedProfile: false,
+        auditTags: ["runner-auth", "credential-expired", "expired-runner-01"]
+      },
+      {
+        id: "malformed-scoped-config-fails-closed",
+        passed: true,
+        decisionOk: false,
+        status: 401,
+        mode: "misconfigured",
+        runnerId: "shell-runner-01",
+        allowedExecutorProfiles: [],
+        allExecutorProfiles: false,
+        canUseRequestedProfile: false,
+        canUseDeniedProfile: false,
+        auditTags: ["runner-auth", "misconfigured"]
+      }
+    ],
+    summary: {
+      total: 6,
+      passed: 6,
+      failed: 0,
+      scopedCredentials: 3,
+      activeScopedCredentials: 2,
+      expiredScopedCredentials: 1
+    },
+    checks: {
+      developmentOpenVisible: true,
+      sharedTokenLegacyCompatible: true,
+      scopedCredentialsPreferred: true,
+      scopedShellRunnerLimited: true,
+      scopedHashTokenAccepted: true,
+      expiredCredentialRejected: true,
+      malformedConfigFailsClosed: true,
+      tokensRedacted: true
+    },
+    honestyClaim: {
+      level: "runner-auth-drill",
+      claim: "Local runner auth drill.",
+      limitations: ["No real runner controlled."],
+      productionRequirements: ["Store credentials in a server-side vault."]
     }
   };
 }

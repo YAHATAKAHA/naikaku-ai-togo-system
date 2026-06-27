@@ -17,6 +17,7 @@ import type {
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
+  RunnerAuthDrillSummary,
   SandboxCapabilityDrillSummary,
   SecurityRedTeamDrillSummary,
   VerificationManifest
@@ -35,6 +36,7 @@ interface VerificationManifestOptions {
   executorContractDrillPath: string;
   sandboxCapabilityDrillPath: string;
   securityRedTeamDrillPath: string;
+  runnerAuthDrillPath: string;
   productionBoundaryDrillPath: string;
   releaseVerificationPath: string;
   outputPath: string;
@@ -62,6 +64,7 @@ async function main() {
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
   const sandboxCapabilityDrill = await loadSandboxCapabilityDrill(options.sandboxCapabilityDrillPath);
   const securityRedTeamDrill = await loadSecurityRedTeamDrill(options.securityRedTeamDrillPath);
+  const runnerAuthDrill = await loadRunnerAuthDrill(options.runnerAuthDrillPath);
   const productionBoundaryDrill = await loadProductionBoundaryDrill(options.productionBoundaryDrillPath);
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
@@ -77,6 +80,7 @@ async function main() {
     executorContractDrill,
     sandboxCapabilityDrill,
     securityRedTeamDrill,
+    runnerAuthDrill,
     productionBoundaryDrill,
     releaseVerification,
     generatedAt: options.generatedAt,
@@ -93,6 +97,7 @@ async function main() {
       executorContractDrill: options.executorContractDrillPath,
       sandboxCapabilityDrill: options.sandboxCapabilityDrillPath,
       securityRedTeamDrill: options.securityRedTeamDrillPath,
+      runnerAuthDrill: options.runnerAuthDrillPath,
       productionBoundaryDrill: options.productionBoundaryDrillPath,
       releaseVerification: options.releaseVerificationPath
     }
@@ -202,6 +207,14 @@ async function loadSecurityRedTeamDrill(reportPath: string): Promise<SecurityRed
   return parsed;
 }
 
+async function loadRunnerAuthDrill(reportPath: string): Promise<RunnerAuthDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as RunnerAuthDrillSummary;
+  if (parsed.schema !== "naikaku.runner-auth-drill.v1") {
+    throw new Error("Runner auth drill must use schema naikaku.runner-auth-drill.v1.");
+  }
+  return parsed;
+}
+
 async function loadProductionBoundaryDrill(reportPath: string): Promise<ProductionBoundaryDrillSummary> {
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as ProductionBoundaryDrillSummary;
   if (parsed.schema !== "naikaku.production-boundary-drill.v1") {
@@ -250,6 +263,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
     sandboxCapabilityDrillPath: "output/sandbox-capability-drill/summary.json",
     securityRedTeamDrillPath: "output/security-red-team-drill/summary.json",
+    runnerAuthDrillPath: "output/runner-auth-drill/summary.json",
     productionBoundaryDrillPath: "output/verification/production-boundary-latest.json",
     releaseVerificationPath: "output/rehearsal-drill/release-verification-latest.json",
     outputPath: "output/verification/verification-manifest-latest.json",
@@ -336,6 +350,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
       continue;
     }
 
+    if (arg === "--runner-auth-drill") {
+      options.runnerAuthDrillPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
     if (arg === "--production-boundary-drill") {
       options.productionBoundaryDrillPath = requireValue(args, index, arg);
       index += 1;
@@ -403,6 +423,7 @@ Options:
                                   Read sandbox capability readiness drill summary.
   --security-red-team-drill <path>
                                   Read security red-team drill summary.
+  --runner-auth-drill <path>     Read runner auth drill summary.
   --production-boundary-drill <path>
                                   Read production boundary drill summary.
   --release-verification <path>  Read release verification JSON.

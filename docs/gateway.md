@@ -22,16 +22,19 @@ NAIKAKU_GATEWAY_HOST=127.0.0.1
 NAIKAKU_GATEWAY_PORT=8787
 NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
 NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
+NAIKAKU_RUNNER_CREDENTIALS='[{"runnerId":"shell-runner-01","token":"shell-token","executorProfiles":["shell-container"],"expiresAt":"2026-12-31T00:00:00.000Z"}]'
 NAIKAKU_LEDGER_DIR=.naikaku-data
 ```
 
 `VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
 
-`NAIKAKU_RUNNER_TOKEN` protects executor-facing routes when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
+`NAIKAKU_RUNNER_TOKEN` protects executor-facing routes in legacy shared-token mode when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
+
+`NAIKAKU_RUNNER_CREDENTIALS` is preferred for real runner development. It takes precedence over `NAIKAKU_RUNNER_TOKEN` and accepts a JSON array, or an object with a `runners` array. Each entry requires `runnerId`, either `token` or `tokenSha256`, and `executorProfiles`. Optional `rotatedAt`, `notBefore`, `expiresAt`, and `label` fields support rotation evidence. Malformed scoped config fails closed with `runnerAuth.mode` set to `misconfigured`; it does not fall back to an open gateway.
 
 `NAIKAKU_LEDGER_DIR` controls where the gateway stores local approval and evidence ledgers. The default is `.naikaku-data`, which is ignored by Git.
 
-The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by `NAIKAKU_RUNNER_TOKEN`, the panel surfaces the gateway authentication error and still shows approval/status data.
+The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by runner authentication, the panel surfaces the gateway authentication error and still shows approval/status data.
 
 Authenticated runner requests use either:
 
@@ -47,6 +50,8 @@ x-naikaku-runner-token: <NAIKAKU_RUNNER_TOKEN>
 x-naikaku-runner-id: shell-runner-01
 ```
 
+When scoped credentials are configured, that runner can receive or submit evidence only for its configured executor profiles. For example, a runner with `executorProfiles: ["shell-container"]` cannot run or read `browser-sandbox`, `desktop-vm`, `mcp-proxy`, or `human-approval` evidence. `/v1/executor/handoff` filters ready actions to the authenticated runner scope, while executor run, evidence, ledger evidence writes, and coding-agent sandbox-runner execution return `403` when the submitted payload contains out-of-scope profiles.
+
 ## Endpoints
 
 ### `GET /health`
@@ -58,10 +63,21 @@ The response also includes runner auth posture:
 ```json
 {
   "runnerAuth": {
-    "mode": "token-required",
+    "mode": "scoped-credentials-required",
     "configured": true,
     "acceptedHeaders": ["Authorization: Bearer <token>", "x-naikaku-runner-token"],
-    "runnerIdRequired": true
+    "runnerIdRequired": true,
+    "supportsScopedCredentials": true,
+    "scopedRunnerCredentials": [
+      {
+        "runnerId": "shell-runner-01",
+        "executorProfiles": ["shell-container"],
+        "allExecutorProfiles": false,
+        "tokenFingerprint": "sha256:abcd1234ef56",
+        "expiresAt": "2026-12-31T00:00:00.000Z",
+        "status": "active"
+      }
+    ]
   }
 }
 ```
@@ -168,7 +184,7 @@ Response:
 
 Builds the executor-facing handoff from a run plus approval records. This does not execute actions. It filters out blocked, rejected, and still-unapproved work.
 
-If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 Any supplied approval records are also upserted into the local ledger.
 
 ```json
@@ -196,7 +212,7 @@ Executors should consume `readyActions` only. A `needs-approval` action appears 
 
 Dry-runs executor-ready actions from a handoff. This endpoint does not execute shell commands, browser navigation, desktop input, file writes, or MCP calls. It returns simulated executor steps for audit and UI development.
 
-If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 
 ```json
 {
@@ -235,7 +251,7 @@ Response:
 
 Builds an exportable evidence bundle from an `ExecutorRun`. This endpoint does not execute anything. It normalizes per-step evidence, evidence hashes, runner ids, and replay flags into `naikaku.executor-evidence.v1` so future Browser, Shell, Desktop, and MCP runner services can satisfy the same audit contract.
 
-If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 The generated bundle is also upserted into the local evidence ledger.
 
 ```json
@@ -306,7 +322,7 @@ Upserts one `AutomationApprovalRecord` into the local ledger.
 
 ### `GET /v1/ledger/evidence`
 
-Lists stored executor evidence bundles. Add `?runId=run-...` or `?executorRunId=...` to filter. If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+Lists stored executor evidence bundles. Add `?runId=run-...` or `?executorRunId=...` to filter. If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 
 ```json
 {
@@ -317,7 +333,7 @@ Lists stored executor evidence bundles. Add `?runId=run-...` or `?executorRunId=
 
 ### `POST /v1/ledger/evidence`
 
-Upserts one `naikaku.executor-evidence.v1` bundle. If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+Upserts one `naikaku.executor-evidence.v1` bundle. If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 
 ```json
 {
@@ -1126,7 +1142,7 @@ Consumes a ready runner self-test and the matching session bundle, then executes
 
 The execution route always reruns the sandbox runner preflight server-side before any command starts, even if the caller already used the preflight endpoint. If that server-side preflight is not `ready`, the route returns `409` with the preflight payload and does not execute commands. This prevents direct API callers from bypassing the Workbench preflight step.
 
-If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
+If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 
 ```json
 {
@@ -1477,7 +1493,7 @@ The gateway is intentionally conservative:
 - It does not operate the host desktop.
 - It does not persist raw secrets.
 - It checks blocked actions and network allowlists before sandbox work.
-- It requires runner authentication for executor routes when `NAIKAKU_RUNNER_TOKEN` is configured.
+- It requires runner authentication for executor routes when `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is configured, and scoped credentials enforce executor profile boundaries.
 - It stores local ledger files under `NAIKAKU_LEDGER_DIR` and keeps that directory out of Git.
 
 Production work should add authentication, durable audit storage, real provider adapters, and executor backends.

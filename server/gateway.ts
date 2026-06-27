@@ -32,6 +32,7 @@ import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilitie
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import { runCodingAgentSandboxRunner } from "./codingAgentSandboxRunner";
 import type {
+  AutomationAction,
   AutomationApprovalRecord,
   AuditEvent,
   CabinetRun,
@@ -54,6 +55,7 @@ import type {
   CodingAgentSessionDrillReport,
   CodingAgentSessionReceipt,
   DevelopmentWorkItem,
+  ExecutorProfileId,
   ExecutorEvidenceBundle,
   ExecutorRun,
   ExecutorHandoff,
@@ -73,7 +75,12 @@ import {
 } from "./ledgerStore";
 import { runGatewayCabinet } from "./liveCabinet";
 import { validateProviderConfig } from "./providerAdapters";
-import { evaluateRunnerAuth, runnerAuthPosture, type RunnerAuthDecision } from "./runnerAuth";
+import {
+  evaluateRunnerAuth,
+  runnerAuthPosture,
+  runnerCanUseExecutorProfile,
+  type RunnerAuthDecision
+} from "./runnerAuth";
 import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolicy";
 
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
@@ -209,10 +216,13 @@ const server = createServer(async (request, response) => {
         run: body.run,
         approvalRecords: body.approvalRecords || []
       });
+      const scopedHandoff = scopeExecutorHandoffForRunner(handoff, auth);
       sendJson(response, 200, {
-        ...handoff,
+        ...scopedHandoff,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth),
+        gatewayRunnerScopeFilteredActions: handoff.readyActions.length - scopedHandoff.readyActions.length
       });
       return;
     }
@@ -224,13 +234,22 @@ const server = createServer(async (request, response) => {
       const body = await readJson<{
         handoff: ExecutorHandoff;
       }>(request);
+      if (!ensureRunnerCanAccessProfiles({
+        auth,
+        response,
+        profiles: body.handoff?.readyActions?.map((action) => action.executorProfileId) || [],
+        operation: "executor run"
+      })) {
+        return;
+      }
       const executorRun = runExecutorHandoff({
         handoff: body.handoff
       });
       sendJson(response, 200, {
         ...executorRun,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
       });
       return;
     }
@@ -249,6 +268,14 @@ const server = createServer(async (request, response) => {
         });
         return;
       }
+      if (!ensureRunnerCanAccessProfiles({
+        auth,
+        response,
+        profiles: body.executorRun.steps.map((step) => step.executorProfileId),
+        operation: "executor evidence export"
+      })) {
+        return;
+      }
       const bundle = buildExecutorEvidenceBundle({
         executorRun: body.executorRun
       });
@@ -257,7 +284,8 @@ const server = createServer(async (request, response) => {
         ...bundle,
         stored: true,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
       });
       return;
     }
@@ -304,14 +332,17 @@ const server = createServer(async (request, response) => {
 
       const runId = requestUrl.searchParams.get("runId") || undefined;
       const executorRunId = requestUrl.searchParams.get("executorRunId") || undefined;
-      const bundles = await listEvidenceBundlesFromLedger({ runId, executorRunId });
+      const bundles = (await listEvidenceBundlesFromLedger({ runId, executorRunId }))
+        .map((bundle) => scopeEvidenceBundleForRunner(bundle, auth))
+        .filter((bundle) => auth.allExecutorProfiles || bundle.steps.length > 0);
       sendJson(response, 200, {
         schema: "naikaku.evidence-ledger-query.v1",
         runId: runId || null,
         executorRunId: executorRunId || null,
         bundles,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
       });
       return;
     }
@@ -330,13 +361,22 @@ const server = createServer(async (request, response) => {
         });
         return;
       }
+      if (!ensureRunnerCanAccessProfiles({
+        auth,
+        response,
+        profiles: body.bundle.steps.map((step) => step.executorProfileId),
+        operation: "executor evidence ledger write"
+      })) {
+        return;
+      }
       const bundle = await saveEvidenceBundleToLedger({ bundle: body.bundle });
       sendJson(response, 200, {
         ok: true,
         stored: true,
         bundle,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
       });
       return;
     }
@@ -887,13 +927,24 @@ const server = createServer(async (request, response) => {
         bundle: body.bundle,
         sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
+      if (!ensureRunnerCanAccessProfiles({
+        auth,
+        response,
+        profiles: preflight.items
+          .filter((item) => item.preflightStatus === "ready")
+          .map((item) => item.executorProfileId),
+        operation: "coding-agent sandbox runner"
+      })) {
+        return;
+      }
       if (preflight.decision !== "ready") {
         sendJson(response, 409, {
           ok: false,
           message: "Sandbox runner preflight is not ready; execution was not started.",
           preflight,
           gatewayRunnerId: auth.runnerId,
-          authMode: auth.mode
+          authMode: auth.mode,
+          gatewayRunnerScope: runnerScopePayload(auth)
         });
         return;
       }
@@ -906,7 +957,8 @@ const server = createServer(async (request, response) => {
       sendJson(response, 200, {
         ...result,
         gatewayRunnerId: auth.runnerId,
-        authMode: auth.mode
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
       });
       return;
     }
@@ -1083,6 +1135,96 @@ async function readJson<T>(request: IncomingMessage): Promise<T> {
 
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? (JSON.parse(raw) as T) : ({} as T);
+}
+
+function scopeExecutorHandoffForRunner(
+  handoff: ExecutorHandoff,
+  auth: RunnerAuthDecision
+): ExecutorHandoff {
+  if (auth.allExecutorProfiles) return handoff;
+
+  const readyActions = handoff.readyActions.filter((action) =>
+    runnerCanUseExecutorProfile(auth, action.executorProfileId)
+  );
+  const scopedOutActions = handoff.readyActions
+    .filter((action) => !runnerCanUseExecutorProfile(auth, action.executorProfileId))
+    .map((action): AutomationAction => {
+      const { handoffStatus: _handoffStatus, approvalRecordId: _approvalRecordId, ...automationAction } = action;
+      return {
+        ...automationAction,
+        status: "blocked",
+        approvalRequired: true,
+        reason: `Runner ${auth.runnerId} is not scoped for ${action.executorProfileId}.`,
+        auditTags: [...action.auditTags, "runner-scope-held", auth.runnerId]
+      };
+    });
+
+  return {
+    ...handoff,
+    readyActions,
+    heldActions: [...handoff.heldActions, ...scopedOutActions]
+  };
+}
+
+function scopeEvidenceBundleForRunner(
+  bundle: ExecutorEvidenceBundle,
+  auth: RunnerAuthDecision
+): ExecutorEvidenceBundle {
+  if (auth.allExecutorProfiles) return bundle;
+  const steps = bundle.steps.filter((step) =>
+    runnerCanUseExecutorProfile(auth, step.executorProfileId)
+  );
+
+  return {
+    ...bundle,
+    steps,
+    summary: {
+      steps: steps.length,
+      evidenceItems: steps.reduce((total, step) => total + step.evidence.length, 0),
+      replayableSteps: steps.filter((step) => step.replayable).length
+    }
+  };
+}
+
+function ensureRunnerCanAccessProfiles({
+  auth,
+  response,
+  profiles,
+  operation
+}: {
+  auth: RunnerAuthDecision;
+  response: ServerResponse;
+  profiles: ExecutorProfileId[];
+  operation: string;
+}) {
+  const uniqueProfiles = [...new Set(profiles)];
+  const deniedProfiles = uniqueProfiles.filter((profile) =>
+    !runnerCanUseExecutorProfile(auth, profile)
+  );
+
+  if (deniedProfiles.length === 0) return true;
+
+  sendJson(response, 403, {
+    ok: false,
+    message: `Runner ${auth.runnerId} is not scoped for ${operation}.`,
+    runnerAuth: {
+      mode: auth.mode,
+      runnerId: auth.runnerId,
+      allowedExecutorProfiles: auth.allowedExecutorProfiles,
+      allExecutorProfiles: auth.allExecutorProfiles
+    },
+    deniedExecutorProfiles: deniedProfiles,
+    auditTags: ["runner-auth", "scope-denied", auth.runnerId, ...deniedProfiles]
+  });
+  return false;
+}
+
+function runnerScopePayload(auth: RunnerAuthDecision) {
+  return {
+    allExecutorProfiles: auth.allExecutorProfiles,
+    allowedExecutorProfiles: auth.allowedExecutorProfiles,
+    tokenFingerprint: auth.tokenFingerprint
+  };
 }
 
 function authorizeExecutorRequest(

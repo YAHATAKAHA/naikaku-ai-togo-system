@@ -24,5 +24,6 @@ output/localization-drill
 output/executor-contract-drill
 output/sandbox-capability-drill
 output/security-red-team-drill
+output/runner-auth-drill
 output/verification
 .naikaku-data

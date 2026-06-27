@@ -119,7 +119,7 @@ Acceptance:
 - Add Server Ledger panel for refreshing gateway-side approvals and evidence bundle status from the workbench.
 - Convert next-loop and automation work into status-trackable development items.
 - Replace local file ledger with durable backend storage.
-- Replace shared runner token with per-runner scoped credentials and rotation.
+- Add per-runner scoped credentials with profile limits, token-hash support, rotation metadata, and fail-closed malformed config while preserving shared-token local compatibility.
 - Replace dry-run runner with authenticated Shell/Browser/Desktop executors that emit real evidence artifacts.
 - Add action replay logs backed by screenshots, terminal transcripts, artifact manifests, and MCP request logs.
 

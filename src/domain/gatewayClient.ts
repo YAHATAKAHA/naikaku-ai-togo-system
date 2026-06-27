@@ -25,6 +25,7 @@ import type {
   DevelopmentWorkItem,
   ExecutorEvidenceBundle,
   ExecutorHandoff,
+  ExecutorProfileId,
   ExecutorRun,
   MemoryEntry,
   ProviderConfig,
@@ -59,10 +60,22 @@ export interface GatewayHealth {
   service: string;
   capabilities: string[];
   runnerAuth?: {
-    mode: "development-open" | "token-required";
+    mode: "development-open" | "shared-token-required" | "scoped-credentials-required" | "misconfigured";
     configured: boolean;
     acceptedHeaders: string[];
     runnerIdRequired: boolean;
+    supportsScopedCredentials?: boolean;
+    scopedRunnerCredentials?: Array<{
+      runnerId: string;
+      executorProfiles: ExecutorProfileId[];
+      allExecutorProfiles: boolean;
+      tokenFingerprint: string;
+      notBefore?: string;
+      expiresAt?: string;
+      rotatedAt?: string;
+      label?: string;
+      status: "active" | "not-yet-valid" | "expired";
+    }>;
     warning?: string;
   };
   timestamp: string;
