@@ -91,7 +91,15 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.autoWorkRun).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkSelfTest).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkSelfTesting).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkCodexSmoke).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkCodexSmoking).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkAdapterNeedsReady("openclaw-local")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeIdle).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeStarting).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeCompleted(8, "output/codex")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeFailed(1, "output/codex")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeUnavailable("offline")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.codexSmokeResult(1, 1, 0)).toBeTruthy();
       expect(copy.engineeringLaunchpad.runnerPresetTemplatesLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.runnerPresetEnable).toBeTruthy();
       expect(copy.engineeringLaunchpad.runnerPresetEnabled).toBeTruthy();

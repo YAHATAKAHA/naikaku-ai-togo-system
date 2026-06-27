@@ -45,6 +45,10 @@ import {
   runEngineeringAutoWorkGateway,
   type EngineeringAutoWorkGatewayRequest
 } from "./engineeringAutoWorkGateway";
+import {
+  runEngineeringCodexSmokeGateway,
+  type EngineeringCodexSmokeGatewayRequest
+} from "./engineeringCodexSmokeGateway";
 import { buildEngineeringRunnerReadiness } from "./engineeringRunnerReadiness";
 import {
   buildEngineeringRunnerPresetRegistry,
@@ -171,6 +175,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-implementation-evidence",
           "coding-agent-implementation-artifact-audit",
           "engineering-auto-work",
+          "engineering-codex-smoke",
           "engineering-runner-presets",
           "engineering-runner-preset-enable",
           "engineering-runner-readiness",
@@ -1184,6 +1189,13 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && requestUrl.pathname === "/v1/engineering/auto-work") {
       const body = await readJson<EngineeringAutoWorkGatewayRequest>(request);
       const result = runEngineeringAutoWorkGateway(body);
+      sendJson(response, result.statusCode, result.body);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/engineering/codex-smoke") {
+      const body = await readJson<EngineeringCodexSmokeGatewayRequest>(request);
+      const result = runEngineeringCodexSmokeGateway(body);
       sendJson(response, result.statusCode, result.body);
       return;
     }

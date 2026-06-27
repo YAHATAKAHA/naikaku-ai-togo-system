@@ -87,6 +87,8 @@ export interface EngineeringLaunchpadCopy {
   autoWorkRunning: string;
   autoWorkSelfTest: string;
   autoWorkSelfTesting: string;
+  autoWorkCodexSmoke: string;
+  autoWorkCodexSmoking: string;
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
   autoWorkOpenHandsNeedsReady: string;
@@ -98,6 +100,12 @@ export interface EngineeringLaunchpadCopy {
   autoWorkCompleted: (preset: string, passed: number, completedJobs: number, outputDir: string) => string;
   autoWorkFailed: (exitCode: number | null, outputDir: string) => string;
   autoWorkGatewayUnavailable: (errorMessage: string) => string;
+  codexSmokeIdle: string;
+  codexSmokeStarting: string;
+  codexSmokeCompleted: (passed: number, outputDir: string) => string;
+  codexSmokeFailed: (exitCode: number | null, outputDir: string) => string;
+  codexSmokeUnavailable: (errorMessage: string) => string;
+  codexSmokeResult: (changedFiles: number, baselineExitCode: number | null, finalExitCode: number | null) => string;
   runnerReadinessLabel: string;
   runnerReadinessRefresh: string;
   runnerReadinessChecking: string;
@@ -537,6 +545,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkRunning: "実行中",
       autoWorkSelfTest: "Fixture 自測",
       autoWorkSelfTesting: "自測中",
+      autoWorkCodexSmoke: "Codex に小工程を任せる",
+      autoWorkCodexSmoking: "Codex 実行中",
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
       autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
@@ -551,6 +561,15 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `ローカル gateway の自動工程を利用できません。${errorMessage}`,
+      codexSmokeIdle: "Codex smoke はまだ実行していません。",
+      codexSmokeStarting: "内閣の許可後、Codex CLI に生成小工程を任せています。",
+      codexSmokeCompleted: (passed, outputDir) =>
+        `Codex smoke が完了しました。${passed} checks pass、出力 ${outputDir}。`,
+      codexSmokeFailed: (exitCode, outputDir) =>
+        `Codex smoke が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
+      codexSmokeUnavailable: (errorMessage) => `Codex smoke を利用できません。${errorMessage}`,
+      codexSmokeResult: (changed, baseline, final) =>
+        `変更 ${changed} file・test ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 体検",
       runnerReadinessRefresh: "Runner を確認",
       runnerReadinessChecking: "本機の runner コマンドを確認しています。",
@@ -993,6 +1012,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkRunning: "Running",
       autoWorkSelfTest: "Fixture self-test",
       autoWorkSelfTesting: "Self-testing",
+      autoWorkCodexSmoke: "Let Codex handle a tiny job",
+      autoWorkCodexSmoking: "Codex running",
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
       autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
@@ -1007,6 +1028,15 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `Auto work failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
       autoWorkGatewayUnavailable: (errorMessage) => `Local gateway auto work is unavailable. ${errorMessage}`,
+      codexSmokeIdle: "Codex smoke has not run yet.",
+      codexSmokeStarting: "After cabinet approval, local Codex CLI is handling a generated tiny coding job.",
+      codexSmokeCompleted: (passed, outputDir) =>
+        `Codex smoke completed: ${passed} checks passed, output ${outputDir}.`,
+      codexSmokeFailed: (exitCode, outputDir) =>
+        `Codex smoke failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
+      codexSmokeUnavailable: (errorMessage) => `Codex smoke is unavailable. ${errorMessage}`,
+      codexSmokeResult: (changed, baseline, final) =>
+        `${changed} changed files, test ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner check",
       runnerReadinessRefresh: "Check runners",
       runnerReadinessChecking: "Checking local runner commands.",
@@ -1449,6 +1479,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkRunning: "正在运行",
       autoWorkSelfTest: "Fixture 自测",
       autoWorkSelfTesting: "自测中",
+      autoWorkCodexSmoke: "让 Codex 做小工程",
+      autoWorkCodexSmoking: "Codex 执行中",
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
@@ -1463,6 +1495,15 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自动工程失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自动工程不可用。${errorMessage}`,
+      codexSmokeIdle: "Codex smoke 还没有运行。",
+      codexSmokeStarting: "内阁批准后，正在让本地 Codex CLI 处理生成的小工程。",
+      codexSmokeCompleted: (passed, outputDir) =>
+        `Codex smoke 完成：${passed} 项检查通过，输出 ${outputDir}。`,
+      codexSmokeFailed: (exitCode, outputDir) =>
+        `Codex smoke 失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
+      codexSmokeUnavailable: (errorMessage) => `Codex smoke 不可用。${errorMessage}`,
+      codexSmokeResult: (changed, baseline, final) =>
+        `变更 ${changed} 个文件，测试 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 体检",
       runnerReadinessRefresh: "检查 runner",
       runnerReadinessChecking: "正在检查本机 runner 命令。",
@@ -1905,6 +1946,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkRunning: "正在執行",
       autoWorkSelfTest: "Fixture 自測",
       autoWorkSelfTesting: "自測中",
+      autoWorkCodexSmoke: "讓 Codex 做小工程",
+      autoWorkCodexSmoking: "Codex 執行中",
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
@@ -1919,6 +1962,15 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自動工程不可用。${errorMessage}`,
+      codexSmokeIdle: "Codex smoke 還沒有執行。",
+      codexSmokeStarting: "內閣批准後，正在讓本地 Codex CLI 處理生成的小工程。",
+      codexSmokeCompleted: (passed, outputDir) =>
+        `Codex smoke 完成：${passed} 項檢查通過，輸出 ${outputDir}。`,
+      codexSmokeFailed: (exitCode, outputDir) =>
+        `Codex smoke 失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
+      codexSmokeUnavailable: (errorMessage) => `Codex smoke 不可用。${errorMessage}`,
+      codexSmokeResult: (changed, baseline, final) =>
+        `變更 ${changed} 個檔案，測試 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 體檢",
       runnerReadinessRefresh: "檢查 runner",
       runnerReadinessChecking: "正在檢查本機 runner 命令。",
@@ -2361,6 +2413,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkRunning: "실행 중",
       autoWorkSelfTest: "Fixture 자체 테스트",
       autoWorkSelfTesting: "자체 테스트 중",
+      autoWorkCodexSmoke: "Codex에 작은 작업 맡기기",
+      autoWorkCodexSmoking: "Codex 실행 중",
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
       autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
@@ -2375,6 +2429,15 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `자동 엔지니어링 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
       autoWorkGatewayUnavailable: (errorMessage) => `로컬 gateway 자동 엔지니어링을 사용할 수 없습니다. ${errorMessage}`,
+      codexSmokeIdle: "Codex smoke는 아직 실행되지 않았습니다.",
+      codexSmokeStarting: "내각 승인 후 로컬 Codex CLI가 생성된 작은 코딩 작업을 처리합니다.",
+      codexSmokeCompleted: (passed, outputDir) =>
+        `Codex smoke 완료: ${passed}개 검사 통과, 출력 ${outputDir}.`,
+      codexSmokeFailed: (exitCode, outputDir) =>
+        `Codex smoke 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
+      codexSmokeUnavailable: (errorMessage) => `Codex smoke를 사용할 수 없습니다. ${errorMessage}`,
+      codexSmokeResult: (changed, baseline, final) =>
+        `변경 파일 ${changed}개, 테스트 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 점검",
       runnerReadinessRefresh: "Runner 확인",
       runnerReadinessChecking: "로컬 runner 명령을 확인하는 중입니다.",

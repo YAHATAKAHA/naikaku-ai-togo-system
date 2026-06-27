@@ -192,6 +192,7 @@ import {
   listEvidenceLedgerViaGateway,
   reviewCodingAgentBriefsViaGateway,
   reviewCodingAgentSessionReceiptViaGateway,
+  runEngineeringCodexSmokeViaGateway,
   runEngineeringAutoWorkViaGateway,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
@@ -201,6 +202,7 @@ import {
 import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
+  EngineeringCodexSmokeGatewayResponse,
   EngineeringRunnerPreset,
   EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport,
@@ -365,6 +367,15 @@ export function App() {
     status: "idle" | "running" | "completed" | "error";
     message: string;
     result: EngineeringAutoWorkGatewayResponse | null;
+  }>({
+    status: "idle",
+    message: "",
+    result: null
+  });
+  const [engineeringCodexSmokeState, setEngineeringCodexSmokeState] = useState<{
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+    result: EngineeringCodexSmokeGatewayResponse | null;
   }>({
     status: "idle",
     message: "",
@@ -4543,6 +4554,72 @@ export function App() {
     });
   }
 
+  async function runEngineeringCodexSmokeFromLaunchpad() {
+    const mission = workspace.mission.trim();
+
+    if (!mission) {
+      setEngineeringCodexSmokeState({
+        status: "error",
+        message: copy.engineeringLaunchpad.autoWorkMissionRequired,
+        result: null
+      });
+      return;
+    }
+
+    setEngineeringCodexSmokeState({
+      status: "running",
+      message: copy.engineeringLaunchpad.codexSmokeStarting,
+      result: null
+    });
+
+    try {
+      const result = await runEngineeringCodexSmokeViaGateway({
+        mission,
+        outputDir: "output/engineering-codex-smoke-ui",
+        timeoutMs: 300_000
+      });
+      const nextStatus = result.ok ? "completed" : "error";
+      const message = result.ok
+        ? copy.engineeringLaunchpad.codexSmokeCompleted(result.checks.pass, result.outputDir)
+        : copy.engineeringLaunchpad.codexSmokeFailed(result.exitCode, result.outputDir);
+
+      setEngineeringCodexSmokeState({
+        status: nextStatus,
+        message,
+        result
+      });
+      recordAudit({
+        type: "development.engineering_codex_smoke.completed",
+        severity: result.ok ? "success" : "error",
+        summary: `Engineering Codex smoke completed via gateway: ${result.decision}.`,
+        metadata: {
+          outputDir: result.outputDir,
+          exitCode: result.exitCode,
+          checksPass: result.checks.pass,
+          checksFail: result.checks.fail,
+          changedFiles: result.summary?.files?.changedFiles?.length || 0,
+          baselineExitCode: result.summary?.tests?.baselineExitCode ?? null,
+          finalExitCode: result.summary?.tests?.finalExitCode ?? null
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "unknown";
+      setEngineeringCodexSmokeState({
+        status: "error",
+        message: copy.engineeringLaunchpad.codexSmokeUnavailable(errorMessage),
+        result: null
+      });
+      recordAudit({
+        type: "development.engineering_codex_smoke.completed",
+        severity: "error",
+        summary: `Engineering Codex smoke gateway failed: ${errorMessage}.`,
+        metadata: {
+          gatewayError: errorMessage
+        }
+      });
+    }
+  }
+
   async function refreshEngineeringRunnerReadinessFromLaunchpad() {
     setEngineeringRunnerReadinessState((current) => ({
       status: "loading",
@@ -4771,6 +4848,7 @@ export function App() {
             autoWorkAdapterReady={engineeringAutoWorkAdapterReady}
             autoWorkWorktree={engineeringAutoWorkWorktree}
             autoWorkState={engineeringAutoWorkState}
+            codexSmokeState={engineeringCodexSmokeState}
             runnerReadinessState={engineeringRunnerReadinessState}
             runnerPresets={engineeringRunnerPresets}
             runnerPresetTemplates={engineeringRunnerPresetTemplates}
@@ -4786,6 +4864,7 @@ export function App() {
             onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}
             onRunAutoWork={() => void runEngineeringAutoWorkFromLaunchpad()}
             onRunAutoWorkSelfTest={() => void runEngineeringFixtureSelfTestFromLaunchpad()}
+            onRunCodexSmoke={() => void runEngineeringCodexSmokeFromLaunchpad()}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

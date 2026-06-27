@@ -214,11 +214,12 @@ function buildSteps({
         "run",
         "src/i18n.test.ts",
         "server/engineeringAutoWorkGateway.test.ts",
+        "server/engineeringCodexSmokeGateway.test.ts",
         "server/engineeringRunnerPresets.test.ts",
         "server/engineeringRunnerReadiness.test.ts",
         "src/domain/engineeringSelfSimulation.test.ts"
       ],
-      proves: "Japanese-first localization, runner presets/readiness, gateway auto-work, and engineering self-simulation contracts still hold."
+      proves: "Japanese-first localization, runner presets/readiness, gateway auto-work, governed Codex smoke gateway, and engineering self-simulation contracts still hold."
     },
     {
       id: "gateway-auto-work",

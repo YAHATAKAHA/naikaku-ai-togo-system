@@ -187,7 +187,9 @@ npm run gateway
 npm run dev
 ```
 
-Enter the task in the engineering mission box, then click `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. The browser calls the local gateway endpoint `/v1/engineering/auto-work`, starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository.
+Enter the task in the engineering mission box, then click `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. Both paths write under `output/` and do not modify the main repository.
+
+The browser calls the local gateway endpoint `/v1/engineering/auto-work` for fixture and preset runners, starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository.
 
 For external tools, click `Check runners` to inspect local CLI/app candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtimes, choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, or enable the safe `OpenClaw local agent` template from the runner check panel. Then click `Start auto work`. Runner readiness detection and template enablement do not install tools, accept licenses, expose arbitrary shell, grant push/deploy, grant host-secret access, or allow unbounded Mac control. The operator still confirms adapter readiness before launching any external command.
 

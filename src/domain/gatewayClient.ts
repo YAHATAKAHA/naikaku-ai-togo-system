@@ -129,6 +129,59 @@ export interface EngineeringAutoWorkGatewayResponse {
   stderrTail: string;
 }
 
+export interface EngineeringCodexSmokeGatewayRequest {
+  mission: string;
+  outputDir?: string;
+  timeoutMs?: number;
+}
+
+export interface EngineeringCodexSmokeGatewayResponse {
+  schema: "naikaku.engineering-codex-smoke-gateway.v1";
+  ok: boolean;
+  decision: "completed" | "failed" | "blocked";
+  message: string;
+  executor: "codex-cli";
+  exitCode: number | null;
+  signal: string | null;
+  outputDir: string;
+  summaryPath: string;
+  summary: {
+    schema?: "naikaku.codex-engineer-smoke.v1";
+    mission?: string;
+    codex?: {
+      commandPath?: string | null;
+      exitCode?: number;
+      finalMessagePath?: string;
+    };
+    tests?: {
+      baselineExitCode?: number;
+      finalExitCode?: number;
+    };
+    files?: {
+      changedFiles?: string[];
+      changedFilesPath?: string;
+      diffPath?: string;
+      baselineTranscript?: string;
+      finalTranscript?: string;
+      codexTranscript?: string;
+      receiptPath?: string;
+    };
+    checks?: Record<string, boolean>;
+  } | null;
+  checks: {
+    pass: number;
+    fail: number;
+  };
+  command: {
+    command: string;
+    args: string[];
+    cwd: string;
+    timeoutMs: number;
+  } | null;
+  stdoutTail: string;
+  stderrTail: string;
+}
+
 export interface EngineeringRunnerPreset {
   id: EngineeringAutoWorkGatewayPreset;
   label: string;
@@ -1099,6 +1152,26 @@ export async function runEngineeringAutoWorkViaGateway(
   }
 
   return (await response.json()) as EngineeringAutoWorkGatewayResponse;
+}
+
+export async function runEngineeringCodexSmokeViaGateway(
+  request: EngineeringCodexSmokeGatewayRequest,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/codex-smoke`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(request),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway engineering Codex smoke failed"));
+  }
+
+  return (await response.json()) as EngineeringCodexSmokeGatewayResponse;
 }
 
 export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSignal) {

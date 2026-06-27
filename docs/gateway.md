@@ -249,6 +249,34 @@ Successful responses include the command contract, stdout/stderr tail, checks, a
 }
 ```
 
+### `POST /v1/engineering/codex-smoke`
+
+Runs the fixed governed Codex coding smoke from the Workbench. The browser sends only a mission, output directory, and timeout; the gateway invokes `npm run codex:engineer-smoke` with an argument array. It does not accept arbitrary shell, does not edit the Naikaku source tree, and writes evidence under `output/engineering-codex-smoke-ui` by default.
+
+```json
+{
+  "mission": "Prove the cabinet can supervise an AI coder",
+  "outputDir": "output/engineering-codex-smoke-ui",
+  "timeoutMs": 300000
+}
+```
+
+Successful responses include the command contract, stdout/stderr tail, check counts, and parsed Codex smoke summary:
+
+```json
+{
+  "schema": "naikaku.engineering-codex-smoke-gateway.v1",
+  "ok": true,
+  "decision": "completed",
+  "executor": "codex-cli",
+  "outputDir": "output/engineering-codex-smoke-ui",
+  "checks": {
+    "pass": 8,
+    "fail": 0
+  }
+}
+```
+
 ### `POST /v1/cabinet/run`
 
 Runs the cabinet orchestrator and returns artifacts, automation actions, logs, scores, and next-iteration tasks.

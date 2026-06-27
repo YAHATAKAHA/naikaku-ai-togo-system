@@ -31,6 +31,7 @@ import type { EngineeringSelfSimulationReport } from "../domain/engineeringSelfS
 import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
+  EngineeringCodexSmokeGatewayResponse,
   EngineeringRunnerPreset,
   EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport
@@ -75,6 +76,11 @@ interface EngineeringLaunchpadProps {
     message: string;
     result: EngineeringAutoWorkGatewayResponse | null;
   };
+  codexSmokeState: {
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+    result: EngineeringCodexSmokeGatewayResponse | null;
+  };
   runnerReadinessState: {
     status: "idle" | "loading" | "ready" | "error";
     message: string;
@@ -97,6 +103,7 @@ interface EngineeringLaunchpadProps {
   onRunSelfSimulation: () => void;
   onRunAutoWork: () => void;
   onRunAutoWorkSelfTest: () => void;
+  onRunCodexSmoke: () => void;
   onRunCabinet: () => void;
   onPrepareEngineeringPack: () => void;
   onRunPreflight: () => void;
@@ -133,6 +140,7 @@ export function EngineeringLaunchpad({
   autoWorkAdapterReady,
   autoWorkWorktree,
   autoWorkState,
+  codexSmokeState,
   runnerReadinessState,
   runnerPresets,
   runnerPresetTemplates,
@@ -148,6 +156,7 @@ export function EngineeringLaunchpad({
   onRunSelfSimulation,
   onRunAutoWork,
   onRunAutoWorkSelfTest,
+  onRunCodexSmoke,
   onRunCabinet,
   onPrepareEngineeringPack,
   onRunPreflight,
@@ -167,6 +176,8 @@ export function EngineeringLaunchpad({
   );
   const autoWorkSummary = autoWorkState.result?.summary;
   const autoWorkCounts = autoWorkSummary?.counts;
+  const codexSmokeSummary = codexSmokeState.result?.summary;
+  const codexSmokeChangedFiles = codexSmokeSummary?.files?.changedFiles?.length || 0;
   const runnerReadinessReport = runnerReadinessState.report;
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
@@ -321,7 +332,7 @@ export function EngineeringLaunchpad({
           <button
             type="button"
             onClick={onRunAutoWork}
-            disabled={autoWorkState.status === "running" || runStatus === "running"}
+            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
           >
             <Terminal size={15} /> {autoWorkState.status === "running" ? copy.autoWorkRunning : copy.autoWorkRun}
           </button>
@@ -329,9 +340,17 @@ export function EngineeringLaunchpad({
             type="button"
             data-variant="secondary"
             onClick={onRunAutoWorkSelfTest}
-            disabled={autoWorkState.status === "running" || runStatus === "running"}
+            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
           >
             <FlaskConical size={15} /> {autoWorkState.status === "running" ? copy.autoWorkSelfTesting : copy.autoWorkSelfTest}
+          </button>
+          <button
+            type="button"
+            data-variant="secondary"
+            onClick={onRunCodexSmoke}
+            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
+          >
+            <Bot size={15} /> {codexSmokeState.status === "running" ? copy.autoWorkCodexSmoking : copy.autoWorkCodexSmoke}
           </button>
         </div>
         <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>
@@ -351,6 +370,20 @@ export function EngineeringLaunchpad({
                 )}
               </span>
               <span>{copy.autoWorkOutputLabel}: {autoWorkState.result.outputDir}</span>
+            </>
+          ) : null}
+          <strong>{codexSmokeState.message || copy.codexSmokeIdle}</strong>
+          {codexSmokeState.result ? (
+            <>
+              <span>{copy.autoWorkChecks(codexSmokeState.result.checks.pass, codexSmokeState.result.checks.fail)}</span>
+              <span>
+                {copy.codexSmokeResult(
+                  codexSmokeChangedFiles,
+                  codexSmokeSummary?.tests?.baselineExitCode ?? null,
+                  codexSmokeSummary?.tests?.finalExitCode ?? null
+                )}
+              </span>
+              <span>{copy.autoWorkOutputLabel}: {codexSmokeState.result.outputDir}</span>
             </>
           ) : null}
         </div>
