@@ -6,6 +6,10 @@ import {
   type ExternalRunnerAdapterId,
   type ExternalRunnerRisk
 } from "../src/domain/externalRunnerAdapters";
+import {
+  buildEngineeringRunnerPresetRegistry,
+  type EngineeringRunnerPresetRegistry
+} from "./engineeringRunnerPresets";
 
 export type EngineeringRunnerReadinessStatus =
   | "ready"
@@ -14,7 +18,7 @@ export type EngineeringRunnerReadinessStatus =
   | "missing"
   | "blocked-by-default";
 
-export type EngineeringRunnerWorkbenchPreset = "prepared" | "fixture" | "openhands";
+export type EngineeringRunnerWorkbenchPreset = string;
 
 export interface EngineeringRunnerReadinessItem {
   adapterId: ExternalRunnerAdapterId;
@@ -58,6 +62,7 @@ export interface EngineeringRunnerReadinessReport {
 interface ReadinessDependencies {
   cwd?: string;
   generatedAt?: string;
+  runnerPresetRegistry?: EngineeringRunnerPresetRegistry;
   commandExists?: (command: string) => boolean;
   pathExists?: (path: string) => boolean;
 }
@@ -84,6 +89,7 @@ const applicationCandidates: Partial<Record<ExternalRunnerAdapterId, string[]>> 
 export function buildEngineeringRunnerReadiness({
   cwd = process.cwd(),
   generatedAt = new Date().toISOString(),
+  runnerPresetRegistry = buildEngineeringRunnerPresetRegistry({ generatedAt }),
   commandExists = defaultCommandExists,
   pathExists = existsSync
 }: ReadinessDependencies = {}): EngineeringRunnerReadinessReport {
@@ -98,7 +104,8 @@ export function buildEngineeringRunnerReadiness({
       commandCandidates: commands,
       detectedCommands,
       applicationCandidates: applications,
-      detectedApplications
+      detectedApplications,
+      runnerPresetRegistry
     });
   });
 
@@ -113,7 +120,7 @@ export function buildEngineeringRunnerReadiness({
       limitations: [
         "It does not install upstream tools or accept third-party licenses for the operator.",
         "Detected desktop or browser runners still need approval, action logs, redaction review, and receipts before use.",
-        "The Workbench can directly launch only prepared, fixture, and OpenHands preset flows today."
+        "The Workbench can directly launch only built-in presets and configured gateway runner presets."
       ]
     }
   };
@@ -124,18 +131,20 @@ function readinessItem({
   commandCandidates,
   detectedCommands,
   applicationCandidates,
-  detectedApplications
+  detectedApplications,
+  runnerPresetRegistry
 }: {
   adapter: ExternalRunnerAdapter;
   commandCandidates: string[];
   detectedCommands: string[];
   applicationCandidates: string[];
   detectedApplications: string[];
+  runnerPresetRegistry: EngineeringRunnerPresetRegistry;
 }): EngineeringRunnerReadinessItem {
   const detected = detectedCommands.length > 0 || detectedApplications.length > 0;
   const builtIn = adapter.id === "naikaku-local-engineering-runner";
-  const workbenchPreset = presetFor(adapter.id);
-  const canLaunchFromWorkbench = builtIn || (adapter.id === "openhands-coding-agent" && detected);
+  const workbenchPreset = presetFor(adapter.id, runnerPresetRegistry);
+  const canLaunchFromWorkbench = builtIn || Boolean(workbenchPreset && detected);
 
   return {
     adapterId: adapter.id,
@@ -174,10 +183,17 @@ function statusFor({
   return adapter.risk === "critical" ? "blocked-by-default" : "detected-needs-adapter";
 }
 
-function presetFor(adapterId: ExternalRunnerAdapterId): EngineeringRunnerWorkbenchPreset | null {
+function presetFor(
+  adapterId: ExternalRunnerAdapterId,
+  runnerPresetRegistry: EngineeringRunnerPresetRegistry
+): EngineeringRunnerWorkbenchPreset | null {
   if (adapterId === "naikaku-local-engineering-runner") return "fixture";
-  if (adapterId === "openhands-coding-agent") return "openhands";
-  return null;
+  return runnerPresetRegistry.presets.find((preset) =>
+    preset.availableInWorkbench &&
+    preset.kind === "external-command" &&
+    preset.adapterId === adapterId &&
+    preset.id !== "fixture"
+  )?.id || null;
 }
 
 function nextActionFor({

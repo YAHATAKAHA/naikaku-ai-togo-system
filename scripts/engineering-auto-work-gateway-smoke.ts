@@ -53,6 +53,7 @@ interface RunnerReadinessBody {
 }
 
 interface RunnerPresetsBody {
+  configPath?: string;
   summary?: {
     total?: number;
     builtIn?: number;
@@ -63,8 +64,25 @@ interface RunnerPresetsBody {
   presets?: Array<{
     id?: string;
     kind?: string;
+    source?: string;
     availableInWorkbench?: boolean;
   }>;
+  templates?: Array<{
+    id?: string;
+    enabled?: boolean;
+  }>;
+}
+
+interface RunnerPresetEnableBody {
+  ok?: boolean;
+  status?: string;
+  templateId?: string;
+  configPath?: string;
+  preset?: {
+    id?: string;
+    source?: string;
+  } | null;
+  registry?: RunnerPresetsBody;
 }
 
 interface GatewaySmokeSummary {
@@ -75,6 +93,9 @@ interface GatewaySmokeSummary {
   cases: {
     healthStatus: number;
     presetsStatus: number;
+    presetEnableStatus: number;
+    presetEnableResult: string | null;
+    presetEnablePreset: string | null;
     presetsTotal: number;
     presetsBuiltIn: number;
     presetsConfigured: number;
@@ -97,7 +118,10 @@ interface GatewaySmokeSummary {
     healthOk: boolean;
     capabilityAdvertised: boolean;
     presetsCapabilityAdvertised: boolean;
+    presetEnableCapabilityAdvertised: boolean;
     presetsEndpointOk: boolean;
+    presetEnableEndpointOk: boolean;
+    safePresetTemplateEnabled: boolean;
     builtInPresetsAvailable: boolean;
     readinessCapabilityAdvertised: boolean;
     readinessEndpointOk: boolean;
@@ -125,16 +149,22 @@ async function main() {
 
   const generatedAt = new Date().toISOString();
   const outputDir = path.resolve(options.outputDir);
+  const presetConfigPath = path.join(outputDir, "engineering-runner-presets.json");
   await rm(outputDir, { recursive: true, force: true });
   await mkdir(outputDir, { recursive: true });
 
   const port = await getAvailablePort();
   const gatewayUrl = `http://127.0.0.1:${port}`;
-  const gateway = await startGateway({ port, timeoutMs: options.timeoutMs });
+  const gateway = await startGateway({ port, timeoutMs: options.timeoutMs, presetConfigPath });
 
   try {
     const health = await getJson<{ capabilities?: string[] }>(`${gatewayUrl}/health`);
     const presets = await getJson<RunnerPresetsBody>(`${gatewayUrl}/v1/engineering/runner-presets`);
+    const presetEnable = await postJson<RunnerPresetEnableBody>(
+      `${gatewayUrl}/v1/engineering/runner-presets/enable`,
+      { templateId: "openclaw-local" }
+    );
+    const enabledPresetRegistry = presetEnable.body.registry || presets.body;
     const readiness = await getJson<RunnerReadinessBody>(`${gatewayUrl}/v1/engineering/runner-readiness`);
     const autoWork = await postJson<AutoWorkGatewayBody>(
       `${gatewayUrl}/v1/engineering/auto-work`,
@@ -149,8 +179,9 @@ async function main() {
     );
     const counts = autoWork.body.summary?.counts || {};
     const commandArgs = autoWork.body.command?.args || [];
-    const presetSummary = presets.body.summary || {};
-    const presetItems = presets.body.presets || [];
+    const presetSummary = enabledPresetRegistry.summary || {};
+    const presetItems = enabledPresetRegistry.presets || [];
+    const presetTemplates = enabledPresetRegistry.templates || [];
     const readinessSummary = readiness.body.summary || {};
     const readinessItems = readiness.body.items || [];
     const localRunner = readinessItems.find((item) =>
@@ -164,6 +195,9 @@ async function main() {
       cases: {
         healthStatus: health.status,
         presetsStatus: presets.status,
+        presetEnableStatus: presetEnable.status,
+        presetEnableResult: presetEnable.body.status || null,
+        presetEnablePreset: presetEnable.body.preset?.id || null,
         presetsTotal: presetSummary.total || 0,
         presetsBuiltIn: presetSummary.builtIn || 0,
         presetsConfigured: presetSummary.configured || 0,
@@ -186,7 +220,13 @@ async function main() {
         healthOk: health.status === 200,
         capabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-auto-work")),
         presetsCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-presets")),
+        presetEnableCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-preset-enable")),
         presetsEndpointOk: presets.status === 200,
+        presetEnableEndpointOk: presetEnable.status === 200 && presetEnable.body.ok === true,
+        safePresetTemplateEnabled: presetEnable.body.preset?.id === "openclaw-local" &&
+          presetEnable.body.preset?.source === "file" &&
+          presetTemplates.some((template) => template.id === "openclaw-local" && template.enabled === true) &&
+          presetItems.some((preset) => preset.id === "openclaw-local" && preset.source === "file"),
         builtInPresetsAvailable: ["prepared", "fixture", "openhands"].every((id) =>
           presetItems.some((preset) => preset.id === id && preset.availableInWorkbench === true)
         ),
@@ -278,13 +318,22 @@ async function getAvailablePort() {
   });
 }
 
-async function startGateway({ port, timeoutMs }: { port: number; timeoutMs: number }) {
+async function startGateway({
+  port,
+  timeoutMs,
+  presetConfigPath
+}: {
+  port: number;
+  timeoutMs: number;
+  presetConfigPath: string;
+}) {
   const child = spawn(npmCommand, ["run", "gateway"], {
     cwd: process.cwd(),
     env: {
       ...process.env,
       NAIKAKU_GATEWAY_PORT: String(port),
-      NAIKAKU_CORS_ORIGIN: "http://127.0.0.1:5173"
+      NAIKAKU_CORS_ORIGIN: "http://127.0.0.1:5173",
+      NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE: presetConfigPath
     },
     stdio: ["ignore", "pipe", "pipe"],
     shell: false
@@ -362,6 +411,7 @@ function printSummary(summary: GatewaySmokeSummary) {
   console.log(`Output: ${summary.outputDir}`);
   console.log(`Gateway: ${summary.gatewayUrl}`);
   console.log(`Runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured`);
+  console.log(`Preset enable: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnablePreset || "unknown"}`);
   console.log(`Runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessLaunchable} launchable`);
   console.log(`Auto-work: ${summary.cases.autoWorkPreset || "unknown"} / ${summary.cases.autoWorkMode || "unknown"}`);
   console.log(`Receipts: ${summary.cases.importedReceipts}, evidence: ${summary.cases.acceptedEvidence}, artifacts: ${summary.cases.verifiedArtifactPaths}`);
@@ -380,6 +430,8 @@ function summaryMarkdown(summary: GatewaySmokeSummary) {
     "",
     `- health: HTTP ${summary.cases.healthStatus}`,
     `- runner-presets: HTTP ${summary.cases.presetsStatus}`,
+    `- runner-preset-enable: HTTP ${summary.cases.presetEnableStatus}`,
+    `- runner-preset-enable result: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnablePreset || "unknown"}`,
     `- runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured, ${summary.cases.presetsTotal} total`,
     `- runner-readiness: HTTP ${summary.cases.readinessStatus}`,
     `- runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessDetected} detected, ${summary.cases.readinessLaunchable} launchable`,

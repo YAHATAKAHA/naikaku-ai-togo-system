@@ -105,6 +105,12 @@ export interface EngineeringLaunchpadCopy {
   runnerReadinessAdapterStatus: (status: string) => string;
   runnerReadinessDetected: (commands: number, apps: number) => string;
   runnerReadinessNextActionLabel: string;
+  runnerPresetTemplatesLabel: string;
+  runnerPresetEnable: string;
+  runnerPresetEnabled: string;
+  runnerPresetEnableStarting: (label: string) => string;
+  runnerPresetEnableCompleted: (label: string) => string;
+  runnerPresetEnableFailed: (errorMessage: string) => string;
   macScopeLabel: string;
   macScopeItems: string[];
   macRunnerLabel: string;
@@ -551,6 +557,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessAdapterStatus: (status) => status,
       runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "次の操作",
+      runnerPresetTemplatesLabel: "追加 runner テンプレート",
+      runnerPresetEnable: "有効化",
+      runnerPresetEnabled: "有効",
+      runnerPresetEnableStarting: (label) => `${label} をローカル gateway に追加しています。`,
+      runnerPresetEnableCompleted: (label) => `${label} を有効化しました。Runner から選択できます。`,
+      runnerPresetEnableFailed: (errorMessage) => `Runner テンプレートを有効化できません。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
       capabilitiesLabel: "必要な Mac 工程能力",
       signalsLabel: "検出したミッション信号",
@@ -999,6 +1011,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessAdapterStatus: (status) => status,
       runnerReadinessDetected: (commands, apps) => `${commands} cmd / ${apps} app`,
       runnerReadinessNextActionLabel: "Next action",
+      runnerPresetTemplatesLabel: "Additional runner templates",
+      runnerPresetEnable: "Enable",
+      runnerPresetEnabled: "Enabled",
+      runnerPresetEnableStarting: (label) => `Adding ${label} to the local gateway.`,
+      runnerPresetEnableCompleted: (label) => `${label} is enabled and selectable from Runner.`,
+      runnerPresetEnableFailed: (errorMessage) => `Runner template could not be enabled. ${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
       capabilitiesLabel: "Required Mac engineering capabilities",
       signalsLabel: "Detected mission signals",
@@ -1447,6 +1465,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessAdapterStatus: (status) => status,
       runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "下一步",
+      runnerPresetTemplatesLabel: "追加 runner 模板",
+      runnerPresetEnable: "启用",
+      runnerPresetEnabled: "已启用",
+      runnerPresetEnableStarting: (label) => `正在把 ${label} 加入本地 gateway。`,
+      runnerPresetEnableCompleted: (label) => `${label} 已启用，可在 Runner 中选择。`,
+      runnerPresetEnableFailed: (errorMessage) => `无法启用 runner 模板。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "识别到的任务信号",
@@ -1895,6 +1919,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessAdapterStatus: (status) => status,
       runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "下一步",
+      runnerPresetTemplatesLabel: "追加 runner 模板",
+      runnerPresetEnable: "啟用",
+      runnerPresetEnabled: "已啟用",
+      runnerPresetEnableStarting: (label) => `正在把 ${label} 加入本地 gateway。`,
+      runnerPresetEnableCompleted: (label) => `${label} 已啟用，可在 Runner 中選擇。`,
+      runnerPresetEnableFailed: (errorMessage) => `無法啟用 runner 模板。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "識別到的任務信號",
@@ -2343,6 +2373,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessAdapterStatus: (status) => status,
       runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "다음 작업",
+      runnerPresetTemplatesLabel: "추가 runner 템플릿",
+      runnerPresetEnable: "활성화",
+      runnerPresetEnabled: "활성화됨",
+      runnerPresetEnableStarting: (label) => `${label}을 로컬 gateway에 추가하는 중입니다.`,
+      runnerPresetEnableCompleted: (label) => `${label}이 활성화되어 Runner에서 선택할 수 있습니다.`,
+      runnerPresetEnableFailed: (errorMessage) => `Runner 템플릿을 활성화할 수 없습니다. ${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
       capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
       signalsLabel: "감지된 미션 신호",

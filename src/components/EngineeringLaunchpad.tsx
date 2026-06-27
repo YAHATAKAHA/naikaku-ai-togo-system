@@ -6,6 +6,7 @@ import {
   FlaskConical,
   PackageCheck,
   PlayCircle,
+  PlusCircle,
   RefreshCcw,
   ShieldCheck,
   Terminal,
@@ -31,6 +32,7 @@ import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
   EngineeringRunnerPreset,
+  EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport
 } from "../domain/gatewayClient";
 import type { EngineeringLaunchpadCopy } from "../i18n";
@@ -79,11 +81,17 @@ interface EngineeringLaunchpadProps {
     report: EngineeringRunnerReadinessReport | null;
   };
   runnerPresets: EngineeringRunnerPreset[];
+  runnerPresetTemplates: EngineeringRunnerPresetTemplate[];
+  runnerPresetEnableState: {
+    status: "idle" | "loading" | "ready" | "error";
+    message: string;
+  };
   onMissionChange: (mission: string) => void;
   onAutoWorkPresetChange: (preset: EngineeringAutoWorkGatewayPreset) => void;
   onAutoWorkAdapterReadyChange: (ready: boolean) => void;
   onAutoWorkWorktreeChange: (worktree: string) => void;
   onRefreshRunnerReadiness: () => void;
+  onEnableRunnerPresetTemplate: (templateId: string) => void;
   onFocusMission: () => void;
   onApplyMissionTemplate: () => void;
   onRunSelfSimulation: () => void;
@@ -126,11 +134,14 @@ export function EngineeringLaunchpad({
   autoWorkState,
   runnerReadinessState,
   runnerPresets,
+  runnerPresetTemplates,
+  runnerPresetEnableState,
   onMissionChange,
   onAutoWorkPresetChange,
   onAutoWorkAdapterReadyChange,
   onAutoWorkWorktreeChange,
   onRefreshRunnerReadiness,
+  onEnableRunnerPresetTemplate,
   onFocusMission,
   onApplyMissionTemplate,
   onRunSelfSimulation,
@@ -368,6 +379,31 @@ export function EngineeringLaunchpad({
                   ) : null}
                 </span>
               ))}
+            </div>
+          ) : null}
+          {runnerPresetTemplates.length > 0 ? (
+            <div className="engineering-runner-preset-templates" data-status={runnerPresetEnableState.status}>
+              <small>{copy.runnerPresetTemplatesLabel}</small>
+              {runnerPresetTemplates.map((template) => (
+                <span key={template.id}>
+                  <strong>{template.label}</strong>
+                  <small>{template.summary}</small>
+                  <em>{template.commandCandidates.join(" / ") || template.command}</em>
+                  {template.enabled ? (
+                    <b>{copy.runnerPresetEnabled}</b>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onEnableRunnerPresetTemplate(template.id)}
+                      disabled={runnerPresetEnableState.status === "loading"}
+                      title={template.nextAction}
+                    >
+                      <PlusCircle size={14} /> {copy.runnerPresetEnable}
+                    </button>
+                  )}
+                </span>
+              ))}
+              {runnerPresetEnableState.message ? <p>{runnerPresetEnableState.message}</p> : null}
             </div>
           ) : null}
         </div>

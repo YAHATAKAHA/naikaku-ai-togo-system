@@ -24,6 +24,7 @@ NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
 NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
 NAIKAKU_RUNNER_CREDENTIALS='[{"runnerId":"shell-runner-01","token":"shell-token","executorProfiles":["shell-container"],"expiresAt":"2026-12-31T00:00:00.000Z"}]'
 NAIKAKU_ENGINEERING_RUNNER_PRESETS='[{"id":"openclaw-local","label":"OpenClaw local agent","adapterId":"openclaw-desktop-runner","command":"openclaw","args":["agent","--agent","naikaku","--message-file","{taskPath}","--local","--json"],"commandCandidates":["openclaw"]}]'
+NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE=.naikaku-data/engineering-runner-presets.json
 NAIKAKU_LEDGER_DIR=.naikaku-data
 ```
 
@@ -35,13 +36,15 @@ NAIKAKU_LEDGER_DIR=.naikaku-data
 
 `NAIKAKU_LEDGER_DIR` controls where the gateway stores local approval and evidence ledgers. The default is `.naikaku-data`, which is ignored by Git.
 
-`NAIKAKU_ENGINEERING_RUNNER_PRESETS` is an optional JSON array of local CLI command templates exposed to the Engineering Launchpad. The browser can select a preset id, but it cannot submit arbitrary command lines. Each preset needs:
+`NAIKAKU_ENGINEERING_RUNNER_PRESETS` is an optional JSON array of local CLI command templates exposed to the Engineering Launchpad. `NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE` points at the local JSON file used by safe template enablement; by default it lives at `.naikaku-data/engineering-runner-presets.json` under `NAIKAKU_LEDGER_DIR`. The browser can select a preset id, but it cannot submit arbitrary command lines. Each preset needs:
 
 - `id`: lowercase preset id shown to the Workbench.
 - `label`: operator-facing label.
 - `adapterId`: one of the known adapter ids such as `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
 - `command`: a bare command name, for example `openclaw`, `browser-use`, `npx`, `hs`, or `mcp`.
 - `args`: fixed arguments passed to the command. Supported placeholders are the same as `engineering:run-adapter`: `{jobPath}`, `{taskPath}`, `{receiptDraftPath}`, and `{sessionId}`.
+
+The Workbench can also call `/v1/engineering/runner-presets/enable` with a safe built-in template id such as `openclaw-local`. That endpoint writes the fixed gateway-side command template into the preset config file; it does not accept shell commands from the browser.
 
 The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by runner authentication, the panel surfaces the gateway authentication error and still shows approval/status data.
 
@@ -142,11 +145,12 @@ Successful responses include per-adapter status, detected commands/apps, whether
 
 ### `GET /v1/engineering/runner-presets`
 
-Returns the built-in Workbench presets plus any server-configured CLI presets from `NAIKAKU_ENGINEERING_RUNNER_PRESETS`.
+Returns the built-in Workbench presets, safe enableable templates, and any configured CLI presets from `NAIKAKU_ENGINEERING_RUNNER_PRESETS` plus the local preset config file.
 
 ```json
 {
   "schema": "naikaku.engineering-runner-presets.v1",
+  "configPath": ".naikaku-data/engineering-runner-presets.json",
   "summary": {
     "total": 4,
     "builtIn": 3,
@@ -160,18 +164,51 @@ Returns the built-in Workbench presets plus any server-configured CLI presets fr
       "id": "openclaw-local",
       "label": "OpenClaw local agent",
       "kind": "external-command",
-      "source": "env",
+      "source": "file",
       "adapterId": "openclaw-desktop-runner",
       "command": "openclaw",
       "args": ["agent", "--agent", "naikaku", "--message-file", "{taskPath}", "--local", "--json"],
       "requiresAdapterReady": true,
       "availableInWorkbench": true
     }
+  ],
+  "templates": [
+    {
+      "id": "openclaw-local",
+      "label": "OpenClaw local agent",
+      "enabled": true
+    }
   ]
 }
 ```
 
 Configured presets still run through `/v1/engineering/auto-work`, require the Workbench adapter-ready confirmation by default, and must return Naikaku receipts before implementation completion can be claimed.
+
+### `POST /v1/engineering/runner-presets/enable`
+
+Enables a safe built-in runner preset template by writing the fixed command template to the local gateway preset config file. The request accepts only a template id; it does not accept `command`, `args`, or arbitrary shell text from the browser.
+
+```json
+{
+  "templateId": "openclaw-local"
+}
+```
+
+Successful responses include the updated registry and the newly selectable preset:
+
+```json
+{
+  "schema": "naikaku.engineering-runner-preset-enable.v1",
+  "ok": true,
+  "status": "enabled",
+  "templateId": "openclaw-local",
+  "preset": {
+    "id": "openclaw-local",
+    "source": "file",
+    "command": "openclaw"
+  }
+}
+```
 
 ### `POST /v1/engineering/auto-work`
 

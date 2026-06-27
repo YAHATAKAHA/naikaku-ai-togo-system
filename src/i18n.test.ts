@@ -90,6 +90,12 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.autoWorkLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkRun).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkAdapterNeedsReady("openclaw-local")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetTemplatesLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetEnable).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetEnabled).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetEnableStarting("OpenClaw local agent")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetEnableCompleted("OpenClaw local agent")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerPresetEnableFailed("error")).toBeTruthy();
       expect(copy.engineeringLaunchpad.applyMissionTemplate).toBeTruthy();
       expect(copy.engineeringLaunchpad.runSelfSimulation).toBeTruthy();
       expect(copy.engineeringLaunchpad.selfSimulationLabel).toBeTruthy();

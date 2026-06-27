@@ -2,6 +2,9 @@ import {
   externalRunnerAdapterIds,
   type ExternalRunnerAdapterId
 } from "../src/domain/externalRunnerAdapters";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { ledgerDir } from "./ledgerStore";
 
 export type EngineeringAutoWorkGatewayPreset = string;
 
@@ -11,7 +14,7 @@ export interface EngineeringRunnerPreset {
   id: EngineeringAutoWorkGatewayPreset;
   label: string;
   kind: EngineeringRunnerPresetKind;
-  source: "built-in" | "env";
+  source: "built-in" | "env" | "file";
   adapterId: ExternalRunnerAdapterId | null;
   command: string | null;
   args: string[];
@@ -23,10 +26,23 @@ export interface EngineeringRunnerPreset {
   nextAction: string;
 }
 
+export interface EngineeringRunnerPresetTemplate {
+  id: string;
+  label: string;
+  adapterId: ExternalRunnerAdapterId;
+  command: string;
+  commandCandidates: string[];
+  summary: string;
+  nextAction: string;
+  enabled: boolean;
+}
+
 export interface EngineeringRunnerPresetRegistry {
   schema: "naikaku.engineering-runner-presets.v1";
   generatedAt: string;
+  configPath: string;
   presets: EngineeringRunnerPreset[];
+  templates: EngineeringRunnerPresetTemplate[];
   errors: string[];
   summary: {
     total: number;
@@ -40,6 +56,17 @@ export interface EngineeringRunnerPresetRegistry {
     claim: string;
     limitations: string[];
   };
+}
+
+export interface EngineeringRunnerPresetEnableResult {
+  schema: "naikaku.engineering-runner-preset-enable.v1";
+  ok: boolean;
+  status: "enabled" | "already-enabled" | "blocked";
+  message: string;
+  configPath: string;
+  templateId: string;
+  preset: EngineeringRunnerPreset | null;
+  registry: EngineeringRunnerPresetRegistry;
 }
 
 interface RawConfiguredPreset {
@@ -103,20 +130,59 @@ const BUILT_IN_PRESETS: EngineeringRunnerPreset[] = [
   }
 ];
 
+const PRESET_TEMPLATES: Array<Omit<EngineeringRunnerPresetTemplate, "enabled"> & { preset: RawConfiguredPreset }> = [
+  {
+    id: "openclaw-local",
+    label: "OpenClaw local agent",
+    adapterId: "openclaw-desktop-runner",
+    command: "openclaw",
+    commandCandidates: ["openclaw"],
+    summary: "Run OpenClaw's local embedded agent with one scoped Naikaku task file.",
+    nextAction: "Install OpenClaw, configure the naikaku agent id, then approve one scoped local run.",
+    preset: {
+      id: "openclaw-local",
+      label: "OpenClaw local agent",
+      adapterId: "openclaw-desktop-runner",
+      command: "openclaw",
+      args: ["agent", "--agent", "naikaku", "--message-file", "{taskPath}", "--local", "--json"],
+      commandCandidates: ["openclaw"],
+      nextAction: "Run OpenClaw's local embedded agent against one scoped Naikaku task file."
+    }
+  }
+];
+
 export function buildEngineeringRunnerPresetRegistry({
   generatedAt = new Date().toISOString(),
-  envValue = process.env.NAIKAKU_ENGINEERING_RUNNER_PRESETS
+  envValue = process.env.NAIKAKU_ENGINEERING_RUNNER_PRESETS,
+  configPath = engineeringRunnerPresetsConfigPath()
 }: {
   generatedAt?: string;
   envValue?: string;
+  configPath?: string;
 } = {}): EngineeringRunnerPresetRegistry {
-  const { presets: configuredPresets, errors } = parseConfiguredPresets(envValue);
+  const reservedIds = new Set(BUILT_IN_PRESETS.map((preset) => preset.id));
+  const seenIds = new Set<string>();
+  const envResult = parseConfiguredPresets(envValue, "env", reservedIds, seenIds, "NAIKAKU_ENGINEERING_RUNNER_PRESETS");
+  const fileResult = readConfiguredPresetFile(configPath, reservedIds, seenIds);
+  const configuredPresets = [...envResult.presets, ...fileResult.presets];
+  const errors = [...envResult.errors, ...fileResult.errors];
   const presets = [...BUILT_IN_PRESETS, ...configuredPresets];
 
   return {
     schema: "naikaku.engineering-runner-presets.v1",
     generatedAt,
+    configPath,
     presets,
+    templates: PRESET_TEMPLATES.map((template) => ({
+      id: template.id,
+      label: template.label,
+      adapterId: template.adapterId,
+      command: template.command,
+      commandCandidates: template.commandCandidates,
+      summary: template.summary,
+      nextAction: template.nextAction,
+      enabled: presets.some((preset) => preset.id === template.id)
+    })),
     errors,
     summary: {
       total: presets.length,
@@ -130,12 +196,84 @@ export function buildEngineeringRunnerPresetRegistry({
       claim: "Workbench runner presets are fixed server-side command templates.",
       limitations: [
         "The browser can select a preset id, but it cannot submit arbitrary shell commands.",
-        "Configured presets must come from NAIKAKU_ENGINEERING_RUNNER_PRESETS on the local gateway host.",
+        "Configured presets must come from NAIKAKU_ENGINEERING_RUNNER_PRESETS or the local gateway preset config file.",
         "External command presets still require operator installation, license review, scoped worktree approval, receipts, and evidence before completion can be claimed.",
         "Presets do not grant Mac Accessibility, Screen Recording, Automation, Git push, deploy, external-send, or host-secret access."
       ]
     }
   };
+}
+
+export function enableEngineeringRunnerPresetTemplate({
+  templateId,
+  generatedAt = new Date().toISOString(),
+  configPath = engineeringRunnerPresetsConfigPath()
+}: {
+  templateId: string;
+  generatedAt?: string;
+  configPath?: string;
+}): EngineeringRunnerPresetEnableResult {
+  const template = PRESET_TEMPLATES.find((candidate) => candidate.id === templateId);
+  if (!template) {
+    const registry = buildEngineeringRunnerPresetRegistry({ generatedAt, configPath });
+    return {
+      schema: "naikaku.engineering-runner-preset-enable.v1",
+      ok: false,
+      status: "blocked",
+      message: `Unknown runner preset template: ${templateId}.`,
+      configPath,
+      templateId,
+      preset: null,
+      registry
+    };
+  }
+
+  const loaded = readRawPresetFile(configPath);
+  if (loaded.errors.length > 0) {
+    const registry = buildEngineeringRunnerPresetRegistry({ generatedAt, configPath });
+    return {
+      schema: "naikaku.engineering-runner-preset-enable.v1",
+      ok: false,
+      status: "blocked",
+      message: loaded.errors[0],
+      configPath,
+      templateId,
+      preset: null,
+      registry
+    };
+  }
+
+  const existingIndex = loaded.presets.findIndex((preset) => stringField(preset.id) === template.id);
+  const nextRawPresets = [...loaded.presets];
+  if (existingIndex >= 0) {
+    nextRawPresets[existingIndex] = template.preset;
+  } else {
+    nextRawPresets.push(template.preset);
+  }
+
+  writePresetFile(configPath, {
+    schema: "naikaku.engineering-runner-presets-config.v1",
+    generatedAt,
+    presets: nextRawPresets
+  });
+
+  const registry = buildEngineeringRunnerPresetRegistry({ generatedAt, configPath });
+  return {
+    schema: "naikaku.engineering-runner-preset-enable.v1",
+    ok: true,
+    status: existingIndex >= 0 ? "already-enabled" : "enabled",
+    message: existingIndex >= 0
+      ? `${template.label} was already enabled and has been refreshed from the built-in safe template.`
+      : `${template.label} enabled in the local gateway preset config.`,
+    configPath,
+    templateId,
+    preset: registry.presets.find((preset) => preset.id === template.id) || null,
+    registry
+  };
+}
+
+export function engineeringRunnerPresetsConfigPath(env = process.env) {
+  return env.NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE || join(ledgerDir(env), "engineering-runner-presets.json");
 }
 
 export function findEngineeringRunnerPreset(
@@ -146,18 +284,85 @@ export function findEngineeringRunnerPreset(
   return registry.presets.find((preset) => preset.id === id) || null;
 }
 
-function parseConfiguredPresets(envValue: string | undefined) {
-  if (!envValue || !envValue.trim()) {
+function readConfiguredPresetFile(
+  configPath: string,
+  reservedIds: Set<string>,
+  seenIds: Set<string>
+) {
+  if (!configPath || !existsSync(configPath)) {
+    return { presets: [] as EngineeringRunnerPreset[], errors: [] as string[] };
+  }
+
+  try {
+    return parseConfiguredPresets(readFileSync(configPath, "utf8"), "file", reservedIds, seenIds, configPath);
+  } catch (error) {
+    return {
+      presets: [] as EngineeringRunnerPreset[],
+      errors: [`${configPath} could not be read: ${error instanceof Error ? error.message : "read failed"}.`]
+    };
+  }
+}
+
+function readRawPresetFile(configPath: string) {
+  if (!configPath || !existsSync(configPath)) {
+    return { presets: [] as RawConfiguredPreset[], errors: [] as string[] };
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(configPath, "utf8")) as unknown;
+    const rawPresets = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && Array.isArray((parsed as { presets?: unknown }).presets)
+        ? (parsed as { presets: unknown[] }).presets
+        : null;
+
+    if (!rawPresets) {
+      return {
+        presets: [] as RawConfiguredPreset[],
+        errors: [`${configPath} must be an array or an object with a presets array.`]
+      };
+    }
+
+    const invalidIndex = rawPresets.findIndex((item) => !item || typeof item !== "object" || Array.isArray(item));
+    if (invalidIndex >= 0) {
+      return {
+        presets: [] as RawConfiguredPreset[],
+        errors: [`${configPath} presets[${invalidIndex}] must be an object.`]
+      };
+    }
+
+    return { presets: rawPresets as RawConfiguredPreset[], errors: [] as string[] };
+  } catch (error) {
+    return {
+      presets: [] as RawConfiguredPreset[],
+      errors: [`${configPath} must be valid JSON: ${error instanceof Error ? error.message : "parse failed"}.`]
+    };
+  }
+}
+
+function writePresetFile(configPath: string, content: unknown) {
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, `${JSON.stringify(content, null, 2)}\n`, "utf8");
+}
+
+function parseConfiguredPresets(
+  value: string | undefined,
+  source: "env" | "file",
+  reservedIds: Set<string>,
+  seenIds: Set<string>,
+  label: string
+) {
+  if (!value || !value.trim()) {
     return { presets: [] as EngineeringRunnerPreset[], errors: [] as string[] };
   }
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(envValue);
+    parsed = JSON.parse(value);
   } catch (error) {
     return {
       presets: [] as EngineeringRunnerPreset[],
-      errors: [`NAIKAKU_ENGINEERING_RUNNER_PRESETS must be valid JSON: ${error instanceof Error ? error.message : "parse failed"}.`]
+      errors: [`${label} must be valid JSON: ${error instanceof Error ? error.message : "parse failed"}.`]
     };
   }
 
@@ -169,19 +374,22 @@ function parseConfiguredPresets(envValue: string | undefined) {
   if (!rawPresets) {
     return {
       presets: [] as EngineeringRunnerPreset[],
-      errors: ["NAIKAKU_ENGINEERING_RUNNER_PRESETS must be an array or an object with a presets array."]
+      errors: [`${label} must be an array or an object with a presets array.`]
     };
   }
 
   const presets: EngineeringRunnerPreset[] = [];
   const errors: string[] = [];
-  const reservedIds = new Set(BUILT_IN_PRESETS.map((preset) => preset.id));
-  const seenIds = new Set<string>();
 
   rawPresets.forEach((item, index) => {
-    const result = normalizeConfiguredPreset(item as RawConfiguredPreset, index, reservedIds, seenIds);
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      errors.push(`${label} preset[${index}] must be an object.`);
+      return;
+    }
+
+    const result = normalizeConfiguredPreset(item as RawConfiguredPreset, index, reservedIds, seenIds, source);
     if (typeof result === "string") {
-      errors.push(result);
+      errors.push(`${label} ${result}`);
       return;
     }
     seenIds.add(result.id);
@@ -195,7 +403,8 @@ function normalizeConfiguredPreset(
   item: RawConfiguredPreset,
   index: number,
   reservedIds: Set<string>,
-  seenIds: Set<string>
+  seenIds: Set<string>,
+  source: "env" | "file"
 ): EngineeringRunnerPreset | string {
   const prefix = `preset[${index}]`;
   const id = stringField(item.id);
@@ -230,7 +439,7 @@ function normalizeConfiguredPreset(
     id,
     label,
     kind: "external-command",
-    source: "env",
+    source,
     adapterId: adapterId as ExternalRunnerAdapterId,
     command,
     args,

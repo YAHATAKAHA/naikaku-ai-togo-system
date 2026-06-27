@@ -183,6 +183,7 @@ import {
   createReleaseVerificationViaGateway,
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
+  enableEngineeringRunnerPresetViaGateway,
   gatewayBaseUrl,
   getEngineeringRunnerPresetsViaGateway,
   getEngineeringRunnerReadinessViaGateway,
@@ -201,6 +202,7 @@ import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
   EngineeringRunnerPreset,
+  EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport,
   LedgerSummary
 } from "./domain/gatewayClient";
@@ -378,6 +380,14 @@ export function App() {
     report: null
   });
   const [engineeringRunnerPresets, setEngineeringRunnerPresets] = useState<EngineeringRunnerPreset[]>([]);
+  const [engineeringRunnerPresetTemplates, setEngineeringRunnerPresetTemplates] = useState<EngineeringRunnerPresetTemplate[]>([]);
+  const [engineeringRunnerPresetEnableState, setEngineeringRunnerPresetEnableState] = useState<{
+    status: "idle" | "loading" | "ready" | "error";
+    message: string;
+  }>({
+    status: "idle",
+    message: ""
+  });
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -4395,7 +4405,7 @@ export function App() {
     setEngineeringAutoWorkWorktree((current) => {
       const fixtureWorktree = "output/engineering-auto-work-ui/fixture-worktree";
       if (preset === "fixture") return fixtureWorktree;
-      if (preset === "openhands" && current === fixtureWorktree) return ".";
+      if (current === fixtureWorktree) return ".";
       return current || ".";
     });
   }
@@ -4525,6 +4535,7 @@ export function App() {
         getEngineeringRunnerPresetsViaGateway()
       ]);
       setEngineeringRunnerPresets(presetRegistry.presets);
+      setEngineeringRunnerPresetTemplates(presetRegistry.templates);
       setEngineeringRunnerReadinessState({
         status: "ready",
         message: copy.engineeringLaunchpad.runnerReadinessStatus(
@@ -4561,6 +4572,57 @@ export function App() {
         severity: "error",
         summary: `Engineering runner readiness gateway failed: ${errorMessage}.`,
         metadata: {
+          gatewayError: errorMessage
+        }
+      });
+    }
+  }
+
+  async function enableEngineeringRunnerPresetTemplateFromLaunchpad(templateId: string) {
+    const templateLabel = engineeringRunnerPresetTemplates.find((template) => template.id === templateId)?.label || templateId;
+    setEngineeringRunnerPresetEnableState({
+      status: "loading",
+      message: copy.engineeringLaunchpad.runnerPresetEnableStarting(templateLabel)
+    });
+
+    try {
+      const result = await enableEngineeringRunnerPresetViaGateway(templateId);
+      setEngineeringRunnerPresets(result.registry.presets);
+      setEngineeringRunnerPresetTemplates(result.registry.templates);
+      if (result.preset) {
+        updateEngineeringAutoWorkPreset(result.preset.id);
+        setEngineeringAutoWorkAdapterReady(false);
+      }
+
+      setEngineeringRunnerPresetEnableState({
+        status: "ready",
+        message: copy.engineeringLaunchpad.runnerPresetEnableCompleted(result.preset?.label || templateLabel)
+      });
+      recordAudit({
+        type: "development.engineering_runner_preset.enabled",
+        severity: "success",
+        summary: `Engineering runner preset template enabled: ${templateId}.`,
+        metadata: {
+          templateId,
+          status: result.status,
+          preset: result.preset?.id || null,
+          configPath: result.configPath,
+          configuredPresets: result.registry.summary.configured,
+          presetErrors: result.registry.summary.errors
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "unknown";
+      setEngineeringRunnerPresetEnableState({
+        status: "error",
+        message: copy.engineeringLaunchpad.runnerPresetEnableFailed(errorMessage)
+      });
+      recordAudit({
+        type: "development.engineering_runner_preset.enabled",
+        severity: "error",
+        summary: `Engineering runner preset enable failed: ${errorMessage}.`,
+        metadata: {
+          templateId,
           gatewayError: errorMessage
         }
       });
@@ -4690,11 +4752,14 @@ export function App() {
             autoWorkState={engineeringAutoWorkState}
             runnerReadinessState={engineeringRunnerReadinessState}
             runnerPresets={engineeringRunnerPresets}
+            runnerPresetTemplates={engineeringRunnerPresetTemplates}
+            runnerPresetEnableState={engineeringRunnerPresetEnableState}
             onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
             onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
             onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
             onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
             onRefreshRunnerReadiness={() => void refreshEngineeringRunnerReadinessFromLaunchpad()}
+            onEnableRunnerPresetTemplate={(templateId) => void enableEngineeringRunnerPresetTemplateFromLaunchpad(templateId)}
             onFocusMission={focusMissionBrief}
             onApplyMissionTemplate={applyEngineeringMissionTemplate}
             onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}

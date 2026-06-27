@@ -133,7 +133,7 @@ export interface EngineeringRunnerPreset {
   id: EngineeringAutoWorkGatewayPreset;
   label: string;
   kind: "prepared" | "fixture" | "external-command";
-  source: "built-in" | "env";
+  source: "built-in" | "env" | "file";
   adapterId: string | null;
   command: string | null;
   args: string[];
@@ -145,10 +145,23 @@ export interface EngineeringRunnerPreset {
   nextAction: string;
 }
 
+export interface EngineeringRunnerPresetTemplate {
+  id: string;
+  label: string;
+  adapterId: string;
+  command: string;
+  commandCandidates: string[];
+  summary: string;
+  nextAction: string;
+  enabled: boolean;
+}
+
 export interface EngineeringRunnerPresetRegistry {
   schema: "naikaku.engineering-runner-presets.v1";
   generatedAt: string;
+  configPath: string;
   presets: EngineeringRunnerPreset[];
+  templates: EngineeringRunnerPresetTemplate[];
   errors: string[];
   summary: {
     total: number;
@@ -162,6 +175,17 @@ export interface EngineeringRunnerPresetRegistry {
     claim: string;
     limitations: string[];
   };
+}
+
+export interface EngineeringRunnerPresetEnableResult {
+  schema: "naikaku.engineering-runner-preset-enable.v1";
+  ok: boolean;
+  status: "enabled" | "already-enabled" | "blocked";
+  message: string;
+  configPath: string;
+  templateId: string;
+  preset: EngineeringRunnerPreset | null;
+  registry: EngineeringRunnerPresetRegistry;
 }
 
 export type EngineeringRunnerReadinessStatus =
@@ -1099,6 +1123,26 @@ export async function getEngineeringRunnerPresetsViaGateway(signal?: AbortSignal
   }
 
   return (await response.json()) as EngineeringRunnerPresetRegistry;
+}
+
+export async function enableEngineeringRunnerPresetViaGateway(
+  templateId: string,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-presets/enable`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ templateId }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway runner preset enable failed"));
+  }
+
+  return (await response.json()) as EngineeringRunnerPresetEnableResult;
 }
 
 export async function checkGatewayHealth() {
