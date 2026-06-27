@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI API Gateway 構想 | Naikaku by EMYSTI</title>
+    <meta name="description" content="Naikaku はユーザー自身の API キーと、将来の EMYSTI API Gateway を並存させる設計です。モデルルーティング、課金、監査、fallback の構想。" />
+    <link rel="canonical" href="https://naikaku.emysti.net/ja/api-gateway/" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/ja/"><span class="mark">内</span><span>Naikaku AI 統合システム</span></a>
+      <nav class="nav-links" aria-label="Naikaku navigation">
+        <a href="/ja/download/">ダウンロード</a>
+        <a href="/ja/api-gateway/">API Gateway</a>
+        <a href="/ja/developers/">開発者向け</a>
+        <a href="/ja/license/">ライセンス</a>
+      </nav>
+    </header>
+    <div class="crumbs"><a href="/ja/">Naikaku</a> / API Gateway</div>
+    <main>
+      <section class="band">
+        <p class="eyebrow">Bring your own API · EMYSTI Gateway ready</p>
+        <h1 class="page-title">自分の API でも、将来の EMYSTI Gateway でも。</h1>
+        <p class="lead">
+          Naikaku は API をロックしません。ユーザー自身の provider key を使える設計を保ちつつ、
+          将来は EMYSTI API Gateway を公式入口として追加できる構造にします。
+        </p>
+      </section>
+      <section class="band white">
+        <div class="split">
+          <article class="card accent-green">
+            <h3>自分の API キーを使う</h3>
+            <ul>
+              <li>役割ごとに provider、endpoint、model、API-key alias を設定。</li>
+              <li>OpenAI 互換、OpenRouter、Anthropic、Aliyun DashScope/Qwen、Gemini、ローカルモデルを想定。</li>
+              <li>ローカル gateway は raw secret を frontend に保存しない方針。</li>
+            </ul>
+          </article>
+          <article class="card accent-red">
+            <h3>EMYSTI API Gateway を使う</h3>
+            <ul>
+              <li>モデルルーティング、コスト制御、fallback、監査ログを公式サービス化する余地。</li>
+              <li>複数 provider 契約を持ちたくないユーザー向け。</li>
+              <li>将来のクラウド版、チーム管理、課金と接続可能。</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+      <section class="band">
+        <div class="section-head">
+          <h2>クラウド化するなら、ここに置く。</h2>
+          <p class="body-copy">
+            EMYSTI Cloud は Naikaku 本体を閉じ込めるものではなく、API ルーティング、利用量、請求、チーム設定、
+            runner audit、モデル fallback を扱う control plane として設計するのが自然です。
+          </p>
+        </div>
+      </section>
+    </main>
+    <footer>Copyright 2026 合同会社EMYSTI · <a href="/ja/">Naikaku</a></footer>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://naikaku.emysti.net/sitemap.xml
