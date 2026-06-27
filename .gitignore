@@ -22,5 +22,6 @@ output/release-drill
 output/coding-agent-receipt-drill
 output/localization-drill
 output/executor-contract-drill
+output/sandbox-capability-drill
 output/verification
 .naikaku-data

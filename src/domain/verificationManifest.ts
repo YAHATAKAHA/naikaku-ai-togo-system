@@ -12,6 +12,7 @@ import type {
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
+  SandboxCapabilityDrillSummary,
   VerificationManifest,
   VerificationManifestCheck
 } from "./types";
@@ -36,6 +37,7 @@ export interface BuildVerificationManifestInput {
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
   executorContractDrill: ExecutorContractDrillSummary;
+  sandboxCapabilityDrill: SandboxCapabilityDrillSummary;
   productionBoundaryDrill: ProductionBoundaryDrillSummary;
   releaseVerification: ReleaseVerificationReport;
   generatedAt?: string;
@@ -50,6 +52,7 @@ export interface BuildVerificationManifestInput {
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
+    sandboxCapabilityDrill: string;
     productionBoundaryDrill: string;
     releaseVerification: string;
   };
@@ -66,6 +69,7 @@ export function buildVerificationManifest({
   codingAgentReport,
   localizationDrill,
   executorContractDrill,
+  sandboxCapabilityDrill,
   productionBoundaryDrill,
   releaseVerification,
   generatedAt = new Date().toISOString(),
@@ -84,6 +88,7 @@ export function buildVerificationManifest({
     codingAgentOutOfScopeCheck(codingAgentReport),
     localizationDrillCheck(localizationDrill),
     executorContractDrillCheck(executorContractDrill),
+    sandboxCapabilityDrillCheck(sandboxCapabilityDrill),
     releaseVerificationCheck(releaseVerification),
     dryRunBoundaryCheck(releaseVerification),
     productionBoundaryDrillCheck(productionBoundaryDrill)
@@ -107,10 +112,12 @@ export function buildVerificationManifest({
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
       executorContractGeneratedAt: executorContractDrill.generatedAt,
+      sandboxCapabilityGeneratedAt: sandboxCapabilityDrill.generatedAt,
       productionBoundaryGeneratedAt: productionBoundaryDrill.generatedAt,
       releaseVerificationGeneratedAt: releaseVerification.generatedAt,
       localizationLocales: localizationDrill.locales.map((locale) => locale.locale),
       executorProfiles: executorContractDrill.profiles.map((profile) => profile.profileId),
+      sandboxCapabilityProfiles: sandboxCapabilityDrill.profiles.map((profile) => profile.profileId),
       productionBoundaryExitCode: productionBoundaryDrill.observedExitCode,
       releaseRunId: releaseVerification.sourceRunId,
       releaseScope: releaseVerification.scope
@@ -126,7 +133,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, sandbox capability, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -732,6 +739,55 @@ function executorContractDrillCheck(report: ExecutorContractDrillSummary): Verif
     nextAction: ok
       ? "Keep the executor contract drill summary attached to runner handoff evidence."
       : "Rerun executor drill and restore scoped commands, replayable evidence, dry-run identity, or blocked-action handling."
+  };
+}
+
+function sandboxCapabilityDrillCheck(report: SandboxCapabilityDrillSummary): VerificationManifestCheck {
+  const profiles = report.profiles.map((profile) => profile.profileId);
+  const checksPassed = Object.values(report.checks).every(Boolean)
+    && report.profiles.every((profile) => profile.failures.length === 0);
+  const ok = report.schema === "naikaku.sandbox-capability-drill.v1"
+    && report.valid.schema === "naikaku.sandbox-capabilities.v1"
+    && report.valid.profiles === expectedExecutorProfiles.length
+    && report.valid.rolesCovered > 0
+    && report.valid.readinessChecks === expectedExecutorProfiles.length * 5
+    && report.valid.passedReadinessChecks > 0
+    && report.valid.warningReadinessChecks > 0
+    && report.valid.blockedReadinessChecks > 0
+    && report.valid.requiredApprovals > 0
+    && report.valid.evidenceArtifacts >= expectedExecutorProfiles.length
+    && report.valid.killSwitchArmed
+    && expectedExecutorProfiles.every((profile) => profiles.includes(profile))
+    && report.profiles.every((profile) =>
+      profile.readinessChecks === 5 &&
+      profile.evidenceArtifacts > 0
+    )
+    && !report.killSwitchOpen.killSwitchArmed
+    && report.killSwitchOpen.blocked === report.killSwitchOpen.profiles
+    && report.killSwitchOpen.blockedReadinessChecks >= expectedExecutorProfiles.length
+    && checksPassed;
+
+  return {
+    id: "sandbox-capability-drill",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Sandbox capability drill proved runner readiness checks, evidence requirements, approval gates, blocked reasons, and kill-switch behavior."
+      : "Sandbox capability drill did not prove capability readiness or kill-switch boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Profiles: ${profiles.join(", ")}`,
+      `Roles covered: ${report.valid.rolesCovered}`,
+      `Readiness checks: ${report.valid.readinessChecks}`,
+      `Readiness pass/warn/block: ${report.valid.passedReadinessChecks}/${report.valid.warningReadinessChecks}/${report.valid.blockedReadinessChecks}`,
+      `Required approvals: ${report.valid.requiredApprovals}`,
+      `Evidence artifacts: ${report.valid.evidenceArtifacts}`,
+      `Default kill switch armed: ${report.valid.killSwitchArmed ? "yes" : "no"}`,
+      `Kill-switch-open blocked profiles: ${report.killSwitchOpen.blocked}/${report.killSwitchOpen.profiles}`,
+      `Kill-switch-open blocked checks: ${report.killSwitchOpen.blockedReadinessChecks}`
+    ],
+    nextAction: ok
+      ? "Keep the sandbox capability drill summary attached before connecting real computer-use runners."
+      : "Restore capability readiness checks, approval gates, evidence artifacts, and kill-switch blocking before runner handoff."
   };
 }
 

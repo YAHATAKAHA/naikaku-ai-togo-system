@@ -15,7 +15,8 @@ import type {
   ExecutorContractDrillSummary,
   LocalizationDrillSummary,
   ProductionBoundaryDrillSummary,
-  ReleaseVerificationReport
+  ReleaseVerificationReport,
+  SandboxCapabilityDrillSummary
 } from "./types";
 
 const inputs = {
@@ -29,6 +30,7 @@ const inputs = {
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
   executorContractDrill: "output/executor-contract-drill/summary.json",
+  sandboxCapabilityDrill: "output/sandbox-capability-drill/summary.json",
   productionBoundaryDrill: "output/verification/production-boundary-latest.json",
   releaseVerification: "output/rehearsal-drill/release-verification-latest.json"
 };
@@ -46,6 +48,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -55,8 +58,8 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 15,
-      passed: 15,
+      total: 16,
+      passed: 16,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
@@ -72,6 +75,7 @@ describe("verification manifest", () => {
       "coding-agent-out-of-scope-receipt",
       "localization-drill",
       "executor-contract-drill",
+      "sandbox-capability-drill",
       "release-verification",
       "dry-run-boundary",
       "production-boundary-drill"
@@ -84,7 +88,9 @@ describe("verification manifest", () => {
     expect(manifest.source.codingAgentRunnerIntakeAuditGeneratedAt).toBe("2026-06-27T00:03:45.000Z");
     expect(manifest.source.codingAgentRunnerSelfTestGeneratedAt).toBe("2026-06-27T00:04:00.000Z");
     expect(manifest.source.codingAgentSandboxRunnerGeneratedAt).toBe("2026-06-27T00:05:00.000Z");
+    expect(manifest.source.sandboxCapabilityGeneratedAt).toBe("2026-06-27T00:03:30.000Z");
     expect(manifest.source.executorProfiles).toContain("desktop-vm");
+    expect(manifest.source.sandboxCapabilityProfiles).toContain("shell-container");
     expect(manifest.source.productionBoundaryExitCode).toBe(4);
     expect(serializeVerificationManifest(manifest)).toContain("naikaku.verification-manifest.v1");
   });
@@ -104,6 +110,7 @@ describe("verification manifest", () => {
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -133,6 +140,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -162,6 +170,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -191,6 +200,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -220,6 +230,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -249,6 +260,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -278,6 +290,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -307,6 +320,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -336,6 +350,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -365,6 +380,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -393,6 +409,7 @@ describe("verification manifest", () => {
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -423,6 +440,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -455,6 +473,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -483,6 +502,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorDrill,
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -493,6 +513,35 @@ describe("verification manifest", () => {
     expect(manifest.decision).toBe("invalid");
     expect(executorCheck?.status).toBe("fail");
     expect(executorCheck?.evidence.join(" ")).toContain("executed=true");
+  });
+
+  it("invalidates the manifest when sandbox capability kill switch does not block profiles", () => {
+    const sandboxCapabilityDrill = sandboxCapabilityDrillFixture();
+    sandboxCapabilityDrill.killSwitchOpen.blocked = 0;
+    sandboxCapabilityDrill.checks.killSwitchBlocksAllProfiles = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill,
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const sandboxCapabilityCheck = manifest.checks.find((check) => check.id === "sandbox-capability-drill");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(sandboxCapabilityCheck?.status).toBe("fail");
+    expect(sandboxCapabilityCheck?.summary).toContain("did not prove");
   });
 
   it("invalidates the manifest when production boundary exit code is not observed", () => {
@@ -511,6 +560,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill,
       releaseVerification: releaseVerificationFixture(),
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -557,6 +607,7 @@ describe("verification manifest", () => {
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
       executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
       productionBoundaryDrill: productionBoundaryDrillFixture(),
       releaseVerification,
       generatedAt: "2026-06-27T00:10:00.000Z",
@@ -1192,6 +1243,76 @@ function executorContractDrillFixture(): ExecutorContractDrillSummary {
       level: "local-drill",
       claim: "Local executor drill.",
       limitations: ["No real executor controlled."],
+      productionRequirements: ["Attach production runner evidence."]
+    }
+  };
+}
+
+function sandboxCapabilityDrillFixture(): SandboxCapabilityDrillSummary {
+  const profiles = [
+    "browser-sandbox",
+    "desktop-vm",
+    "shell-container",
+    "mcp-proxy",
+    "human-approval"
+  ] as const;
+
+  return {
+    schema: "naikaku.sandbox-capability-drill.v1",
+    generatedAt: "2026-06-27T00:03:30.000Z",
+    outputDir: "output/sandbox-capability-drill",
+    valid: {
+      schema: "naikaku.sandbox-capabilities.v1",
+      profiles: 5,
+      rolesCovered: 8,
+      dryRunReady: 0,
+      needsApproval: 5,
+      blocked: 0,
+      approvalActions: 7,
+      blockedActions: 1,
+      readinessChecks: 25,
+      passedReadinessChecks: 20,
+      warningReadinessChecks: 4,
+      blockedReadinessChecks: 1,
+      requiredApprovals: 7,
+      evidenceArtifacts: 15,
+      killSwitchArmed: true
+    },
+    killSwitchOpen: {
+      profiles: 5,
+      blocked: 5,
+      readinessChecks: 25,
+      blockedReadinessChecks: 10,
+      blockedActions: 10,
+      killSwitchArmed: false
+    },
+    profiles: profiles.map((profileId) => ({
+      profileId,
+      decision: "needs-approval",
+      readinessChecks: 5,
+      passedReadinessChecks: 4,
+      warningReadinessChecks: profileId === "human-approval" ? 0 : 1,
+      blockedReadinessChecks: profileId === "human-approval" ? 1 : 0,
+      requiredApprovals: profileId === "shell-container" || profileId === "mcp-proxy" ? 2 : 1,
+      blockedReasons: profileId === "human-approval" ? 1 : 0,
+      evidenceArtifacts: 3,
+      failures: []
+    })),
+    checks: {
+      schemaStable: true,
+      allProfilesCovered: true,
+      readinessChecksStable: true,
+      approvalsVisible: true,
+      blockedReasonsVisible: true,
+      evidenceArtifactsStable: true,
+      killSwitchBlocksAllProfiles: true,
+      noSecretLeakage: true,
+      noProfileFailures: true
+    },
+    honestyClaim: {
+      level: "sandbox-capability-readiness-drill",
+      claim: "Local sandbox capability drill.",
+      limitations: ["No real runner controlled."],
       productionRequirements: ["Attach production runner evidence."]
     }
   };

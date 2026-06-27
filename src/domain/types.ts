@@ -1154,6 +1154,56 @@ export interface ExecutorContractDrillSummary {
   };
 }
 
+export interface SandboxCapabilityDrillSummary {
+  schema: "naikaku.sandbox-capability-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  valid: {
+    schema: SandboxCapabilityRegistry["schema"];
+    profiles: number;
+    rolesCovered: number;
+    dryRunReady: number;
+    needsApproval: number;
+    blocked: number;
+    approvalActions: number;
+    blockedActions: number;
+    readinessChecks: number;
+    passedReadinessChecks: number;
+    warningReadinessChecks: number;
+    blockedReadinessChecks: number;
+    requiredApprovals: number;
+    evidenceArtifacts: number;
+    killSwitchArmed: boolean;
+  };
+  killSwitchOpen: {
+    profiles: number;
+    blocked: number;
+    readinessChecks: number;
+    blockedReadinessChecks: number;
+    blockedActions: number;
+    killSwitchArmed: boolean;
+  };
+  profiles: Array<{
+    profileId: ExecutorProfileId;
+    decision: SandboxCapabilityStatus;
+    readinessChecks: number;
+    passedReadinessChecks: number;
+    warningReadinessChecks: number;
+    blockedReadinessChecks: number;
+    requiredApprovals: number;
+    blockedReasons: number;
+    evidenceArtifacts: number;
+    failures: string[];
+  }>;
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface ProductionBoundaryDrillSummary {
   schema: "naikaku.production-boundary-drill.v1";
   generatedAt: string;
@@ -1201,6 +1251,7 @@ export interface VerificationManifest {
     codingAgentReceiptDrill: string;
     localizationDrill: string;
     executorContractDrill: string;
+    sandboxCapabilityDrill: string;
     productionBoundaryDrill: string;
     releaseVerification: string;
   };
@@ -1215,10 +1266,12 @@ export interface VerificationManifest {
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
+    sandboxCapabilityGeneratedAt: string;
     productionBoundaryGeneratedAt: string;
     releaseVerificationGeneratedAt: string;
     localizationLocales: string[];
     executorProfiles: ExecutorProfileId[];
+    sandboxCapabilityProfiles: ExecutorProfileId[];
     productionBoundaryExitCode: number;
     releaseRunId: string;
     releaseScope: string;
