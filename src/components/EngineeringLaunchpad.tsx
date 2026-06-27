@@ -5,7 +5,8 @@ import {
   PackageCheck,
   PlayCircle,
   ShieldCheck,
-  Terminal
+  Terminal,
+  WandSparkles
 } from "lucide-react";
 import type {
   CabinetRun,
@@ -17,12 +18,14 @@ import type {
   CodingAgentSessionBundle,
   DevelopmentIssueDrafts
 } from "../domain/types";
+import type { EngineeringLaunchProfile } from "../domain/engineeringLaunchProfile";
 import type { EngineeringLaunchpadCopy } from "../i18n";
 
 interface EngineeringLaunchpadProps {
   copy: EngineeringLaunchpadCopy;
   activeRoles: number;
   run: CabinetRun | null;
+  profile: EngineeringLaunchProfile;
   briefs: CodingAgentBriefs;
   sessionBundle: CodingAgentSessionBundle | null;
   runnerManifest: CodingAgentRunnerManifest | null;
@@ -32,6 +35,7 @@ interface EngineeringLaunchpadProps {
   issueDrafts: DevelopmentIssueDrafts;
   runStatus: string;
   onFocusMission: () => void;
+  onApplyMissionTemplate: () => void;
   onRunCabinet: () => void;
   onPrepareEngineeringPack: () => void;
   onRunPreflight: () => void;
@@ -43,6 +47,7 @@ export function EngineeringLaunchpad({
   copy,
   activeRoles,
   run,
+  profile,
   briefs,
   sessionBundle,
   runnerManifest,
@@ -52,6 +57,7 @@ export function EngineeringLaunchpad({
   issueDrafts,
   runStatus,
   onFocusMission,
+  onApplyMissionTemplate,
   onRunCabinet,
   onPrepareEngineeringPack,
   onRunPreflight,
@@ -95,6 +101,71 @@ export function EngineeringLaunchpad({
         <span>{copy.runner(runnerTasks, runnerSelfTest?.decision || "not-ready")}</span>
       </div>
 
+      <div className="engineering-profile-grid">
+        <article>
+          <small>{copy.permissionModeLabel}</small>
+          <strong>{copy.permissionMode(profile.permissionMode)}</strong>
+        </article>
+        <article>
+          <small>{copy.launchStageLabel}</small>
+          <strong>{copy.launchStage(profile.stage)}</strong>
+        </article>
+        <article>
+          <small>{copy.nextActionLabel}</small>
+          <strong>{copy.nextAction(profile.nextAction)}</strong>
+        </article>
+      </div>
+
+      <div className="engineering-mission-draft-grid" aria-label={copy.missionDraftLabel}>
+        <article className="engineering-mission-draft-score">
+          <small>{copy.missionDraftLabel}</small>
+          <strong>
+            {copy.missionDraftScore(
+              profile.missionDraft.score,
+              profile.missionDraft.present,
+              profile.missionDraft.missing,
+              profile.missionDraft.recommended
+            )}
+          </strong>
+        </article>
+        <div>
+          {profile.missionDraft.items.map((item) => (
+            <span data-status={item.status} key={item.id}>
+              {copy.missionDraftItem(item.id)}
+              <small>{copy.missionDraftStatus(item.status)}</small>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="engineering-capability-strip" aria-label={copy.capabilitiesLabel}>
+        {profile.capabilities.map((capability) => (
+          <span
+            data-status={capability.status}
+            key={capability.id}
+            title={capability.reason}
+          >
+            {copy.capability(capability.id)}
+            <small>{copy.capabilityStatus(capability.status)}</small>
+          </span>
+        ))}
+      </div>
+
+      <div className="engineering-signal-strip" aria-label={copy.signalsLabel}>
+        {profile.signals.map((signal) => (
+          <span key={signal}>{copy.signal(signal)}</span>
+        ))}
+      </div>
+
+      <div className="engineering-unlock-list" aria-label={copy.unlockChecklistLabel}>
+        {profile.unlockChecklist.map((item) => (
+          <article data-status={item.status} key={item.id}>
+            <strong>{copy.unlockItem(item.id, item.count)}</strong>
+            <small>{copy.unlockStatus(item.status)}</small>
+          </article>
+        ))}
+      </div>
+
       <div className="engineering-action-row">
         <button type="button" onClick={onFocusMission}>
           <ClipboardCheck size={15} /> {copy.focusMission}
@@ -113,6 +184,9 @@ export function EngineeringLaunchpad({
         </button>
         <button type="button" onClick={onExportIssueScript} disabled={!issueDrafts.drafts.length}>
           <CheckCircle2 size={15} /> {copy.exportIssues}
+        </button>
+        <button type="button" onClick={onApplyMissionTemplate}>
+          <WandSparkles size={15} /> {copy.applyMissionTemplate}
         </button>
       </div>
 

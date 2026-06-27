@@ -526,6 +526,278 @@ a.secondary-button {
   overflow-wrap: anywhere;
 }
 
+.engineering-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.engineering-profile-grid article {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 10px 11px;
+}
+
+.engineering-profile-grid small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engineering-profile-grid strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.28;
+  overflow-wrap: anywhere;
+}
+
+.engineering-mission-draft-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.engineering-mission-draft-score {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 10px 11px;
+}
+
+.engineering-mission-draft-score small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engineering-mission-draft-score strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.28;
+  overflow-wrap: anywhere;
+}
+
+.engineering-mission-draft-grid > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 8px;
+}
+
+.engineering-mission-draft-grid span {
+  min-height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.engineering-mission-draft-grid span small {
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--muted);
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.engineering-mission-draft-grid span[data-status="present"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+  color: #176246;
+}
+
+.engineering-mission-draft-grid span[data-status="present"] small {
+  background: #dff3eb;
+  color: #176246;
+}
+
+.engineering-mission-draft-grid span[data-status="missing"] {
+  border-color: #f0b4b4;
+  background: #fff5f5;
+  color: #8b2d2d;
+}
+
+.engineering-mission-draft-grid span[data-status="missing"] small {
+  background: #ffe0e0;
+  color: #8b2d2d;
+}
+
+.engineering-capability-strip,
+.engineering-signal-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.engineering-unlock-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
+  gap: 7px;
+}
+
+.engineering-unlock-list article {
+  min-width: 0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 8px 9px;
+}
+
+.engineering-unlock-list strong {
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.engineering-unlock-list small {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--muted);
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.engineering-unlock-list article[data-status="done"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+}
+
+.engineering-unlock-list article[data-status="done"] small {
+  background: #dff3eb;
+  color: #176246;
+}
+
+.engineering-unlock-list article[data-status="next"] {
+  border-color: var(--accent);
+  background: #f4f7ff;
+}
+
+.engineering-unlock-list article[data-status="next"] small {
+  background: #dfe7ff;
+  color: var(--accent);
+}
+
+.engineering-unlock-list article[data-status="approval"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+}
+
+.engineering-unlock-list article[data-status="approval"] small {
+  background: #ffe9bd;
+  color: #7a4c13;
+}
+
+.engineering-unlock-list article[data-status="blocked"] {
+  border-color: #f0b4b4;
+  background: #fff5f5;
+}
+
+.engineering-unlock-list article[data-status="blocked"] small {
+  background: #ffe0e0;
+  color: #8b2d2d;
+}
+
+.engineering-capability-strip span,
+.engineering-signal-strip span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.engineering-capability-strip span {
+  justify-content: space-between;
+}
+
+.engineering-capability-strip small {
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--muted);
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.engineering-capability-strip span[data-status="ready"] {
+  border-color: #b9dfd1;
+  background: #f3fbf7;
+  color: #176246;
+}
+
+.engineering-capability-strip span[data-status="ready"] small {
+  background: #dff3eb;
+  color: #176246;
+}
+
+.engineering-capability-strip span[data-status="approval-required"] {
+  border-color: #f3d19c;
+  background: #fffaf0;
+  color: #7a4c13;
+}
+
+.engineering-capability-strip span[data-status="approval-required"] small {
+  background: #ffe9bd;
+  color: #7a4c13;
+}
+
+.engineering-capability-strip span[data-status="blocked"] {
+  border-color: #f0b4b4;
+  background: #fff5f5;
+  color: #8b2d2d;
+}
+
+.engineering-capability-strip span[data-status="blocked"] small {
+  background: #ffe0e0;
+  color: #8b2d2d;
+}
+
 .engineering-action-row {
   display: flex;
   align-items: center;
@@ -4373,6 +4645,9 @@ meter {
   .development-item-list,
   .coding-briefs-list,
   .engineering-flow-grid,
+  .engineering-profile-grid,
+  .engineering-mission-draft-grid,
+  .engineering-unlock-list,
   .engineering-launchpad-metrics,
   .engineering-permission-grid,
   .issues-draft-list,
@@ -4448,6 +4723,12 @@ meter {
   .coding-briefs-export-row > span {
     width: 100%;
     margin-right: 0;
+  }
+
+  .engineering-capability-strip span,
+  .engineering-signal-strip span {
+    flex: 1 1 160px;
+    justify-content: center;
   }
 
   .coding-briefs-export-row button,

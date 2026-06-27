@@ -132,6 +132,7 @@ import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
+import { buildEngineeringLaunchProfile } from "./domain/engineeringLaunchProfile";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
@@ -447,6 +448,31 @@ export function App() {
         releaseVerification
       }),
     [developmentBoard, locale, releaseVerification]
+  );
+  const engineeringLaunchProfile = useMemo(
+    () =>
+      buildEngineeringLaunchProfile({
+        mission: workspace.mission,
+        activeRoles: activeRoles.length,
+        run,
+        briefs: codingAgentBriefs,
+        sessionBundle: codingAgentSessionBundle,
+        runnerManifest: codingAgentRunnerManifest,
+        runnerSelfTest: codingAgentRunnerSelfTest,
+        sandboxRunnerPreflight: codingAgentSandboxRunnerPreflight,
+        sandboxRunnerReport: codingAgentSandboxRunnerReport
+      }),
+    [
+      activeRoles.length,
+      codingAgentBriefs,
+      codingAgentRunnerManifest,
+      codingAgentRunnerSelfTest,
+      codingAgentSandboxRunnerPreflight,
+      codingAgentSandboxRunnerReport,
+      codingAgentSessionBundle,
+      run,
+      workspace.mission
+    ]
   );
   const productReadinessReport = useMemo<ProductReadinessReport>(
     () =>
@@ -3962,6 +3988,14 @@ export function App() {
     missionInput?.focus();
   }
 
+  function applyEngineeringMissionTemplate() {
+    setWorkspace((current) => ({
+      ...current,
+      mission: engineeringLaunchProfile.missionTemplate.text
+    }));
+    window.requestAnimationFrame(focusMissionBrief);
+  }
+
   async function prepareEngineeringPackFromLaunchpad() {
     await exportCodingAgentDispatchManifest();
   }
@@ -4062,6 +4096,7 @@ export function App() {
             copy={copy.engineeringLaunchpad}
             activeRoles={activeRoles.length}
             run={run}
+            profile={engineeringLaunchProfile}
             briefs={codingAgentBriefs}
             sessionBundle={codingAgentSessionBundle}
             runnerManifest={codingAgentRunnerManifest}
@@ -4071,6 +4106,7 @@ export function App() {
             issueDrafts={developmentIssueDrafts}
             runStatus={runState.status}
             onFocusMission={focusMissionBrief}
+            onApplyMissionTemplate={applyEngineeringMissionTemplate}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

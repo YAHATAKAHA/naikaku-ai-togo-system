@@ -59,7 +59,25 @@ export interface EngineeringLaunchpadCopy {
   subtitle: string;
   stateLabel: string;
   metricsLabel: string;
+  permissionModeLabel: string;
+  launchStageLabel: string;
+  nextActionLabel: string;
+  missionDraftLabel: string;
+  missionDraftScore: (score: number, present: number, missing: number, recommended: number) => string;
+  capabilitiesLabel: string;
+  signalsLabel: string;
+  unlockChecklistLabel: string;
   state: (state: string) => string;
+  permissionMode: (mode: string) => string;
+  launchStage: (stage: string) => string;
+  nextAction: (action: string) => string;
+  capability: (capability: string) => string;
+  capabilityStatus: (status: string) => string;
+  missionDraftItem: (item: string) => string;
+  missionDraftStatus: (status: string) => string;
+  signal: (signal: string) => string;
+  unlockItem: (item: string, count?: number) => string;
+  unlockStatus: (status: string) => string;
   roles: (count: number) => string;
   briefs: (total: number, implementable: number) => string;
   sessions: (ready: number, held: number) => string;
@@ -70,6 +88,7 @@ export interface EngineeringLaunchpadCopy {
   preflight: string;
   runSandbox: string;
   exportIssues: string;
+  applyMissionTemplate: string;
   steps: Array<{
     title: string;
     body: string;
@@ -327,7 +346,25 @@ const copies: Record<SupportedLocale, AppCopy> = {
       subtitle: "ミッションを書き、内閣で分解し、監督用ブリーフと runner 起動パッケージを作り、許可された Mac ローカル操作だけを実行します。",
       stateLabel: "状態",
       metricsLabel: "Engineering launch metrics",
+      permissionModeLabel: "権限モード",
+      launchStageLabel: "起動段階",
+      nextActionLabel: "次の操作",
+      missionDraftLabel: "ミッション体検",
+      missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
+      capabilitiesLabel: "必要な Mac 工程能力",
+      signalsLabel: "検出したミッション信号",
+      unlockChecklistLabel: "工程解放チェックリスト",
       state: jaEngineeringLaunchState,
+      permissionMode: jaEngineeringPermissionMode,
+      launchStage: jaEngineeringLaunchStage,
+      nextAction: jaEngineeringNextAction,
+      capability: jaEngineeringCapability,
+      capabilityStatus: jaEngineeringCapabilityStatus,
+      missionDraftItem: jaEngineeringMissionDraftItem,
+      missionDraftStatus: jaEngineeringMissionDraftStatus,
+      signal: jaEngineeringSignal,
+      unlockItem: jaEngineeringUnlockItem,
+      unlockStatus: jaEngineeringUnlockStatus,
       roles: (count) => `${count}役割`,
       briefs: (total, implementable) => `${implementable}/${total}実装候補`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
@@ -338,6 +375,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       preflight: "権限確認",
       runSandbox: "ローカル実行",
       exportIssues: "Issue script",
+      applyMissionTemplate: "Brief 整形",
       steps: [
         {
           title: "1. ミッション入力",
@@ -606,7 +644,25 @@ const copies: Record<SupportedLocale, AppCopy> = {
       subtitle: "Write the mission, split it through the cabinet, prepare supervisor briefs and runner packages, then execute only approved local Mac actions.",
       stateLabel: "State",
       metricsLabel: "Engineering launch metrics",
+      permissionModeLabel: "Permission mode",
+      launchStageLabel: "Launch stage",
+      nextActionLabel: "Next action",
+      missionDraftLabel: "Mission check",
+      missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
+      capabilitiesLabel: "Required Mac engineering capabilities",
+      signalsLabel: "Detected mission signals",
+      unlockChecklistLabel: "Engineering unlock checklist",
       state: enEngineeringLaunchState,
+      permissionMode: enEngineeringPermissionMode,
+      launchStage: enEngineeringLaunchStage,
+      nextAction: enEngineeringNextAction,
+      capability: enEngineeringCapability,
+      capabilityStatus: enEngineeringCapabilityStatus,
+      missionDraftItem: enEngineeringMissionDraftItem,
+      missionDraftStatus: enEngineeringMissionDraftStatus,
+      signal: enEngineeringSignal,
+      unlockItem: enEngineeringUnlockItem,
+      unlockStatus: enEngineeringUnlockStatus,
       roles: (count) => `${count} role${count === 1 ? "" : "s"}`,
       briefs: (total, implementable) => `${implementable}/${total} implementation briefs`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
@@ -617,6 +673,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       preflight: "Check permission",
       runSandbox: "Run local sandbox",
       exportIssues: "Issue script",
+      applyMissionTemplate: "Shape brief",
       steps: [
         {
           title: "1. Enter the mission",
@@ -885,7 +942,25 @@ const copies: Record<SupportedLocale, AppCopy> = {
       subtitle: "先写任务，再让内阁拆分监督，生成 agent brief 和 runner 包，最后只执行被允许的本地 Mac 操作。",
       stateLabel: "状态",
       metricsLabel: "工程启动指标",
+      permissionModeLabel: "权限模式",
+      launchStageLabel: "启动阶段",
+      nextActionLabel: "下一步",
+      missionDraftLabel: "任务体检",
+      missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
+      capabilitiesLabel: "所需 Mac 工程能力",
+      signalsLabel: "识别到的任务信号",
+      unlockChecklistLabel: "工程解锁清单",
       state: zhHansEngineeringLaunchState,
+      permissionMode: zhHansEngineeringPermissionMode,
+      launchStage: zhHansEngineeringLaunchStage,
+      nextAction: zhHansEngineeringNextAction,
+      capability: zhHansEngineeringCapability,
+      capabilityStatus: zhHansEngineeringCapabilityStatus,
+      missionDraftItem: zhHansEngineeringMissionDraftItem,
+      missionDraftStatus: zhHansEngineeringMissionDraftStatus,
+      signal: zhHansEngineeringSignal,
+      unlockItem: zhHansEngineeringUnlockItem,
+      unlockStatus: zhHansEngineeringUnlockStatus,
       roles: (count) => `${count} 个角色`,
       briefs: (total, implementable) => `${implementable}/${total} 个实现 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
@@ -896,6 +971,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       preflight: "权限检查",
       runSandbox: "本地沙箱运行",
       exportIssues: "Issue 脚本",
+      applyMissionTemplate: "整理任务",
       steps: [
         {
           title: "1. 输入任务",
@@ -1164,7 +1240,25 @@ const copies: Record<SupportedLocale, AppCopy> = {
       subtitle: "先寫任務，再讓內閣拆分監督，生成 agent brief 和 runner 包，最後只執行被允許的本地 Mac 操作。",
       stateLabel: "狀態",
       metricsLabel: "工程啟動指標",
+      permissionModeLabel: "權限模式",
+      launchStageLabel: "啟動階段",
+      nextActionLabel: "下一步",
+      missionDraftLabel: "任務體檢",
+      missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
+      capabilitiesLabel: "所需 Mac 工程能力",
+      signalsLabel: "識別到的任務信號",
+      unlockChecklistLabel: "工程解鎖清單",
       state: zhHantEngineeringLaunchState,
+      permissionMode: zhHantEngineeringPermissionMode,
+      launchStage: zhHantEngineeringLaunchStage,
+      nextAction: zhHantEngineeringNextAction,
+      capability: zhHantEngineeringCapability,
+      capabilityStatus: zhHantEngineeringCapabilityStatus,
+      missionDraftItem: zhHantEngineeringMissionDraftItem,
+      missionDraftStatus: zhHantEngineeringMissionDraftStatus,
+      signal: zhHantEngineeringSignal,
+      unlockItem: zhHantEngineeringUnlockItem,
+      unlockStatus: zhHantEngineeringUnlockStatus,
       roles: (count) => `${count} 個角色`,
       briefs: (total, implementable) => `${implementable}/${total} 個實作 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
@@ -1175,6 +1269,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       preflight: "權限檢查",
       runSandbox: "本地沙箱執行",
       exportIssues: "Issue 腳本",
+      applyMissionTemplate: "整理任務",
       steps: [
         {
           title: "1. 輸入任務",
@@ -1443,7 +1538,25 @@ const copies: Record<SupportedLocale, AppCopy> = {
       subtitle: "미션을 작성하고 내각으로 분해한 뒤 agent brief와 runner 패키지를 만들고, 허용된 로컬 Mac 동작만 실행합니다.",
       stateLabel: "상태",
       metricsLabel: "엔지니어링 시작 지표",
+      permissionModeLabel: "권한 모드",
+      launchStageLabel: "시작 단계",
+      nextActionLabel: "다음 작업",
+      missionDraftLabel: "미션 점검",
+      missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
+      capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
+      signalsLabel: "감지된 미션 신호",
+      unlockChecklistLabel: "엔지니어링 잠금 해제 체크리스트",
       state: koEngineeringLaunchState,
+      permissionMode: koEngineeringPermissionMode,
+      launchStage: koEngineeringLaunchStage,
+      nextAction: koEngineeringNextAction,
+      capability: koEngineeringCapability,
+      capabilityStatus: koEngineeringCapabilityStatus,
+      missionDraftItem: koEngineeringMissionDraftItem,
+      missionDraftStatus: koEngineeringMissionDraftStatus,
+      signal: koEngineeringSignal,
+      unlockItem: koEngineeringUnlockItem,
+      unlockStatus: koEngineeringUnlockStatus,
       roles: (count) => `${count}개 역할`,
       briefs: (total, implementable) => `${implementable}/${total}개 구현 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
@@ -1454,6 +1567,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       preflight: "권한 확인",
       runSandbox: "로컬 샌드박스 실행",
       exportIssues: "Issue script",
+      applyMissionTemplate: "미션 정리",
       steps: [
         {
           title: "1. 미션 입력",
@@ -2317,4 +2431,631 @@ function koEngineeringLaunchState(state: string) {
   if (state === "runner-verified") return "증거 검증됨";
   if (state === "runner-needs-review") return "검토 필요";
   return state;
+}
+
+function jaEngineeringPermissionMode(mode: string) {
+  return engineeringLabel(mode, {
+    "code-only": "コード作業のみ",
+    "browser-assisted": "ブラウザ補助",
+    "mac-assisted": "Mac 操作あり",
+    "approval-gated": "人間承認ゲート"
+  });
+}
+
+function enEngineeringPermissionMode(mode: string) {
+  return engineeringLabel(mode, {
+    "code-only": "code only",
+    "browser-assisted": "browser assisted",
+    "mac-assisted": "Mac assisted",
+    "approval-gated": "approval gated"
+  });
+}
+
+function zhHansEngineeringPermissionMode(mode: string) {
+  return engineeringLabel(mode, {
+    "code-only": "仅代码工程",
+    "browser-assisted": "浏览器辅助",
+    "mac-assisted": "需要 Mac 操作",
+    "approval-gated": "人审闸门"
+  });
+}
+
+function zhHantEngineeringPermissionMode(mode: string) {
+  return engineeringLabel(mode, {
+    "code-only": "僅程式碼工程",
+    "browser-assisted": "瀏覽器輔助",
+    "mac-assisted": "需要 Mac 操作",
+    "approval-gated": "人審閘門"
+  });
+}
+
+function koEngineeringPermissionMode(mode: string) {
+  return engineeringLabel(mode, {
+    "code-only": "코드 작업만",
+    "browser-assisted": "브라우저 보조",
+    "mac-assisted": "Mac 조작 포함",
+    "approval-gated": "승인 게이트"
+  });
+}
+
+function jaEngineeringLaunchStage(stage: string) {
+  return engineeringLabel(stage, {
+    "needs-mission": "入力待ち",
+    "mission-ready": "ミッション準備済み",
+    "cabinet-ready": "内閣結果確認",
+    "packaging-ready": "工程パック準備",
+    "preflight-ready": "権限確認待ち",
+    "sandbox-ready": "ローカル実行待ち",
+    "evidence-review": "証拠レビュー",
+    "needs-review": "レビュー要"
+  });
+}
+
+function enEngineeringLaunchStage(stage: string) {
+  return engineeringLabel(stage, {
+    "needs-mission": "needs mission",
+    "mission-ready": "mission ready",
+    "cabinet-ready": "cabinet output",
+    "packaging-ready": "prepare pack",
+    "preflight-ready": "permission check",
+    "sandbox-ready": "local run ready",
+    "evidence-review": "evidence review",
+    "needs-review": "needs review"
+  });
+}
+
+function zhHansEngineeringLaunchStage(stage: string) {
+  return engineeringLabel(stage, {
+    "needs-mission": "等待输入任务",
+    "mission-ready": "任务已准备",
+    "cabinet-ready": "内阁结果检查",
+    "packaging-ready": "准备工程包",
+    "preflight-ready": "等待权限检查",
+    "sandbox-ready": "等待本地运行",
+    "evidence-review": "证据审查",
+    "needs-review": "需要审查"
+  });
+}
+
+function zhHantEngineeringLaunchStage(stage: string) {
+  return engineeringLabel(stage, {
+    "needs-mission": "等待輸入任務",
+    "mission-ready": "任務已準備",
+    "cabinet-ready": "內閣結果檢查",
+    "packaging-ready": "準備工程包",
+    "preflight-ready": "等待權限檢查",
+    "sandbox-ready": "等待本地執行",
+    "evidence-review": "證據審查",
+    "needs-review": "需要審查"
+  });
+}
+
+function koEngineeringLaunchStage(stage: string) {
+  return engineeringLabel(stage, {
+    "needs-mission": "미션 입력 필요",
+    "mission-ready": "미션 준비됨",
+    "cabinet-ready": "내각 결과 확인",
+    "packaging-ready": "패키지 준비",
+    "preflight-ready": "권한 확인 대기",
+    "sandbox-ready": "로컬 실행 대기",
+    "evidence-review": "증거 검토",
+    "needs-review": "검토 필요"
+  });
+}
+
+function jaEngineeringNextAction(action: string) {
+  return engineeringLabel(action, {
+    "enter-mission": "まず入力する",
+    "run-cabinet": "内閣で分解",
+    "prepare-pack": "工程組を準備",
+    "run-preflight": "権限を確認",
+    "run-sandbox": "ローカル実行",
+    "review-evidence": "証拠を確認",
+    "request-approval": "承認を取る"
+  });
+}
+
+function enEngineeringNextAction(action: string) {
+  return engineeringLabel(action, {
+    "enter-mission": "enter mission",
+    "run-cabinet": "run cabinet",
+    "prepare-pack": "prepare agents",
+    "run-preflight": "check permission",
+    "run-sandbox": "run local sandbox",
+    "review-evidence": "review evidence",
+    "request-approval": "request approval"
+  });
+}
+
+function zhHansEngineeringNextAction(action: string) {
+  return engineeringLabel(action, {
+    "enter-mission": "先输入任务",
+    "run-cabinet": "运行内阁拆分",
+    "prepare-pack": "准备工程组",
+    "run-preflight": "检查权限",
+    "run-sandbox": "运行本地沙箱",
+    "review-evidence": "审查证据",
+    "request-approval": "请求人审"
+  });
+}
+
+function zhHantEngineeringNextAction(action: string) {
+  return engineeringLabel(action, {
+    "enter-mission": "先輸入任務",
+    "run-cabinet": "執行內閣拆分",
+    "prepare-pack": "準備工程組",
+    "run-preflight": "檢查權限",
+    "run-sandbox": "執行本地沙箱",
+    "review-evidence": "審查證據",
+    "request-approval": "請求人審"
+  });
+}
+
+function koEngineeringNextAction(action: string) {
+  return engineeringLabel(action, {
+    "enter-mission": "미션 입력",
+    "run-cabinet": "내각 실행",
+    "prepare-pack": "에이전트 준비",
+    "run-preflight": "권한 확인",
+    "run-sandbox": "로컬 샌드박스 실행",
+    "review-evidence": "증거 검토",
+    "request-approval": "승인 요청"
+  });
+}
+
+function jaEngineeringCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "repo-files": "リポジトリ内ファイル",
+    "output-evidence": "証拠保存",
+    "allowlisted-shell": "許可済み shell",
+    "git-read": "Git 読み取り",
+    "browser-profile": "隔離ブラウザ",
+    "mac-accessibility": "Accessibility",
+    "mac-screen-recording": "画面収録",
+    "mcp-allowlist": "MCP allowlist",
+    "human-approval": "人間承認",
+    "external-write-approval": "外部書き込み承認"
+  });
+}
+
+function enEngineeringCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "repo-files": "repo files",
+    "output-evidence": "evidence output",
+    "allowlisted-shell": "allowlisted shell",
+    "git-read": "Git read",
+    "browser-profile": "isolated browser",
+    "mac-accessibility": "Accessibility",
+    "mac-screen-recording": "Screen Recording",
+    "mcp-allowlist": "MCP allowlist",
+    "human-approval": "human approval",
+    "external-write-approval": "external write approval"
+  });
+}
+
+function zhHansEngineeringCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "repo-files": "仓库文件",
+    "output-evidence": "证据输出",
+    "allowlisted-shell": "允许的 shell",
+    "git-read": "Git 只读",
+    "browser-profile": "隔离浏览器",
+    "mac-accessibility": "辅助功能权限",
+    "mac-screen-recording": "屏幕录制权限",
+    "mcp-allowlist": "MCP 白名单",
+    "human-approval": "人类审批",
+    "external-write-approval": "外部写入审批"
+  });
+}
+
+function zhHantEngineeringCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "repo-files": "倉庫檔案",
+    "output-evidence": "證據輸出",
+    "allowlisted-shell": "允許的 shell",
+    "git-read": "Git 唯讀",
+    "browser-profile": "隔離瀏覽器",
+    "mac-accessibility": "輔助使用權限",
+    "mac-screen-recording": "螢幕錄製權限",
+    "mcp-allowlist": "MCP 白名單",
+    "human-approval": "人類審批",
+    "external-write-approval": "外部寫入審批"
+  });
+}
+
+function koEngineeringCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "repo-files": "저장소 파일",
+    "output-evidence": "증거 출력",
+    "allowlisted-shell": "허용된 shell",
+    "git-read": "Git 읽기",
+    "browser-profile": "격리 브라우저",
+    "mac-accessibility": "손쉬운 사용",
+    "mac-screen-recording": "화면 기록",
+    "mcp-allowlist": "MCP 허용 목록",
+    "human-approval": "인간 승인",
+    "external-write-approval": "외부 쓰기 승인"
+  });
+}
+
+function jaEngineeringCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "準備済み",
+    needed: "必要",
+    "approval-required": "承認必要",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    needed: "needed",
+    "approval-required": "approval",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已准备",
+    needed: "需要",
+    "approval-required": "需审批",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已準備",
+    needed: "需要",
+    "approval-required": "需審批",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "준비됨",
+    needed: "필요",
+    "approval-required": "승인 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringMissionDraftItem(item: string) {
+  return engineeringLabel(item, {
+    goal: "目的",
+    "repo-target": "リポジトリ",
+    "work-scope": "作業範囲",
+    verification: "検証",
+    "permission-boundary": "権限境界",
+    "approval-boundary": "承認境界",
+    evidence: "証拠"
+  });
+}
+
+function enEngineeringMissionDraftItem(item: string) {
+  return engineeringLabel(item, {
+    goal: "goal",
+    "repo-target": "repo target",
+    "work-scope": "work scope",
+    verification: "verification",
+    "permission-boundary": "permission boundary",
+    "approval-boundary": "approval boundary",
+    evidence: "evidence"
+  });
+}
+
+function zhHansEngineeringMissionDraftItem(item: string) {
+  return engineeringLabel(item, {
+    goal: "目标",
+    "repo-target": "仓库目标",
+    "work-scope": "工作范围",
+    verification: "验证",
+    "permission-boundary": "权限边界",
+    "approval-boundary": "人审边界",
+    evidence: "证据"
+  });
+}
+
+function zhHantEngineeringMissionDraftItem(item: string) {
+  return engineeringLabel(item, {
+    goal: "目標",
+    "repo-target": "倉庫目標",
+    "work-scope": "工作範圍",
+    verification: "驗證",
+    "permission-boundary": "權限邊界",
+    "approval-boundary": "人審邊界",
+    evidence: "證據"
+  });
+}
+
+function koEngineeringMissionDraftItem(item: string) {
+  return engineeringLabel(item, {
+    goal: "목표",
+    "repo-target": "저장소 대상",
+    "work-scope": "작업 범위",
+    verification: "검증",
+    "permission-boundary": "권한 경계",
+    "approval-boundary": "승인 경계",
+    evidence: "증거"
+  });
+}
+
+function jaEngineeringMissionDraftStatus(status: string) {
+  return engineeringLabel(status, {
+    present: "入力済み",
+    missing: "不足",
+    recommended: "推奨"
+  });
+}
+
+function enEngineeringMissionDraftStatus(status: string) {
+  return engineeringLabel(status, {
+    present: "present",
+    missing: "missing",
+    recommended: "suggested"
+  });
+}
+
+function zhHansEngineeringMissionDraftStatus(status: string) {
+  return engineeringLabel(status, {
+    present: "已有",
+    missing: "缺少",
+    recommended: "建议"
+  });
+}
+
+function zhHantEngineeringMissionDraftStatus(status: string) {
+  return engineeringLabel(status, {
+    present: "已有",
+    missing: "缺少",
+    recommended: "建議"
+  });
+}
+
+function koEngineeringMissionDraftStatus(status: string) {
+  return engineeringLabel(status, {
+    present: "입력됨",
+    missing: "부족",
+    recommended: "권장"
+  });
+}
+
+function jaEngineeringSignal(signal: string) {
+  return engineeringLabel(signal, {
+    "mission-missing": "ミッション未入力",
+    "mission-present": "ミッションあり",
+    "repo-mentioned": "リポジトリあり",
+    "coding-requested": "コード作業",
+    "browser-requested": "ブラウザ操作",
+    "mac-control-requested": "Mac 操作",
+    "mcp-requested": "MCP 連携",
+    "external-write-requested": "外部書き込み",
+    "verification-mentioned": "検証あり",
+    "secrets-risk": "秘密リスク",
+    "runner-pack-ready": "runner pack",
+    "preflight-ready": "preflight OK",
+    "evidence-ready": "証拠あり"
+  });
+}
+
+function enEngineeringSignal(signal: string) {
+  return engineeringLabel(signal, {
+    "mission-missing": "mission missing",
+    "mission-present": "mission present",
+    "repo-mentioned": "repo mentioned",
+    "coding-requested": "coding requested",
+    "browser-requested": "browser requested",
+    "mac-control-requested": "Mac control",
+    "mcp-requested": "MCP requested",
+    "external-write-requested": "external write",
+    "verification-mentioned": "verification",
+    "secrets-risk": "secret risk",
+    "runner-pack-ready": "runner pack",
+    "preflight-ready": "preflight ready",
+    "evidence-ready": "evidence ready"
+  });
+}
+
+function zhHansEngineeringSignal(signal: string) {
+  return engineeringLabel(signal, {
+    "mission-missing": "未输入任务",
+    "mission-present": "已有任务",
+    "repo-mentioned": "提到仓库",
+    "coding-requested": "代码工程",
+    "browser-requested": "浏览器操作",
+    "mac-control-requested": "Mac 控制",
+    "mcp-requested": "MCP 调用",
+    "external-write-requested": "外部写入",
+    "verification-mentioned": "提到验证",
+    "secrets-risk": "密钥风险",
+    "runner-pack-ready": "runner 包已就绪",
+    "preflight-ready": "预检已通过",
+    "evidence-ready": "证据已生成"
+  });
+}
+
+function zhHantEngineeringSignal(signal: string) {
+  return engineeringLabel(signal, {
+    "mission-missing": "未輸入任務",
+    "mission-present": "已有任務",
+    "repo-mentioned": "提到倉庫",
+    "coding-requested": "程式碼工程",
+    "browser-requested": "瀏覽器操作",
+    "mac-control-requested": "Mac 控制",
+    "mcp-requested": "MCP 呼叫",
+    "external-write-requested": "外部寫入",
+    "verification-mentioned": "提到驗證",
+    "secrets-risk": "密鑰風險",
+    "runner-pack-ready": "runner 包已就緒",
+    "preflight-ready": "預檢已通過",
+    "evidence-ready": "證據已生成"
+  });
+}
+
+function koEngineeringSignal(signal: string) {
+  return engineeringLabel(signal, {
+    "mission-missing": "미션 없음",
+    "mission-present": "미션 있음",
+    "repo-mentioned": "저장소 언급",
+    "coding-requested": "코드 작업",
+    "browser-requested": "브라우저 조작",
+    "mac-control-requested": "Mac 제어",
+    "mcp-requested": "MCP 요청",
+    "external-write-requested": "외부 쓰기",
+    "verification-mentioned": "검증 언급",
+    "secrets-risk": "비밀값 위험",
+    "runner-pack-ready": "runner pack 준비",
+    "preflight-ready": "preflight 통과",
+    "evidence-ready": "증거 생성"
+  });
+}
+
+function jaEngineeringUnlockItem(item: string, count?: number) {
+  return engineeringUnlockLabel(item, count, {
+    "write-mission": "ミッションを書く",
+    "run-cabinet": "内閣で分解する",
+    "prepare-agent-pack": "工程パックを作る",
+    "review-held-sessions": count ? `${count}件の held session を確認` : "held session を確認",
+    "run-preflight": "権限 preflight を実行",
+    "approve-browser-profile": "隔離ブラウザを承認",
+    "approve-mac-desktop": count ? `${count}件の Mac 権限を承認` : "Mac デスクトップ権限を承認",
+    "approve-mcp-tools": "MCP ツール allowlist を承認",
+    "approve-external-writes": "外部書き込みを人間承認",
+    "run-local-sandbox": "ローカル sandbox を実行",
+    "review-evidence": count ? `${count}件の証拠を確認` : "証拠を確認",
+    "keep-secrets-blocked": "秘密情報は渡さない"
+  });
+}
+
+function enEngineeringUnlockItem(item: string, count?: number) {
+  return engineeringUnlockLabel(item, count, {
+    "write-mission": "Write the mission",
+    "run-cabinet": "Split with cabinet",
+    "prepare-agent-pack": "Prepare the agent pack",
+    "review-held-sessions": count ? `Review ${count} held sessions` : "Review held sessions",
+    "run-preflight": "Run permission preflight",
+    "approve-browser-profile": "Approve isolated browser",
+    "approve-mac-desktop": count ? `Approve ${count} Mac permissions` : "Approve Mac desktop permissions",
+    "approve-mcp-tools": "Approve MCP tool allowlist",
+    "approve-external-writes": "Approve external writes",
+    "run-local-sandbox": "Run local sandbox",
+    "review-evidence": count ? `Review ${count} evidence items` : "Review evidence",
+    "keep-secrets-blocked": "Keep secrets blocked"
+  });
+}
+
+function zhHansEngineeringUnlockItem(item: string, count?: number) {
+  return engineeringUnlockLabel(item, count, {
+    "write-mission": "写清任务",
+    "run-cabinet": "让内阁拆分",
+    "prepare-agent-pack": "准备工程组包",
+    "review-held-sessions": count ? `审查 ${count} 个 held session` : "审查 held session",
+    "run-preflight": "运行权限预检",
+    "approve-browser-profile": "批准隔离浏览器",
+    "approve-mac-desktop": count ? `批准 ${count} 项 Mac 权限` : "批准 Mac 桌面权限",
+    "approve-mcp-tools": "批准 MCP 工具白名单",
+    "approve-external-writes": "审批外部写入",
+    "run-local-sandbox": "运行本地沙箱",
+    "review-evidence": count ? `审查 ${count} 条证据` : "审查证据",
+    "keep-secrets-blocked": "密钥保持阻断"
+  });
+}
+
+function zhHantEngineeringUnlockItem(item: string, count?: number) {
+  return engineeringUnlockLabel(item, count, {
+    "write-mission": "寫清任務",
+    "run-cabinet": "讓內閣拆分",
+    "prepare-agent-pack": "準備工程組包",
+    "review-held-sessions": count ? `審查 ${count} 個 held session` : "審查 held session",
+    "run-preflight": "執行權限預檢",
+    "approve-browser-profile": "批准隔離瀏覽器",
+    "approve-mac-desktop": count ? `批准 ${count} 項 Mac 權限` : "批准 Mac 桌面權限",
+    "approve-mcp-tools": "批准 MCP 工具白名單",
+    "approve-external-writes": "審批外部寫入",
+    "run-local-sandbox": "執行本地沙箱",
+    "review-evidence": count ? `審查 ${count} 條證據` : "審查證據",
+    "keep-secrets-blocked": "密鑰保持阻斷"
+  });
+}
+
+function koEngineeringUnlockItem(item: string, count?: number) {
+  return engineeringUnlockLabel(item, count, {
+    "write-mission": "미션 작성",
+    "run-cabinet": "내각으로 분해",
+    "prepare-agent-pack": "에이전트 패키지 준비",
+    "review-held-sessions": count ? `${count}개 held session 검토` : "held session 검토",
+    "run-preflight": "권한 preflight 실행",
+    "approve-browser-profile": "격리 브라우저 승인",
+    "approve-mac-desktop": count ? `${count}개 Mac 권한 승인` : "Mac 데스크톱 권한 승인",
+    "approve-mcp-tools": "MCP 도구 허용 목록 승인",
+    "approve-external-writes": "외부 쓰기 승인",
+    "run-local-sandbox": "로컬 샌드박스 실행",
+    "review-evidence": count ? `${count}개 증거 검토` : "증거 검토",
+    "keep-secrets-blocked": "비밀값 차단 유지"
+  });
+}
+
+function jaEngineeringUnlockStatus(status: string) {
+  return engineeringLabel(status, {
+    done: "完了",
+    next: "次",
+    waiting: "待機",
+    approval: "承認",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringUnlockStatus(status: string) {
+  return engineeringLabel(status, {
+    done: "done",
+    next: "next",
+    waiting: "waiting",
+    approval: "approval",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringUnlockStatus(status: string) {
+  return engineeringLabel(status, {
+    done: "完成",
+    next: "下一步",
+    waiting: "等待",
+    approval: "审批",
+    blocked: "阻止"
+  });
+}
+
+function zhHantEngineeringUnlockStatus(status: string) {
+  return engineeringLabel(status, {
+    done: "完成",
+    next: "下一步",
+    waiting: "等待",
+    approval: "審批",
+    blocked: "阻止"
+  });
+}
+
+function koEngineeringUnlockStatus(status: string) {
+  return engineeringLabel(status, {
+    done: "완료",
+    next: "다음",
+    waiting: "대기",
+    approval: "승인",
+    blocked: "차단"
+  });
+}
+
+function engineeringUnlockLabel(
+  value: string,
+  _count: number | undefined,
+  labels: Record<string, string>
+) {
+  return labels[value] || value;
+}
+
+function engineeringLabel(value: string, labels: Record<string, string>) {
+  return labels[value] || value;
 }
