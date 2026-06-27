@@ -73,6 +73,85 @@ describe("engineering auto-work gateway", () => {
     expect(result.body.message).toContain("adapterReady=true");
   });
 
+  it("runs a server-configured external CLI preset through fixed command args", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "naikaku-auto-work-gateway-preset-"));
+    const calls: Array<{ command: string; args: string[] }> = [];
+    const result = runEngineeringAutoWorkGateway({
+      mission: "Run OpenClaw through the configured preset",
+      runnerPreset: "openclaw-local",
+      adapterReady: true,
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    }, {
+      cwd,
+      npmCommand: "npm-test",
+      runnerPresetsEnv: JSON.stringify([
+        {
+          id: "openclaw-local",
+          label: "OpenClaw local agent",
+          adapterId: "openclaw-desktop-runner",
+          command: "openclaw",
+          args: ["agent", "--agent", "naikaku", "--message-file", "{taskPath}", "--local", "--json"]
+        }
+      ]),
+      spawn: ((command: string, args: string[]) => {
+        calls.push({ command, args });
+        const outIndex = args.indexOf("--out");
+        const outputDir = args[outIndex + 1];
+        mkdirSync(join(cwd, outputDir), { recursive: true });
+        writeFileSync(join(cwd, outputDir, "summary.json"), JSON.stringify({
+          checks: {
+            handoffPrepared: true,
+            externalRunnerStarted: true,
+            externalReceiptImported: true
+          }
+        }));
+        return { status: 0, signal: null, stdout: "ok", stderr: "" };
+      }) as never
+    });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.preset).toBe("openclaw-local");
+    expect(calls[0].args).toEqual(expect.arrayContaining([
+      "--adapter",
+      "openclaw-desktop-runner",
+      "--command",
+      "openclaw",
+      "--arg",
+      "agent",
+      "--arg",
+      "--message-file",
+      "--arg",
+      "{taskPath}",
+      "--adapter-ready"
+    ]));
+    expect(calls[0].args).not.toContain("--runner-preset");
+  });
+
+  it("blocks configured external CLI presets until the operator marks the adapter ready", () => {
+    const result = runEngineeringAutoWorkGateway({
+      mission: "Run OpenClaw through the configured preset",
+      runnerPreset: "openclaw-local"
+    }, {
+      cwd: process.cwd(),
+      npmCommand: "npm-test",
+      runnerPresetsEnv: JSON.stringify([
+        {
+          id: "openclaw-local",
+          adapterId: "openclaw-desktop-runner",
+          command: "openclaw",
+          args: ["agent", "--message-file", "{taskPath}"]
+        }
+      ]),
+      spawn: (() => {
+        throw new Error("spawn should not run");
+      }) as never
+    });
+
+    expect(result.statusCode).toBe(422);
+    expect(result.body.message).toContain("adapterReady=true");
+    expect(result.body.preset).toBe("openclaw-local");
+  });
+
   it("rejects output paths outside the local output directory", () => {
     const result = runEngineeringAutoWorkGateway({
       mission: "Try unsafe output",

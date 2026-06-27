@@ -30,6 +30,7 @@ import type { EngineeringSelfSimulationReport } from "../domain/engineeringSelfS
 import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
+  EngineeringRunnerPreset,
   EngineeringRunnerReadinessReport
 } from "../domain/gatewayClient";
 import type { EngineeringLaunchpadCopy } from "../i18n";
@@ -77,6 +78,7 @@ interface EngineeringLaunchpadProps {
     message: string;
     report: EngineeringRunnerReadinessReport | null;
   };
+  runnerPresets: EngineeringRunnerPreset[];
   onMissionChange: (mission: string) => void;
   onAutoWorkPresetChange: (preset: EngineeringAutoWorkGatewayPreset) => void;
   onAutoWorkAdapterReadyChange: (ready: boolean) => void;
@@ -123,6 +125,7 @@ export function EngineeringLaunchpad({
   autoWorkWorktree,
   autoWorkState,
   runnerReadinessState,
+  runnerPresets,
   onMissionChange,
   onAutoWorkPresetChange,
   onAutoWorkAdapterReadyChange,
@@ -152,6 +155,10 @@ export function EngineeringLaunchpad({
   const autoWorkSummary = autoWorkState.result?.summary;
   const autoWorkCounts = autoWorkSummary?.counts;
   const runnerReadinessReport = runnerReadinessState.report;
+  const configuredRunnerPresets = runnerPresets.filter((preset) =>
+    preset.availableInWorkbench &&
+    !["prepared", "fixture", "openhands"].includes(preset.id)
+  );
   const state = launchState({
     run,
     runnerSelfTest,
@@ -270,13 +277,16 @@ export function EngineeringLaunchpad({
             <span>{copy.autoWorkPresetLabel}</span>
             <select
               value={autoWorkPreset}
-              onChange={(event) =>
-                onAutoWorkPresetChange(event.target.value as EngineeringAutoWorkGatewayPreset)
-              }
+              onChange={(event) => onAutoWorkPresetChange(event.target.value)}
             >
               <option value="fixture">{copy.autoWorkFixture}</option>
               <option value="prepared">{copy.autoWorkPrepared}</option>
               <option value="openhands">{copy.autoWorkOpenHands}</option>
+              {configuredRunnerPresets.map((preset) => (
+                <option value={preset.id} key={preset.id}>
+                  {preset.label}
+                </option>
+              ))}
             </select>
           </label>
           <label>

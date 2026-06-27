@@ -23,6 +23,7 @@ NAIKAKU_GATEWAY_PORT=8787
 NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
 NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
 NAIKAKU_RUNNER_CREDENTIALS='[{"runnerId":"shell-runner-01","token":"shell-token","executorProfiles":["shell-container"],"expiresAt":"2026-12-31T00:00:00.000Z"}]'
+NAIKAKU_ENGINEERING_RUNNER_PRESETS='[{"id":"openclaw-local","label":"OpenClaw local agent","adapterId":"openclaw-desktop-runner","command":"openclaw","args":["agent","--agent","naikaku","--message-file","{taskPath}","--local","--json"],"commandCandidates":["openclaw"]}]'
 NAIKAKU_LEDGER_DIR=.naikaku-data
 ```
 
@@ -33,6 +34,14 @@ NAIKAKU_LEDGER_DIR=.naikaku-data
 `NAIKAKU_RUNNER_CREDENTIALS` is preferred for real runner development. It takes precedence over `NAIKAKU_RUNNER_TOKEN` and accepts a JSON array, or an object with a `runners` array. Each entry requires `runnerId`, either `token` or `tokenSha256`, and `executorProfiles`. Optional `rotatedAt`, `notBefore`, `expiresAt`, and `label` fields support rotation evidence. Malformed scoped config fails closed with `runnerAuth.mode` set to `misconfigured`; it does not fall back to an open gateway.
 
 `NAIKAKU_LEDGER_DIR` controls where the gateway stores local approval and evidence ledgers. The default is `.naikaku-data`, which is ignored by Git.
+
+`NAIKAKU_ENGINEERING_RUNNER_PRESETS` is an optional JSON array of local CLI command templates exposed to the Engineering Launchpad. The browser can select a preset id, but it cannot submit arbitrary command lines. Each preset needs:
+
+- `id`: lowercase preset id shown to the Workbench.
+- `label`: operator-facing label.
+- `adapterId`: one of the known adapter ids such as `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
+- `command`: a bare command name, for example `openclaw`, `browser-use`, `npx`, `hs`, or `mcp`.
+- `args`: fixed arguments passed to the command. Supported placeholders are the same as `engineering:run-adapter`: `{jobPath}`, `{taskPath}`, `{receiptDraftPath}`, and `{sessionId}`.
 
 The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by runner authentication, the panel surfaces the gateway authentication error and still shows approval/status data.
 
@@ -130,6 +139,39 @@ Successful responses include per-adapter status, detected commands/apps, whether
   ]
 }
 ```
+
+### `GET /v1/engineering/runner-presets`
+
+Returns the built-in Workbench presets plus any server-configured CLI presets from `NAIKAKU_ENGINEERING_RUNNER_PRESETS`.
+
+```json
+{
+  "schema": "naikaku.engineering-runner-presets.v1",
+  "summary": {
+    "total": 4,
+    "builtIn": 3,
+    "configured": 1,
+    "externalCommand": 2,
+    "availableInWorkbench": 4,
+    "errors": 0
+  },
+  "presets": [
+    {
+      "id": "openclaw-local",
+      "label": "OpenClaw local agent",
+      "kind": "external-command",
+      "source": "env",
+      "adapterId": "openclaw-desktop-runner",
+      "command": "openclaw",
+      "args": ["agent", "--agent", "naikaku", "--message-file", "{taskPath}", "--local", "--json"],
+      "requiresAdapterReady": true,
+      "availableInWorkbench": true
+    }
+  ]
+}
+```
+
+Configured presets still run through `/v1/engineering/auto-work`, require the Workbench adapter-ready confirmation by default, and must return Naikaku receipts before implementation completion can be claimed.
 
 ### `POST /v1/engineering/auto-work`
 

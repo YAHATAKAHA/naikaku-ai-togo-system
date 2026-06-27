@@ -87,6 +87,9 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.missionDraftScore(57, 4, 2, 1)).toBeTruthy();
       expect(copy.engineeringLaunchpad.missionDraftItem("approval-boundary")).toBeTruthy();
       expect(copy.engineeringLaunchpad.missionDraftStatus("missing")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkRun).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkAdapterNeedsReady("openclaw-local")).toBeTruthy();
       expect(copy.engineeringLaunchpad.applyMissionTemplate).toBeTruthy();
       expect(copy.engineeringLaunchpad.runSelfSimulation).toBeTruthy();
       expect(copy.engineeringLaunchpad.selfSimulationLabel).toBeTruthy();

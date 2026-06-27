@@ -2,8 +2,12 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { supportedLocales, type SupportedLocale } from "../src/i18n";
-
-export type EngineeringAutoWorkGatewayPreset = "prepared" | "fixture" | "openhands";
+import {
+  buildEngineeringRunnerPresetRegistry,
+  findEngineeringRunnerPreset,
+  type EngineeringAutoWorkGatewayPreset,
+  type EngineeringRunnerPresetRegistry
+} from "./engineeringRunnerPresets";
 
 export interface EngineeringAutoWorkGatewayRequest {
   mission?: string;
@@ -52,6 +56,7 @@ interface RunDependencies {
   npmCommand?: string;
   spawn?: EngineeringAutoWorkSpawn;
   now?: () => string;
+  runnerPresetsEnv?: string;
 }
 
 type EngineeringAutoWorkSpawn = (
@@ -86,16 +91,21 @@ export function runEngineeringAutoWorkGateway(
 
   let validation: ReturnType<typeof buildEngineeringAutoWorkCommand>;
   try {
+    const runnerPresetRegistry = buildEngineeringRunnerPresetRegistry({
+      generatedAt: request.generatedAt || now(),
+      envValue: dependencies.runnerPresetsEnv
+    });
     validation = buildEngineeringAutoWorkCommand({
       request,
       cwd,
       npmCommand,
-      generatedAt: request.generatedAt || now()
+      generatedAt: request.generatedAt || now(),
+      runnerPresetRegistry
     });
   } catch (error) {
     return blocked(
       error instanceof Error ? error.message : "Invalid engineering auto-work request.",
-      normalizePreset(request.runnerPreset),
+      typeof request.runnerPreset === "string" && request.runnerPreset.trim() ? request.runnerPreset.trim() : "prepared",
       Boolean(request.adapterReady),
       cwd,
       npmCommand
@@ -149,12 +159,14 @@ function buildEngineeringAutoWorkCommand({
   request,
   cwd,
   npmCommand,
-  generatedAt
+  generatedAt,
+  runnerPresetRegistry
 }: {
   request: EngineeringAutoWorkGatewayRequest;
   cwd: string;
   npmCommand: string;
   generatedAt: string;
+  runnerPresetRegistry: EngineeringRunnerPresetRegistry;
 }): EngineeringAutoWorkGatewayRun | {
   preset: EngineeringAutoWorkGatewayPreset;
   adapterReady: boolean;
@@ -168,12 +180,21 @@ function buildEngineeringAutoWorkCommand({
     return blocked("Mission is required before starting engineering auto-work.", "prepared", false, cwd, npmCommand);
   }
 
-  const preset = normalizePreset(request.runnerPreset);
-  const adapterReady = Boolean(request.adapterReady);
-  if (preset === "openhands" && !adapterReady) {
+  const preset = findEngineeringRunnerPreset(request.runnerPreset, runnerPresetRegistry);
+  if (!preset) {
     return blocked(
-      "OpenHands preset requires adapterReady=true after the local adapter is installed and license-reviewed.",
-      preset,
+      `Unknown runner preset: ${request.runnerPreset || "prepared"}. Refresh runner presets or configure NAIKAKU_ENGINEERING_RUNNER_PRESETS on the local gateway.`,
+      typeof request.runnerPreset === "string" && request.runnerPreset.trim() ? request.runnerPreset.trim() : "prepared",
+      Boolean(request.adapterReady),
+      cwd,
+      npmCommand
+    );
+  }
+  const adapterReady = Boolean(request.adapterReady);
+  if (preset.requiresAdapterReady && !adapterReady) {
+    return blocked(
+      `${preset.label} requires adapterReady=true after the local adapter is installed, license-reviewed, and approved for this run.`,
+      preset.id,
       adapterReady,
       cwd,
       npmCommand
@@ -189,10 +210,10 @@ function buildEngineeringAutoWorkCommand({
   const requestedWorktree = typeof request.worktree === "string" && request.worktree.trim()
     ? request.worktree.trim()
     : undefined;
-  const worktreeInput = preset === "fixture" && (!requestedWorktree || requestedWorktree === ".")
+  const worktreeInput = preset.kind === "fixture" && (!requestedWorktree || requestedWorktree === ".")
     ? fixtureWorktree
     : requestedWorktree;
-  const worktree = normalizeRelativePath(worktreeInput, preset === "fixture" ? fixtureWorktree : ".", "worktree", {
+  const worktree = normalizeRelativePath(worktreeInput, preset.kind === "fixture" ? fixtureWorktree : ".", "worktree", {
     requireOutputPrefix: false,
     allowDot: true
   });
@@ -215,15 +236,33 @@ function buildEngineeringAutoWorkCommand({
     generatedAt
   ];
 
-  if (preset !== "prepared") {
-    args.push("--runner-preset", preset);
+  if (preset.kind === "fixture") {
+    args.push("--runner-preset", preset.id);
+  } else if (preset.kind === "external-command") {
+    if (!preset.adapterId || !preset.command) {
+      return blocked(`Runner preset ${preset.id} is missing adapter command metadata.`, preset.id, adapterReady, cwd, npmCommand);
+    }
+    args.push(
+      "--adapter",
+      preset.adapterId,
+      "--command",
+      preset.command,
+      "--max-jobs",
+      String(preset.maxJobs)
+    );
+    preset.args.forEach((arg) => {
+      args.push("--arg", arg);
+    });
+    if (!preset.receiptRequired) {
+      args.push("--no-require-receipt");
+    }
   }
   if (adapterReady) {
     args.push("--adapter-ready");
   }
 
   return {
-    preset,
+    preset: preset.id,
     adapterReady,
     command: npmCommand,
     args,
@@ -264,11 +303,6 @@ function blocked(
       stderrTail: message
     }
   };
-}
-
-function normalizePreset(value: EngineeringAutoWorkGatewayRequest["runnerPreset"]): EngineeringAutoWorkGatewayPreset {
-  if (value === "fixture" || value === "openhands" || value === "prepared") return value;
-  return "prepared";
 }
 
 function normalizeLocale(value: EngineeringAutoWorkGatewayRequest["locale"]): SupportedLocale {

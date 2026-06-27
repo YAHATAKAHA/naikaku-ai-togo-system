@@ -82,7 +82,7 @@ export interface GatewayHealth {
   timestamp: string;
 }
 
-export type EngineeringAutoWorkGatewayPreset = "prepared" | "fixture" | "openhands";
+export type EngineeringAutoWorkGatewayPreset = string;
 
 export interface EngineeringAutoWorkGatewayRequest {
   mission: string;
@@ -127,6 +127,41 @@ export interface EngineeringAutoWorkGatewayResponse {
   } | null;
   stdoutTail: string;
   stderrTail: string;
+}
+
+export interface EngineeringRunnerPreset {
+  id: EngineeringAutoWorkGatewayPreset;
+  label: string;
+  kind: "prepared" | "fixture" | "external-command";
+  source: "built-in" | "env";
+  adapterId: string | null;
+  command: string | null;
+  args: string[];
+  requiresAdapterReady: boolean;
+  receiptRequired: boolean;
+  maxJobs: number;
+  commandCandidates: string[];
+  availableInWorkbench: boolean;
+  nextAction: string;
+}
+
+export interface EngineeringRunnerPresetRegistry {
+  schema: "naikaku.engineering-runner-presets.v1";
+  generatedAt: string;
+  presets: EngineeringRunnerPreset[];
+  errors: string[];
+  summary: {
+    total: number;
+    builtIn: number;
+    configured: number;
+    externalCommand: number;
+    availableInWorkbench: number;
+    errors: number;
+  };
+  policy: {
+    claim: string;
+    limitations: string[];
+  };
 }
 
 export type EngineeringRunnerReadinessStatus =
@@ -1052,6 +1087,18 @@ export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSign
   }
 
   return (await response.json()) as EngineeringRunnerReadinessReport;
+}
+
+export async function getEngineeringRunnerPresetsViaGateway(signal?: AbortSignal) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-presets`, {
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway engineering runner presets failed"));
+  }
+
+  return (await response.json()) as EngineeringRunnerPresetRegistry;
 }
 
 export async function checkGatewayHealth() {

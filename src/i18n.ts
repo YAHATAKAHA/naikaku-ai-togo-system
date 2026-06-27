@@ -88,6 +88,7 @@ export interface EngineeringLaunchpadCopy {
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
   autoWorkOpenHandsNeedsReady: string;
+  autoWorkAdapterNeedsReady: (preset: string) => string;
   autoWorkOutputLabel: string;
   autoWorkChecks: (passed: number, failed: number) => string;
   autoWorkResult: (preset: string, mode: string, completedJobs: number, receipts: number, evidence: number, artifacts: number) => string;
@@ -529,6 +530,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
       autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
+      autoWorkAdapterNeedsReady: (preset) => `${preset} を使う前に、ローカル CLI の導入、ライセンス確認、この実行への承認を明示してください。`,
       autoWorkOutputLabel: "出力",
       autoWorkChecks: (passed, failed) => `チェック ${passed} pass / ${failed} fail`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
@@ -976,6 +978,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
       autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
+      autoWorkAdapterNeedsReady: (preset) => `Confirm the local ${preset} CLI install, license review, and approval for this run before using it.`,
       autoWorkOutputLabel: "Output",
       autoWorkChecks: (passed, failed) => `${passed} checks passed / ${failed} failed`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
@@ -1423,6 +1426,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
+      autoWorkAdapterNeedsReady: (preset) => `使用 ${preset} 前，请先确认本机 CLI 已安装、许可已审查，并批准本次运行。`,
       autoWorkOutputLabel: "输出",
       autoWorkChecks: (passed, failed) => `检查 ${passed} 通过 / ${failed} 失败`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
@@ -1870,6 +1874,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
+      autoWorkAdapterNeedsReady: (preset) => `使用 ${preset} 前，請先確認本機 CLI 已安裝、授權已審查，並批准本次執行。`,
       autoWorkOutputLabel: "輸出",
       autoWorkChecks: (passed, failed) => `檢查 ${passed} 通過 / ${failed} 失敗`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
@@ -2317,6 +2322,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
       autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
+      autoWorkAdapterNeedsReady: (preset) => `${preset} 사용 전 로컬 CLI 설치, 라이선스 검토, 이번 실행 승인을 확인하세요.`,
       autoWorkOutputLabel: "출력",
       autoWorkChecks: (passed, failed) => `검사 ${passed} pass / ${failed} fail`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>

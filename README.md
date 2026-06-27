@@ -123,6 +123,23 @@ npm run dev
 
 Enter the task in the engineering mission box, click `Check runners` to inspect local CLI/app candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtimes, choose `Fixture auto-test` for the built-in no-provider proof, or choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, then click `Start auto work`. The browser calls the local gateway endpoint `/v1/engineering/auto-work`, which starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository. Runner readiness detection only checks local command/app presence; it does not install tools, accept licenses, expose arbitrary shell, grant push/deploy, grant host-secret access, or allow unbounded Mac control. Custom runner command lines remain available through the CLI path below.
 
+To make Naikaku act as a safe Workbench wrapper around another local open-source CLI, configure named presets on the gateway host. The browser can select the preset id after `Check runners`, but cannot submit arbitrary shell:
+
+```bash
+NAIKAKU_ENGINEERING_RUNNER_PRESETS='[
+  {
+    "id": "openclaw-local",
+    "label": "OpenClaw local agent",
+    "adapterId": "openclaw-desktop-runner",
+    "command": "openclaw",
+    "args": ["agent", "--agent", "naikaku", "--message-file", "{taskPath}", "--local", "--json"],
+    "commandCandidates": ["openclaw"]
+  }
+]' npm run gateway
+```
+
+The same pattern can wrap `browser-use`, `npx playwright`, `hs`, MCP runners, or a Hermes-style runtime as long as the command can consume the scoped task file and write the expected Naikaku receipt. External presets require the Workbench adapter-ready checkbox by default, so installation, license review, and approval stay explicit.
+
 For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, external-runner handoff package, deterministic adapter self-test, local verification runner, and fixture-only coding loop:
 
 ```bash

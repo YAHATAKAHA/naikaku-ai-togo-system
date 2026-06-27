@@ -52,6 +52,21 @@ interface RunnerReadinessBody {
   }>;
 }
 
+interface RunnerPresetsBody {
+  summary?: {
+    total?: number;
+    builtIn?: number;
+    configured?: number;
+    availableInWorkbench?: number;
+    errors?: number;
+  };
+  presets?: Array<{
+    id?: string;
+    kind?: string;
+    availableInWorkbench?: boolean;
+  }>;
+}
+
 interface GatewaySmokeSummary {
   schema: "naikaku.engineering-auto-work-gateway-smoke.v1";
   generatedAt: string;
@@ -59,6 +74,10 @@ interface GatewaySmokeSummary {
   gatewayUrl: string;
   cases: {
     healthStatus: number;
+    presetsStatus: number;
+    presetsTotal: number;
+    presetsBuiltIn: number;
+    presetsConfigured: number;
     readinessStatus: number;
     readinessTotal: number;
     readinessReady: number;
@@ -77,6 +96,9 @@ interface GatewaySmokeSummary {
   checks: {
     healthOk: boolean;
     capabilityAdvertised: boolean;
+    presetsCapabilityAdvertised: boolean;
+    presetsEndpointOk: boolean;
+    builtInPresetsAvailable: boolean;
     readinessCapabilityAdvertised: boolean;
     readinessEndpointOk: boolean;
     localRunnerReady: boolean;
@@ -112,6 +134,7 @@ async function main() {
 
   try {
     const health = await getJson<{ capabilities?: string[] }>(`${gatewayUrl}/health`);
+    const presets = await getJson<RunnerPresetsBody>(`${gatewayUrl}/v1/engineering/runner-presets`);
     const readiness = await getJson<RunnerReadinessBody>(`${gatewayUrl}/v1/engineering/runner-readiness`);
     const autoWork = await postJson<AutoWorkGatewayBody>(
       `${gatewayUrl}/v1/engineering/auto-work`,
@@ -126,6 +149,8 @@ async function main() {
     );
     const counts = autoWork.body.summary?.counts || {};
     const commandArgs = autoWork.body.command?.args || [];
+    const presetSummary = presets.body.summary || {};
+    const presetItems = presets.body.presets || [];
     const readinessSummary = readiness.body.summary || {};
     const readinessItems = readiness.body.items || [];
     const localRunner = readinessItems.find((item) =>
@@ -138,6 +163,10 @@ async function main() {
       gatewayUrl,
       cases: {
         healthStatus: health.status,
+        presetsStatus: presets.status,
+        presetsTotal: presetSummary.total || 0,
+        presetsBuiltIn: presetSummary.builtIn || 0,
+        presetsConfigured: presetSummary.configured || 0,
         readinessStatus: readiness.status,
         readinessTotal: readinessSummary.total || 0,
         readinessReady: readinessSummary.ready || 0,
@@ -156,6 +185,11 @@ async function main() {
       checks: {
         healthOk: health.status === 200,
         capabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-auto-work")),
+        presetsCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-presets")),
+        presetsEndpointOk: presets.status === 200,
+        builtInPresetsAvailable: ["prepared", "fixture", "openhands"].every((id) =>
+          presetItems.some((preset) => preset.id === id && preset.availableInWorkbench === true)
+        ),
         readinessCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-readiness")),
         readinessEndpointOk: readiness.status === 200,
         localRunnerReady: localRunner?.status === "ready" && localRunner.canLaunchFromWorkbench === true,
@@ -327,6 +361,7 @@ function printSummary(summary: GatewaySmokeSummary) {
   console.log("Engineering auto-work gateway smoke: " + (failed === 0 ? "passed" : "failed"));
   console.log(`Output: ${summary.outputDir}`);
   console.log(`Gateway: ${summary.gatewayUrl}`);
+  console.log(`Runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured`);
   console.log(`Runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessLaunchable} launchable`);
   console.log(`Auto-work: ${summary.cases.autoWorkPreset || "unknown"} / ${summary.cases.autoWorkMode || "unknown"}`);
   console.log(`Receipts: ${summary.cases.importedReceipts}, evidence: ${summary.cases.acceptedEvidence}, artifacts: ${summary.cases.verifiedArtifactPaths}`);
@@ -344,6 +379,8 @@ function summaryMarkdown(summary: GatewaySmokeSummary) {
     "## Cases",
     "",
     `- health: HTTP ${summary.cases.healthStatus}`,
+    `- runner-presets: HTTP ${summary.cases.presetsStatus}`,
+    `- runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured, ${summary.cases.presetsTotal} total`,
     `- runner-readiness: HTTP ${summary.cases.readinessStatus}`,
     `- runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessDetected} detected, ${summary.cases.readinessLaunchable} launchable`,
     `- auto-work: HTTP ${summary.cases.autoWorkStatus}`,

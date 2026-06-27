@@ -184,6 +184,7 @@ import {
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
+  getEngineeringRunnerPresetsViaGateway,
   getEngineeringRunnerReadinessViaGateway,
   getLedgerSummaryViaGateway,
   listApprovalLedgerViaGateway,
@@ -199,6 +200,7 @@ import {
 import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
+  EngineeringRunnerPreset,
   EngineeringRunnerReadinessReport,
   LedgerSummary
 } from "./domain/gatewayClient";
@@ -375,6 +377,7 @@ export function App() {
     message: "",
     report: null
   });
+  const [engineeringRunnerPresets, setEngineeringRunnerPresets] = useState<EngineeringRunnerPreset[]>([]);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -4417,6 +4420,8 @@ export function App() {
   async function runEngineeringAutoWorkFromLaunchpad() {
     const mission = workspace.mission.trim();
     const adapterReady = engineeringAutoWorkPreset === "fixture" || engineeringAutoWorkAdapterReady;
+    const selectedPreset = engineeringRunnerPresets.find((preset) => preset.id === engineeringAutoWorkPreset);
+    const requiresAdapterReady = selectedPreset?.requiresAdapterReady || engineeringAutoWorkPreset === "openhands";
 
     if (!mission) {
       setEngineeringAutoWorkState({
@@ -4426,10 +4431,12 @@ export function App() {
       });
       return;
     }
-    if (engineeringAutoWorkPreset === "openhands" && !adapterReady) {
+    if (requiresAdapterReady && !adapterReady) {
       setEngineeringAutoWorkState({
         status: "error",
-        message: copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady,
+        message: engineeringAutoWorkPreset === "openhands"
+          ? copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady
+          : copy.engineeringLaunchpad.autoWorkAdapterNeedsReady(engineeringAutoWorkPreset),
         result: null
       });
       return;
@@ -4513,7 +4520,11 @@ export function App() {
     }));
 
     try {
-      const report = await getEngineeringRunnerReadinessViaGateway();
+      const [report, presetRegistry] = await Promise.all([
+        getEngineeringRunnerReadinessViaGateway(),
+        getEngineeringRunnerPresetsViaGateway()
+      ]);
+      setEngineeringRunnerPresets(presetRegistry.presets);
       setEngineeringRunnerReadinessState({
         status: "ready",
         message: copy.engineeringLaunchpad.runnerReadinessStatus(
@@ -4533,7 +4544,9 @@ export function App() {
           ready: report.summary.ready,
           detected: report.summary.detected,
           launchableFromWorkbench: report.summary.launchableFromWorkbench,
-          blockedByDefault: report.summary.blockedByDefault
+          blockedByDefault: report.summary.blockedByDefault,
+          configuredPresets: presetRegistry.summary.configured,
+          presetErrors: presetRegistry.summary.errors
         }
       });
     } catch (error) {
@@ -4676,6 +4689,7 @@ export function App() {
             autoWorkWorktree={engineeringAutoWorkWorktree}
             autoWorkState={engineeringAutoWorkState}
             runnerReadinessState={engineeringRunnerReadinessState}
+            runnerPresets={engineeringRunnerPresets}
             onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
             onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
             onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
