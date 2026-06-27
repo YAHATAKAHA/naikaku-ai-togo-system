@@ -10,6 +10,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerIntakeAuditDrillSummary,
   CodingAgentRunnerInvocationDrillSummary,
+  CodingAgentRunnerLeaseDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
@@ -30,6 +31,7 @@ interface VerificationManifestOptions {
   codingAgentRunnerInvocationPath: string;
   codingAgentRunnerIntakePath: string;
   codingAgentRunnerSelfTestPath: string;
+  codingAgentRunnerLeasePath: string;
   codingAgentSandboxRunnerPath: string;
   codingAgentReportPath: string;
   localizationDrillPath: string;
@@ -58,6 +60,7 @@ async function main() {
   const codingAgentRunnerInvocation = await loadCodingAgentRunnerInvocation(options.codingAgentRunnerInvocationPath);
   const codingAgentRunnerIntake = await loadCodingAgentRunnerIntake(options.codingAgentRunnerIntakePath);
   const codingAgentRunnerSelfTest = await loadCodingAgentRunnerSelfTest(options.codingAgentRunnerSelfTestPath);
+  const codingAgentRunnerLease = await loadCodingAgentRunnerLease(options.codingAgentRunnerLeasePath);
   const codingAgentSandboxRunner = await loadCodingAgentSandboxRunner(options.codingAgentSandboxRunnerPath);
   const codingAgentReport = await loadCodingAgentReport(options.codingAgentReportPath);
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
@@ -74,6 +77,7 @@ async function main() {
     codingAgentRunnerInvocation,
     codingAgentRunnerIntake,
     codingAgentRunnerSelfTest,
+    codingAgentRunnerLease,
     codingAgentSandboxRunner,
     codingAgentReport,
     localizationDrill,
@@ -91,6 +95,7 @@ async function main() {
       codingAgentRunnerInvocation: options.codingAgentRunnerInvocationPath,
       codingAgentRunnerIntakeAudit: options.codingAgentRunnerIntakePath,
       codingAgentRunnerSelfTest: options.codingAgentRunnerSelfTestPath,
+      codingAgentRunnerLease: options.codingAgentRunnerLeasePath,
       codingAgentSandboxRunner: options.codingAgentSandboxRunnerPath,
       codingAgentReceiptDrill: options.codingAgentReportPath,
       localizationDrill: options.localizationDrillPath,
@@ -163,6 +168,14 @@ async function loadCodingAgentRunnerSelfTest(reportPath: string): Promise<Coding
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentRunnerSelfTestDrillSummary;
   if (parsed.schema !== "naikaku.coding-agent-runner-self-test-drill.v1") {
     throw new Error("Coding-agent runner self-test must use schema naikaku.coding-agent-runner-self-test-drill.v1.");
+  }
+  return parsed;
+}
+
+async function loadCodingAgentRunnerLease(reportPath: string): Promise<CodingAgentRunnerLeaseDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as CodingAgentRunnerLeaseDrillSummary;
+  if (parsed.schema !== "naikaku.coding-agent-runner-lease-drill.v1") {
+    throw new Error("Coding-agent runner lease must use schema naikaku.coding-agent-runner-lease-drill.v1.");
   }
   return parsed;
 }
@@ -257,6 +270,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     codingAgentRunnerInvocationPath: "output/coding-agent-runner-invocation/summary.json",
     codingAgentRunnerIntakePath: "output/coding-agent-runner-intake-audit/summary.json",
     codingAgentRunnerSelfTestPath: "output/coding-agent-runner-self-test/summary.json",
+    codingAgentRunnerLeasePath: "output/coding-agent-runner-lease/summary.json",
     codingAgentSandboxRunnerPath: "output/coding-agent-sandbox-runner/summary.json",
     codingAgentReportPath: "output/coding-agent-receipt-drill/summary.json",
     localizationDrillPath: "output/localization-drill/summary.json",
@@ -316,6 +330,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
 
     if (arg === "--coding-agent-runner-self-test") {
       options.codingAgentRunnerSelfTestPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--coding-agent-runner-lease") {
+      options.codingAgentRunnerLeasePath = requireValue(args, index, arg);
       index += 1;
       continue;
     }
@@ -413,6 +433,8 @@ Options:
                                   Read coding-agent runner intake audit summary.
   --coding-agent-runner-self-test <path>
                                   Read coding-agent runner self-test summary.
+  --coding-agent-runner-lease <path>
+                                  Read coding-agent runner lease summary.
   --coding-agent-sandbox-runner <path>
                                   Read coding-agent sandbox runner summary.
   --coding-agent-report <path>   Read coding-agent receipt drill summary.

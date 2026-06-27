@@ -9,6 +9,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerIntakeAuditDrillSummary,
   CodingAgentRunnerInvocationDrillSummary,
+  CodingAgentRunnerLeaseDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
@@ -28,6 +29,7 @@ const inputs = {
   codingAgentRunnerInvocation: "output/coding-agent-runner-invocation/summary.json",
   codingAgentRunnerIntakeAudit: "output/coding-agent-runner-intake-audit/summary.json",
   codingAgentRunnerSelfTest: "output/coding-agent-runner-self-test/summary.json",
+  codingAgentRunnerLease: "output/coding-agent-runner-lease/summary.json",
   codingAgentSandboxRunner: "output/coding-agent-sandbox-runner/summary.json",
   codingAgentReceiptDrill: "output/coding-agent-receipt-drill/summary.json",
   localizationDrill: "output/localization-drill/summary.json",
@@ -48,6 +50,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -64,8 +67,8 @@ describe("verification manifest", () => {
     expect(manifest.schema).toBe("naikaku.verification-manifest.v1");
     expect(manifest.decision).toBe("verified");
     expect(manifest.summary).toEqual({
-      total: 18,
-      passed: 18,
+      total: 19,
+      passed: 19,
       failed: 0
     });
     expect(manifest.checks.map((check) => check.id)).toEqual([
@@ -75,6 +78,7 @@ describe("verification manifest", () => {
       "coding-agent-runner-invocation",
       "coding-agent-runner-intake-audit",
       "coding-agent-runner-self-test",
+      "coding-agent-runner-lease",
       "coding-agent-sandbox-runner",
       "coding-agent-valid-receipt",
       "coding-agent-mismatched-receipt",
@@ -95,6 +99,7 @@ describe("verification manifest", () => {
     expect(manifest.source.codingAgentRunnerInvocationGeneratedAt).toBe("2026-06-27T00:03:30.000Z");
     expect(manifest.source.codingAgentRunnerIntakeAuditGeneratedAt).toBe("2026-06-27T00:03:45.000Z");
     expect(manifest.source.codingAgentRunnerSelfTestGeneratedAt).toBe("2026-06-27T00:04:00.000Z");
+    expect(manifest.source.codingAgentRunnerLeaseGeneratedAt).toBe("2026-06-27T00:04:30.000Z");
     expect(manifest.source.codingAgentSandboxRunnerGeneratedAt).toBe("2026-06-27T00:05:00.000Z");
     expect(manifest.source.sandboxCapabilityGeneratedAt).toBe("2026-06-27T00:03:30.000Z");
     expect(manifest.source.securityRedTeamGeneratedAt).toBe("2026-06-27T00:03:40.000Z");
@@ -118,6 +123,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
@@ -150,6 +156,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -182,6 +189,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -214,6 +222,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -246,6 +255,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -278,6 +288,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -310,6 +321,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation,
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -342,6 +354,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake,
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -374,6 +387,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake,
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -408,6 +422,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake,
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -440,6 +455,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest,
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -460,6 +476,40 @@ describe("verification manifest", () => {
     expect(selfTestCheck?.evidence).toContain("Not-executed commands: 15");
   });
 
+  it("invalidates the manifest when runner leases allow duplicate active ownership", () => {
+    const codingAgentRunnerLease = codingAgentRunnerLeaseFixture();
+    codingAgentRunnerLease.valid.duplicateBlocks = 0;
+    codingAgentRunnerLease.valid.deniedAttempts = 1;
+    codingAgentRunnerLease.checks.duplicateRunnerBlocked = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease,
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const leaseCheck = manifest.checks.find((check) => check.id === "coding-agent-runner-lease");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(leaseCheck?.status).toBe("fail");
+    expect(leaseCheck?.evidence).toContain("Duplicate blocks: 0");
+  });
+
   it("invalidates the manifest when sandbox runner does not execute local commands", () => {
     const codingAgentSandboxRunner = codingAgentSandboxRunnerFixture();
     codingAgentSandboxRunner.valid.processExecutions = 0;
@@ -472,6 +522,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner,
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -506,6 +557,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner,
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -537,6 +589,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport,
       localizationDrill: localizationDrillFixture(),
@@ -570,6 +623,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
@@ -605,6 +659,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill,
@@ -636,6 +691,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -667,6 +723,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -708,6 +765,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -752,6 +810,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -784,6 +843,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -833,6 +893,7 @@ describe("verification manifest", () => {
       codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
       codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
       codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
       codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
       codingAgentReport: codingAgentReportFixture(),
       localizationDrill: localizationDrillFixture(),
@@ -1214,6 +1275,64 @@ function codingAgentRunnerSelfTestFixture(): CodingAgentRunnerSelfTestDrillSumma
       claim: "Local runner self-test drill.",
       limitations: ["No implementation work was executed."],
       productionRequirements: ["Attach real coding-agent receipts."]
+    }
+  };
+}
+
+function codingAgentRunnerLeaseFixture(): CodingAgentRunnerLeaseDrillSummary {
+  return {
+    schema: "naikaku.coding-agent-runner-lease-drill.v1",
+    generatedAt: "2026-06-27T00:04:30.000Z",
+    outputDir: "output/coding-agent-runner-lease",
+    operatorLocale: "ja",
+    source: {
+      runnerSelfTestDecision: "self-test-ready",
+      wouldRun: 8,
+      notExecutedCommands: 16,
+      receiptDraftPaths: 8
+    },
+    valid: {
+      decision: "lease-ready",
+      total: 8,
+      availableTasks: 7,
+      activeLeases: 1,
+      expiredLeases: 1,
+      attempts: 5,
+      grantedAttempts: 2,
+      idempotentClaims: 1,
+      reclaimedLeases: 1,
+      deniedAttempts: 2,
+      duplicateBlocks: 1,
+      profileDeniedAttempts: 1,
+      firstLeaseSessionId: "coding-brief-team-execution-minister-work-package",
+      firstLeaseRunnerId: "runner-alpha",
+      reclaimedRunnerId: "runner-beta"
+    },
+    productionHeld: {
+      decision: "needs-review",
+      availableTasks: 0,
+      activeLeases: 0,
+      heldTasks: 8,
+      attempts: 1,
+      deniedAttempts: 1
+    },
+    checks: {
+      validLeaseReady: true,
+      firstLeaseGranted: true,
+      sameRunnerClaimIdempotent: true,
+      duplicateRunnerBlocked: true,
+      profileMismatchDenied: true,
+      expiredLeaseReclaimed: true,
+      productionHeldNoLeases: true,
+      productionHeldClaimDenied: true,
+      commandsStillNotExecuted: true,
+      noImplementationClaim: true
+    },
+    honestyClaim: {
+      level: "runner-task-lease",
+      claim: "Local runner lease drill.",
+      limitations: ["It does not read prompt contents or execute commands."],
+      productionRequirements: ["Persist leases before production runner fleets attach."]
     }
   };
 }

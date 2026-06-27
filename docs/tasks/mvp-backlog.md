@@ -62,6 +62,7 @@ Acceptance:
 - Operators can write and audit a local coding-agent dispatch package with prompt files and receipt templates only for ready sessions; production-held sessions remain visible but unassigned.
 - Operators can write runner invocation files for ready coding-agent tasks while held and production-held tasks remain visible but unpackaged.
 - Operators can audit runner invocation files before handoff so unreadable, unsafe, overclaimed, or production-held invocations are not accepted by a runner.
+- Operators can run a runner lease drill that proves one scoped runner owns a task at a time, same-runner retries are idempotent, competing runners are blocked, expired leases can be reclaimed, wrong-profile runners are denied, and production-held sessions receive no active leases.
 - Operators can run a coding-agent sandbox runner drill that executes only allowlisted local verification commands, writes transcripts/evidence/receipt/audit artifacts, and keeps the result separate from Development Board completion.
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.

@@ -1050,6 +1050,51 @@ export interface CodingAgentRunnerSelfTestDrillSummary {
   };
 }
 
+export interface CodingAgentRunnerLeaseDrillSummary {
+  schema: "naikaku.coding-agent-runner-lease-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  operatorLocale: string;
+  source: {
+    runnerSelfTestDecision: string;
+    wouldRun: number;
+    notExecutedCommands: number;
+    receiptDraftPaths: number;
+  };
+  valid: {
+    decision: string;
+    total: number;
+    availableTasks: number;
+    activeLeases: number;
+    expiredLeases: number;
+    attempts: number;
+    grantedAttempts: number;
+    idempotentClaims: number;
+    reclaimedLeases: number;
+    deniedAttempts: number;
+    duplicateBlocks: number;
+    profileDeniedAttempts: number;
+    firstLeaseSessionId: string | null;
+    firstLeaseRunnerId: string | null;
+    reclaimedRunnerId: string | null;
+  };
+  productionHeld: {
+    decision: string;
+    availableTasks: number;
+    activeLeases: number;
+    heldTasks: number;
+    attempts: number;
+    deniedAttempts: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface CodingAgentSandboxRunnerDrillSummary {
   schema: "naikaku.coding-agent-sandbox-runner-drill.v1";
   generatedAt: string;
@@ -1417,6 +1462,7 @@ export interface VerificationManifest {
     codingAgentRunnerInvocation: string;
     codingAgentRunnerIntakeAudit: string;
     codingAgentRunnerSelfTest: string;
+    codingAgentRunnerLease: string;
     codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
@@ -1434,6 +1480,7 @@ export interface VerificationManifest {
     codingAgentRunnerInvocationGeneratedAt: string;
     codingAgentRunnerIntakeAuditGeneratedAt: string;
     codingAgentRunnerSelfTestGeneratedAt: string;
+    codingAgentRunnerLeaseGeneratedAt: string;
     codingAgentSandboxRunnerGeneratedAt: string;
     codingAgentGeneratedAt: string;
     localizationGeneratedAt: string;
@@ -2274,6 +2321,105 @@ export interface CodingAgentRunnerSelfTest {
   };
   honestyClaim: {
     level: "local-runner-self-test";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
+export type CodingAgentRunnerLeaseDecision =
+  | "lease-ready"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentRunnerLeaseItemStatus =
+  | "available"
+  | "leased"
+  | "held"
+  | "blocked";
+
+export type CodingAgentRunnerLeaseRecordStatus =
+  | "active"
+  | "expired";
+
+export type CodingAgentRunnerLeaseAttemptDecision =
+  | "leased"
+  | "already-leased"
+  | "reclaimed"
+  | "denied"
+  | "no-task";
+
+export interface CodingAgentRunnerLeaseRecord {
+  leaseId: string;
+  sessionId: string;
+  runnerId: string;
+  executorProfileId: ExecutorProfileId;
+  issuedAt: string;
+  expiresAt: string;
+  status: CodingAgentRunnerLeaseRecordStatus;
+}
+
+export interface CodingAgentRunnerLeaseAttempt {
+  attemptId: string;
+  attemptedAt: string;
+  runnerId: string;
+  allowedExecutorProfiles: ExecutorProfileId[];
+  requestedSessionId: string | null;
+  decision: CodingAgentRunnerLeaseAttemptDecision;
+  sessionId: string | null;
+  leaseId: string | null;
+  reason: string;
+}
+
+export interface CodingAgentRunnerLeaseItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  sourceSelfTestStatus: CodingAgentRunnerSelfTestItemStatus;
+  leaseStatus: CodingAgentRunnerLeaseItemStatus;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  evidenceArtifactPrefix: string;
+  activeLeaseId: string | null;
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentRunnerLeaseLedger {
+  schema: "naikaku.coding-agent-runner-lease.v1";
+  generatedAt: string;
+  mode: "runner-task-lease";
+  sourceSchema: CodingAgentRunnerSelfTest["schema"];
+  sourceDecision: CodingAgentRunnerSelfTestDecision;
+  decision: CodingAgentRunnerLeaseDecision;
+  runId?: string;
+  operatorLocale: string;
+  leaseTtlMs: number;
+  items: CodingAgentRunnerLeaseItem[];
+  leases: CodingAgentRunnerLeaseRecord[];
+  attempts: CodingAgentRunnerLeaseAttempt[];
+  summary: {
+    total: number;
+    availableTasks: number;
+    activeLeases: number;
+    expiredLeases: number;
+    heldTasks: number;
+    blockedTasks: number;
+    attempts: number;
+    grantedAttempts: number;
+    idempotentClaims: number;
+    reclaimedLeases: number;
+    deniedAttempts: number;
+    duplicateBlocks: number;
+    profileDeniedAttempts: number;
+  };
+  honestyClaim: {
+    level: "runner-task-lease";
     claim: string;
     limitations: string[];
     productionRequirements: string[];

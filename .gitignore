@@ -15,6 +15,7 @@ output/coding-agent-runner-manifest
 output/coding-agent-runner-invocation
 output/coding-agent-runner-intake-audit
 output/coding-agent-runner-self-test
+output/coding-agent-runner-lease
 output/coding-agent-sandbox-runner
 output/rehearsal
 output/rehearsal-drill

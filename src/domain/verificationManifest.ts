@@ -4,6 +4,7 @@ import type {
   CodingAgentReceiptDrillSummary,
   CodingAgentRunnerIntakeAuditDrillSummary,
   CodingAgentRunnerInvocationDrillSummary,
+  CodingAgentRunnerLeaseDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
   CodingAgentSandboxRunnerDrillSummary,
@@ -35,6 +36,7 @@ export interface BuildVerificationManifestInput {
   codingAgentRunnerInvocation: CodingAgentRunnerInvocationDrillSummary;
   codingAgentRunnerIntake: CodingAgentRunnerIntakeAuditDrillSummary;
   codingAgentRunnerSelfTest: CodingAgentRunnerSelfTestDrillSummary;
+  codingAgentRunnerLease: CodingAgentRunnerLeaseDrillSummary;
   codingAgentSandboxRunner: CodingAgentSandboxRunnerDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
   localizationDrill: LocalizationDrillSummary;
@@ -52,6 +54,7 @@ export interface BuildVerificationManifestInput {
     codingAgentRunnerInvocation: string;
     codingAgentRunnerIntakeAudit: string;
     codingAgentRunnerSelfTest: string;
+    codingAgentRunnerLease: string;
     codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
     localizationDrill: string;
@@ -71,6 +74,7 @@ export function buildVerificationManifest({
   codingAgentRunnerInvocation,
   codingAgentRunnerIntake,
   codingAgentRunnerSelfTest,
+  codingAgentRunnerLease,
   codingAgentSandboxRunner,
   codingAgentReport,
   localizationDrill,
@@ -90,6 +94,7 @@ export function buildVerificationManifest({
     codingAgentRunnerInvocationCheck(codingAgentRunnerInvocation),
     codingAgentRunnerIntakeCheck(codingAgentRunnerIntake),
     codingAgentRunnerSelfTestCheck(codingAgentRunnerSelfTest),
+    codingAgentRunnerLeaseCheck(codingAgentRunnerLease),
     codingAgentSandboxRunnerCheck(codingAgentSandboxRunner),
     codingAgentValidCheck(codingAgentReport),
     codingAgentMismatchCheck(codingAgentReport),
@@ -118,6 +123,7 @@ export function buildVerificationManifest({
       codingAgentRunnerInvocationGeneratedAt: codingAgentRunnerInvocation.generatedAt,
       codingAgentRunnerIntakeAuditGeneratedAt: codingAgentRunnerIntake.generatedAt,
       codingAgentRunnerSelfTestGeneratedAt: codingAgentRunnerSelfTest.generatedAt,
+      codingAgentRunnerLeaseGeneratedAt: codingAgentRunnerLease.generatedAt,
       codingAgentSandboxRunnerGeneratedAt: codingAgentSandboxRunner.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
       localizationGeneratedAt: localizationDrill.generatedAt,
@@ -147,7 +153,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, runner auth, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, sandbox capability, security red-team, runner auth, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, runner lease, sandbox runner, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -434,6 +440,66 @@ function codingAgentRunnerSelfTestCheck(report: CodingAgentRunnerSelfTestDrillSu
     nextAction: ok
       ? "Keep the runner self-test summary attached before handing manifests to governed coding-agent runners."
       : "Restore runner self-test so it only preflights contracts and never claims completed execution."
+  };
+}
+
+function codingAgentRunnerLeaseCheck(report: CodingAgentRunnerLeaseDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-runner-lease-drill.v1"
+    && report.source.runnerSelfTestDecision === "self-test-ready"
+    && report.source.wouldRun > 0
+    && report.source.notExecutedCommands > 0
+    && report.source.receiptDraftPaths === report.source.wouldRun
+    && report.valid.decision === "lease-ready"
+    && report.valid.total >= report.source.wouldRun
+    && report.valid.activeLeases === 1
+    && report.valid.expiredLeases === 1
+    && report.valid.attempts >= 5
+    && report.valid.grantedAttempts === 2
+    && report.valid.idempotentClaims === 1
+    && report.valid.reclaimedLeases === 1
+    && report.valid.deniedAttempts >= 2
+    && report.valid.duplicateBlocks === 1
+    && report.valid.profileDeniedAttempts === 1
+    && report.valid.firstLeaseSessionId !== null
+    && report.valid.firstLeaseRunnerId === "runner-alpha"
+    && report.valid.reclaimedRunnerId === "runner-beta"
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.availableTasks === 0
+    && report.productionHeld.activeLeases === 0
+    && report.productionHeld.heldTasks > 0
+    && report.productionHeld.deniedAttempts === 1
+    && checksPassed;
+
+  return {
+    id: "coding-agent-runner-lease",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent runner lease drill proved exclusive task ownership, idempotent same-runner claims, duplicate blocking, expiry reclaim, profile-scope denial, and production-held non-assignment."
+      : "Coding-agent runner lease drill did not preserve exclusive runner ownership or production-held non-assignment.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Runner self-test decision: ${report.source.runnerSelfTestDecision}`,
+      `Source would-run: ${report.source.wouldRun}`,
+      `Source not-executed commands: ${report.source.notExecutedCommands}`,
+      `Lease decision: ${report.valid.decision}`,
+      `Active leases: ${report.valid.activeLeases}`,
+      `Expired leases: ${report.valid.expiredLeases}`,
+      `Attempts: ${report.valid.attempts}`,
+      `Granted attempts: ${report.valid.grantedAttempts}`,
+      `Idempotent claims: ${report.valid.idempotentClaims}`,
+      `Reclaimed leases: ${report.valid.reclaimedLeases}`,
+      `Duplicate blocks: ${report.valid.duplicateBlocks}`,
+      `Profile denied attempts: ${report.valid.profileDeniedAttempts}`,
+      `First lease runner: ${report.valid.firstLeaseRunnerId || "none"}`,
+      `Reclaimed runner: ${report.valid.reclaimedRunnerId || "none"}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held active leases: ${report.productionHeld.activeLeases}`,
+      `Production-held denied attempts: ${report.productionHeld.deniedAttempts}`
+    ],
+    nextAction: ok
+      ? "Keep the runner lease summary attached before allowing concurrent governed coding-agent runners."
+      : "Restore runner lease idempotency, duplicate-claim blocking, expiry reclaim, and profile-scope checks before sandbox runner execution."
   };
 }
 
