@@ -1,6 +1,6 @@
 # macOS Developer Preview
 
-Naikaku does not yet ship as a signed `.dmg` or `.pkg`. The first public download is a macOS developer preview archive for people who are comfortable running a Node/Vite workbench locally.
+Naikaku does not yet ship as a signed `.dmg` or `.pkg`. The current public download is a macOS developer preview archive for people who are comfortable running a Node/Vite workbench locally.
 
 ## Download
 

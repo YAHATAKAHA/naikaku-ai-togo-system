@@ -1,8 +1,10 @@
 # Naikaku AI Togo System
 
-Naikaku AI Togo System is a Japanese-first, multi-model AI cabinet workbench for governed software work.
+Naikaku AI Togo System is a multi-model AI cabinet workbench for governed software work, with Japanese as the primary operator language.
 
 Instead of treating one model as an unchecked operator, Naikaku separates a mission into roles: planning, execution, critique, supervision, scoring, memory, and safety. Runners such as local CLIs or automation tools are attached behind approval gates, scoped permissions, receipts, and artifact review.
+
+[日本語 README](./README.ja.md)
 
 ## What It Is
 
@@ -15,6 +17,19 @@ Naikaku is designed for developers who want AI-assisted engineering to be audita
 - Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported in the product UI.
 
 This repository contains the product source, tests, fixture drills, and public technical documentation.
+
+## Development
+
+Naikaku AI Togo System is developed and maintained by 合同会社EMYSTI.
+
+Project links:
+
+- Product site: <https://naikaku.emysti.net/>
+- Japanese product page: <https://naikaku.emysti.net/ja/>
+- Company site: <https://www.emysti.net>
+- GitHub releases: <https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases>
+
+The product website is public-facing material. Its source, deployment configuration, and server files are intentionally outside this repository.
 
 ## What It Is Not
 
@@ -60,7 +75,7 @@ The last command runs the no-provider verification path. It uses local fixtures 
 
 ## Release Package
 
-The first public package is a macOS developer preview archive, not a signed `.dmg` installer.
+The current public package is a macOS developer preview archive, not a signed `.dmg` installer.
 
 Latest release:
 

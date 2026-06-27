@@ -11,6 +11,7 @@ It must stay safe to clone, inspect, fork, package, and publish. Do not add priv
 - Public technical documentation, install notes, architecture notes, security boundaries, and contribution guides.
 - Public examples that use placeholder values only.
 - `.env.example` files that contain variable names, never real values.
+- Public URLs for the product site, company site, documentation, GitHub releases, and contact pages.
 
 ## Excluded
 
