@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ExternalRunnerAdapterJob } from "../src/domain/externalRunnerHandoff";
 
@@ -10,6 +10,13 @@ type AdapterRunStatus =
   | "timed-out"
   | "blocked-not-executable";
 
+type ExternalReceiptStatus =
+  | "present"
+  | "missing"
+  | "invalid-json"
+  | "stale"
+  | "not-requested";
+
 interface EngineeringRunAdapterOptions {
   handoffDir: string;
   jobPath: string | null;
@@ -17,6 +24,7 @@ interface EngineeringRunAdapterOptions {
   commandOverride: string | null;
   argOverride: string[];
   allowReviewOnly: boolean;
+  requireReceipt: boolean;
   maxJobs: number;
   timeoutMs: number;
   generatedAt: string;
@@ -31,12 +39,20 @@ interface AdapterJobRun {
   command: string;
   args: string[];
   status: AdapterRunStatus;
+  startedAt: string;
   exitCode: number | null;
   signal: string | null;
   durationMs: number;
   stdoutTranscriptPath: string;
   stderrTranscriptPath: string;
+  stdoutBytes: number;
+  stderrBytes: number;
   receiptDraftPath: string | null;
+  externalReceiptStatus: ExternalReceiptStatus;
+  externalReceiptSchema: string | null;
+  adapterExecutionReceiptPath: string;
+  canEnterImplementationReview: boolean;
+  nextAction: string;
   error: string | null;
 }
 
@@ -54,6 +70,11 @@ interface EngineeringRunAdapterSummary {
     notInstalled: number;
     timedOut: number;
     blocked: number;
+    externalReceiptsPresent: number;
+    externalReceiptsMissing: number;
+    externalReceiptsStale: number;
+    externalReceiptsInvalid: number;
+    readyForImplementationReview: number;
   };
   honestyClaim: {
     claim: string;
@@ -96,13 +117,19 @@ async function main() {
       failed: runs.filter((run) => run.status === "failed").length,
       notInstalled: runs.filter((run) => run.status === "not-installed").length,
       timedOut: runs.filter((run) => run.status === "timed-out").length,
-      blocked: runs.filter((run) => run.status === "blocked-not-executable").length
+      blocked: runs.filter((run) => run.status === "blocked-not-executable").length,
+      externalReceiptsPresent: runs.filter((run) => run.externalReceiptStatus === "present").length,
+      externalReceiptsMissing: runs.filter((run) => run.externalReceiptStatus === "missing").length,
+      externalReceiptsStale: runs.filter((run) => run.externalReceiptStatus === "stale").length,
+      externalReceiptsInvalid: runs.filter((run) => run.externalReceiptStatus === "invalid-json").length,
+      readyForImplementationReview: runs.filter((run) => run.canEnterImplementationReview).length
     },
     honestyClaim: {
       claim: "This report records Naikaku's adapter bridge invoking user-installed external runner commands from adapter job JSON.",
       limitations: [
         "It does not install upstream runners, grant macOS permissions, push Git, deploy, send messages, or verify implementation completion by itself.",
-        "Completed means the external command exited 0 and transcripts were captured; completion still requires a Naikaku receipt, implementation evidence, artifact audit, and release verification.",
+        "Completed means the external command exited 0 and transcripts plus an adapter execution receipt were captured.",
+        "Implementation review starts only when the external runner also writes the expected Naikaku session receipt.",
         "not-installed means the configured command was not found on this machine."
       ]
     }
@@ -112,7 +139,13 @@ async function main() {
   await writeFile(path.join(outputDir, "summary.md"), summaryMarkdown(summary), "utf8");
   printSummary(summary);
 
-  if (summary.summary.failed || summary.summary.notInstalled || summary.summary.timedOut || summary.summary.blocked) {
+  if (
+    summary.summary.failed ||
+    summary.summary.notInstalled ||
+    summary.summary.timedOut ||
+    summary.summary.blocked ||
+    (options.requireReceipt && summary.summary.readyForImplementationReview !== summary.summary.completed)
+  ) {
     process.exitCode = 2;
   }
 }
@@ -150,9 +183,15 @@ async function runJob({
     .map((arg) => substituteArg(arg, { jobPath, job }));
   const stdoutPath = relativePath(path.resolve(options.outputDir, "transcripts", `${safeFileStem(job.sessionId)}.stdout.log`));
   const stderrPath = relativePath(path.resolve(options.outputDir, "transcripts", `${safeFileStem(job.sessionId)}.stderr.log`));
+  const adapterExecutionReceiptPath = relativePath(path.resolve(
+    options.outputDir,
+    "adapter-receipts",
+    `${safeFileStem(job.sessionId)}.json`
+  ));
 
   await mkdir(path.dirname(path.resolve(stdoutPath)), { recursive: true });
   await mkdir(path.dirname(path.resolve(stderrPath)), { recursive: true });
+  await mkdir(path.dirname(path.resolve(adapterExecutionReceiptPath)), { recursive: true });
 
   const base = {
     jobPath,
@@ -163,27 +202,95 @@ async function runJob({
     args,
     stdoutTranscriptPath: stdoutPath,
     stderrTranscriptPath: stderrPath,
+    adapterExecutionReceiptPath,
     receiptDraftPath: job.receiptDraftPath
   };
 
   if (!job.executable && !options.allowReviewOnly) {
     await writeFile(path.resolve(stdoutPath), "", "utf8");
     await writeFile(path.resolve(stderrPath), "Adapter job is not executable. Regenerate handoff after license/install/approval gates pass.\n", "utf8");
-    return {
+    return finalizeRun({
       ...base,
       status: "blocked-not-executable",
       exitCode: null,
       signal: null,
+      startedAt: new Date().toISOString(),
       durationMs: 0,
       error: "Adapter job is not executable."
-    };
+    }, options.generatedAt);
   }
 
-  return runProcess({
+  return finalizeRun(await runProcess({
     ...base,
     cwd: path.resolve(job.commandPlan.workingDirectory || "."),
     timeoutMs: options.timeoutMs
-  });
+  }), options.generatedAt);
+}
+
+async function finalizeRun(
+  run: Omit<
+    AdapterJobRun,
+    | "stdoutBytes"
+    | "stderrBytes"
+    | "externalReceiptStatus"
+    | "externalReceiptSchema"
+    | "canEnterImplementationReview"
+    | "nextAction"
+  >,
+  generatedAt: string
+): Promise<AdapterJobRun> {
+  const [stdoutBytes, stderrBytes] = await Promise.all([
+    fileBytes(run.stdoutTranscriptPath),
+    fileBytes(run.stderrTranscriptPath)
+  ]);
+  const receiptProbe = await externalReceiptProbe(run.receiptDraftPath, Date.parse(run.startedAt));
+  const canEnterImplementationReview = run.status === "completed" && receiptProbe.status === "present";
+  const completeRun: AdapterJobRun = {
+    ...run,
+    stdoutBytes,
+    stderrBytes,
+    externalReceiptStatus: receiptProbe.status,
+    externalReceiptSchema: receiptProbe.schema,
+    canEnterImplementationReview,
+    nextAction: nextActionFor({
+      status: run.status,
+      receiptStatus: receiptProbe.status
+    })
+  };
+
+  await writeFile(path.resolve(run.adapterExecutionReceiptPath), `${JSON.stringify({
+    schema: "naikaku.external-runner-adapter-execution-receipt.v1",
+    generatedAt,
+    jobPath: run.jobPath,
+    adapterId: run.adapterId,
+    sessionId: run.sessionId,
+    title: run.title,
+    command: run.command,
+    args: run.args,
+    status: run.status,
+    startedAt: run.startedAt,
+    exitCode: run.exitCode,
+    signal: run.signal,
+    durationMs: run.durationMs,
+    stdoutTranscriptPath: run.stdoutTranscriptPath,
+    stderrTranscriptPath: run.stderrTranscriptPath,
+    stdoutBytes,
+    stderrBytes,
+    externalReceiptPath: run.receiptDraftPath,
+    externalReceiptStatus: receiptProbe.status,
+    externalReceiptSchema: receiptProbe.schema,
+    canEnterImplementationReview,
+    nextAction: completeRun.nextAction,
+    honestyClaim: {
+      claim: "This adapter execution receipt proves that Naikaku invoked a user-installed runner command and captured transcripts.",
+      limitations: [
+        "It does not prove the external runner made correct code changes.",
+        "It does not replace the required Naikaku coding-agent session receipt, implementation evidence, artifact audit, or release verification."
+      ]
+    }
+  }, null, 2)}\n`, "utf8");
+
+  return completeRun;
 }
 
 function runProcess({
@@ -197,7 +304,8 @@ function runProcess({
   timeoutMs,
   stdoutTranscriptPath,
   stderrTranscriptPath,
-  receiptDraftPath
+  receiptDraftPath,
+  adapterExecutionReceiptPath
 }: {
   jobPath: string;
   adapterId: string;
@@ -210,6 +318,7 @@ function runProcess({
   stdoutTranscriptPath: string;
   stderrTranscriptPath: string;
   receiptDraftPath: string | null;
+  adapterExecutionReceiptPath: string;
 }): Promise<AdapterJobRun> {
   const startedAt = Date.now();
 
@@ -254,16 +363,76 @@ function runProcess({
         command,
         args,
         status,
+        startedAt: new Date(startedAt).toISOString(),
         exitCode: code,
         signal,
         durationMs: Date.now() - startedAt,
         stdoutTranscriptPath,
         stderrTranscriptPath,
+        stdoutBytes: 0,
+        stderrBytes: 0,
         receiptDraftPath,
+        externalReceiptStatus: "not-requested",
+        externalReceiptSchema: null,
+        adapterExecutionReceiptPath,
+        canEnterImplementationReview: false,
+        nextAction: "Capture adapter execution receipt.",
         error: spawnError?.message ?? null
       });
     });
   });
+}
+
+async function externalReceiptProbe(receiptPath: string | null, notBeforeMs: number): Promise<{
+  status: ExternalReceiptStatus;
+  schema: string | null;
+}> {
+  if (!receiptPath) {
+    return { status: "not-requested", schema: null };
+  }
+  try {
+    const receiptStat = await stat(path.resolve(receiptPath));
+    const raw = await readFile(path.resolve(receiptPath), "utf8");
+    const parsed = JSON.parse(raw) as { schema?: unknown };
+    if (Number.isFinite(notBeforeMs) && receiptStat.mtimeMs + 1 < notBeforeMs) {
+      return { status: "stale", schema: typeof parsed.schema === "string" ? parsed.schema : null };
+    }
+    return {
+      status: "present",
+      schema: typeof parsed.schema === "string" ? parsed.schema : null
+    };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { status: "missing", schema: null };
+    }
+    return { status: "invalid-json", schema: null };
+  }
+}
+
+async function fileBytes(filePath: string) {
+  try {
+    return (await stat(path.resolve(filePath))).size;
+  } catch {
+    return 0;
+  }
+}
+
+function nextActionFor({
+  status,
+  receiptStatus
+}: {
+  status: AdapterRunStatus;
+  receiptStatus: ExternalReceiptStatus;
+}) {
+  if (status === "not-installed") return "Install the configured upstream runner CLI or override --command.";
+  if (status === "blocked-not-executable") return "Regenerate handoff after license, install, and approval gates pass.";
+  if (status === "timed-out") return "Inspect transcripts, then rerun with a larger --timeout-ms or smaller task.";
+  if (status === "failed") return "Inspect stderr/stdout transcripts, fix runner configuration or task scope, then rerun.";
+  if (receiptStatus === "present") return "Import the external receipt into Naikaku receipt review and artifact audit.";
+  if (receiptStatus === "stale") return "Rerun the adapter or clear the stale receipt; this receipt predates the current command run.";
+  if (receiptStatus === "invalid-json") return "Fix the external receipt JSON before implementation review.";
+  if (receiptStatus === "missing") return "Ask the runner to write the expected Naikaku session receipt before claiming implementation.";
+  return "Attach a Naikaku session receipt before claiming implementation.";
 }
 
 async function readJson<T>(filePath: string): Promise<T> {
@@ -301,8 +470,14 @@ function summaryMarkdown(summary: EngineeringRunAdapterSummary) {
       `- Exit code: ${job.exitCode ?? "none"}`,
       `- Command: ${[job.command, ...job.args].join(" ")}`,
       `- Stdout: ${job.stdoutTranscriptPath}`,
+      `- Stdout bytes: ${job.stdoutBytes}`,
       `- Stderr: ${job.stderrTranscriptPath}`,
+      `- Stderr bytes: ${job.stderrBytes}`,
       `- Receipt: ${job.receiptDraftPath ?? "missing"}`,
+      `- External receipt status: ${job.externalReceiptStatus}`,
+      `- Adapter execution receipt: ${job.adapterExecutionReceiptPath}`,
+      `- Ready for implementation review: ${job.canEnterImplementationReview ? "yes" : "no"}`,
+      `- Next action: ${job.nextAction}`,
       ""
     ]),
     "## Honesty Boundary",
@@ -322,6 +497,9 @@ function printSummary(summary: EngineeringRunAdapterSummary) {
   console.log(`- not installed: ${summary.summary.notInstalled}`);
   console.log(`- timed out: ${summary.summary.timedOut}`);
   console.log(`- blocked: ${summary.summary.blocked}`);
+  console.log(`- external receipts present: ${summary.summary.externalReceiptsPresent}`);
+  console.log(`- external receipts stale: ${summary.summary.externalReceiptsStale}`);
+  console.log(`- ready for implementation review: ${summary.summary.readyForImplementationReview}`);
 }
 
 function parseArgs(args: string[]): EngineeringRunAdapterOptions {
@@ -332,6 +510,7 @@ function parseArgs(args: string[]): EngineeringRunAdapterOptions {
     commandOverride: null,
     argOverride: [],
     allowReviewOnly: false,
+    requireReceipt: false,
     maxJobs: Number.POSITIVE_INFINITY,
     timeoutMs: 180_000,
     generatedAt: new Date().toISOString(),
@@ -359,6 +538,8 @@ function parseArgs(args: string[]): EngineeringRunAdapterOptions {
       index += 1;
     } else if (arg === "--allow-review-only") {
       options.allowReviewOnly = true;
+    } else if (arg === "--require-receipt") {
+      options.requireReceipt = true;
     } else if (arg === "--max-jobs") {
       options.maxJobs = Number(args[index + 1] || options.maxJobs);
       index += 1;
@@ -395,6 +576,7 @@ function printHelp() {
     "  --command <cmd>         Override the job command, for example openhands or python.",
     "  --arg <value>           Add one override argument. Supports {taskPath}, {jobPath}, {receiptDraftPath}, {sessionId}. Repeat as needed.",
     "  --allow-review-only     Permit running non-executable review-only jobs for local experiments.",
+    "  --require-receipt       Exit non-zero unless completed jobs also produced the expected Naikaku receipt.",
     "  --max-jobs <number>     Limit jobs. Default: all selected jobs.",
     "  --timeout-ms <number>   Per-job timeout. Default: 180000.",
     "  --generated-at <iso>    Stable timestamp for tests.",

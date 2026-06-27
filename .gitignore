@@ -19,7 +19,7 @@ output/coding-agent-runner-lease
 output/coding-agent-sandbox-runner
 output/coding-agent-gateway-runner-smoke
 output/coding-agent-engineering-self-simulation
-output/engineering-adapter-run
+output/engineering-adapter-run*
 output/engineering-adapters
 output/engineering-handoff
 output/engineering-mvp
