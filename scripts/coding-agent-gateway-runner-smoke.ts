@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createServer as createNetServer } from "node:net";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -82,6 +82,10 @@ interface GatewayRunnerSmokeSummary {
     worktreeArtifactAuditStatus: number;
     worktreeArtifactAuditDecision: string | null;
     worktreeArtifactAuditChangedFiles: number;
+    cleanWorktreeArtifactAuditStatus: number;
+    cleanWorktreeArtifactAuditDecision: string | null;
+    cleanWorktreeArtifactAuditUnchangedFiles: number;
+    cleanWorktreeProbePath: string | null;
   };
   checks: {
     healthOk: boolean;
@@ -94,6 +98,7 @@ interface GatewayRunnerSmokeSummary {
     leaseValidationReturned: boolean;
     receiptAndAuditVerified: boolean;
     worktreeArtifactAuditVerified: boolean;
+    cleanWorktreeArtifactAuditBlocked: boolean;
   };
   honestyClaim: {
     level: "local-gateway-smoke";
@@ -177,6 +182,17 @@ async function main() {
       `${gatewayUrl}/v1/development/coding-briefs/implementation-artifact-audit`,
       { evidence: worktreeEvidence }
     );
+    const cleanWorktreeProbePath = cleanTrackedFilePath();
+    const cleanWorktreeEvidence = await buildCleanWorktreeEvidenceFixture({
+      changedFilePath: cleanWorktreeProbePath,
+      outputRelativeDir,
+      generatedAt: options.generatedAt,
+      locale: options.locale
+    });
+    const cleanWorktreeArtifactAudit = await postJson<CodingAgentImplementationArtifactAudit>(
+      `${gatewayUrl}/v1/development/coding-briefs/implementation-artifact-audit`,
+      { evidence: cleanWorktreeEvidence }
+    );
 
     const summary = buildSummary({
       options,
@@ -190,7 +206,9 @@ async function main() {
       unissued,
       leaseClaim,
       sandboxRunner,
-      worktreeArtifactAudit
+      worktreeArtifactAudit,
+      cleanWorktreeArtifactAudit,
+      cleanWorktreeProbePath
     });
 
     await writeJson(path.join(outputDir, "summary.json"), summary);
@@ -343,6 +361,78 @@ async function buildWorktreeEvidenceFixture({
   };
 }
 
+async function buildCleanWorktreeEvidenceFixture({
+  changedFilePath,
+  outputRelativeDir,
+  generatedAt,
+  locale
+}: {
+  changedFilePath: string;
+  outputRelativeDir: string;
+  generatedAt: string;
+  locale: string;
+}): Promise<CodingAgentImplementationEvidence> {
+  const transcriptPath = `${outputRelativeDir}/clean-worktree-artifact-audit/transcript.log`;
+  const evidencePath = `${outputRelativeDir}/clean-worktree-artifact-audit/evidence.txt`;
+
+  await mkdir(path.dirname(transcriptPath), { recursive: true });
+  await writeFile(transcriptPath, "command=npm run test\nexitCode=0\nresult=passed\n", "utf8");
+  await writeFile(evidencePath, "Gateway smoke clean-worktree negative evidence.\n", "utf8");
+
+  return {
+    schema: "naikaku.coding-agent-implementation-evidence.v1",
+    generatedAt,
+    sourceSchema: "naikaku.coding-agent-session-receipt.v1",
+    sourceDecision: "verified",
+    decision: "accepted-for-handoff",
+    operatorLocale: locale,
+    items: [
+      {
+        sessionId: "gateway-smoke-clean-worktree-session",
+        sourceItemId: "gateway-smoke-clean-worktree-item",
+        title: "Gateway smoke clean worktree negative evidence",
+        receiptStatus: "verified",
+        accepted: true,
+        changedFiles: [changedFilePath],
+        commandResults: [
+          {
+            command: "npm run test",
+            exitCode: 0,
+            outputSummary: "Synthetic gateway smoke command passed.",
+            transcriptRef: transcriptPath
+          }
+        ],
+        evidence: [`Clean worktree evidence artifact: ${evidencePath}`],
+        risks: ["Synthetic gateway smoke negative fixture only."],
+        missing: [],
+        nextAction: "This fixture should stay blocked because the changed-file path is clean in Git worktree status."
+      }
+    ],
+    summary: {
+      total: 1,
+      accepted: 1,
+      needsEvidence: 0,
+      blocked: 0,
+      changedFiles: 1,
+      commandResults: 1,
+      failedCommands: 0,
+      evidenceItems: 1,
+      riskNotes: 1
+    },
+    honestyClaim: {
+      level: "implementation-evidence-summary",
+      claim: "Synthetic gateway smoke negative fixture for clean worktree artifact audit.",
+      limitations: [
+        "This fixture proves gateway worktree-status rejection only.",
+        "It is not implementation evidence for product backlog work."
+      ],
+      productionRequirements: [
+        "Use real changed files from a governed runner workspace before accepting implementation evidence."
+      ]
+    }
+  };
+}
+
 function buildSummary({
   options,
   outputRelativeDir,
@@ -355,7 +445,9 @@ function buildSummary({
   unissued,
   leaseClaim,
   sandboxRunner,
-  worktreeArtifactAudit
+  worktreeArtifactAudit,
+  cleanWorktreeArtifactAudit,
+  cleanWorktreeProbePath
 }: {
   options: GatewayRunnerSmokeOptions;
   outputRelativeDir: string;
@@ -369,6 +461,8 @@ function buildSummary({
   leaseClaim: JsonResponse<CodingAgentRunnerLeaseLedger>;
   sandboxRunner: JsonResponse<CodingAgentSandboxRunnerResult>;
   worktreeArtifactAudit: JsonResponse<CodingAgentImplementationArtifactAudit>;
+  cleanWorktreeArtifactAudit: JsonResponse<CodingAgentImplementationArtifactAudit>;
+  cleanWorktreeProbePath: string;
 }): GatewayRunnerSmokeSummary {
   const healthBody = asRecord(health.body);
   const runnerAuth = asRecord(healthBody.runnerAuth);
@@ -398,7 +492,11 @@ function buildSummary({
     worktreeArtifactAuditVerified: worktreeArtifactAudit.status === 200 &&
       worktreeArtifactAudit.body.decision === "verified" &&
       worktreeArtifactAudit.body.summary.worktreeChangedFiles === 1 &&
-      worktreeArtifactAudit.body.summary.worktreeUnchangedFiles === 0
+      worktreeArtifactAudit.body.summary.worktreeUnchangedFiles === 0,
+    cleanWorktreeArtifactAuditBlocked: cleanWorktreeArtifactAudit.status === 200 &&
+      cleanWorktreeArtifactAudit.body.decision === "needs-artifacts" &&
+      cleanWorktreeArtifactAudit.body.summary.worktreeChangedFiles === 0 &&
+      cleanWorktreeArtifactAudit.body.summary.worktreeUnchangedFiles === 1
   };
 
   return {
@@ -439,12 +537,20 @@ function buildSummary({
       worktreeArtifactAuditDecision: worktreeArtifactAudit.status === 200 ? worktreeArtifactAudit.body.decision : null,
       worktreeArtifactAuditChangedFiles: worktreeArtifactAudit.status === 200
         ? worktreeArtifactAudit.body.summary.worktreeChangedFiles
-        : 0
+        : 0,
+      cleanWorktreeArtifactAuditStatus: cleanWorktreeArtifactAudit.status,
+      cleanWorktreeArtifactAuditDecision: cleanWorktreeArtifactAudit.status === 200
+        ? cleanWorktreeArtifactAudit.body.decision
+        : null,
+      cleanWorktreeArtifactAuditUnchangedFiles: cleanWorktreeArtifactAudit.status === 200
+        ? cleanWorktreeArtifactAudit.body.summary.worktreeUnchangedFiles
+        : 0,
+      cleanWorktreeProbePath
     },
     checks,
     honestyClaim: {
       level: "local-gateway-smoke",
-      claim: "This smoke starts the local gateway, proves missing and unissued runner leases are blocked over HTTP, executes the gateway sandbox-runner route with a gateway-issued lease, and verifies gateway artifact audit can see a Git worktree change.",
+      claim: "This smoke starts the local gateway, proves missing and unissued runner leases are blocked over HTTP, executes the gateway sandbox-runner route with a gateway-issued lease, verifies gateway artifact audit can see a Git worktree change, and proves a clean tracked changed-file claim stays blocked.",
       limitations: [
         "It runs against 127.0.0.1 only and uses synthetic scoped runner credentials.",
         "It executes the existing local sandbox-runner verification commands, but it does not ask a model to implement backlog work.",
@@ -609,6 +715,52 @@ function messageOf(response: JsonResponse) {
   return response.raw;
 }
 
+function cleanTrackedFilePath() {
+  const preferred = [
+    "tsconfig.json",
+    "vite.config.ts",
+    "src/data/defaultCabinet.ts",
+    "src/domain/types.ts",
+    "package.json"
+  ];
+  for (const filePath of preferred) {
+    if (isCleanTrackedFile(filePath)) return filePath;
+  }
+
+  const result = spawnSync("git", ["ls-files", "-z"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+  if (result.error || result.status !== 0) {
+    throw new Error("Could not list tracked files for clean worktree smoke fixture.");
+  }
+
+  const trackedFiles = result.stdout.split("\0")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const cleanFile = trackedFiles.find((filePath) => isCleanTrackedFile(filePath));
+  if (!cleanFile) {
+    throw new Error("Could not find a clean tracked file for the clean worktree smoke fixture.");
+  }
+  return cleanFile;
+}
+
+function isCleanTrackedFile(relativePath: string) {
+  const result = spawnSync("git", [
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=no",
+    "--",
+    relativePath
+  ], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+  return !result.error && result.status === 0 && result.stdout.trim() === "";
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -659,6 +811,7 @@ function summaryMarkdown(summary: GatewayRunnerSmokeSummary) {
     `- Receipt review: ${summary.cases.receiptReviewDecision || "unknown"}`,
     `- Artifact audit: ${summary.cases.artifactAuditDecision || "unknown"}`,
     `- Worktree artifact audit: ${summary.cases.worktreeArtifactAuditStatus} / ${summary.cases.worktreeArtifactAuditDecision || "unknown"} (${summary.cases.worktreeArtifactAuditChangedFiles} changed files)`,
+    `- Clean worktree artifact audit: ${summary.cases.cleanWorktreeArtifactAuditStatus} / ${summary.cases.cleanWorktreeArtifactAuditDecision || "unknown"} (${summary.cases.cleanWorktreeArtifactAuditUnchangedFiles} unchanged files; probe ${summary.cases.cleanWorktreeProbePath || "unknown"})`,
     "",
     "## Checks",
     "",
@@ -690,6 +843,10 @@ function printSummary(summary: GatewayRunnerSmokeSummary) {
   console.log(
     `Worktree artifact audit: ${summary.cases.worktreeArtifactAuditDecision || "unknown"}, ` +
     `${summary.cases.worktreeArtifactAuditChangedFiles} changed files`
+  );
+  console.log(
+    `Clean worktree artifact audit: ${summary.cases.cleanWorktreeArtifactAuditDecision || "unknown"}, ` +
+    `${summary.cases.cleanWorktreeArtifactAuditUnchangedFiles} unchanged files`
   );
   console.log(`Checks: ${Object.values(summary.checks).length - failed} pass, ${failed} fail`);
 }

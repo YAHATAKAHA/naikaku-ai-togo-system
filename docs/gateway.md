@@ -1310,7 +1310,7 @@ For a reproducible local HTTP check, run:
 npm run coding-agent:gateway-smoke
 ```
 
-The smoke starts a temporary `127.0.0.1` gateway with synthetic scoped runner credentials, proves `/v1/development/coding-briefs/sandbox-runner` rejects missing and fabricated unissued lease ledgers with `409`, claims a lease through `/v1/development/coding-briefs/runner-lease`, executes the sandbox-runner route with the gateway-issued lease, and verifies `/v1/development/coding-briefs/implementation-artifact-audit` can see a temporary Git worktree change.
+The smoke starts a temporary `127.0.0.1` gateway with synthetic scoped runner credentials, proves `/v1/development/coding-briefs/sandbox-runner` rejects missing and fabricated unissued lease ledgers with `409`, claims a lease through `/v1/development/coding-briefs/runner-lease`, executes the sandbox-runner route with the gateway-issued lease, verifies `/v1/development/coding-briefs/implementation-artifact-audit` can see a temporary Git worktree change, and proves a clean tracked changed-file claim returns `needs-artifacts`.
 
 ### `POST /v1/development/coding-briefs/session-drill`
 
