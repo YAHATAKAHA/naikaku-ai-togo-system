@@ -34,6 +34,7 @@ import type {
   ReleaseRehearsalReport,
   ReleaseVerificationReport,
   RoleWorkspaceScaffolds,
+  SandboxPolicy,
   TeamHandoff
 } from "./types";
 
@@ -725,6 +726,7 @@ export async function createCodingAgentRunnerInvocationViaGateway(
 
 export async function createCodingAgentRunnerIntakeViaGateway(
   invocationPackage: CodingAgentRunnerInvocationPackage,
+  sandboxPolicy?: SandboxPolicy,
   signal?: AbortSignal
 ) {
   const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-intake`, {
@@ -732,7 +734,7 @@ export async function createCodingAgentRunnerIntakeViaGateway(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ invocationPackage }),
+    body: JSON.stringify({ invocationPackage, sandboxPolicy }),
     signal
   });
 
@@ -766,6 +768,7 @@ export async function createCodingAgentRunnerSelfTestViaGateway(
 export async function runCodingAgentSandboxRunnerViaGateway(
   selfTest: CodingAgentRunnerSelfTest,
   bundle: CodingAgentSessionBundle,
+  sandboxPolicy?: SandboxPolicy,
   timeoutMs?: number,
   signal?: AbortSignal
 ) {
@@ -774,7 +777,7 @@ export async function runCodingAgentSandboxRunnerViaGateway(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ selfTest, bundle, timeoutMs }),
+    body: JSON.stringify({ selfTest, bundle, sandboxPolicy, timeoutMs }),
     signal
   });
 
@@ -788,6 +791,7 @@ export async function runCodingAgentSandboxRunnerViaGateway(
 export async function createCodingAgentSandboxRunnerPreflightViaGateway(
   selfTest: CodingAgentRunnerSelfTest,
   bundle: CodingAgentSessionBundle,
+  sandboxPolicy?: SandboxPolicy,
   signal?: AbortSignal
 ) {
   const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/sandbox-runner/preflight`, {
@@ -795,7 +799,7 @@ export async function createCodingAgentSandboxRunnerPreflightViaGateway(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ selfTest, bundle }),
+    body: JSON.stringify({ selfTest, bundle, sandboxPolicy }),
     signal
   });
 

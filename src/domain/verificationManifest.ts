@@ -327,12 +327,14 @@ function codingAgentRunnerIntakeCheck(report: CodingAgentRunnerIntakeAuditDrillS
     && report.valid.unsafePaths === 0
     && report.valid.sourceBlockedChecks === 0
     && report.valid.completedCommandResults === 0
+    && report.valid.blockedSecurityClassifications === 0
     && report.productionHeld.decision === "needs-review"
     && report.productionHeld.acceptedIntakes === 0
     && report.productionHeld.invocationFiles === 0
     && report.productionHeld.invocationFilesFound === 0
     && report.productionHeld.receiptDraftPaths === 0
     && report.productionHeld.unsafePaths === 0
+    && report.productionHeld.blockedSecurityClassifications === 0
     && checksPassed;
 
   return {
@@ -356,9 +358,11 @@ function codingAgentRunnerIntakeCheck(report: CodingAgentRunnerIntakeAuditDrillS
       `Completed command results: ${report.valid.completedCommandResults}`,
       `Source blocked checks: ${report.valid.sourceBlockedChecks}`,
       `Unsafe paths: ${report.valid.unsafePaths}`,
+      `Blocked security classifications: ${report.valid.blockedSecurityClassifications}`,
       `Production-held decision: ${report.productionHeld.decision}`,
       `Production-held accepted intakes: ${report.productionHeld.acceptedIntakes}`,
-      `Production-held invocation files found: ${report.productionHeld.invocationFilesFound}`
+      `Production-held invocation files found: ${report.productionHeld.invocationFilesFound}`,
+      `Production-held blocked security classifications: ${report.productionHeld.blockedSecurityClassifications}`
     ],
     nextAction: ok
       ? "Keep the intake audit summary attached before a governed runner consumes invocation files."

@@ -1,23 +1,28 @@
 import { isSafeRelativeArtifactPath } from "./codingAgentArtifactReferences";
+import { defaultSandboxPolicy } from "../data/defaultCabinet";
+import { classifyActionImpact } from "./securityClassifiers";
 import type {
   CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerIntakeAuditDecision,
   CodingAgentRunnerIntakeAuditItem,
   CodingAgentRunnerIntakeAuditItemStatus,
   CodingAgentRunnerInvocationItem,
-  CodingAgentRunnerInvocationPackage
+  CodingAgentRunnerInvocationPackage,
+  SandboxPolicy
 } from "./types";
 
 export interface BuildCodingAgentRunnerIntakeAuditInput {
   invocationPackage: CodingAgentRunnerInvocationPackage;
+  sandboxPolicy?: SandboxPolicy;
   generatedAt?: string;
 }
 
 export function buildCodingAgentRunnerIntakeAudit({
   invocationPackage,
+  sandboxPolicy = defaultSandboxPolicy,
   generatedAt = new Date().toISOString()
 }: BuildCodingAgentRunnerIntakeAuditInput): CodingAgentRunnerIntakeAudit {
-  const items = invocationPackage.items.map((item) => intakeItemFor(item));
+  const items = invocationPackage.items.map((item) => intakeItemFor(item, sandboxPolicy));
   const acceptedIntakes = items.filter((item) => item.intakeStatus === "accepted-for-runner").length;
   const heldIntakes = items.filter((item) => item.intakeStatus === "held").length;
   const blockedIntakes = items.filter((item) => item.intakeStatus === "blocked").length;
@@ -34,6 +39,9 @@ export function buildCodingAgentRunnerIntakeAudit({
     item.invocationStatus === "invocation-ready" &&
     !item.runnerInstructions.some((instruction) => instruction.includes("Return the completed receipt"))
   ).length;
+  const blockedSecurityClassifications = items.reduce((total, item) =>
+    total + item.checks.filter((check) => check.id === "security-classifier" && check.status === "block").length,
+  0);
 
   return {
     schema: "naikaku.coding-agent-runner-intake-audit.v1",
@@ -61,7 +69,8 @@ export function buildCodingAgentRunnerIntakeAudit({
       unsafePaths,
       sourceBlockedChecks,
       completedCommandResults,
-      missingRunnerInstructions
+      missingRunnerInstructions,
+      blockedSecurityClassifications
     },
     honestyClaim: {
       level: "runner-invocation-intake-audit",
@@ -113,13 +122,17 @@ export function serializeCodingAgentRunnerIntakeAuditMarkdown(report: CodingAgen
     `- Unsafe paths: ${report.summary.unsafePaths}`,
     `- Source blocked checks: ${report.summary.sourceBlockedChecks}`,
     `- Completed command results observed: ${report.summary.completedCommandResults}`,
+    `- Blocked security classifications: ${report.summary.blockedSecurityClassifications}`,
     "",
     ...report.items.flatMap((item, index) => itemMarkdown(item, index + 1))
   ].join("\n");
 }
 
-function intakeItemFor(item: CodingAgentRunnerInvocationItem): CodingAgentRunnerIntakeAuditItem {
-  const checks = checksFor(item);
+function intakeItemFor(
+  item: CodingAgentRunnerInvocationItem,
+  sandboxPolicy: SandboxPolicy
+): CodingAgentRunnerIntakeAuditItem {
+  const checks = checksFor(item, sandboxPolicy);
   const intakeStatus = statusFor(item, checks);
 
   return {
@@ -144,7 +157,7 @@ function intakeItemFor(item: CodingAgentRunnerInvocationItem): CodingAgentRunner
   };
 }
 
-function checksFor(item: CodingAgentRunnerInvocationItem) {
+function checksFor(item: CodingAgentRunnerInvocationItem, sandboxPolicy: SandboxPolicy) {
   const ready = item.invocationStatus === "invocation-ready";
   const sourceBlockedChecks = item.checks.filter((check) => check.status === "block").length;
   const transcriptRefs = item.commands.map((command) => command.transcriptRef).filter(Boolean) as string[];
@@ -164,6 +177,22 @@ function checksFor(item: CodingAgentRunnerInvocationItem) {
   const hasStopConditions = item.stopConditions.some((condition) => condition.includes("host secrets")) &&
     item.stopConditions.some((condition) => condition.includes("production deploy")) &&
     item.stopConditions.some((condition) => condition.includes("Git push"));
+  const securityClassifications = item.commands.map((command) =>
+    classifyActionImpact({
+      executorProfileId: item.executorProfileId,
+      action: item.executorProfileId === "shell-container" ? "run_shell" : "runner_command",
+      target: command.command ? `/workspace:${command.command}` : item.evidenceArtifactPrefix,
+      risk: item.executorProfileId === "shell-container" ? "high" : "medium",
+      instruction: item.title,
+      sandboxPolicy
+    })
+  );
+  const blockedSecurityClassifications = securityClassifications.filter((classification) =>
+    classification.decision === "blocked"
+  );
+  const securityFindings = securityClassifications.reduce((total, classification) =>
+    total + classification.findings.length,
+  0);
 
   return [
     {
@@ -239,6 +268,11 @@ function checksFor(item: CodingAgentRunnerInvocationItem) {
       id: "stop-conditions",
       status: hasStopConditions ? "pass" as const : "block" as const,
       summary: `${item.stopConditions.length} stop conditions are attached.`
+    },
+    {
+      id: "security-classifier",
+      status: blockedSecurityClassifications.length === 0 ? "pass" as const : "block" as const,
+      summary: `${blockedSecurityClassifications.length} blocked security classification(s), ${securityFindings} finding(s) across pending command contracts.`
     },
     {
       id: "no-real-execution",

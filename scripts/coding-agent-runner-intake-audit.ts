@@ -72,7 +72,8 @@ async function main() {
       invocationFiles: productionHeld.audit.summary.invocationFiles,
       invocationFilesFound: productionHeld.invocationFilesFound,
       receiptDraftPaths: productionHeld.audit.summary.receiptDraftPaths,
-      unsafePaths: productionHeld.audit.summary.unsafePaths
+      unsafePaths: productionHeld.audit.summary.unsafePaths,
+      blockedSecurityClassifications: productionHeld.audit.summary.blockedSecurityClassifications
     },
     checks: checksFor(valid, productionHeld),
     honestyClaim: {
@@ -179,7 +180,8 @@ function auditSummary(audit: CodingAgentRunnerIntakeAudit, drillCase: RunnerInta
     expectedEvidenceArtifacts: audit.summary.expectedEvidenceArtifacts,
     unsafePaths: audit.summary.unsafePaths,
     sourceBlockedChecks: audit.summary.sourceBlockedChecks,
-    completedCommandResults: audit.summary.completedCommandResults
+    completedCommandResults: audit.summary.completedCommandResults,
+    blockedSecurityClassifications: audit.summary.blockedSecurityClassifications
   };
 }
 
@@ -203,6 +205,9 @@ function checksFor(valid: RunnerIntakeCase, productionHeld: RunnerIntakeCase) {
       ),
     sourceChecksClean:
       valid.audit.summary.sourceBlockedChecks === 0,
+    securityClassificationsClean:
+      valid.audit.summary.blockedSecurityClassifications === 0 &&
+      productionHeld.audit.summary.blockedSecurityClassifications === 0,
     safePaths:
       valid.audit.summary.unsafePaths === 0 &&
       productionHeld.audit.summary.unsafePaths === 0,
@@ -242,6 +247,7 @@ function summaryMarkdown(summary: CodingAgentRunnerIntakeAuditDrillSummary) {
     `- Unsafe paths: ${summary.valid.unsafePaths}`,
     `- Source blocked checks: ${summary.valid.sourceBlockedChecks}`,
     `- Completed command results: ${summary.valid.completedCommandResults}`,
+    `- Blocked security classifications: ${summary.valid.blockedSecurityClassifications}`,
     "",
     "## Production-Held Intake Audit",
     "",
@@ -250,6 +256,7 @@ function summaryMarkdown(summary: CodingAgentRunnerIntakeAuditDrillSummary) {
     `- Invocation files: ${summary.productionHeld.invocationFiles}`,
     `- Invocation files found: ${summary.productionHeld.invocationFilesFound}`,
     `- Receipt draft paths: ${summary.productionHeld.receiptDraftPaths}`,
+    `- Blocked security classifications: ${summary.productionHeld.blockedSecurityClassifications}`,
     "",
     "## Checks",
     "",

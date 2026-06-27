@@ -348,6 +348,37 @@ describe("verification manifest", () => {
     expect(intakeCheck?.evidence).toContain("Invocation files found: 7");
   });
 
+  it("invalidates the manifest when runner intake has blocked security classifications", () => {
+    const codingAgentRunnerIntake = codingAgentRunnerIntakeAuditFixture();
+    codingAgentRunnerIntake.valid.blockedSecurityClassifications = 1;
+    codingAgentRunnerIntake.checks.securityClassificationsClean = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake,
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const intakeCheck = manifest.checks.find((check) => check.id === "coding-agent-runner-intake-audit");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(intakeCheck?.status).toBe("fail");
+    expect(intakeCheck?.evidence).toContain("Blocked security classifications: 1");
+  });
+
   it("invalidates the manifest when runner self-test claims executed commands", () => {
     const codingAgentRunnerSelfTest = codingAgentRunnerSelfTestFixture();
     codingAgentRunnerSelfTest.valid.notExecutedCommands = 15;
@@ -949,7 +980,8 @@ function codingAgentRunnerIntakeAuditFixture(): CodingAgentRunnerIntakeAuditDril
       expectedEvidenceArtifacts: 24,
       unsafePaths: 0,
       sourceBlockedChecks: 0,
-      completedCommandResults: 0
+      completedCommandResults: 0,
+      blockedSecurityClassifications: 0
     },
     productionHeld: {
       decision: "needs-review",
@@ -959,7 +991,8 @@ function codingAgentRunnerIntakeAuditFixture(): CodingAgentRunnerIntakeAuditDril
       invocationFiles: 0,
       invocationFilesFound: 0,
       receiptDraftPaths: 0,
-      unsafePaths: 0
+      unsafePaths: 0,
+      blockedSecurityClassifications: 0
     },
     checks: {
       validAccepted: true,
@@ -968,6 +1001,7 @@ function codingAgentRunnerIntakeAuditFixture(): CodingAgentRunnerIntakeAuditDril
       markdownFilesReadable: true,
       pendingCommandsOnly: true,
       sourceChecksClean: true,
+      securityClassificationsClean: true,
       safePaths: true,
       noExecutionClaim: true,
       productionHeldNotAccepted: true,

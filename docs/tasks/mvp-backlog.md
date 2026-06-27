@@ -147,6 +147,7 @@ Acceptance:
 - Unsafe external instructions cannot call tools directly.
 - Sensitive actions require explicit human approval.
 - Operators and CI can run a security red-team drill that blocks prompt injection, credential exfiltration, localhost/control-plane access, metadata service access, Git mutation, production deployment, and external-send fixtures while keeping safe allowlisted research available.
+- Runner intake and sandbox-runner preflight apply the security classifier to command contracts before governed coding runners consume or execute work.
 
 ## Track 6: Memory and Learning
 

@@ -794,6 +794,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-intake") {
       const body = await readJson<{
         invocationPackage?: CodingAgentRunnerInvocationPackage;
+        sandboxPolicy?: SandboxPolicy;
       }>(request);
       if (body.invocationPackage?.schema !== "naikaku.coding-agent-runner-invocation-package.v1") {
         sendJson(response, 422, {
@@ -803,7 +804,8 @@ const server = createServer(async (request, response) => {
         return;
       }
       const audit: CodingAgentRunnerIntakeAudit = buildCodingAgentRunnerIntakeAudit({
-        invocationPackage: body.invocationPackage
+        invocationPackage: body.invocationPackage,
+        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
       sendJson(response, 200, audit);
       return;
@@ -831,6 +833,7 @@ const server = createServer(async (request, response) => {
       const body = await readJson<{
         selfTest?: CodingAgentRunnerSelfTest;
         bundle?: CodingAgentSessionBundle;
+        sandboxPolicy?: SandboxPolicy;
       }>(request);
       if (body.selfTest?.schema !== "naikaku.coding-agent-runner-self-test.v1") {
         sendJson(response, 422, {
@@ -848,7 +851,8 @@ const server = createServer(async (request, response) => {
       }
       const preflight: CodingAgentSandboxRunnerPreflight = buildCodingAgentSandboxRunnerPreflight({
         selfTest: body.selfTest,
-        bundle: body.bundle
+        bundle: body.bundle,
+        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
       sendJson(response, 200, preflight);
       return;
@@ -861,6 +865,7 @@ const server = createServer(async (request, response) => {
       const body = await readJson<{
         selfTest?: CodingAgentRunnerSelfTest;
         bundle?: CodingAgentSessionBundle;
+        sandboxPolicy?: SandboxPolicy;
         timeoutMs?: number;
       }>(request);
       if (body.selfTest?.schema !== "naikaku.coding-agent-runner-self-test.v1") {
@@ -879,7 +884,8 @@ const server = createServer(async (request, response) => {
       }
       const preflight: CodingAgentSandboxRunnerPreflight = buildCodingAgentSandboxRunnerPreflight({
         selfTest: body.selfTest,
-        bundle: body.bundle
+        bundle: body.bundle,
+        sandboxPolicy: body.sandboxPolicy || defaultSandboxPolicy
       });
       if (preflight.decision !== "ready") {
         sendJson(response, 409, {

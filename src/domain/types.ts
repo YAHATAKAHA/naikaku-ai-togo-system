@@ -978,6 +978,7 @@ export interface CodingAgentRunnerIntakeAuditDrillSummary {
     unsafePaths: number;
     sourceBlockedChecks: number;
     completedCommandResults: number;
+    blockedSecurityClassifications: number;
   };
   productionHeld: {
     decision: string;
@@ -988,6 +989,7 @@ export interface CodingAgentRunnerIntakeAuditDrillSummary {
     invocationFilesFound: number;
     receiptDraftPaths: number;
     unsafePaths: number;
+    blockedSecurityClassifications: number;
   };
   checks: Record<string, boolean>;
   honestyClaim: {
@@ -2117,6 +2119,7 @@ export interface CodingAgentRunnerIntakeAudit {
     sourceBlockedChecks: number;
     completedCommandResults: number;
     missingRunnerInstructions: number;
+    blockedSecurityClassifications: number;
   };
   honestyClaim: {
     level: "runner-invocation-intake-audit";
@@ -2221,6 +2224,8 @@ export interface CodingAgentSandboxRunnerPreflightCommand {
   transcriptRef: string | null;
   status: CodingAgentSandboxRunnerPreflightCommandStatus;
   reason: string;
+  securityDecision?: SecurityClassificationDecision;
+  securityFindings?: SecurityThreatCategory[];
 }
 
 export interface CodingAgentSandboxRunnerPreflightItem {
@@ -2275,6 +2280,7 @@ export interface CodingAgentSandboxRunnerPreflight {
     unsafePaths: number;
     missingBundleSessions: number;
     extraBundleSessions: number;
+    blockedSecurityCommands: number;
   };
   honestyClaim: {
     level: "local-sandbox-runner-preflight";

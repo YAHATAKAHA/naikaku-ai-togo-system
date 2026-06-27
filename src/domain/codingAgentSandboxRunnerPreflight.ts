@@ -1,4 +1,6 @@
 import { isSafeRelativeArtifactPath } from "./codingAgentArtifactReferences";
+import { defaultSandboxPolicy } from "../data/defaultCabinet";
+import { classifyActionImpact } from "./securityClassifiers";
 import type {
   CodingAgentRunnerSelfTest,
   CodingAgentRunnerSelfTestItem,
@@ -7,7 +9,8 @@ import type {
   CodingAgentSandboxRunnerPreflightDecision,
   CodingAgentSandboxRunnerPreflightItem,
   CodingAgentSandboxRunnerPreflightItemStatus,
-  CodingAgentSessionBundle
+  CodingAgentSessionBundle,
+  SandboxPolicy
 } from "./types";
 
 export const codingAgentSandboxRunnerAllowedCommands = ["npm run test", "npm run build"] as const;
@@ -16,12 +19,14 @@ export function buildCodingAgentSandboxRunnerPreflight({
   selfTest,
   bundle,
   generatedAt = new Date().toISOString(),
-  commandAllowlist = codingAgentSandboxRunnerAllowedCommands
+  commandAllowlist = codingAgentSandboxRunnerAllowedCommands,
+  sandboxPolicy = defaultSandboxPolicy
 }: {
   selfTest: CodingAgentRunnerSelfTest;
   bundle?: CodingAgentSessionBundle;
   generatedAt?: string;
   commandAllowlist?: readonly string[];
+  sandboxPolicy?: SandboxPolicy;
 }): CodingAgentSandboxRunnerPreflight {
   const allowedCommands = new Set(commandAllowlist);
   const bundleSessions = new Set((bundle?.sessions || []).map((session) => session.id));
@@ -35,6 +40,7 @@ export function buildCodingAgentSandboxRunnerPreflight({
   const items = selfTest.items.map((item) => preflightItemFor({
     item,
     allowedCommands,
+    sandboxPolicy,
     bundleSessionFound: bundle ? bundleSessions.has(item.sessionId) : true
   }));
   const commands = items.flatMap((item) => item.commands);
@@ -46,6 +52,9 @@ export function buildCodingAgentSandboxRunnerPreflight({
   const blockedCommandCount = commands.filter((command) => command.status === "blocked").length;
   const notRunnableCommands = commands.filter((command) => command.status === "not-runnable").length;
   const unsafePaths = items.reduce((total, item) => total + unsafePathCountFor(item), 0);
+  const blockedSecurityCommands = commands.filter((command) =>
+    command.securityDecision === "blocked"
+  ).length;
 
   return {
     schema: "naikaku.coding-agent-sandbox-runner-preflight.v1",
@@ -62,7 +71,8 @@ export function buildCodingAgentSandboxRunnerPreflight({
       blockedCommands: blockedCommandCount,
       unsafePaths,
       missingBundleSessions,
-      extraBundleSessions
+      extraBundleSessions,
+      blockedSecurityCommands
     }),
     runId: selfTest.runId,
     operatorLocale: selfTest.operatorLocale,
@@ -83,7 +93,8 @@ export function buildCodingAgentSandboxRunnerPreflight({
       expectedEvidenceArtifacts: items.reduce((total, item) => total + item.expectedEvidenceArtifacts.length, 0),
       unsafePaths,
       missingBundleSessions,
-      extraBundleSessions
+      extraBundleSessions,
+      blockedSecurityCommands
     },
     honestyClaim: {
       level: "local-sandbox-runner-preflight",
@@ -137,6 +148,7 @@ export function serializeCodingAgentSandboxRunnerPreflightMarkdown(report: Codin
     `- Receipt draft paths: ${report.summary.receiptDraftPaths}`,
     `- Expected evidence artifacts: ${report.summary.expectedEvidenceArtifacts}`,
     `- Unsafe paths: ${report.summary.unsafePaths}`,
+    `- Blocked security commands: ${report.summary.blockedSecurityCommands}`,
     `- Missing bundle sessions: ${report.summary.missingBundleSessions}`,
     `- Extra bundle sessions: ${report.summary.extraBundleSessions}`,
     "",
@@ -172,10 +184,12 @@ export function serializeCodingAgentSandboxRunnerPreflightMarkdown(report: Codin
 function preflightItemFor({
   item,
   allowedCommands,
+  sandboxPolicy,
   bundleSessionFound
 }: {
   item: CodingAgentRunnerSelfTestItem;
   allowedCommands: Set<string>;
+  sandboxPolicy: SandboxPolicy;
   bundleSessionFound: boolean;
 }): CodingAgentSandboxRunnerPreflightItem {
   const commands = item.commands.map((command): CodingAgentSandboxRunnerPreflightCommand => {
@@ -195,14 +209,37 @@ function preflightItemFor({
         reason: "Command is outside the local sandbox runner allowlist."
       };
     }
+    const securityClassification = classifyActionImpact({
+      executorProfileId: item.executorProfileId,
+      action: item.executorProfileId === "shell-container" ? "run_shell" : "runner_command",
+      target: `/workspace:${command.command}`,
+      risk: item.executorProfileId === "shell-container" ? "high" : "medium",
+      instruction: [item.title, ...item.simulatedActions].join("\n"),
+      sandboxPolicy
+    });
+    if (securityClassification.decision === "blocked") {
+      return {
+        command: command.command,
+        transcriptRef: command.transcriptRef,
+        status: "blocked",
+        reason: `Security classifier blocked command: ${securityClassification.summary}`,
+        securityDecision: securityClassification.decision,
+        securityFindings: securityClassification.findings.map((finding) => finding.category)
+      };
+    }
     return {
       command: command.command,
       transcriptRef: command.transcriptRef,
       status: "allowed",
-      reason: "Command is allowed for local sandbox runner execution."
+      reason: securityClassification.decision === "needs-approval"
+        ? "Command is allowlisted and remains approval/evidence-gated for local sandbox runner execution."
+        : "Command is allowed for local sandbox runner execution.",
+      securityDecision: securityClassification.decision,
+      securityFindings: securityClassification.findings.map((finding) => finding.category)
     };
   });
   const hasBlockedCommand = commands.some((command) => command.status === "blocked");
+  const blockedSecurityCommands = commands.filter((command) => command.securityDecision === "blocked").length;
   const hasUnsafePath = unsafePathCountFor({
     promptPath: item.promptPath,
     receiptDraftPath: item.receiptDraftPath,
@@ -248,6 +285,11 @@ function preflightItemFor({
         summary: `${commands.filter((command) => command.status === "allowed").length} allowed / ${commands.filter((command) => command.status === "blocked").length} blocked commands.`
       },
       {
+        id: "security-classifier",
+        status: blockedSecurityCommands === 0 ? "pass" : "block",
+        summary: `${blockedSecurityCommands} command(s) blocked by the security classifier.`
+      },
+      {
         id: "path-safety",
         status: hasUnsafePath ? "block" : "pass",
         summary: hasUnsafePath ? "One or more artifact paths are unsafe." : "Artifact paths stay relative and scoped."
@@ -287,7 +329,8 @@ function decisionFor({
   blockedCommands,
   unsafePaths,
   missingBundleSessions,
-  extraBundleSessions
+  extraBundleSessions,
+  blockedSecurityCommands
 }: {
   selfTest: CodingAgentRunnerSelfTest;
   readyTasks: number;
@@ -296,8 +339,9 @@ function decisionFor({
   unsafePaths: number;
   missingBundleSessions: number;
   extraBundleSessions: number;
+  blockedSecurityCommands: number;
 }): CodingAgentSandboxRunnerPreflightDecision {
-  if (blockedTasks > 0 || blockedCommands > 0 || unsafePaths > 0 || missingBundleSessions > 0 || extraBundleSessions > 0) {
+  if (blockedTasks > 0 || blockedCommands > 0 || blockedSecurityCommands > 0 || unsafePaths > 0 || missingBundleSessions > 0 || extraBundleSessions > 0) {
     return "blocked";
   }
   if (selfTest.decision !== "self-test-ready" || readyTasks === 0) return "needs-review";

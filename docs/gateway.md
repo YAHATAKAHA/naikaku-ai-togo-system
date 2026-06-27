@@ -1005,6 +1005,10 @@ Consumes a runner invocation package and audits whether the package is acceptabl
     "schema": "naikaku.coding-agent-runner-invocation-package.v1",
     "decision": "package-ready",
     "items": []
+  },
+  "sandboxPolicy": {
+    "killSwitchArmed": true,
+    "blockedActions": ["send_email", "purchase", "delete_remote", "deploy_production"]
   }
 }
 ```
@@ -1021,7 +1025,8 @@ Response:
     "invocationFiles": 8,
     "completedCommandResults": 0,
     "unsafePaths": 0,
-    "sourceBlockedChecks": 0
+    "sourceBlockedChecks": 0,
+    "blockedSecurityClassifications": 0
   },
   "honestyClaim": {
     "level": "runner-invocation-intake-audit",
@@ -1030,7 +1035,7 @@ Response:
 }
 ```
 
-Accepted intakes require readable invocation file references, safe prompt, receipt, transcript, and evidence paths, pending command contracts with null exit codes, receipt-return instructions, stop conditions, and no inherited blocked checks. Held or production-evidence-held tasks remain visible but must receive zero accepted intakes.
+Accepted intakes require readable invocation file references, safe prompt, receipt, transcript, and evidence paths, pending command contracts with null exit codes, receipt-return instructions, stop conditions, no inherited blocked checks, and zero blocked security classifications. Held or production-evidence-held tasks remain visible but must receive zero accepted intakes.
 
 ### `POST /v1/development/coding-briefs/runner-self-test`
 
@@ -1083,6 +1088,10 @@ Consumes a runner self-test plus the matching session bundle and checks whether 
     "schema": "naikaku.coding-agent-session-bundle.v1",
     "decision": "ready",
     "sessions": []
+  },
+  "sandboxPolicy": {
+    "killSwitchArmed": true,
+    "blockedActions": ["send_email", "purchase", "delete_remote", "deploy_production"]
   }
 }
 ```
@@ -1100,6 +1109,7 @@ Response:
     "blockedTasks": 0,
     "allowedCommands": 16,
     "blockedCommands": 0,
+    "blockedSecurityCommands": 0,
     "expectedProcessExecutions": 2
   },
   "honestyClaim": {
@@ -1108,7 +1118,7 @@ Response:
 }
 ```
 
-A `ready` preflight means the inputs are eligible for the local sandbox runner. It still does not prove feature implementation and does not replace the executable runner report, receipt review, artifact audit, or production evidence.
+A `ready` preflight means the inputs are eligible for the local sandbox runner. Command allowlisting is not sufficient by itself: the preflight also applies the local security classifier, so classifier-blocked Git, deploy, localhost/control-plane, metadata, credential, or external-send command contracts keep the preflight blocked. It still does not prove feature implementation and does not replace the executable runner report, receipt review, artifact audit, or production evidence.
 
 ### `POST /v1/development/coding-briefs/sandbox-runner`
 
@@ -1129,6 +1139,10 @@ If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
     "schema": "naikaku.coding-agent-session-bundle.v1",
     "decision": "ready",
     "sessions": []
+  },
+  "sandboxPolicy": {
+    "killSwitchArmed": true,
+    "blockedActions": ["send_email", "purchase", "delete_remote", "deploy_production"]
   },
   "timeoutMs": 120000
 }

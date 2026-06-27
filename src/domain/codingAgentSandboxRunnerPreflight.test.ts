@@ -37,6 +37,7 @@ describe("coding agent sandbox runner preflight", () => {
     expect(preflight.decision).toBe("ready");
     expect(preflight.summary.readyTasks).toBe(selfTest.summary.wouldRun);
     expect(preflight.summary.blockedCommands).toBe(0);
+    expect(preflight.summary.blockedSecurityCommands).toBe(0);
     expect(preflight.summary.allowedCommands).toBe(selfTest.summary.pendingCommands);
     expect(preflight.summary.expectedProcessExecutions).toBe(2);
     expect(preflight.honestyClaim.claim).toContain("does not execute commands");
@@ -58,6 +59,25 @@ describe("coding agent sandbox runner preflight", () => {
     expect(preflight.items.every((item) =>
       item.commands.every((command) => command.status === "blocked")
     )).toBe(true);
+  });
+
+  it("blocks classifier-denied commands even if they are mistakenly allowlisted", () => {
+    const bundle = defaultBundle();
+    const selfTest = structuredClone(defaultSelfTest(bundle));
+    selfTest.items[0].commands[0].command = "git push origin main";
+    const preflight = buildCodingAgentSandboxRunnerPreflight({
+      selfTest,
+      bundle,
+      commandAllowlist: ["git push origin main", "npm run build", "npm run test"]
+    });
+    const firstCommand = preflight.items[0].commands[0];
+
+    expect(preflight.decision).toBe("blocked");
+    expect(preflight.summary.blockedSecurityCommands).toBe(1);
+    expect(firstCommand.status).toBe("blocked");
+    expect(firstCommand.securityDecision).toBe("blocked");
+    expect(firstCommand.securityFindings).toContain("destructive-action");
+    expect(preflight.items[0].checks.find((check) => check.id === "security-classifier")?.status).toBe("block");
   });
 
   it("blocks mismatched self-test and bundle inputs", () => {

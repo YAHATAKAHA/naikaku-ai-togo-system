@@ -37,6 +37,7 @@ describe("coding agent runner intake audit", () => {
     expect(audit.summary.completedCommandResults).toBe(0);
     expect(audit.summary.sourceBlockedChecks).toBe(0);
     expect(audit.summary.unsafePaths).toBe(0);
+    expect(audit.summary.blockedSecurityClassifications).toBe(0);
     expect(audit.items.every((item) => item.intakeStatus === "accepted-for-runner")).toBe(true);
     expect(serializeCodingAgentRunnerIntakeAuditMarkdown(audit)).toContain("Coding Agent Runner Intake Audit");
     expect(audit.honestyClaim.limitations.join(" ")).toContain("does not read prompt file contents");
@@ -82,6 +83,21 @@ describe("coding agent runner intake audit", () => {
     expect(firstItem.checks.find((check) => check.id === "invocation-file-path")?.status).toBe("block");
     expect(firstItem.checks.find((check) => check.id === "pending-command-contract")?.status).toBe("block");
     expect(firstItem.checks.find((check) => check.id === "no-real-execution")?.status).toBe("block");
+  });
+
+  it("blocks dangerous pending command contracts with the security classifier", () => {
+    const invocationPackage = defaultInvocationPackage();
+    const tampered = structuredClone(invocationPackage) as CodingAgentRunnerInvocationPackage;
+    tampered.items[0].commands[0].command = "git push origin main";
+
+    const audit = buildCodingAgentRunnerIntakeAudit({ invocationPackage: tampered });
+    const firstItem = audit.items[0];
+
+    expect(audit.decision).toBe("blocked");
+    expect(audit.summary.blockedSecurityClassifications).toBe(1);
+    expect(firstItem.intakeStatus).toBe("blocked");
+    expect(firstItem.checks.find((check) => check.id === "security-classifier")?.status).toBe("block");
+    expect(firstItem.checks.find((check) => check.id === "security-classifier")?.summary).toContain("blocked security");
   });
 });
 

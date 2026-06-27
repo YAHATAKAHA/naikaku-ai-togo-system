@@ -2777,13 +2777,18 @@ export function App() {
   }) {
     let preflight = buildCodingAgentSandboxRunnerPreflight({
       selfTest: runnerSelfTest,
-      bundle
+      bundle,
+      sandboxPolicy: workspace.sandboxPolicy
     });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
 
     try {
-      preflight = await createCodingAgentSandboxRunnerPreflightViaGateway(runnerSelfTest, bundle);
+      preflight = await createCodingAgentSandboxRunnerPreflightViaGateway(
+        runnerSelfTest,
+        bundle,
+        workspace.sandboxPolicy
+      );
       source = "gateway";
     } catch (error) {
       gatewayError = error instanceof Error ? error.message : "unknown";
@@ -2929,7 +2934,11 @@ export function App() {
         return;
       }
 
-      const result = await runCodingAgentSandboxRunnerViaGateway(codingAgentRunnerSelfTest, codingAgentSessionBundle);
+      const result = await runCodingAgentSandboxRunnerViaGateway(
+        codingAgentRunnerSelfTest,
+        codingAgentSessionBundle,
+        workspace.sandboxPolicy
+      );
 
       setCodingAgentSandboxRunnerPreflight(result.preflight);
       createCodingAgentSandboxRunnerPreflightDownload(result.preflight);
@@ -3082,13 +3091,17 @@ export function App() {
     }
     let runnerIntake = buildCodingAgentRunnerIntakeAudit({
       invocationPackage: runnerInvocation,
+      sandboxPolicy: workspace.sandboxPolicy,
       generatedAt: runnerInvocation.generatedAt
     });
     let runnerIntakeSource: "gateway" | "local" = "local";
     let runnerIntakeGatewayError: string | null = null;
 
     try {
-      runnerIntake = await createCodingAgentRunnerIntakeViaGateway(runnerInvocation);
+      runnerIntake = await createCodingAgentRunnerIntakeViaGateway(
+        runnerInvocation,
+        workspace.sandboxPolicy
+      );
       runnerIntakeSource = "gateway";
     } catch (error) {
       runnerIntakeGatewayError = error instanceof Error ? error.message : "unknown";
