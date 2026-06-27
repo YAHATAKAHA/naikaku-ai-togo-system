@@ -1,6 +1,12 @@
 # Naikaku AI Togo System
 
-Japan-born multi-model AI cabinet system for planning, execution, critique, supervision, scoring, sandboxed computer use, and iterative refinement.
+Japan-born multi-model AI cabinet workbench for governed planning, coding runners, sandboxed execution, critique, supervision, scoring, and evidence-based iteration.
+
+Naikaku AI Togo System is maintained by **合同会社EMYSTI** ([www.emysti.net](https://www.emysti.net)), a Japan-based company building AI systems, product infrastructure, and cross-border services connecting Japan and East Asia.
+
+**License:** source-available for noncommercial use under the [PolyForm Noncommercial License 1.0.0](./LICENSE). Personal study, noncommercial research, hobby use, and noncommercial self-hosting are allowed. Commercial use, commercial modification, paid hosting/SaaS, resale, integration into commercial products, or client delivery requires separate written permission from 合同会社EMYSTI. See [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md) and [NOTICE](./NOTICE).
+
+This repository is public source, but it is **not OSI Open Source** because commercial use is restricted. That is intentional: we want developers to inspect, learn from, test, and noncommercially extend the system, while commercial adaptation remains licensed.
 
 Naikaku is an operator workbench for teams that want multiple AI roles to cooperate like a cabinet: one mission enters, specialized ministers reason over it, controlled tools execute it, auditors challenge it, and a scoring office decides whether the result is ready or needs another cycle.
 
@@ -71,6 +77,27 @@ This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement
 6. Programmable under governance. Cabinet members can produce Codex-like coding briefs and consume completion receipts, but coding-agent work must move through sandbox boundaries, receipts, local artifact fingerprints, and release gates before the board marks anything complete.
 7. Craft matters. The system should feel deliberate, readable, inspectable, and calm under pressure.
 
+## License And Commercial Use
+
+Naikaku is published for noncommercial use under the PolyForm Noncommercial License 1.0.0.
+
+Allowed without a commercial agreement:
+
+- personal learning, research, experiments, and hobby projects;
+- noncommercial self-hosting and evaluation;
+- noncommercial forks and modifications that preserve the license and required notice;
+- educational or public-interest research use covered by the license.
+
+Requires written commercial permission from 合同会社EMYSTI:
+
+- paid SaaS or hosted access;
+- integration into a commercial AI agent, automation, consulting, or developer-tool product;
+- modifications or deployments delivered to a client;
+- resale, managed service operation, or commercial support built around this code;
+- internal business use where the system supports commercial operations.
+
+This is a professional public-source release, not a waiver of commercial rights. Contact 合同会社EMYSTI through [www.emysti.net](https://www.emysti.net) for commercial licensing.
+
 ## Quick Start
 
 ```bash
@@ -79,6 +106,8 @@ npm run dev
 ```
 
 Then open the local Vite URL and try the default mission. The center column now starts with the Engineering Launchpad: use "Go to input" to edit the mission, "Check runners" to detect local command-line adapters, "Split by cabinet" to create supervised work, "Prepare agents" to build the coding-agent runner package, "Check permission" to preflight Mac-local execution, and "Run local sandbox" after the gateway is running. Use the right inspector to change role provider settings.
+
+For a public-source verification run that does not require paid model credentials:
 
 To answer "does this actually automate anything?" from a fresh checkout, run the open-source MVP check first:
 
@@ -162,7 +191,7 @@ For the local gate intended for GitHub Actions and pull request review:
 npm run ci:open-source
 ```
 
-The workflow template is saved at `docs/ci/open-source-mvp-ci.yml`. Copy it to `.github/workflows/ci.yml` with a GitHub token that has `workflow` scope when you are ready to enable repository Actions.
+The GitHub Actions workflow template is saved at `docs/ci/open-source-mvp-ci.yml`. Copy it to `.github/workflows/ci.yml` with a GitHub token that has `workflow` scope when you are ready to enforce this gate automatically.
 
 To build a local wrapper kit for an external CLI runner:
 
@@ -466,4 +495,8 @@ Raw provider API keys are not persisted by the frontend. The current workbench a
 
 ## License
 
-Private repository. License decision pending.
+Naikaku AI Togo System is source-available for noncommercial use under the [PolyForm Noncommercial License 1.0.0](./LICENSE).
+
+Required notice: Copyright 2026 合同会社EMYSTI (https://www.emysti.net).
+
+Commercial use, commercial modification, paid hosting/SaaS, resale, integration into commercial products, or client delivery requires a separate written commercial license from 合同会社EMYSTI. See [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md).

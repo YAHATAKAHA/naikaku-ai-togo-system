@@ -2,6 +2,12 @@
 
 Naikaku is organized so teams can develop roles, providers, sandboxes, memory, and UI in parallel without stepping on each other.
 
+## License Expectations
+
+By contributing, you agree that your contribution may be distributed as part of Naikaku AI Togo System under the repository license: PolyForm Noncommercial License 1.0.0, with separate commercial licensing controlled by 合同会社EMYSTI.
+
+Do not contribute code, prompts, assets, model outputs, or third-party snippets unless you have the right to submit them under these terms.
+
 ## Local Setup
 
 ```bash

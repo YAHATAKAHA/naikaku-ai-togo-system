@@ -1,4 +1,4 @@
-name: Open Source MVP CI
+name: Public Source MVP CI
 
 "on":
   push:
@@ -31,5 +31,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run open-source CI gate
+      - name: Run public-source CI gate
         run: npm run ci:open-source
