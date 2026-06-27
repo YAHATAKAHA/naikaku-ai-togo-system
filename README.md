@@ -8,6 +8,12 @@ Naikaku AI Togo System is maintained by **合同会社EMYSTI** ([www.emysti.net]
 
 This repository is public source, but it is **not OSI Open Source** because commercial use is restricted. That is intentional: we want developers to inspect, learn from, test, and noncommercially extend the system, while commercial adaptation remains licensed.
 
+## Repository Boundary
+
+This repository must stay safe to clone, fork, package, and publish. It contains the Naikaku product source, tests, fixtures, and public technical documentation. It does **not** contain website source, Nginx/Certbot/cloud deployment files, EMYSTI AI knowledge-base files, server backups, private business notes, credentials, cookies, raw environment dumps, or customer data.
+
+The public product page is linked below, but its website and deployment source are intentionally maintained outside this repository. See [PUBLIC-SOURCE-SCOPE.md](./PUBLIC-SOURCE-SCOPE.md) before adding files.
+
 Naikaku is an operator workbench for teams that want multiple AI roles to cooperate like a cabinet: one mission enters, specialized ministers reason over it, controlled tools execute it, auditors challenge it, and a scoring office decides whether the result is ready or needs another cycle.
 
 The product is not meant to make operators babysit every automation prompt. Its job is to turn annoying confirmations and single-agent drift into a cabinet protocol: one role proposes, another implements, critics and supervisors can object with evidence, and the cabinet vote decides whether a governed runner may continue. Human approval is reserved for genuinely high-impact actions such as desktop permissions, external sends, Git push, deploy, secrets, purchases, or broad host control. Routine low-risk progress should keep moving while transcripts, receipts, and artifact audits stay attached.

@@ -4,6 +4,16 @@ dist
 output/
 .env
 .env.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+.keys/
+deploy/
+infra/private/
+site/
 .DS_Store
 *.log
 coverage

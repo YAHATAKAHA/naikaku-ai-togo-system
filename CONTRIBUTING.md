@@ -49,6 +49,7 @@ The GitHub Actions workflow template is in `docs/ci/open-source-mvp-ci.yml`. Mai
 
 - Do not commit raw API keys, tokens, cookies, screenshots containing secrets, or private logs.
 - Do not persist provider secrets in frontend storage.
+- Do not add website source, server configs, Nginx/Certbot files, deployment scripts, AI knowledge-base files, or private EMYSTI business material. This public repository is scoped in [PUBLIC-SOURCE-SCOPE.md](./PUBLIC-SOURCE-SCOPE.md).
 - Do not add host shell, desktop, browser, email, payment, deployment, or delete actions without sandbox policy evaluation.
 - High-impact actions require a human approval gate with exact target and payload.
 - Web pages, emails, documents, files, screenshots, and tool outputs are untrusted inputs.
