@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 interface OpenSourceMvpCheckOptions {
@@ -14,9 +14,15 @@ interface CheckStep {
   command: string;
   args: string[];
   proves: string;
+  env?: Record<string, string>;
 }
 
-interface CheckResult extends CheckStep {
+interface CheckResult {
+  id: string;
+  label: string;
+  command: string;
+  args: string[];
+  proves: string;
   commandLine: string;
   exitCode: number;
   expectedExitCode: number;
@@ -33,14 +39,60 @@ interface OpenSourceMvpCheckSummary {
     buildPassed: boolean;
     targetedTestsPassed: boolean;
     gatewayAutoWorkPassed: boolean;
+    gatewayEvidenceVerified: boolean;
+    configuredPresetBridgePassed: boolean;
+    configuredPresetEvidenceVerified: boolean;
     fixtureCodingLoopPassed: boolean;
+    fixturePatchVerified: boolean;
     allPassed: boolean;
   };
   evidence: {
     gatewayAutoWorkSummary: string;
+    configuredPresetBridgeSummary: string;
     fixtureCodingLoopSummary: string;
+    gatewayAutoWork: GatewayAutoWorkEvidence;
+    configuredPresetBridge: ConfiguredPresetBridgeEvidence;
+    fixtureCodingLoop: FixtureCodingLoopEvidence;
   };
   claimBoundary: string[];
+}
+
+interface GatewayAutoWorkEvidence {
+  summaryReadable: boolean;
+  preset: string | null;
+  mode: string | null;
+  importedReceipts: number;
+  acceptedEvidence: number;
+  verifiedArtifactPaths: number;
+  checksPass: number;
+  checksFail: number;
+}
+
+interface FixtureCodingLoopEvidence {
+  summaryReadable: boolean;
+  changedFile: string | null;
+  baselineTestExitCode: number | null;
+  finalTestExitCode: number | null;
+  receiptDecision: string | null;
+  evidenceDecision: string | null;
+  artifactAuditDecision: string | null;
+  verifiedArtifactPaths: number;
+  worktreeChangedFiles: number;
+  failedTestRejected: boolean;
+  cleanWorktreeClaimRejected: boolean;
+}
+
+interface ConfiguredPresetBridgeEvidence {
+  summaryReadable: boolean;
+  runnerPreset: string | null;
+  mode: string | null;
+  adapterId: string | null;
+  adapterCompletedJobs: number;
+  importedReceipts: number;
+  acceptedEvidence: number;
+  verifiedArtifactPaths: number;
+  adapterReviewDecision: string | null;
+  allChecksPassed: boolean;
 }
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -94,6 +146,27 @@ function buildSteps({
   outputDir: string;
   timeoutMs: number;
 }): CheckStep[] {
+  const configuredPresetWorktree = relativePath(path.join(outputDir, "configured-preset-bridge", "worktree"));
+  const configuredPresetEnv = JSON.stringify([
+    {
+      id: "fixture-configured",
+      label: "Configured fixture runner",
+      adapterId: "openhands-coding-agent",
+      command: "tsx",
+      args: [
+        "scripts/engineering-fixture-external-runner.ts",
+        "--job",
+        "{jobPath}",
+        "--worktree",
+        configuredPresetWorktree,
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z"
+      ],
+      commandCandidates: ["tsx"],
+      nextAction: "Run the fixture runner through the configured preset path."
+    }
+  ]);
+
   return [
     {
       id: "build",
@@ -133,6 +206,33 @@ function buildSteps({
       proves: "The local gateway can accept a mission through /v1/engineering/auto-work, run the fixture adapter, import a receipt, and audit evidence/artifacts."
     },
     {
+      id: "configured-preset-bridge",
+      label: "Configured CLI preset bridge",
+      command: npmCommand,
+      args: [
+        "run",
+        "engineering:auto-work",
+        "--",
+        "--mission",
+        "Configured preset smoke: launch a fixed CLI adapter and import receipt",
+        "--adapter-ready",
+        "--runner-preset",
+        "fixture-configured",
+        "--out",
+        path.join(outputDir, "configured-preset-bridge"),
+        "--worktree",
+        configuredPresetWorktree,
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z",
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      env: {
+        NAIKAKU_ENGINEERING_RUNNER_PRESETS: configuredPresetEnv
+      },
+      proves: "A server-style configured preset id can launch a fixed local CLI adapter without accepting arbitrary browser shell input."
+    },
+    {
       id: "fixture-coding-loop",
       label: "Fixture coding-agent engineering loop",
       command: npmCommand,
@@ -154,7 +254,10 @@ function runStep(step: CheckStep): CheckResult {
   const startedAt = Date.now();
   const result = spawnSync(step.command, step.args, {
     cwd: process.cwd(),
-    env: process.env,
+    env: {
+      ...process.env,
+      ...step.env
+    },
     stdio: "inherit",
     shell: false
   });
@@ -166,7 +269,11 @@ function runStep(step: CheckStep): CheckResult {
   }
 
   return {
-    ...step,
+    id: step.id,
+    label: step.label,
+    command: step.command,
+    args: step.args,
+    proves: step.proves,
     commandLine: formatCommandLine(step.command, step.args),
     exitCode,
     expectedExitCode: 0,
@@ -185,12 +292,53 @@ function buildSummary({
   generatedAt: string;
 }): OpenSourceMvpCheckSummary {
   const byId = new Map(results.map((result) => [result.id, result]));
+  const gatewayEvidence = readGatewayEvidence(path.join(outputDir, "gateway-auto-work", "summary.json"));
+  const configuredPresetEvidence = readConfiguredPresetBridgeEvidence(path.join(
+    outputDir,
+    "configured-preset-bridge",
+    "summary.json"
+  ));
+  const fixtureEvidence = readFixtureEvidence(path.join(outputDir, "fixture-coding-loop", "summary.json"));
+  const gatewayEvidenceVerified = gatewayEvidence.summaryReadable &&
+    gatewayEvidence.preset === "fixture" &&
+    gatewayEvidence.mode === "external-run-attempted" &&
+    gatewayEvidence.importedReceipts >= 1 &&
+    gatewayEvidence.acceptedEvidence >= 1 &&
+    gatewayEvidence.verifiedArtifactPaths >= 1 &&
+    gatewayEvidence.checksFail === 0;
+  const configuredPresetEvidenceVerified = configuredPresetEvidence.summaryReadable &&
+    configuredPresetEvidence.runnerPreset === "fixture-configured" &&
+    configuredPresetEvidence.mode === "external-run-attempted" &&
+    configuredPresetEvidence.adapterId === "openhands-coding-agent" &&
+    configuredPresetEvidence.adapterCompletedJobs >= 1 &&
+    configuredPresetEvidence.importedReceipts >= 1 &&
+    configuredPresetEvidence.acceptedEvidence >= 1 &&
+    configuredPresetEvidence.verifiedArtifactPaths >= 1 &&
+    configuredPresetEvidence.adapterReviewDecision === "verified" &&
+    configuredPresetEvidence.allChecksPassed;
+  const fixturePatchVerified = fixtureEvidence.summaryReadable &&
+    fixtureEvidence.baselineTestExitCode === 1 &&
+    fixtureEvidence.finalTestExitCode === 0 &&
+    fixtureEvidence.receiptDecision === "verified" &&
+    fixtureEvidence.evidenceDecision === "accepted-for-handoff" &&
+    fixtureEvidence.artifactAuditDecision === "verified" &&
+    fixtureEvidence.verifiedArtifactPaths >= 4 &&
+    fixtureEvidence.worktreeChangedFiles >= 1 &&
+    fixtureEvidence.failedTestRejected &&
+    fixtureEvidence.cleanWorktreeClaimRejected;
   const checks = {
     buildPassed: byId.get("build")?.passed === true,
     targetedTestsPassed: byId.get("targeted-tests")?.passed === true,
     gatewayAutoWorkPassed: byId.get("gateway-auto-work")?.passed === true,
+    gatewayEvidenceVerified,
+    configuredPresetBridgePassed: byId.get("configured-preset-bridge")?.passed === true,
+    configuredPresetEvidenceVerified,
     fixtureCodingLoopPassed: byId.get("fixture-coding-loop")?.passed === true,
-    allPassed: results.every((result) => result.passed)
+    fixturePatchVerified,
+    allPassed: results.every((result) => result.passed) &&
+      gatewayEvidenceVerified &&
+      configuredPresetEvidenceVerified &&
+      fixturePatchVerified
   };
 
   return {
@@ -201,14 +349,121 @@ function buildSummary({
     checks,
     evidence: {
       gatewayAutoWorkSummary: relativePath(path.join(outputDir, "gateway-auto-work", "summary.json")),
-      fixtureCodingLoopSummary: relativePath(path.join(outputDir, "fixture-coding-loop", "summary.json"))
+      configuredPresetBridgeSummary: relativePath(path.join(outputDir, "configured-preset-bridge", "summary.json")),
+      fixtureCodingLoopSummary: relativePath(path.join(outputDir, "fixture-coding-loop", "summary.json")),
+      gatewayAutoWork: gatewayEvidence,
+      configuredPresetBridge: configuredPresetEvidence,
+      fixtureCodingLoop: fixtureEvidence
     },
     claimBoundary: [
-      "This check proves local build/test health, gateway auto-work plumbing, and a no-provider fixture coding loop.",
+      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, and a no-provider fixture coding loop.",
       "It does not prove a real OpenClaw/OpenHands/Hermes run, arbitrary desktop control, production deployment, Git push, or completion of real backlog work.",
       "External CLI runners should be invoked as governed adapters that return Naikaku receipts and evidence, not as unbounded host automation."
     ]
   };
+}
+
+function readGatewayEvidence(filePath: string): GatewayAutoWorkEvidence {
+  const parsed = readJsonIfExists<{
+    cases?: {
+      autoWorkPreset?: unknown;
+      autoWorkMode?: unknown;
+      importedReceipts?: unknown;
+      acceptedEvidence?: unknown;
+      verifiedArtifactPaths?: unknown;
+      checksPass?: unknown;
+      checksFail?: unknown;
+    };
+  }>(filePath);
+  const cases = parsed?.cases || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    preset: stringOrNull(cases.autoWorkPreset),
+    mode: stringOrNull(cases.autoWorkMode),
+    importedReceipts: numberOrZero(cases.importedReceipts),
+    acceptedEvidence: numberOrZero(cases.acceptedEvidence),
+    verifiedArtifactPaths: numberOrZero(cases.verifiedArtifactPaths),
+    checksPass: numberOrZero(cases.checksPass),
+    checksFail: numberOrZero(cases.checksFail)
+  };
+}
+
+function readConfiguredPresetBridgeEvidence(filePath: string): ConfiguredPresetBridgeEvidence {
+  const parsed = readJsonIfExists<{
+    runnerPreset?: unknown;
+    mode?: unknown;
+    adapterId?: unknown;
+    decisions?: {
+      adapterReview?: unknown;
+    };
+    counts?: {
+      adapterCompletedJobs?: unknown;
+      importedReceipts?: unknown;
+      acceptedEvidence?: unknown;
+      verifiedArtifactPaths?: unknown;
+    };
+    checks?: Record<string, unknown>;
+  }>(filePath);
+  const counts = parsed?.counts || {};
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    runnerPreset: stringOrNull(parsed?.runnerPreset),
+    mode: stringOrNull(parsed?.mode),
+    adapterId: stringOrNull(parsed?.adapterId),
+    adapterCompletedJobs: numberOrZero(counts.adapterCompletedJobs),
+    importedReceipts: numberOrZero(counts.importedReceipts),
+    acceptedEvidence: numberOrZero(counts.acceptedEvidence),
+    verifiedArtifactPaths: numberOrZero(counts.verifiedArtifactPaths),
+    adapterReviewDecision: stringOrNull(parsed?.decisions?.adapterReview),
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
+function readFixtureEvidence(filePath: string): FixtureCodingLoopEvidence {
+  const parsed = readJsonIfExists<{
+    fixture?: {
+      changedFile?: unknown;
+      baselineTestExitCode?: unknown;
+      finalTestExitCode?: unknown;
+    };
+    receipt?: {
+      decision?: unknown;
+    };
+    evidence?: {
+      decision?: unknown;
+    };
+    artifactAudit?: {
+      decision?: unknown;
+      verifiedPaths?: unknown;
+      worktreeChangedFiles?: unknown;
+    };
+    checks?: {
+      failedTestClaimRejected?: unknown;
+      cleanWorktreeClaimRejected?: unknown;
+    };
+  }>(filePath);
+
+  return {
+    summaryReadable: Boolean(parsed),
+    changedFile: stringOrNull(parsed?.fixture?.changedFile),
+    baselineTestExitCode: numberOrNull(parsed?.fixture?.baselineTestExitCode),
+    finalTestExitCode: numberOrNull(parsed?.fixture?.finalTestExitCode),
+    receiptDecision: stringOrNull(parsed?.receipt?.decision),
+    evidenceDecision: stringOrNull(parsed?.evidence?.decision),
+    artifactAuditDecision: stringOrNull(parsed?.artifactAudit?.decision),
+    verifiedArtifactPaths: numberOrZero(parsed?.artifactAudit?.verifiedPaths),
+    worktreeChangedFiles: numberOrZero(parsed?.artifactAudit?.worktreeChangedFiles),
+    failedTestRejected: parsed?.checks?.failedTestClaimRejected === true,
+    cleanWorktreeClaimRejected: parsed?.checks?.cleanWorktreeClaimRejected === true
+  };
+}
+
+function readJsonIfExists<T>(filePath: string): T | null {
+  if (!existsSync(filePath)) return null;
+  return JSON.parse(readFileSync(filePath, "utf8")) as T;
 }
 
 function parseArgs(args: string[]): OpenSourceMvpCheckOptions {
@@ -279,7 +534,8 @@ function printHelp() {
     "  -h, --help           Show this help.",
     "",
     "The check builds the app, runs targeted MVP tests, exercises the gateway auto-work endpoint,",
-    "and runs the fixture coding loop that patches a generated repository and verifies receipts/evidence."
+    "runs a configured CLI preset bridge, and runs the fixture coding loop that patches a generated",
+    "repository and verifies receipts/evidence."
   ].join("\n"));
 }
 
@@ -306,7 +562,11 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- build: ${summary.checks.buildPassed ? "pass" : "fail"}`,
     `- targeted tests: ${summary.checks.targetedTestsPassed ? "pass" : "fail"}`,
     `- gateway auto-work: ${summary.checks.gatewayAutoWorkPassed ? "pass" : "fail"}`,
+    `- gateway evidence: ${summary.checks.gatewayEvidenceVerified ? "pass" : "fail"}`,
+    `- configured preset bridge: ${summary.checks.configuredPresetBridgePassed ? "pass" : "fail"}`,
+    `- configured preset evidence: ${summary.checks.configuredPresetEvidenceVerified ? "pass" : "fail"}`,
     `- fixture coding loop: ${summary.checks.fixtureCodingLoopPassed ? "pass" : "fail"}`,
+    `- fixture patch evidence: ${summary.checks.fixturePatchVerified ? "pass" : "fail"}`,
     "",
     "## Cases",
     "",
@@ -323,7 +583,13 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     "## Evidence",
     "",
     `- gateway auto-work summary: ${summary.evidence.gatewayAutoWorkSummary}`,
+    `- gateway receipts/evidence/artifacts: ${summary.evidence.gatewayAutoWork.importedReceipts} / ${summary.evidence.gatewayAutoWork.acceptedEvidence} / ${summary.evidence.gatewayAutoWork.verifiedArtifactPaths}`,
+    `- configured preset bridge summary: ${summary.evidence.configuredPresetBridgeSummary}`,
+    `- configured preset jobs/receipts/evidence/artifacts: ${summary.evidence.configuredPresetBridge.adapterCompletedJobs} / ${summary.evidence.configuredPresetBridge.importedReceipts} / ${summary.evidence.configuredPresetBridge.acceptedEvidence} / ${summary.evidence.configuredPresetBridge.verifiedArtifactPaths}`,
     `- fixture coding loop summary: ${summary.evidence.fixtureCodingLoopSummary}`,
+    `- fixture changed file: ${summary.evidence.fixtureCodingLoop.changedFile || "unknown"}`,
+    `- fixture fail/pass exits: ${summary.evidence.fixtureCodingLoop.baselineTestExitCode ?? "unknown"} -> ${summary.evidence.fixtureCodingLoop.finalTestExitCode ?? "unknown"}`,
+    `- fixture receipt/evidence/audit: ${summary.evidence.fixtureCodingLoop.receiptDecision || "unknown"} / ${summary.evidence.fixtureCodingLoop.evidenceDecision || "unknown"} / ${summary.evidence.fixtureCodingLoop.artifactAuditDecision || "unknown"}`,
     "",
     "## Claim Boundary",
     "",
@@ -348,6 +614,18 @@ function quoteShellArg(value: string) {
     return value;
   }
   return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function stringOrNull(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
+function numberOrZero(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function numberOrNull(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 try {

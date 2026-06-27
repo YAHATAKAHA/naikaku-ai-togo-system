@@ -8,8 +8,12 @@ import {
 } from "../src/domain/externalRunnerAdapters";
 import type { SupportedLocale } from "../src/i18n";
 import { supportedLocales } from "../src/i18n";
+import {
+  buildEngineeringRunnerPresetRegistry,
+  findEngineeringRunnerPreset
+} from "../server/engineeringRunnerPresets";
 
-type RunnerPreset = "openhands" | "fixture";
+type RunnerPreset = string;
 
 interface EngineeringAutoWorkOptions {
   mission: string | null;
@@ -602,14 +606,37 @@ function parseArgs(args: string[]): EngineeringAutoWorkOptions {
 function applyRunnerPreset(options: EngineeringAutoWorkOptions) {
   if (!options.runnerPreset || options.commandOverride) return;
 
-  if (options.runnerPreset === "openhands") {
-    options.adapterId = "openhands-coding-agent";
-    options.commandOverride = "openhands";
-    options.argOverride = ["--always-approve", "-f", "{taskPath}"];
+  const registry = buildEngineeringRunnerPresetRegistry({
+    generatedAt: options.generatedAt
+  });
+  const preset = findEngineeringRunnerPreset(options.runnerPreset, registry);
+  if (!preset) {
+    throw new Error(
+      `Unsupported runner preset: ${options.runnerPreset}. Use prepared, fixture, openhands, or a configured preset id from NAIKAKU_ENGINEERING_RUNNER_PRESETS.`
+    );
+  }
+
+  options.runnerPreset = preset.id;
+
+  if (preset.kind === "prepared") {
+    options.commandOverride = null;
+    options.argOverride = [];
     return;
   }
 
-  options.adapterId = "openhands-coding-agent";
+  if (preset.kind === "external-command") {
+    if (!preset.adapterId || !preset.command) {
+      throw new Error(`Runner preset ${preset.id} is missing adapter command metadata.`);
+    }
+    options.adapterId = preset.adapterId;
+    options.commandOverride = preset.command;
+    options.argOverride = [...preset.args];
+    options.maxJobs = preset.maxJobs;
+    options.requireReceipt = preset.receiptRequired;
+    return;
+  }
+
+  options.adapterId = preset.adapterId || "openhands-coding-agent";
   options.adapterReady = true;
   const fixtureWorktree = path.join(options.outputDir, "fixture-worktree").replace(/\\/g, "/");
   if (!options.worktreeDirExplicit) {
@@ -644,8 +671,9 @@ function requireArgValue(args: string[], index: number, name: string) {
 }
 
 function parseRunnerPreset(value: string): RunnerPreset {
-  if (value === "openhands" || value === "fixture") return value;
-  throw new Error("Unsupported runner preset. Use one of: openhands, fixture.");
+  const preset = value.trim();
+  if (/^[a-z0-9][a-z0-9._-]{1,63}$/.test(preset)) return preset;
+  throw new Error("Unsupported runner preset id. Use 2-64 lowercase letters, numbers, dot, underscore, or hyphen.");
 }
 
 function parseAdapterId(value: string): ExternalRunnerAdapterId {
@@ -685,7 +713,7 @@ function printHelp() {
     "  --out <dir>                Output directory. Default: output/engineering-auto-work.",
     `  --adapter <id>             Adapter id. Default: openhands-coding-agent.`,
     "  --adapter-ready            Record selected adapter as installed, license-reviewed, and approved for this run.",
-    "  --runner-preset <name>      Command preset: openhands or fixture.",
+    "  --runner-preset <name>      Command preset: prepared, fixture, openhands, or configured preset id.",
     "  --command <cmd>            User-installed external runner CLI to invoke.",
     "  --arg <arg>                Repeatable runner arg. Supports {jobPath}, {taskPath}, {receiptDraftPath}, {sessionId}.",
     "  --max-jobs <number>        Max adapter jobs to launch. Default: 1.",
@@ -695,7 +723,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This command is the simplest non-interactive path from mission text to external CLI adapter execution and receipt review. It does not install tools, grant Mac control, commit, push, deploy, or call providers."
+    "This command is the simplest non-interactive path from mission text to external CLI adapter execution and receipt review. Configured presets are loaded from NAIKAKU_ENGINEERING_RUNNER_PRESETS or the local gateway preset file. It does not install tools, grant Mac control, commit, push, deploy, or call providers."
   ].join("\n"));
 }
 

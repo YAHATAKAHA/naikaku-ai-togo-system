@@ -84,7 +84,7 @@ To answer "does this actually automate anything?" from a fresh checkout, run the
 npm run open-source:mvp-check
 ```
 
-It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
 
 For the local JSON gateway:
 
@@ -149,6 +149,17 @@ NAIKAKU_ENGINEERING_RUNNER_PRESETS='[
 ```
 
 The same pattern can wrap `browser-use`, `npx playwright`, `hs`, MCP runners, or a Hermes-style runtime as long as the command can consume the scoped task file and write the expected Naikaku receipt. External presets require the Workbench adapter-ready checkbox by default, so installation, license review, and approval stay explicit.
+
+The command-line path uses the same preset registry. After defining `NAIKAKU_ENGINEERING_RUNNER_PRESETS` or enabling a gateway template, pass the preset id directly:
+
+```bash
+npm run engineering:auto-work -- \
+  --mission "Run the configured local coding adapter and return evidence" \
+  --adapter-ready \
+  --runner-preset openclaw-local
+```
+
+Naikaku expands that fixed preset server-side into `--adapter`, `--command`, and `--arg` values, so operators select a known runner id instead of pasting arbitrary shell into the browser.
 
 For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, external-runner handoff package, deterministic adapter self-test, local verification runner, and fixture-only coding loop:
 
@@ -271,7 +282,7 @@ npm run test      # run unit tests
 npm run preview   # preview the production build
 ```
 
-`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
+`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, a configured preset CLI bridge, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
 
 `npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, remediation plan, remediation issue drafts, and redaction checks. It exits non-zero for blockers and writes JSON, Markdown, issue draft, and reviewable `gh issue create` script artifacts under `output/rehearsal`. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 
