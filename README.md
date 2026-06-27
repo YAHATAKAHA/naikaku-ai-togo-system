@@ -113,18 +113,19 @@ Approval and evidence ledger files default to `.naikaku-data`; set `NAIKAKU_LEDG
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 
-For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, external-runner handoff package, local verification runner, and fixture-only coding loop:
+For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, external-runner handoff package, deterministic adapter self-test, local verification runner, and fixture-only coding loop:
 
 ```bash
 npm run engineering:mvp -- --mission "Implement the settings panel and run npm test"
 ```
 
-This writes `output/engineering-mvp/summary.md` and keeps the claim boundary explicit: local commands can run, a generated fixture workspace can be patched/tested automatically, and OpenHands-style handoff files can be prepared, but real product code changes and completion are not claimed unless a patch or external coding runner returns accepted evidence. To inspect or run each stage manually:
+This writes `output/engineering-mvp/summary.md` and keeps the claim boundary explicit: local commands can run, a generated fixture workspace can be patched/tested automatically, the adapter bridge can launch a deterministic external CLI runner, and OpenHands-style handoff files can be prepared, but real product code changes and completion are not claimed unless a patch or external coding runner returns accepted evidence. To inspect or run each stage manually:
 
 ```bash
 npm run engineering:adapters
 npm run engineering:simulate -- --mission "Implement the settings panel and run npm test"
 npm run engineering:handoff -- --input output/engineering-simulate --adapter openhands-coding-agent
+npm run engineering:adapter-self-test
 npm run engineering:run-local
 ```
 
@@ -156,6 +157,8 @@ npm run engineering:run-adapter -- \
 
 `engineering:run-adapter` writes stdout/stderr transcripts, one `naikaku.external-runner-adapter-execution-receipt.v1` per job, and a run summary. It also checks whether the external runner wrote the expected Naikaku session receipt after the command started, so stale receipts are not accepted. Add `--require-receipt` when a CI or local smoke should fail unless the external runner produced that receipt. A zero exit code is still not enough to mark work done; Naikaku still needs the returned receipt, implementation evidence, artifact audit, and release verification. `engineering:run-local` consumes the simulation package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. None of these commands controls macOS, commits, pushes, deploys, or sends messages. The fixture coding loop modifies only generated files under the output directory.
 
+`engineering:adapter-self-test` is the no-provider proof that the bridge is more than prompt copying: it creates a tiny fixture Git workspace, launches a deterministic fake external CLI runner through adapter job JSON, observes a failing test, patches the fixture, reruns the test, writes a Naikaku session receipt, and verifies receipt/evidence/artifact audit. It modifies only ignored output files and does not claim a real OpenHands model run.
+
 For desktop or browser control, Naikaku should use existing open-source runners as adapters instead of rebuilding the control layer. OpenHands/Codex-style coding agents should handle repository implementation; OpenClaw-style desktop control and Hammerspoon Mac automation should handle approved desktop actions; browser-use or Playwright should handle browser workflows; E2B-style desktops, MCP runners, and Hermes-style runtimes can plug in behind the same approval, allowlist, log, receipt, and artifact-audit contracts. Compatible licenses and attribution must be checked before vendoring code; the safer default is invoking user-installed runners through scoped adapter processes and importing their receipts.
 
 ## Scripts
@@ -176,7 +179,8 @@ npm run coding-agent:runner-lease # self-simulate exclusive runner task leasing 
 npm run coding-agent:sandbox-runner # execute allowlisted local verification commands and audit drill receipts
 npm run coding-agent:gateway-smoke # start local gateway and prove lease-gated sandbox execution over HTTP
 npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its test, and verify receipt/audit evidence
-npm run engineering:mvp # one-command adapter registry, engineering simulation, external handoff, local verification, fixture coding loop, and honest claim summary
+npm run engineering:mvp # one-command adapter registry, engineering simulation, external handoff, adapter self-test, local verification, fixture coding loop, and honest claim summary
+npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts

@@ -34,6 +34,7 @@ interface EngineeringMvpSummary {
     adapterRegistry: string;
     simulation: string;
     externalHandoff: string;
+    adapterSelfTest: string;
     localRunner: string;
     fixtureCoding: string;
     executionReceipt: string;
@@ -41,6 +42,7 @@ interface EngineeringMvpSummary {
   claims: {
     localRun: boolean;
     externalRunnerStarted: boolean;
+    adapterBridgeSelfTest: boolean;
     fixtureCodingLoop: boolean;
     codeChanged: boolean;
     completion: boolean;
@@ -57,6 +59,9 @@ interface EngineeringMvpSummary {
     handoffJobFiles: number;
     handoffReadyTaskFiles: number;
     handoffBlockers: number;
+    adapterSelfTestCompletedJobs: number;
+    adapterSelfTestReadyForReview: number;
+    adapterSelfTestFinalExitCode: number;
     fixtureBaselineExitCode: number;
     fixtureFinalExitCode: number;
     fixtureChangedFiles: number;
@@ -65,6 +70,7 @@ interface EngineeringMvpSummary {
   files: {
     adapterRegistry: string;
     externalHandoffSummary: string;
+    adapterSelfTestSummary: string;
     simulationSummary: string;
     localRunnerSummary: string;
     fixtureCodingSummary: string;
@@ -88,6 +94,7 @@ async function main() {
   const adapterDir = path.join(outputDir, "adapters");
   const simulationDir = path.join(outputDir, "simulate");
   const handoffDir = path.join(outputDir, "handoff");
+  const adapterSelfTestDir = path.join(outputDir, "adapter-self-test");
   const localRunDir = path.join(outputDir, "run-local");
   const fixtureCodingDir = path.join(outputDir, "fixture-coding");
   const mission = await missionFrom(options);
@@ -143,6 +150,21 @@ async function main() {
     ]
   }));
   commandRuns.push(await runCommand({
+    label: "engineering-adapter-self-test",
+    args: [
+      "exec",
+      "--",
+      "tsx",
+      "scripts/engineering-adapter-self-test.ts",
+      "--out",
+      relativePath(adapterSelfTestDir),
+      "--locale",
+      options.locale,
+      "--generated-at",
+      options.generatedAt
+    ]
+  }));
+  commandRuns.push(await runCommand({
     label: "engineering-run-local",
     args: [
       "exec",
@@ -191,6 +213,13 @@ async function main() {
     canStartExternalRunner: boolean;
     summary: { handoffTaskFiles: number; adapterJobFiles: number; readyTaskFiles: number; blockers: number };
   }>(path.join(handoffDir, "summary.json"));
+  const adapterSelfTest = await readJson<{
+    schema: string;
+    adapterRun: { decision: string; completed: number; readyForImplementationReview: number };
+    fixture: { finalTestExitCode: number };
+    checks: Record<string, boolean>;
+  }>(path.join(adapterSelfTestDir, "summary.json"));
+  const adapterBridgeSelfTest = Object.values(adapterSelfTest.checks).every(Boolean);
   const localRunner = await readJson<{
     schema: string;
     decisions: { runnerReport: string; executionReceipt: string };
@@ -225,6 +254,7 @@ async function main() {
       adapterRegistry: adapterRegistry.schema,
       simulation: `${simulation.decisions.selfSimulation}/${simulation.decisions.launchQueue}`,
       externalHandoff: externalHandoff.decision,
+      adapterSelfTest: adapterSelfTest.adapterRun.decision,
       localRunner: localRunner.decisions.runnerReport,
       fixtureCoding: `${fixtureCoding.receipt.decision}/${fixtureCoding.evidence.decision}/${fixtureCoding.artifactAudit.decision}`,
       executionReceipt: localRunner.decisions.executionReceipt
@@ -232,6 +262,7 @@ async function main() {
     claims: {
       localRun: localRunner.claims.localRun,
       externalRunnerStarted: false,
+      adapterBridgeSelfTest,
       fixtureCodingLoop,
       codeChanged: localRunner.claims.codeChanged,
       completion: localRunner.claims.completion,
@@ -248,6 +279,9 @@ async function main() {
       handoffJobFiles: externalHandoff.summary.adapterJobFiles,
       handoffReadyTaskFiles: externalHandoff.summary.readyTaskFiles,
       handoffBlockers: externalHandoff.summary.blockers,
+      adapterSelfTestCompletedJobs: adapterSelfTest.adapterRun.completed,
+      adapterSelfTestReadyForReview: adapterSelfTest.adapterRun.readyForImplementationReview,
+      adapterSelfTestFinalExitCode: adapterSelfTest.fixture.finalTestExitCode,
       fixtureBaselineExitCode: fixtureCoding.fixture.baselineTestExitCode,
       fixtureFinalExitCode: fixtureCoding.fixture.finalTestExitCode,
       fixtureChangedFiles: fixtureCoding.evidence.changedFiles,
@@ -256,15 +290,17 @@ async function main() {
     files: {
       adapterRegistry: relativePath(path.join(adapterDir, "adapter-registry.json")),
       externalHandoffSummary: relativePath(path.join(handoffDir, "summary.json")),
+      adapterSelfTestSummary: relativePath(path.join(adapterSelfTestDir, "summary.json")),
       simulationSummary: relativePath(path.join(simulationDir, "summary.json")),
       localRunnerSummary: relativePath(path.join(localRunDir, "summary.json")),
       fixtureCodingSummary: relativePath(path.join(fixtureCodingDir, "summary.json")),
       executionReceipt: relativePath(path.join(localRunDir, "execution-receipt.json"))
     },
     honestyClaim: {
-      claim: "This one-command MVP run prepares adapter contracts, prepares supervised engineering work, runs preflight-allowed local verification commands, runs a fixture-only coding loop, and summarizes what can be honestly claimed.",
+      claim: "This one-command MVP run prepares adapter contracts, prepares supervised engineering work, runs a deterministic external-CLI adapter self-test, runs preflight-allowed local verification commands, runs a fixture-only coding loop, and summarizes what can be honestly claimed.",
       limitations: [
         "It does not install or launch OpenClaw, OpenHands, browser-use, Playwright, Hammerspoon, E2B, MCP servers, or Hermes runtimes.",
+        "The adapter bridge self-test launches a deterministic local fixture runner through the same job bridge; it is not a real OpenHands model run.",
         "It writes an external runner handoff package for review, but externalRunnerStarted remains false until a user-installed adapter is actually launched and returns a receipt.",
         "It does not call model providers, control macOS, browse, commit, push, deploy, or send external messages.",
         "The fixture coding loop edits only generated files under the MVP output directory and is not real product backlog completion.",
@@ -378,6 +414,8 @@ function printSummary(summary: EngineeringMvpSummary) {
   console.log(`- adapters: ${summary.counts.adapters} (${summary.counts.availableAdapters} available now)`);
   console.log(`- external handoff: ${summary.decisions.externalHandoff}`);
   console.log(`- external runner started: ${summary.claims.externalRunnerStarted ? "yes" : "no"}`);
+  console.log(`- adapter bridge self-test: ${summary.claims.adapterBridgeSelfTest ? "yes" : "no"}`);
+  console.log(`- adapter self-test review-ready: ${summary.counts.adapterSelfTestReadyForReview}`);
   console.log(`- handoff task files: ${summary.counts.handoffTaskFiles}`);
   console.log(`- handoff job files: ${summary.counts.handoffJobFiles}`);
   console.log(`- commands executed: ${summary.counts.commandsExecuted}`);
@@ -466,7 +504,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This command chains engineering:adapters, engineering:simulate, engineering:handoff, engineering:run-local, and a fixture-only coding self-simulation. It writes reviewable external-runner handoff tasks but does not install external runners, control macOS, commit, push, deploy, or call model providers."
+    "This command chains engineering:adapters, engineering:simulate, engineering:handoff, engineering:adapter-self-test, engineering:run-local, and a fixture-only coding self-simulation. It writes reviewable external-runner handoff tasks and proves the adapter bridge with a deterministic fixture CLI runner, but does not install external runners, control macOS, commit, push, deploy, or call model providers."
   ].join("\n"));
 }
 
