@@ -50,6 +50,8 @@ interface ReviewAdapterRunSummary {
     bundleSchema: string;
     adapterRunSchema: string;
     adapterReadyForImplementationReview: number;
+    bundleSessions: number;
+    reviewedSessions: number;
   };
   adapterReceipts: {
     totalJobs: number;
@@ -113,14 +115,15 @@ async function main() {
 
   const bundle = await readJson<CodingAgentSessionBundle>(path.resolve(options.bundlePath));
   const adapterRun = await readJson<AdapterRunSummary>(path.resolve(options.adapterRunPath));
+  const reviewBundle = bundleForAdapterRun(bundle, adapterRun);
   const loaded = loadAdapterReceipts(adapterRun);
   const submittedReceipt = mergedReceipt({
-    bundle,
+    bundle: reviewBundle,
     loadedItems: loaded.items,
     generatedAt: options.generatedAt
   });
   const receiptReview = reviewCodingAgentSessionReceipt({
-    bundle,
+    bundle: reviewBundle,
     receipt: submittedReceipt,
     generatedAt: options.generatedAt
   });
@@ -143,6 +146,7 @@ async function main() {
   const summary = buildSummary({
     options,
     bundle,
+    reviewBundle,
     adapterRun,
     loaded,
     receiptReview,
@@ -164,6 +168,28 @@ async function main() {
   if (!Object.values(summary.checks).every(Boolean)) {
     process.exitCode = 2;
   }
+}
+
+function bundleForAdapterRun(
+  bundle: CodingAgentSessionBundle,
+  adapterRun: AdapterRunSummary
+): CodingAgentSessionBundle {
+  const sessionIds = new Set(adapterRun.jobs.map((job) => job.sessionId));
+  const sessions = bundle.sessions.filter((session) => sessionIds.has(session.id));
+  return {
+    ...bundle,
+    sessions,
+    summary: {
+      ...bundle.summary,
+      total: sessions.length,
+      ready: sessions.filter((session) => session.status === "ready-for-agent").length,
+      held: sessions.filter((session) => session.status !== "ready-for-agent").length,
+      humanApproval: sessions.filter((session) => session.sandboxContract.requiresHumanApproval).length,
+      productionHeld: sessions.filter((session) => session.status === "held-for-production-evidence").length,
+      verificationCommands: sessions.reduce((total, session) => total + session.verificationCommands.length, 0),
+      evidenceItems: sessions.reduce((total, session) => total + session.evidenceRequired.length, 0)
+    }
+  };
 }
 
 function loadAdapterReceipts(adapterRun: AdapterRunSummary) {
@@ -273,6 +299,7 @@ function mergedReceipt({
 function buildSummary({
   options,
   bundle,
+  reviewBundle,
   adapterRun,
   loaded,
   receiptReview,
@@ -283,6 +310,7 @@ function buildSummary({
 }: {
   options: EngineeringReviewAdapterRunOptions;
   bundle: CodingAgentSessionBundle;
+  reviewBundle: CodingAgentSessionBundle;
   adapterRun: AdapterRunSummary;
   loaded: ReturnType<typeof loadAdapterReceipts>;
   receiptReview: CodingAgentSessionReceipt;
@@ -313,7 +341,9 @@ function buildSummary({
     source: {
       bundleSchema: bundle.schema,
       adapterRunSchema: adapterRun.schema,
-      adapterReadyForImplementationReview: adapterRun.summary.readyForImplementationReview
+      adapterReadyForImplementationReview: adapterRun.summary.readyForImplementationReview,
+      bundleSessions: bundle.sessions.length,
+      reviewedSessions: reviewBundle.sessions.length
     },
     adapterReceipts: {
       totalJobs: adapterRun.jobs.length,

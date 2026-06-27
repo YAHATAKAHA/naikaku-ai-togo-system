@@ -53,6 +53,7 @@ This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement
 - Coding Agent Implementation Artifact Audit that checks local changed-file and transcript references, plus gateway-backed Git worktree status for changed-file claims, before accepted evidence can mark Development Board items done.
 - Coding Agent Implementation Evidence reconciliation that maps accepted, locally audited evidence back to source Development Board items and marks only matched, unblocked work as done.
 - Coding Agent Receipt Drill CLI that locally self-simulates a valid receipt, a mismatched receipt, and an out-of-scope sandbox-prefix receipt, proving accepted evidence can update Development Board items while unrelated or cross-session evidence stays blocked.
+- Engineering Auto Work CLI that takes one mission, prepares supervised runner tasks, optionally starts a user-installed adapter CLI, imports fresh receipts, and runs evidence/artifact audit in one non-interactive command.
 - GitHub Issue Drafts export that turns development work items into labeled, Markdown-ready issue payloads plus a reviewable `gh issue create` script for parallel implementation.
 - Memory Inbox for reviewable lessons, decisions, skill proposals, risks, and follow-up items before local persistence.
 - Workspace JSON import/export and recent run history for operator handoff.
@@ -120,6 +121,27 @@ npm run engineering:mvp -- --mission "Implement the settings panel and run npm t
 ```
 
 This writes `output/engineering-mvp/summary.md` and keeps the claim boundary explicit: local commands can run, a generated fixture workspace can be patched/tested automatically, the adapter bridge can launch a deterministic external CLI runner, and OpenHands-style handoff files can be prepared, but real product code changes and completion are not claimed unless a patch or external coding runner returns accepted evidence. To inspect or run each stage manually:
+
+For the shortest operator-facing path, use `engineering:auto-work`. With only a mission it prepares reviewable runner tasks without starting external tools:
+
+```bash
+npm run engineering:auto-work -- --mission "Implement the settings panel and run npm test"
+```
+
+To launch a user-installed command-line adapter and automatically import its returned receipt, add `--adapter-ready --command ...`. Keep `--max-jobs 1` until the adapter reliably writes Naikaku receipts:
+
+```bash
+npm run engineering:auto-work -- \
+  --mission "Implement the settings panel and run npm test" \
+  --adapter-ready \
+  --command openhands \
+  --arg --always-approve \
+  --arg -f \
+  --arg {taskPath} \
+  --worktree .
+```
+
+`--adapter-ready` is a non-interactive local assertion that the selected adapter is installed, license-reviewed, and approved for this run. It does not grant Mac desktop control, Git push, deploy, external sends, or host-secret access.
 
 ```bash
 npm run engineering:adapters
@@ -191,6 +213,7 @@ npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its te
 npm run engineering:mvp # one-command adapter registry, engineering simulation, external handoff, adapter self-test, local verification, fixture coding loop, and honest claim summary
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
+npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit

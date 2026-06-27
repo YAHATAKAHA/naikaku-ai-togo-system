@@ -23,6 +23,7 @@ output/engineering-adapter-self-test
 output/engineering-adapter-review
 output/engineering-adapter-run*
 output/engineering-adapters
+output/engineering-auto-work*
 output/engineering-handoff
 output/engineering-mvp
 output/engineering-simulate

@@ -21,6 +21,7 @@
     "coding-agent:engineering-sim": "tsx scripts/coding-agent-engineering-self-simulation.ts --out output/coding-agent-engineering-self-simulation",
     "engineering:adapter-self-test": "tsx scripts/engineering-adapter-self-test.ts --out output/engineering-adapter-self-test",
     "engineering:adapters": "tsx scripts/engineering-adapters.ts --out output/engineering-adapters",
+    "engineering:auto-work": "tsx scripts/engineering-auto-work.ts",
     "engineering:handoff": "tsx scripts/engineering-handoff.ts --input output/engineering-simulate --out output/engineering-handoff",
     "engineering:mvp": "tsx scripts/engineering-mvp.ts --out output/engineering-mvp",
     "engineering:review-adapter-run": "tsx scripts/engineering-review-adapter-run.ts",
