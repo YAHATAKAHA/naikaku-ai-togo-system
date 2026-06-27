@@ -40,6 +40,9 @@ describe("coding agent sandbox runner", () => {
       });
 
       expect(result.schema).toBe("naikaku.coding-agent-sandbox-runner-result.v1");
+      expect(result.preflight.schema).toBe("naikaku.coding-agent-sandbox-runner-preflight.v1");
+      expect(result.preflight.decision).toBe("blocked");
+      expect(result.preflight.summary.expectedProcessExecutions).toBe(0);
       expect(result.report.schema).toBe("naikaku.coding-agent-sandbox-runner.v1");
       expect(result.report.decision).toBe("blocked");
       expect(result.report.summary.processExecutions).toBe(0);
@@ -50,6 +53,37 @@ describe("coding agent sandbox runner", () => {
         item.commandResults.every((command) => command.status === "blocked")
       )).toBe(true);
       expect(result.honestyClaim.limitations.join(" ")).toContain("does not ask a model");
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns the server preflight with the executed sandbox result", async () => {
+    const originalCwd = process.cwd();
+    const tempDir = mkdtempSync(join(tmpdir(), "naikaku-sandbox-runner-"));
+    const lightweightCommand = "node -e \"console.log('naikaku lightweight runner ok')\"";
+
+    try {
+      process.chdir(tempDir);
+      const bundle = replaceBundleVerificationCommands(defaultBundle(), [lightweightCommand]);
+      const selfTest = defaultSelfTest(bundle);
+      const result = await runCodingAgentSandboxRunner({
+        selfTest,
+        bundle,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+        caseName: "unit-success",
+        commandAllowlist: [lightweightCommand]
+      });
+
+      expect(result.preflight.decision).toBe("ready");
+      expect(result.preflight.summary.allowedCommands).toBe(selfTest.summary.pendingCommands);
+      expect(result.preflight.summary.expectedProcessExecutions).toBe(1);
+      expect(result.report.decision).toBe("sandbox-runner-verified");
+      expect(result.report.summary.processExecutions).toBe(result.preflight.summary.expectedProcessExecutions);
+      expect(result.report.summary.commandResults).toBe(result.preflight.summary.expectedCommandResults);
+      expect(result.receiptReview.decision).toBe("verified");
+      expect(result.artifactAudit.decision).toBe("verified");
     } finally {
       process.chdir(originalCwd);
       rmSync(tempDir, { recursive: true, force: true });
@@ -107,4 +141,18 @@ function defaultBriefs() {
   const handoff = buildTeamHandoff({ workspace });
   const board = buildDevelopmentBoard({ handoff });
   return buildCodingAgentBriefs({ board, generatedAt: board.generatedAt });
+}
+
+function replaceBundleVerificationCommands(bundle: ReturnType<typeof defaultBundle>, commands: string[]) {
+  return {
+    ...bundle,
+    sessions: bundle.sessions.map((session) => ({
+      ...session,
+      verificationCommands: commands
+    })),
+    summary: {
+      ...bundle.summary,
+      verificationCommands: bundle.sessions.length * commands.length
+    }
+  };
 }

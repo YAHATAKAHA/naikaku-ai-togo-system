@@ -93,6 +93,21 @@ export function gatewayBaseUrl() {
   return (fromEnv || DEFAULT_GATEWAY_URL).replace(/\/$/, "");
 }
 
+async function gatewayErrorMessage(response: Response, fallback: string) {
+  const base = `${fallback} with HTTP ${response.status}`;
+  const body = await response.text();
+  if (!body) {
+    return base;
+  }
+
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown };
+    return typeof parsed.message === "string" && parsed.message ? `${base}: ${parsed.message}` : base;
+  } catch {
+    return `${base}: ${body}`;
+  }
+}
+
 export async function runCabinetViaGateway(
   workspace: CabinetWorkspace,
   mode: CabinetRunMode,
@@ -721,7 +736,7 @@ export async function runCodingAgentSandboxRunnerViaGateway(
   });
 
   if (!response.ok) {
-    throw new Error(`Gateway coding agent sandbox runner failed with HTTP ${response.status}`);
+    throw new Error(await gatewayErrorMessage(response, "Gateway coding agent sandbox runner failed"));
   }
 
   return (await response.json()) as CodingAgentSandboxRunnerResult;
@@ -742,7 +757,7 @@ export async function createCodingAgentSandboxRunnerPreflightViaGateway(
   });
 
   if (!response.ok) {
-    throw new Error(`Gateway coding agent sandbox runner preflight failed with HTTP ${response.status}`);
+    throw new Error(await gatewayErrorMessage(response, "Gateway coding agent sandbox runner preflight failed"));
   }
 
   return (await response.json()) as CodingAgentSandboxRunnerPreflight;

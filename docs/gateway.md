@@ -1039,6 +1039,8 @@ A `ready` preflight means the inputs are eligible for the local sandbox runner. 
 
 Consumes a ready runner self-test and the matching session bundle, then executes only the gateway's local sandbox-runner allowlist. Today that allowlist is `npm run test` and `npm run build`. The endpoint writes session-scoped transcripts, changed-file summary placeholders, evidence artifacts, a submitted receipt, receipt review, implementation evidence, and artifact audit. It does not call a model, implement backlog work, browse, control desktops, call MCP tools, call providers, deploy, commit, push, or claim production evidence.
 
+The execution route always reruns the sandbox runner preflight server-side before any command starts, even if the caller already used the preflight endpoint. If that server-side preflight is not `ready`, the route returns `409` with the preflight payload and does not execute commands. This prevents direct API callers from bypassing the Workbench preflight step.
+
 If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
 
 ```json
@@ -1057,11 +1059,30 @@ If `NAIKAKU_RUNNER_TOKEN` is set, this route requires runner authentication.
 }
 ```
 
+Blocked preflight response:
+
+```json
+{
+  "ok": false,
+  "message": "Sandbox runner preflight is not ready; execution was not started.",
+  "preflight": {
+    "schema": "naikaku.coding-agent-sandbox-runner-preflight.v1",
+    "decision": "blocked"
+  },
+  "gatewayRunnerId": "local-gateway",
+  "authMode": "development-open"
+}
+```
+
 Response:
 
 ```json
 {
   "schema": "naikaku.coding-agent-sandbox-runner-result.v1",
+  "preflight": {
+    "schema": "naikaku.coding-agent-sandbox-runner-preflight.v1",
+    "decision": "ready"
+  },
   "report": {
     "schema": "naikaku.coding-agent-sandbox-runner.v1",
     "mode": "local-sandbox-runner-drill",

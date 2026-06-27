@@ -3,7 +3,10 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { isSafeRelativeArtifactPath } from "../src/domain/codingAgentArtifactReferences";
-import { codingAgentSandboxRunnerAllowedCommands } from "../src/domain/codingAgentSandboxRunnerPreflight";
+import {
+  buildCodingAgentSandboxRunnerPreflight,
+  codingAgentSandboxRunnerAllowedCommands
+} from "../src/domain/codingAgentSandboxRunnerPreflight";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import {
@@ -16,6 +19,7 @@ import type {
   CodingAgentRunnerSelfTestItem,
   CodingAgentSandboxRunnerCommandResult,
   CodingAgentSandboxRunnerDecision,
+  CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerReport,
   CodingAgentSandboxRunnerReportItem,
   CodingAgentSandboxRunnerResult,
@@ -34,6 +38,7 @@ export interface RunCodingAgentSandboxRunnerInput {
   caseName?: string;
   timeoutMs?: number;
   commandAllowlist?: readonly string[];
+  preflight?: CodingAgentSandboxRunnerPreflight;
 }
 
 interface ExecutedCommand {
@@ -50,9 +55,16 @@ export async function runCodingAgentSandboxRunner({
   generatedAt = new Date().toISOString(),
   caseName = "gateway",
   timeoutMs = 120_000,
-  commandAllowlist = sandboxRunnerAllowedCommands
+  commandAllowlist = sandboxRunnerAllowedCommands,
+  preflight: suppliedPreflight
 }: RunCodingAgentSandboxRunnerInput): Promise<CodingAgentSandboxRunnerResult> {
   const allowedCommands = new Set(commandAllowlist);
+  const preflight = suppliedPreflight || buildCodingAgentSandboxRunnerPreflight({
+    selfTest,
+    bundle,
+    generatedAt,
+    commandAllowlist
+  });
   const runnableItems = selfTest.items.filter((item) => item.selfTestStatus === "would-run");
   const commandCache = new Map<string, ExecutedCommand>();
 
@@ -95,6 +107,7 @@ export async function runCodingAgentSandboxRunner({
   return {
     schema: "naikaku.coding-agent-sandbox-runner-result.v1",
     generatedAt,
+    preflight,
     report,
     submittedReceipt,
     receiptReview,

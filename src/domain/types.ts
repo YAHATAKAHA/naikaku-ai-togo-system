@@ -1928,6 +1928,7 @@ export interface CodingAgentSandboxRunnerReport {
 export interface CodingAgentSandboxRunnerResult {
   schema: "naikaku.coding-agent-sandbox-runner-result.v1";
   generatedAt: string;
+  preflight: CodingAgentSandboxRunnerPreflight;
   report: CodingAgentSandboxRunnerReport;
   submittedReceipt: CodingAgentSessionReceipt;
   receiptReview: CodingAgentSessionReceipt;

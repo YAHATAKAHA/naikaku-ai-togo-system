@@ -2825,6 +2825,8 @@ export function App() {
 
       const result = await runCodingAgentSandboxRunnerViaGateway(codingAgentRunnerSelfTest, codingAgentSessionBundle);
 
+      setCodingAgentSandboxRunnerPreflight(result.preflight);
+      createCodingAgentSandboxRunnerPreflightDownload(result.preflight);
       setCodingAgentSandboxRunnerReport(result.report);
       setCodingAgentSessionReceipt(result.receiptReview);
       createCodingAgentSandboxRunnerReportDownload(result.report);
@@ -2860,6 +2862,9 @@ export function App() {
           changedFileSummaries: result.report.summary.changedFileSummaries,
           evidenceArtifacts: result.report.summary.evidenceArtifacts,
           unsafePaths: result.report.summary.unsafePaths,
+          preflight: result.preflight.decision,
+          preflightExpectedProcessExecutions: result.preflight.summary.expectedProcessExecutions,
+          preflightAllowedCommands: result.preflight.summary.allowedCommands,
           receiptReview: result.receiptReview.decision,
           implementationEvidence: result.implementationEvidence.decision,
           artifactAudit: result.artifactAudit.decision,

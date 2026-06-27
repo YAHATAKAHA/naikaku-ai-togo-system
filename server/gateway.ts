@@ -833,10 +833,25 @@ const server = createServer(async (request, response) => {
         });
         return;
       }
+      const preflight: CodingAgentSandboxRunnerPreflight = buildCodingAgentSandboxRunnerPreflight({
+        selfTest: body.selfTest,
+        bundle: body.bundle
+      });
+      if (preflight.decision !== "ready") {
+        sendJson(response, 409, {
+          ok: false,
+          message: "Sandbox runner preflight is not ready; execution was not started.",
+          preflight,
+          gatewayRunnerId: auth.runnerId,
+          authMode: auth.mode
+        });
+        return;
+      }
       const result: CodingAgentSandboxRunnerResult = await runCodingAgentSandboxRunner({
         selfTest: body.selfTest,
         bundle: body.bundle,
-        timeoutMs: typeof body.timeoutMs === "number" ? body.timeoutMs : undefined
+        timeoutMs: typeof body.timeoutMs === "number" ? body.timeoutMs : undefined,
+        preflight
       });
       sendJson(response, 200, {
         ...result,
