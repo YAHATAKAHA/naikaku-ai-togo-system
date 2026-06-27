@@ -89,6 +89,13 @@ export interface EngineeringLaunchpadCopy {
   autoWorkSelfTesting: string;
   autoWorkCodexSmoke: string;
   autoWorkCodexSmoking: string;
+  guidedCycleRun: string;
+  guidedCycleRunning: string;
+  guidedCycleIdle: string;
+  guidedCycleStarting: string;
+  guidedCycleExecuting: string;
+  guidedCycleCompleted: (decision: string, outputDir: string) => string;
+  guidedCycleFailed: string;
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
   autoWorkOpenHandsNeedsReady: string;
@@ -547,6 +554,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "Codex に小工程を任せる",
       autoWorkCodexSmoking: "Codex 実行中",
+      guidedCycleRun: "投票して実行",
+      guidedCycleRunning: "会議と実行中",
+      guidedCycleIdle: "一括サイクルはまだ開始していません。",
+      guidedCycleStarting: "内閣で投票し、実行可否を決めています。",
+      guidedCycleExecuting: "内閣結果を受けて Codex 実行に進んでいます。",
+      guidedCycleCompleted: (decision, outputDir) =>
+        `一括サイクル完了: 内閣 ${decision}、実行証拠 ${outputDir}。`,
+      guidedCycleFailed: "一括サイクルは途中で停止しました。上の結果と証拠を確認してください。",
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
       autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
@@ -1014,6 +1029,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "Self-testing",
       autoWorkCodexSmoke: "Let Codex handle a tiny job",
       autoWorkCodexSmoking: "Codex running",
+      guidedCycleRun: "Vote and execute",
+      guidedCycleRunning: "Voting and running",
+      guidedCycleIdle: "The one-click cycle has not started yet.",
+      guidedCycleStarting: "The cabinet is voting before execution.",
+      guidedCycleExecuting: "Cabinet result is ready; starting the Codex execution proof.",
+      guidedCycleCompleted: (decision, outputDir) =>
+        `One-click cycle completed: cabinet ${decision}, evidence ${outputDir}.`,
+      guidedCycleFailed: "The one-click cycle stopped. Review the result and evidence above.",
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
       autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
@@ -1481,6 +1504,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自测中",
       autoWorkCodexSmoke: "让 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 执行中",
+      guidedCycleRun: "投票并执行",
+      guidedCycleRunning: "投票和执行中",
+      guidedCycleIdle: "一键循环还没有开始。",
+      guidedCycleStarting: "内阁正在投票，决定是否执行。",
+      guidedCycleExecuting: "内阁结果已出，正在启动 Codex 执行证明。",
+      guidedCycleCompleted: (decision, outputDir) =>
+        `一键循环完成：内阁 ${decision}，证据 ${outputDir}。`,
+      guidedCycleFailed: "一键循环中途停止。请查看上面的结果和证据。",
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
@@ -1948,6 +1979,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "讓 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 執行中",
+      guidedCycleRun: "投票並執行",
+      guidedCycleRunning: "投票和執行中",
+      guidedCycleIdle: "一鍵循環還沒有開始。",
+      guidedCycleStarting: "內閣正在投票，決定是否執行。",
+      guidedCycleExecuting: "內閣結果已出，正在啟動 Codex 執行證明。",
+      guidedCycleCompleted: (decision, outputDir) =>
+        `一鍵循環完成：內閣 ${decision}，證據 ${outputDir}。`,
+      guidedCycleFailed: "一鍵循環中途停止。請查看上面的結果和證據。",
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
@@ -2415,6 +2454,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "자체 테스트 중",
       autoWorkCodexSmoke: "Codex에 작은 작업 맡기기",
       autoWorkCodexSmoking: "Codex 실행 중",
+      guidedCycleRun: "투표 후 실행",
+      guidedCycleRunning: "투표 및 실행 중",
+      guidedCycleIdle: "원클릭 사이클은 아직 시작되지 않았습니다.",
+      guidedCycleStarting: "내각이 실행 전 투표 중입니다.",
+      guidedCycleExecuting: "내각 결과가 준비되어 Codex 실행 증명을 시작합니다.",
+      guidedCycleCompleted: (decision, outputDir) =>
+        `원클릭 사이클 완료: 내각 ${decision}, 증거 ${outputDir}.`,
+      guidedCycleFailed: "원클릭 사이클이 중간에 멈췄습니다. 위 결과와 증거를 확인하세요.",
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
       autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",

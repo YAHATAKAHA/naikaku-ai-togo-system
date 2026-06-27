@@ -81,6 +81,10 @@ interface EngineeringLaunchpadProps {
     message: string;
     result: EngineeringCodexSmokeGatewayResponse | null;
   };
+  guidedCycleState: {
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+  };
   runnerReadinessState: {
     status: "idle" | "loading" | "ready" | "error";
     message: string;
@@ -104,6 +108,7 @@ interface EngineeringLaunchpadProps {
   onRunAutoWork: () => void;
   onRunAutoWorkSelfTest: () => void;
   onRunCodexSmoke: () => void;
+  onRunGuidedCycle: () => void;
   onRunCabinet: () => void;
   onPrepareEngineeringPack: () => void;
   onRunPreflight: () => void;
@@ -141,6 +146,7 @@ export function EngineeringLaunchpad({
   autoWorkWorktree,
   autoWorkState,
   codexSmokeState,
+  guidedCycleState,
   runnerReadinessState,
   runnerPresets,
   runnerPresetTemplates,
@@ -157,6 +163,7 @@ export function EngineeringLaunchpad({
   onRunAutoWork,
   onRunAutoWorkSelfTest,
   onRunCodexSmoke,
+  onRunGuidedCycle,
   onRunCabinet,
   onPrepareEngineeringPack,
   onRunPreflight,
@@ -178,6 +185,11 @@ export function EngineeringLaunchpad({
   const autoWorkCounts = autoWorkSummary?.counts;
   const codexSmokeSummary = codexSmokeState.result?.summary;
   const codexSmokeChangedFiles = codexSmokeSummary?.files?.changedFiles?.length || 0;
+  const executionBusy =
+    autoWorkState.status === "running" ||
+    codexSmokeState.status === "running" ||
+    guidedCycleState.status === "running" ||
+    runStatus === "running";
   const runnerReadinessReport = runnerReadinessState.report;
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
@@ -332,15 +344,22 @@ export function EngineeringLaunchpad({
           <button
             type="button"
             onClick={onRunAutoWork}
-            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
+            disabled={executionBusy}
           >
             <Terminal size={15} /> {autoWorkState.status === "running" ? copy.autoWorkRunning : copy.autoWorkRun}
           </button>
           <button
             type="button"
+            onClick={onRunGuidedCycle}
+            disabled={executionBusy}
+          >
+            <PlayCircle size={15} /> {guidedCycleState.status === "running" ? copy.guidedCycleRunning : copy.guidedCycleRun}
+          </button>
+          <button
+            type="button"
             data-variant="secondary"
             onClick={onRunAutoWorkSelfTest}
-            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
+            disabled={executionBusy}
           >
             <FlaskConical size={15} /> {autoWorkState.status === "running" ? copy.autoWorkSelfTesting : copy.autoWorkSelfTest}
           </button>
@@ -348,13 +367,14 @@ export function EngineeringLaunchpad({
             type="button"
             data-variant="secondary"
             onClick={onRunCodexSmoke}
-            disabled={autoWorkState.status === "running" || codexSmokeState.status === "running" || runStatus === "running"}
+            disabled={executionBusy}
           >
             <Bot size={15} /> {codexSmokeState.status === "running" ? copy.autoWorkCodexSmoking : copy.autoWorkCodexSmoke}
           </button>
         </div>
         <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>
         <div className="engineering-auto-work-result">
+          <strong>{guidedCycleState.message || copy.guidedCycleIdle}</strong>
           <strong>{autoWorkState.message || copy.autoWorkIdle}</strong>
           {autoWorkState.result ? (
             <>

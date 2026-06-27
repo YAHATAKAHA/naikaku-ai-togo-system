@@ -381,6 +381,13 @@ export function App() {
     message: "",
     result: null
   });
+  const [engineeringGuidedCycleState, setEngineeringGuidedCycleState] = useState<{
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+  }>({
+    status: "idle",
+    message: ""
+  });
   const [engineeringRunnerReadinessState, setEngineeringRunnerReadinessState] = useState<{
     status: "idle" | "loading" | "ready" | "error";
     message: string;
@@ -1554,6 +1561,7 @@ export function App() {
           automationActions: result.run.automationActions?.length || 0
         }
       });
+      return result.run;
     } catch (error) {
       const fallbackRun = runCabinetMission(workspace);
       setRun(fallbackRun);
@@ -1577,6 +1585,7 @@ export function App() {
           gatewayError: error instanceof Error ? error.message : "unknown"
         }
       });
+      return fallbackRun;
     }
   }
 
@@ -4563,7 +4572,7 @@ export function App() {
         message: copy.engineeringLaunchpad.autoWorkMissionRequired,
         result: null
       });
-      return;
+      return null;
     }
 
     setEngineeringCodexSmokeState({
@@ -4602,6 +4611,7 @@ export function App() {
           finalExitCode: result.summary?.tests?.finalExitCode ?? null
         }
       });
+      return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setEngineeringCodexSmokeState({
@@ -4617,7 +4627,60 @@ export function App() {
           gatewayError: errorMessage
         }
       });
+      return null;
     }
+  }
+
+  async function runEngineeringGuidedCycleFromLaunchpad() {
+    const mission = workspace.mission.trim();
+
+    if (!mission) {
+      setEngineeringGuidedCycleState({
+        status: "error",
+        message: copy.engineeringLaunchpad.autoWorkMissionRequired
+      });
+      return;
+    }
+
+    setEngineeringGuidedCycleState({
+      status: "running",
+      message: copy.engineeringLaunchpad.guidedCycleStarting
+    });
+
+    const cabinetRun = await runCabinet();
+    setEngineeringGuidedCycleState({
+      status: "running",
+      message: copy.engineeringLaunchpad.guidedCycleExecuting
+    });
+
+    const codexSmoke = await runEngineeringCodexSmokeFromLaunchpad();
+    if (!codexSmoke?.ok) {
+      setEngineeringGuidedCycleState({
+        status: "error",
+        message: copy.engineeringLaunchpad.guidedCycleFailed
+      });
+      return;
+    }
+
+    setEngineeringGuidedCycleState({
+      status: "completed",
+      message: copy.engineeringLaunchpad.guidedCycleCompleted(
+        cabinetRun.score.decision,
+        codexSmoke.outputDir
+      )
+    });
+    recordAudit({
+      type: "development.engineering_guided_cycle.completed",
+      severity: "success",
+      summary: "Guided engineering cycle completed cabinet vote and governed Codex execution.",
+      runId: cabinetRun.id,
+      metadata: {
+        cabinetDecision: cabinetRun.score.decision,
+        codexOutputDir: codexSmoke.outputDir,
+        codexChecksPass: codexSmoke.checks.pass,
+        codexChecksFail: codexSmoke.checks.fail
+      }
+    });
   }
 
   async function refreshEngineeringRunnerReadinessFromLaunchpad() {
@@ -4849,6 +4912,7 @@ export function App() {
             autoWorkWorktree={engineeringAutoWorkWorktree}
             autoWorkState={engineeringAutoWorkState}
             codexSmokeState={engineeringCodexSmokeState}
+            guidedCycleState={engineeringGuidedCycleState}
             runnerReadinessState={engineeringRunnerReadinessState}
             runnerPresets={engineeringRunnerPresets}
             runnerPresetTemplates={engineeringRunnerPresetTemplates}
@@ -4865,6 +4929,7 @@ export function App() {
             onRunAutoWork={() => void runEngineeringAutoWorkFromLaunchpad()}
             onRunAutoWorkSelfTest={() => void runEngineeringFixtureSelfTestFromLaunchpad()}
             onRunCodexSmoke={() => void runEngineeringCodexSmokeFromLaunchpad()}
+            onRunGuidedCycle={() => void runEngineeringGuidedCycleFromLaunchpad()}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

@@ -180,6 +180,8 @@ Approval and evidence ledger files default to `.naikaku-data`; set `NAIKAKU_LEDG
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 
+For separated model roles, put provider keys in `.env.local` or the gateway host environment using the aliases from `.env.example`, then start `npm run gateway` and switch the Mission panel from `Dry-run` to `Live providers`. The gateway calls each enabled role through its own provider config and prompt: for example Prime Minister and Safety Auditor use OpenAI Responses by default, while other roles can use Anthropic, OpenRouter, Google, local, or custom OpenAI-compatible endpoints. This is the direct API path for "one task in, several supervised roles out"; the Engineering Launchpad's `Vote and execute` button can still stay in safe dry-run mode for public demos.
+
 To use the operator-facing web entry, run the local gateway and app, then use the Mac engineering launchpad panel:
 
 ```bash
@@ -187,7 +189,7 @@ npm run gateway
 npm run dev
 ```
 
-Enter the task in the engineering mission box, then click `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. Both paths write under `output/` and do not modify the main repository.
+Enter the task in the engineering mission box, then click `Vote and execute` to run the cabinet first and automatically continue into the governed Codex smoke. Use `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen without the cabinet step, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. These paths write under `output/` and do not modify the main repository.
 
 The browser calls the local gateway endpoint `/v1/engineering/auto-work` for fixture and preset runners, starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository.
 

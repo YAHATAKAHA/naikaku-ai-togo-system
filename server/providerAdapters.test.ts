@@ -84,4 +84,55 @@ describe("provider adapters", () => {
       model: defaultRoles[0].provider.model
     });
   });
+
+  it("keeps separated OpenAI role identities in consecutive provider calls", async () => {
+    const openAiRoles = defaultRoles.filter((role) => role.provider.provider === "openai").slice(0, 2);
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const fakeFetch = async (url: string | URL | Request, init?: RequestInit) => {
+      requests.push({ url: String(url), init });
+      return new Response(JSON.stringify({ output_text: `Artifact ${requests.length}` }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    };
+
+    await invokeRoleProvider({
+      role: openAiRoles[0],
+      mission: "Build the separated cabinet API proof",
+      context: [],
+      env: { [openAiRoles[0].provider.apiKeyAlias]: "test-secret" },
+      fetchImpl: fakeFetch as typeof fetch
+    });
+    await invokeRoleProvider({
+      role: openAiRoles[1],
+      mission: "Build the separated cabinet API proof",
+      context: [],
+      env: { [openAiRoles[1].provider.apiKeyAlias]: "test-secret" },
+      fetchImpl: fakeFetch as typeof fetch
+    });
+
+    expect(requests).toHaveLength(2);
+
+    const firstBody = JSON.parse(String(requests[0].init?.body)) as {
+      input: Array<{ role: string; content: string }>;
+    };
+    const secondBody = JSON.parse(String(requests[1].init?.body)) as {
+      input: Array<{ role: string; content: string }>;
+    };
+
+    expect(firstBody.input[0]).toEqual({
+      role: "developer",
+      content: openAiRoles[0].systemPrompt
+    });
+    expect(firstBody.input[1].content).toContain(
+      `Cabinet role: ${openAiRoles[0].name} / ${openAiRoles[0].ministry}`
+    );
+    expect(secondBody.input[0]).toEqual({
+      role: "developer",
+      content: openAiRoles[1].systemPrompt
+    });
+    expect(secondBody.input[1].content).toContain(
+      `Cabinet role: ${openAiRoles[1].name} / ${openAiRoles[1].ministry}`
+    );
+  });
 });
