@@ -1310,7 +1310,7 @@ For a reproducible local HTTP check, run:
 npm run coding-agent:gateway-smoke
 ```
 
-The smoke starts a temporary `127.0.0.1` gateway with synthetic scoped runner credentials, proves `/v1/development/coding-briefs/sandbox-runner` rejects missing and fabricated unissued lease ledgers with `409`, claims a lease through `/v1/development/coding-briefs/runner-lease`, then executes the sandbox-runner route with the gateway-issued lease.
+The smoke starts a temporary `127.0.0.1` gateway with synthetic scoped runner credentials, proves `/v1/development/coding-briefs/sandbox-runner` rejects missing and fabricated unissued lease ledgers with `409`, claims a lease through `/v1/development/coding-briefs/runner-lease`, executes the sandbox-runner route with the gateway-issued lease, and verifies `/v1/development/coding-briefs/implementation-artifact-audit` can see a temporary Git worktree change.
 
 ### `POST /v1/development/coding-briefs/session-drill`
 
@@ -1441,7 +1441,7 @@ Implementation evidence decisions are:
 
 ### `POST /v1/development/coding-briefs/implementation-artifact-audit`
 
-Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, prove command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file, evidence-artifact, and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints. Repeated references are reported separately from unique files. Evidence entries that only claim an artifact is "attached" without a local artifact path, evidence artifacts reused across required evidence items, changed files reused across multiple sessions, empty command transcripts, transcript files reused by multiple command results, and transcripts that do not mention the expected command plus exit code are treated as missing proof for automatic board updates. Transcript text is inspected locally for this structural check but is not returned in the audit response.
+Checks local artifact references from implementation evidence before the workbench updates Development Board status. This endpoint does not rerun commands, prove command output truthfulness, call providers, browse, deploy, or push Git. It verifies that changed-file, evidence-artifact, and command-transcript references are safe relative paths and, when found inside the current gateway workspace, records local `sha256`, byte count, and modified-time fingerprints. Gateway-backed checks also compare changed-file references with `git status --porcelain`, so an existing clean file cannot be used as a changed-file claim for automatic board updates. Repeated references are reported separately from unique files. Evidence entries that only claim an artifact is "attached" without a local artifact path, evidence artifacts reused across required evidence items, changed files reused across multiple sessions, changed files absent from Git worktree status, empty command transcripts, transcript files reused by multiple command results, and transcripts that do not mention the expected command plus exit code are treated as missing proof for automatic board updates. Transcript text is inspected locally for this structural check but is not returned in the audit response.
 
 ```json
 {
@@ -1478,7 +1478,10 @@ Response:
     "reusedChangedFilePaths": 0,
     "reusedChangedFileRefs": 0,
     "transcriptContentChecked": 16,
-    "transcriptContentMismatches": 0
+    "transcriptContentMismatches": 0,
+    "worktreeCheckedChangedFiles": 8,
+    "worktreeChangedFiles": 8,
+    "worktreeUnchangedFiles": 0
   },
   "items": [
     {
@@ -1495,7 +1498,9 @@ Response:
           "path": "src/App.tsx",
           "status": "verified",
           "bytes": 2400,
-          "sha256": "..."
+          "sha256": "...",
+          "worktreeChanged": true,
+          "worktreeStatus": "modified"
         }
       ]
     }
@@ -1505,8 +1510,8 @@ Response:
 
 Artifact audit decisions are:
 
-- `verified`: every accepted item has safe, existing local changed-file, evidence-artifact, and transcript references; gateway-backed checks include local file fingerprints.
-- `needs-artifacts`: required references are missing, non-path evidence claims, absent, reused as evidence artifacts or changed files, empty for command transcripts, reused across command results, structurally mismatched against the command result, or could not be checked without gateway filesystem access.
+- `verified`: every accepted item has safe, existing local changed-file, evidence-artifact, and transcript references; gateway-backed checks include local file fingerprints and changed-file worktree status.
+- `needs-artifacts`: required references are missing, non-path evidence claims, absent, reused as evidence artifacts or changed files, clean in Git worktree status, empty for command transcripts, reused across command results, structurally mismatched against the command result, or could not be checked without gateway filesystem access.
 - `blocked`: a referenced path is unsafe or implementation evidence is blocked.
 
 ### `POST /v1/sandbox/check`

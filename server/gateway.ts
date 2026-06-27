@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { relative, resolve } from "node:path";
@@ -20,7 +21,10 @@ import {
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
 import { buildCodingAgentSandboxRunnerPreflight } from "../src/domain/codingAgentSandboxRunnerPreflight";
-import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
+import {
+  auditCodingAgentImplementationArtifacts,
+  type CodingAgentWorktreeProbeResult
+} from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "../src/domain/codingAgentSessionDrill";
@@ -1157,7 +1161,8 @@ const server = createServer(async (request, response) => {
       }
       const audit = auditCodingAgentImplementationArtifacts({
         evidence: body.evidence,
-        artifactProbe: localArtifactProbe
+        artifactProbe: localArtifactProbe,
+        worktreeProbe: localGitWorktreeProbe
       });
       sendJson(response, 200, audit);
       return;
@@ -1244,6 +1249,72 @@ function localArtifactProbe(relativePath: string) {
     modifiedAt: stats.mtime.toISOString(),
     text: content.length <= 1024 * 1024 ? content.toString("utf8") : undefined
   };
+}
+
+function localGitWorktreeProbe(relativePath: string): CodingAgentWorktreeProbeResult {
+  const root = process.cwd();
+  const absolutePath = resolve(root, relativePath);
+  const workspaceRelativePath = relative(root, absolutePath).replace(/\\/g, "/");
+
+  if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
+    return {
+      checked: false,
+      changed: false,
+      status: "unknown",
+      reason: "Changed-file path is outside the current gateway workspace."
+    };
+  }
+
+  const result = spawnSync("git", [
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all",
+    "--",
+    workspaceRelativePath
+  ], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+
+  if (result.error || result.status !== 0) {
+    return {
+      checked: false,
+      changed: false,
+      status: "unknown",
+      reason: `git status failed for ${workspaceRelativePath}.`
+    };
+  }
+
+  const line = result.stdout.split(/\r?\n/).find((entry) => entry.trim().length > 0);
+  if (!line) {
+    return {
+      checked: true,
+      changed: false,
+      status: "clean",
+      reason: `Git worktree has no changed entry for ${workspaceRelativePath}.`
+    };
+  }
+
+  const status = worktreeStatusForPorcelain(line.slice(0, 2));
+  return {
+    checked: true,
+    changed: true,
+    status,
+    reason: `Git worktree reports ${status} for ${workspaceRelativePath}.`
+  };
+}
+
+function worktreeStatusForPorcelain(code: string): CodingAgentWorktreeProbeResult["status"] {
+  if (code.includes("?")) return "untracked";
+  if (code.includes("U")) return "unmerged";
+  if (code.includes("R")) return "renamed";
+  if (code.includes("C")) return "copied";
+  if (code.includes("A")) return "added";
+  if (code.includes("D")) return "deleted";
+  if (code.includes("M")) return "modified";
+  if (code.includes("T")) return "typechange";
+  return "unknown";
 }
 
 async function readJson<T>(request: IncomingMessage): Promise<T> {

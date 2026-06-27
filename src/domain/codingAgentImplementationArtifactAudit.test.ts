@@ -62,6 +62,71 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.honestyClaim.limitations.join(" ")).toContain("does not rerun commands");
   });
 
+  it("verifies changed files against Git worktree status when a probe is available", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "1".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log") ? transcriptTextFor(relativePath, 0) : undefined
+      }),
+      worktreeProbe: () => ({
+        checked: true,
+        changed: true,
+        status: "modified"
+      })
+    });
+
+    const changedFilePath = audit.items[0].paths.find((path) => path.kind === "changed-file");
+
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.worktreeCheckedChangedFiles).toBe(evidence.items.length);
+    expect(audit.summary.worktreeChangedFiles).toBe(evidence.items.length);
+    expect(audit.summary.worktreeUnchangedFiles).toBe(0);
+    expect(changedFilePath).toMatchObject({
+      status: "verified",
+      worktreeChanged: true,
+      worktreeStatus: "modified"
+    });
+  });
+
+  it("rejects changed-file claims that are absent from Git worktree status", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "2".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log") ? transcriptTextFor(relativePath, 0) : undefined
+      }),
+      worktreeProbe: () => ({
+        checked: true,
+        changed: false,
+        status: "clean"
+      })
+    });
+
+    const changedFilePath = audit.items[0].paths.find((path) => path.kind === "changed-file");
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.summary.worktreeCheckedChangedFiles).toBe(evidence.items.length);
+    expect(audit.summary.worktreeChangedFiles).toBe(0);
+    expect(audit.summary.worktreeUnchangedFiles).toBe(evidence.items.length);
+    expect(changedFilePath).toMatchObject({
+      status: "missing",
+      reason: "Changed-file reference is not present in the Git worktree status.",
+      worktreeChanged: false,
+      worktreeStatus: "clean"
+    });
+  });
+
   it("keeps legacy path existence checks compatible without fingerprints", () => {
     const evidence = acceptedEvidenceFixture();
     const audit = auditCodingAgentImplementationArtifacts({

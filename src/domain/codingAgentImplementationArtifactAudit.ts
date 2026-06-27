@@ -5,6 +5,7 @@ import type {
   CodingAgentImplementationArtifactAuditItem,
   CodingAgentImplementationArtifactPath,
   CodingAgentImplementationArtifactPathKind,
+  CodingAgentImplementationWorktreeStatus,
   CodingAgentImplementationEvidence,
   CodingAgentImplementationEvidenceItem
 } from "./types";
@@ -17,6 +18,7 @@ export interface AuditCodingAgentImplementationArtifactsInput {
   evidence: CodingAgentImplementationEvidence;
   generatedAt?: string;
   artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult;
+  worktreeProbe?: (relativePath: string) => CodingAgentWorktreeProbeResult;
   pathExists?: (relativePath: string) => boolean;
 }
 
@@ -28,6 +30,13 @@ export interface CodingAgentArtifactProbeResult {
   text?: string;
 }
 
+export interface CodingAgentWorktreeProbeResult {
+  checked: boolean;
+  changed: boolean;
+  status: CodingAgentImplementationWorktreeStatus;
+  reason?: string;
+}
+
 interface CommandTranscriptExpectation {
   command: string;
   exitCode: number | null;
@@ -37,6 +46,7 @@ export function auditCodingAgentImplementationArtifacts({
   evidence,
   generatedAt = new Date().toISOString(),
   artifactProbe,
+  worktreeProbe,
   pathExists
 }: AuditCodingAgentImplementationArtifactsInput): CodingAgentImplementationArtifactAudit {
   const probe = artifactProbe ?? pathExistsProbe(pathExists);
@@ -44,7 +54,7 @@ export function auditCodingAgentImplementationArtifacts({
   const changedFileUsage = changedFileUsageFor(evidence);
   const evidenceArtifactUsage = evidenceArtifactUsageFor(evidence);
   const items = evidence.items.map((item) =>
-    auditItem(item, evidence, transcriptUsage, changedFileUsage, evidenceArtifactUsage, probe)
+    auditItem(item, evidence, transcriptUsage, changedFileUsage, evidenceArtifactUsage, probe, worktreeProbe)
   );
   const paths = items.flatMap((item) => item.paths);
   const summary = summarizeAudit(items, paths);
@@ -62,6 +72,7 @@ export function auditCodingAgentImplementationArtifacts({
       claim: "This audit checks local coding-agent artifact references before updating development-board status.",
       limitations: [
         "It verifies local path safety and, when a gateway supplies filesystem access, local path existence plus optional sha256 and byte fingerprints.",
+        "When a gateway supplies Git worktree access, changed-file references must also appear in the local worktree status before automatic board updates.",
         "It does not rerun commands or prove command output contents are truthful.",
         "It does not verify remote workspaces, external repositories, deploy targets, model calls, or Git remotes."
       ]
@@ -75,7 +86,8 @@ function auditItem(
   transcriptUsage: Map<string, number>,
   changedFileUsage: Map<string, number>,
   evidenceArtifactUsage: Map<string, number>,
-  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult
+  artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult,
+  worktreeProbe?: (relativePath: string) => CodingAgentWorktreeProbeResult
 ): CodingAgentImplementationArtifactAuditItem {
   const paths: CodingAgentImplementationArtifactPath[] = [];
   const missing: string[] = [];
@@ -95,7 +107,7 @@ function auditItem(
         `Changed file reference is reused by ${usageCount} sessions: ${path}. Provide session-specific changed-file evidence or keep this item for manual review.`
       );
     }
-    paths.push(checkPath("changed-file", path, artifactProbe));
+    paths.push(checkPath("changed-file", path, artifactProbe, undefined, worktreeProbe));
   });
 
   if (!item.evidence.length) {
@@ -162,7 +174,8 @@ function checkPath(
   kind: CodingAgentImplementationArtifactPathKind,
   path: string,
   artifactProbe?: (relativePath: string) => CodingAgentArtifactProbeResult,
-  transcriptExpectation?: CommandTranscriptExpectation
+  transcriptExpectation?: CommandTranscriptExpectation,
+  worktreeProbe?: (relativePath: string) => CodingAgentWorktreeProbeResult
 ): CodingAgentImplementationArtifactPath {
   if (!path.trim()) {
     return {
@@ -242,16 +255,53 @@ function checkPath(
     };
   }
 
+  const worktreeCheck = kind === "changed-file" && worktreeProbe
+    ? checkWorktreeChange(path, worktreeProbe)
+    : null;
+
+  if (worktreeCheck && !worktreeCheck.checked) {
+    return {
+      kind,
+      path,
+      status: "not-checked",
+      reason: worktreeCheck.reason,
+      bytes: probeResult.bytes,
+      sha256: probeResult.sha256,
+      modifiedAt: probeResult.modifiedAt,
+      worktreeChanged: worktreeCheck.changed,
+      worktreeStatus: worktreeCheck.status,
+      worktreeReason: worktreeCheck.reason
+    };
+  }
+
+  if (worktreeCheck && !worktreeCheck.changed) {
+    return {
+      kind,
+      path,
+      status: "missing",
+      reason: worktreeCheck.reason,
+      bytes: probeResult.bytes,
+      sha256: probeResult.sha256,
+      modifiedAt: probeResult.modifiedAt,
+      worktreeChanged: worktreeCheck.changed,
+      worktreeStatus: worktreeCheck.status,
+      worktreeReason: worktreeCheck.reason
+    };
+  }
+
   return {
     kind,
     path,
     status: "verified",
-    reason: "Artifact path exists in the local sandbox workspace.",
+    reason: worktreeCheck?.reason || "Artifact path exists in the local sandbox workspace.",
     bytes: probeResult.bytes,
     sha256: probeResult.sha256,
     modifiedAt: probeResult.modifiedAt,
     transcriptCommandMatched: transcriptContentCheck?.commandMatched,
-    transcriptExitCodeMatched: transcriptContentCheck?.exitCodeMatched
+    transcriptExitCodeMatched: transcriptContentCheck?.exitCodeMatched,
+    worktreeChanged: worktreeCheck?.changed,
+    worktreeStatus: worktreeCheck?.status,
+    worktreeReason: worktreeCheck?.reason
   };
 }
 
@@ -309,8 +359,49 @@ function summarizeAudit(
     transcriptContentChecked: transcriptContentChecked.length,
     transcriptContentMismatches: transcriptContentChecked.filter((path) =>
       path.transcriptCommandMatched === false || path.transcriptExitCodeMatched === false
+    ).length,
+    worktreeCheckedChangedFiles: paths.filter((path) =>
+      path.kind === "changed-file" && typeof path.worktreeChanged === "boolean"
+    ).length,
+    worktreeChangedFiles: paths.filter((path) =>
+      path.kind === "changed-file" && path.worktreeChanged === true
+    ).length,
+    worktreeUnchangedFiles: paths.filter((path) =>
+      path.kind === "changed-file" && path.worktreeChanged === false
     ).length
   };
+}
+
+function checkWorktreeChange(
+  path: string,
+  worktreeProbe: (relativePath: string) => CodingAgentWorktreeProbeResult
+): CodingAgentWorktreeProbeResult & { reason: string } {
+  try {
+    const result = worktreeProbe(path);
+    if (!result.checked) {
+      return {
+        ...result,
+        reason: result.reason || "Git worktree status could not be checked for this changed-file reference."
+      };
+    }
+    if (!result.changed) {
+      return {
+        ...result,
+        reason: result.reason || "Changed-file reference is not present in the Git worktree status."
+      };
+    }
+    return {
+      ...result,
+      reason: result.reason || "Changed-file reference exists and is present in the Git worktree status."
+    };
+  } catch (error) {
+    return {
+      checked: false,
+      changed: false,
+      status: "unknown",
+      reason: `Git worktree probe failed: ${error instanceof Error ? error.message : "unknown error"}.`
+    };
+  }
 }
 
 function checkTranscriptContent(

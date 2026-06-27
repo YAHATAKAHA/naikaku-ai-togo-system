@@ -2744,6 +2744,18 @@ export type CodingAgentImplementationArtifactPathStatus =
   | "unsafe"
   | "not-checked";
 
+export type CodingAgentImplementationWorktreeStatus =
+  | "modified"
+  | "added"
+  | "deleted"
+  | "renamed"
+  | "copied"
+  | "untracked"
+  | "typechange"
+  | "unmerged"
+  | "clean"
+  | "unknown";
+
 export interface CodingAgentImplementationArtifactPath {
   kind: CodingAgentImplementationArtifactPathKind;
   path: string;
@@ -2754,6 +2766,9 @@ export interface CodingAgentImplementationArtifactPath {
   modifiedAt?: string;
   transcriptCommandMatched?: boolean;
   transcriptExitCodeMatched?: boolean;
+  worktreeChanged?: boolean;
+  worktreeStatus?: CodingAgentImplementationWorktreeStatus;
+  worktreeReason?: string;
 }
 
 export interface CodingAgentImplementationArtifactAuditItem {
@@ -2799,6 +2814,9 @@ export interface CodingAgentImplementationArtifactAudit {
     reusedChangedFileRefs: number;
     transcriptContentChecked: number;
     transcriptContentMismatches: number;
+    worktreeCheckedChangedFiles: number;
+    worktreeChangedFiles: number;
+    worktreeUnchangedFiles: number;
   };
   honestyClaim: {
     claim: string;

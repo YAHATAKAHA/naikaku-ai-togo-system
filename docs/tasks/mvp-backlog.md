@@ -34,7 +34,7 @@ This backlog is written so different contributors can work in parallel.
 - Add Coding Agent Runner Intake Audit that accepts only readable, safe, pending-command invocation files before governed runners consume them.
 - Add Coding Agent Session Receipt template/import/review gate that requires changed files, command exit codes, evidence artifacts, and risk notes before accepting implementation claims.
 - Add Coding Agent Implementation Evidence export that summarizes reviewed receipts into JSON/Markdown handoff artifacts without rerunning commands.
-- Add Coding Agent Implementation Artifact Audit that checks safe local changed-file and transcript references before status reconciliation.
+- Add Coding Agent Implementation Artifact Audit that checks safe local changed-file and transcript references, plus gateway-backed Git worktree status, before status reconciliation.
 - Add Coding Agent Implementation Evidence reconciliation that updates matched, unblocked Development Board items from accepted and artifact-audited evidence only.
 - Add GitHub Issue Drafts export and reviewable `gh issue create` script export from Development Board items for parallel implementation handoff.
 
@@ -69,6 +69,7 @@ Acceptance:
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.
 - Operators can have accepted and locally artifact-audited coding-agent implementation evidence mark matched Development Board items done while blocked, incomplete, artifact-unverified, and unmatched items remain held for review.
+- Gateway artifact audit rejects changed-file claims when the referenced file exists but is absent from Git worktree status.
 - Development items can become labeled, Markdown-ready issue drafts and credential-free CLI scripts without requiring GitHub credentials in the browser.
 
 ## Track 2: Provider Adapters

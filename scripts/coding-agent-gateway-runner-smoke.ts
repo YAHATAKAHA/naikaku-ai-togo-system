@@ -21,6 +21,8 @@ import { createDefaultWorkspace } from "../src/domain/storage";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import { executorProfiles } from "../src/data/defaultCabinet";
 import type {
+  CodingAgentImplementationArtifactAudit,
+  CodingAgentImplementationEvidence,
   CodingAgentRunnerLeaseLedger,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -77,6 +79,9 @@ interface GatewayRunnerSmokeSummary {
     leaseValidationOk: boolean | null;
     receiptReviewDecision: string | null;
     artifactAuditDecision: string | null;
+    worktreeArtifactAuditStatus: number;
+    worktreeArtifactAuditDecision: string | null;
+    worktreeArtifactAuditChangedFiles: number;
   };
   checks: {
     healthOk: boolean;
@@ -88,6 +93,7 @@ interface GatewayRunnerSmokeSummary {
     sandboxRunnerExecuted: boolean;
     leaseValidationReturned: boolean;
     receiptAndAuditVerified: boolean;
+    worktreeArtifactAuditVerified: boolean;
   };
   honestyClaim: {
     level: "local-gateway-smoke";
@@ -118,6 +124,7 @@ async function main() {
   const port = await getAvailablePort();
   const gatewayUrl = `http://127.0.0.1:${port}`;
   const gateway = await startGateway({ port, timeoutMs: options.timeoutMs });
+  const cleanupPaths: string[] = [];
 
   try {
     const { bundle, selfTest } = buildSmokeInputs({
@@ -160,6 +167,16 @@ async function main() {
       { selfTest, bundle, leaseLedger: leaseClaim.body, timeoutMs: options.timeoutMs },
       headers
     );
+    const worktreeEvidence = await buildWorktreeEvidenceFixture({
+      outputRelativeDir,
+      generatedAt: options.generatedAt,
+      locale: options.locale,
+      cleanupPaths
+    });
+    const worktreeArtifactAudit = await postJson<CodingAgentImplementationArtifactAudit>(
+      `${gatewayUrl}/v1/development/coding-briefs/implementation-artifact-audit`,
+      { evidence: worktreeEvidence }
+    );
 
     const summary = buildSummary({
       options,
@@ -172,7 +189,8 @@ async function main() {
       noLease,
       unissued,
       leaseClaim,
-      sandboxRunner
+      sandboxRunner,
+      worktreeArtifactAudit
     });
 
     await writeJson(path.join(outputDir, "summary.json"), summary);
@@ -184,6 +202,7 @@ async function main() {
       process.exitCode = 1;
     }
   } finally {
+    await Promise.all(cleanupPaths.map((targetPath) => rm(targetPath, { force: true })));
     await stopGateway(gateway);
   }
 }
@@ -249,6 +268,81 @@ function buildSmokeInputs({
   return { bundle, selfTest };
 }
 
+async function buildWorktreeEvidenceFixture({
+  outputRelativeDir,
+  generatedAt,
+  locale,
+  cleanupPaths
+}: {
+  outputRelativeDir: string;
+  generatedAt: string;
+  locale: string;
+  cleanupPaths: string[];
+}): Promise<CodingAgentImplementationEvidence> {
+  const changedFilePath = ".naikaku-gateway-smoke-worktree-probe.txt";
+  const transcriptPath = `${outputRelativeDir}/worktree-artifact-audit/transcript.log`;
+  const evidencePath = `${outputRelativeDir}/worktree-artifact-audit/evidence.txt`;
+
+  cleanupPaths.push(changedFilePath);
+  await mkdir(path.dirname(transcriptPath), { recursive: true });
+  await writeFile(changedFilePath, `temporary gateway smoke worktree probe ${generatedAt}\n`, "utf8");
+  await writeFile(transcriptPath, "command=npm run test\nexitCode=0\nresult=passed\n", "utf8");
+  await writeFile(evidencePath, "Gateway smoke worktree artifact audit evidence.\n", "utf8");
+
+  return {
+    schema: "naikaku.coding-agent-implementation-evidence.v1",
+    generatedAt,
+    sourceSchema: "naikaku.coding-agent-session-receipt.v1",
+    sourceDecision: "verified",
+    decision: "accepted-for-handoff",
+    operatorLocale: locale,
+    items: [
+      {
+        sessionId: "gateway-smoke-worktree-session",
+        sourceItemId: "gateway-smoke-worktree-item",
+        title: "Gateway smoke worktree evidence",
+        receiptStatus: "verified",
+        accepted: true,
+        changedFiles: [changedFilePath],
+        commandResults: [
+          {
+            command: "npm run test",
+            exitCode: 0,
+            outputSummary: "Synthetic gateway smoke command passed.",
+            transcriptRef: transcriptPath
+          }
+        ],
+        evidence: [`Worktree evidence artifact: ${evidencePath}`],
+        risks: ["Synthetic gateway smoke fixture only."],
+        missing: [],
+        nextAction: "Use this fixture only to prove gateway artifact audit can see Git worktree status."
+      }
+    ],
+    summary: {
+      total: 1,
+      accepted: 1,
+      needsEvidence: 0,
+      blocked: 0,
+      changedFiles: 1,
+      commandResults: 1,
+      failedCommands: 0,
+      evidenceItems: 1,
+      riskNotes: 1
+    },
+    honestyClaim: {
+      level: "implementation-evidence-summary",
+      claim: "Synthetic gateway smoke fixture for worktree artifact audit.",
+      limitations: [
+        "This fixture proves gateway worktree-status checking only.",
+        "It is not implementation evidence for product backlog work."
+      ],
+      productionRequirements: [
+        "Use real changed files, transcripts, and evidence artifacts from a governed runner workspace."
+      ]
+    }
+  };
+}
+
 function buildSummary({
   options,
   outputRelativeDir,
@@ -260,7 +354,8 @@ function buildSummary({
   noLease,
   unissued,
   leaseClaim,
-  sandboxRunner
+  sandboxRunner,
+  worktreeArtifactAudit
 }: {
   options: GatewayRunnerSmokeOptions;
   outputRelativeDir: string;
@@ -273,6 +368,7 @@ function buildSummary({
   unissued: JsonResponse;
   leaseClaim: JsonResponse<CodingAgentRunnerLeaseLedger>;
   sandboxRunner: JsonResponse<CodingAgentSandboxRunnerResult>;
+  worktreeArtifactAudit: JsonResponse<CodingAgentImplementationArtifactAudit>;
 }): GatewayRunnerSmokeSummary {
   const healthBody = asRecord(health.body);
   const runnerAuth = asRecord(healthBody.runnerAuth);
@@ -298,7 +394,11 @@ function buildSummary({
       sandboxResult.leaseValidation.acceptedLeaseIds.length === preflight.body.summary.readyTasks,
     receiptAndAuditVerified: sandboxRunner.status === 200 &&
       sandboxResult.receiptReview.decision === "verified" &&
-      sandboxResult.artifactAudit.decision === "verified"
+      sandboxResult.artifactAudit.decision === "verified",
+    worktreeArtifactAuditVerified: worktreeArtifactAudit.status === 200 &&
+      worktreeArtifactAudit.body.decision === "verified" &&
+      worktreeArtifactAudit.body.summary.worktreeChangedFiles === 1 &&
+      worktreeArtifactAudit.body.summary.worktreeUnchangedFiles === 0
   };
 
   return {
@@ -334,12 +434,17 @@ function buildSummary({
       sandboxRunnerCommandResults: sandboxRunner.status === 200 ? sandboxResult.report.summary.commandResults : 0,
       leaseValidationOk: sandboxRunner.status === 200 ? sandboxResult.leaseValidation?.ok ?? null : null,
       receiptReviewDecision: sandboxRunner.status === 200 ? sandboxResult.receiptReview.decision : null,
-      artifactAuditDecision: sandboxRunner.status === 200 ? sandboxResult.artifactAudit.decision : null
+      artifactAuditDecision: sandboxRunner.status === 200 ? sandboxResult.artifactAudit.decision : null,
+      worktreeArtifactAuditStatus: worktreeArtifactAudit.status,
+      worktreeArtifactAuditDecision: worktreeArtifactAudit.status === 200 ? worktreeArtifactAudit.body.decision : null,
+      worktreeArtifactAuditChangedFiles: worktreeArtifactAudit.status === 200
+        ? worktreeArtifactAudit.body.summary.worktreeChangedFiles
+        : 0
     },
     checks,
     honestyClaim: {
       level: "local-gateway-smoke",
-      claim: "This smoke starts the local gateway, proves missing and unissued runner leases are blocked over HTTP, then executes the gateway sandbox-runner route with a gateway-issued lease.",
+      claim: "This smoke starts the local gateway, proves missing and unissued runner leases are blocked over HTTP, executes the gateway sandbox-runner route with a gateway-issued lease, and verifies gateway artifact audit can see a Git worktree change.",
       limitations: [
         "It runs against 127.0.0.1 only and uses synthetic scoped runner credentials.",
         "It executes the existing local sandbox-runner verification commands, but it does not ask a model to implement backlog work.",
@@ -553,6 +658,7 @@ function summaryMarkdown(summary: GatewayRunnerSmokeSummary) {
     `- Command results: ${summary.cases.sandboxRunnerCommandResults}`,
     `- Receipt review: ${summary.cases.receiptReviewDecision || "unknown"}`,
     `- Artifact audit: ${summary.cases.artifactAuditDecision || "unknown"}`,
+    `- Worktree artifact audit: ${summary.cases.worktreeArtifactAuditStatus} / ${summary.cases.worktreeArtifactAuditDecision || "unknown"} (${summary.cases.worktreeArtifactAuditChangedFiles} changed files)`,
     "",
     "## Checks",
     "",
@@ -580,6 +686,10 @@ function printSummary(summary: GatewayRunnerSmokeSummary) {
     `Sandbox runner: ${summary.cases.sandboxRunnerDecision || "unknown"}, ` +
     `${summary.cases.sandboxRunnerExecutedTasks} executed, ` +
     `${summary.cases.sandboxRunnerProcessExecutions} process executions`
+  );
+  console.log(
+    `Worktree artifact audit: ${summary.cases.worktreeArtifactAuditDecision || "unknown"}, ` +
+    `${summary.cases.worktreeArtifactAuditChangedFiles} changed files`
   );
   console.log(`Checks: ${Object.values(summary.checks).length - failed} pass, ${failed} fail`);
 }
