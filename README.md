@@ -12,7 +12,7 @@ Naikaku's north star is a Japan-first governed coding cabinet. It should feel cl
 
 ## Current Reality
 
-This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement. Today it can show one clear mission input, split that mission into supervised cabinet/coding-agent work, call local Codex CLI as separated cabinet roles when Codex auth is available, prepare runner contracts, run local dry-run drills, probe installed OpenClaw/Hammerspoon tools, and keep receipt/evidence gates honest. It does not currently grant arbitrary Mac desktop control, operate arbitrary apps, run live implementation without a configured runner wrapper, or push/deploy without an external runner and explicit approval. If a capability is not wired, the UI should say so.
+This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement. Today it can show one clear mission input, split that mission into supervised cabinet/coding-agent work, call local Codex CLI or OpenAI-compatible APIs as separated cabinet roles when credentials are available, prepare runner contracts, run local dry-run drills, probe installed OpenClaw/Hammerspoon tools, and keep receipt/evidence gates honest. It does not currently grant arbitrary Mac desktop control, operate arbitrary apps, run live implementation without a configured runner wrapper, or push/deploy without an external runner and explicit approval. If a capability is not wired, the UI should say so.
 
 ## What Exists Now
 
@@ -86,7 +86,7 @@ To answer "does this actually automate anything?" from a fresh checkout, run the
 npm run open-source:mvp-check
 ```
 
-It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, proves separated API-role governance in mock mode, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
 
 To enter one task from the command line without learning the whole pipeline:
 
@@ -104,6 +104,14 @@ npm run naikaku:task -- --codex-smoke "Prove the cabinet can supervise an AI cod
 
 This records the operator mission, asks the cabinet motion gate to authorize local Codex CLI, lets Codex patch only a generated toy worktree, reruns the generated test, and returns the Codex transcript, diff, receipt, and task summary under `output/naikaku-task/codex-engineer-smoke`. It is the quick proof that Naikaku can be an automation wrapper, not just a prompt exporter; it still does not edit product source, control the desktop, push Git, deploy, or claim real backlog completion.
 
+To run the same cabinet loop without the browser:
+
+```bash
+npm run engineering:guided -- --max-loops 3 --runner-preset fixture --adapter-ready "Prove a bounded unattended cabinet loop"
+```
+
+`engineering:guided` writes `naikaku.guided-engineering-cycle.v1` under `output/engineering-guided`. Each cycle writes a cabinet run before any executor starts, then runs either the governed Codex smoke or a fixed `engineering:auto-work` runner preset. `ship`, `block`, failed execution evidence, or the configured loop limit stops the run. Use `--runner-preset openclaw-local --adapter-ready`, `--runner-preset openhands`, or another configured preset after the local CLI and license have been reviewed; the command still cannot accept arbitrary browser shell from the UI, push Git, deploy, grant Mac desktop control, or claim real backlog completion without returned receipts and artifact audits.
+
 To prove the local adapter idea with installed tools, run:
 
 ```bash
@@ -119,6 +127,16 @@ npm run cabinet:codex-smoke
 ```
 
 It calls Codex three times in read-only mode as Prime Minister, Critic, and Supervisor, then lets Naikaku make the deterministic cabinet motion decision from their proposal, audit, dissent, and vote. This is the minimum proof of the product idea: AI roles can disagree, an audit can block unsafe work, and execution is authorized only after the cabinet decision.
+
+To prove the same role split through a model-provider API instead of Codex CLI:
+
+```bash
+npm run cabinet:api-role-smoke -- --mock
+OPENAI_API_KEY=... npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias OPENAI_API_KEY "Review this engineering mission"
+OPENROUTER_API_KEY=... npm run cabinet:api-role-smoke -- --provider openrouter --model openai/<model> --api-key-alias OPENROUTER_API_KEY
+```
+
+The mock command is deterministic and no-network for CI. Live mode calls Prime Minister, Critic, and Supervisor as separate provider calls, parses their JSON, writes `output/cabinet-api-role-smoke/summary.json`, and then runs Naikaku's local cabinet decision. It stores only the environment-variable alias, not the raw secret. This is the direct API proof for "several supervised roles first"; execution still moves through `engineering:guided`, `engineering:auto-work`, Codex/OpenHands/OpenClaw/Hammerspoon presets, and receipt/artifact audit before implementation can be claimed.
 
 To prove Codex can act as a governed implementation runner on a generated toy project:
 
@@ -317,16 +335,20 @@ npm run coding-agent:sandbox-runner # execute allowlisted local verification com
 npm run coding-agent:gateway-smoke # start local gateway and prove lease-gated sandbox execution over HTTP
 npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its test, and verify receipt/audit evidence
 npm run engineering:mvp # one-command adapter registry, engineering simulation, external handoff, adapter self-test, local verification, fixture coding loop, and honest claim summary
+npm run engineering:guided # command-line cabinet vote -> governed executor -> bounded continue loop
+npm run engineering:guided-smoke # prove the guided CLI loop with the safe fixture runner
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
 npm run naikaku:task # one-mission task entry for prepare, self-test, codex-smoke, or fixed runner-preset modes
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
-npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fixture coding loop in one contributor-facing check
+npm run open-source:mvp-check # build, targeted tests, gateway auto-work, API role smoke, guided CLI, runner kit, and fixture coding loop
 npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
 npm run local-tools:smoke # generate a tiny cabinet-vote project and probe local OpenClaw/Hammerspoon adapters
 npm run cabinet:codex-smoke # call Codex CLI as separate cabinet roles, then vote locally
+npm run cabinet:api-role-smoke # call provider API or mock as separate cabinet roles, then vote locally
+npm run cabinet:api-role-smoke:mock # no-network provider-role proof for CI and contributor smoke tests
 npm run codex:engineer-smoke # let Codex patch a generated tiny project and return local evidence
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts

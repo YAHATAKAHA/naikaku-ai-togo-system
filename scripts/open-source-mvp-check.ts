@@ -44,6 +44,10 @@ interface OpenSourceMvpCheckSummary {
     configuredPresetEvidenceVerified: boolean;
     taskEntryPassed: boolean;
     taskEntryEvidenceVerified: boolean;
+    apiRoleSmokePassed: boolean;
+    apiRoleSmokeEvidenceVerified: boolean;
+    guidedCliPassed: boolean;
+    guidedCliEvidenceVerified: boolean;
     runnerKitPassed: boolean;
     runnerKitEvidenceVerified: boolean;
     fixtureCodingLoopPassed: boolean;
@@ -54,11 +58,15 @@ interface OpenSourceMvpCheckSummary {
     gatewayAutoWorkSummary: string;
     configuredPresetBridgeSummary: string;
     taskEntrySummary: string;
+    apiRoleSmokeSummary: string;
+    guidedCliSummary: string;
     runnerKitSummary: string;
     fixtureCodingLoopSummary: string;
     gatewayAutoWork: GatewayAutoWorkEvidence;
     configuredPresetBridge: ConfiguredPresetBridgeEvidence;
     taskEntry: TaskEntryEvidence;
+    apiRoleSmoke: ApiRoleSmokeEvidence;
+    guidedCli: GuidedCliEvidence;
     runnerKit: RunnerKitEvidence;
     fixtureCodingLoop: FixtureCodingLoopEvidence;
   };
@@ -110,6 +118,29 @@ interface TaskEntryEvidence {
   handoffTaskFiles: number;
   externalRunnerStarted: boolean;
   completion: boolean;
+  allChecksPassed: boolean;
+}
+
+interface GuidedCliEvidence {
+  summaryReadable: boolean;
+  executor: string | null;
+  runnerPreset: string | null;
+  stopReason: string | null;
+  maxLoops: number;
+  cycles: number;
+  executionAttempts: number;
+  successfulExecutions: number;
+  allChecksPassed: boolean;
+}
+
+interface ApiRoleSmokeEvidence {
+  summaryReadable: boolean;
+  mode: string | null;
+  roles: number;
+  decision: string | null;
+  roleOutputsParsed: boolean;
+  noExternalRunnerStarted: boolean;
+  noGitOrDeploy: boolean;
   allChecksPassed: boolean;
 }
 
@@ -285,6 +316,48 @@ function buildSteps({
       proves: "A user can enter one mission through the short Naikaku task CLI and receive supervised handoff output without overclaiming completion."
     },
     {
+      id: "api-role-smoke",
+      label: "Separated API role smoke",
+      command: npmCommand,
+      args: [
+        "run",
+        "cabinet:api-role-smoke",
+        "--",
+        "--mock",
+        "--mission",
+        "API role smoke: separate model-provider roles produce proposal, critique, supervision, and a cabinet vote",
+        "--out",
+        path.join(outputDir, "api-role-smoke"),
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z"
+      ],
+      proves: "The same Prime Minister/Critic/Supervisor role split can run through the provider-call contract without starting a runner or persisting raw secrets."
+    },
+    {
+      id: "guided-cli",
+      label: "Guided cabinet CLI loop",
+      command: npmCommand,
+      args: [
+        "run",
+        "engineering:guided",
+        "--",
+        "--mission",
+        "Guided CLI smoke: vote, run the fixed fixture runner, then stop by cabinet decision or loop limit",
+        "--max-loops",
+        "3",
+        "--runner-preset",
+        "fixture",
+        "--adapter-ready",
+        "--out",
+        path.join(outputDir, "guided-cli"),
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z",
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      proves: "The command-line operator path can run cabinet vote -> governed fixed runner -> bounded continue/stop without browser interaction."
+    },
+    {
       id: "runner-kit",
       label: "External runner wrapper kit",
       command: npmCommand,
@@ -370,6 +443,8 @@ function buildSummary({
     "summary.json"
   ));
   const taskEntryEvidence = readTaskEntryEvidence(path.join(outputDir, "task-entry", "summary.json"));
+  const apiRoleSmokeEvidence = readApiRoleSmokeEvidence(path.join(outputDir, "api-role-smoke", "summary.json"));
+  const guidedCliEvidence = readGuidedCliEvidence(path.join(outputDir, "guided-cli", "summary.json"));
   const runnerKitEvidence = readRunnerKitEvidence(path.join(outputDir, "runner-kit", "summary.json"));
   const fixtureEvidence = readFixtureEvidence(path.join(outputDir, "fixture-coding-loop", "summary.json"));
   const gatewayEvidenceVerified = gatewayEvidence.summaryReadable &&
@@ -396,6 +471,24 @@ function buildSummary({
     !taskEntryEvidence.externalRunnerStarted &&
     !taskEntryEvidence.completion &&
     taskEntryEvidence.allChecksPassed;
+  const apiRoleSmokeEvidenceVerified = apiRoleSmokeEvidence.summaryReadable &&
+    apiRoleSmokeEvidence.mode === "mock" &&
+    apiRoleSmokeEvidence.roles === 3 &&
+    apiRoleSmokeEvidence.decision !== null &&
+    apiRoleSmokeEvidence.roleOutputsParsed &&
+    apiRoleSmokeEvidence.noExternalRunnerStarted &&
+    apiRoleSmokeEvidence.noGitOrDeploy &&
+    apiRoleSmokeEvidence.allChecksPassed;
+  const guidedCliEvidenceVerified = guidedCliEvidence.summaryReadable &&
+    guidedCliEvidence.executor === "auto-work" &&
+    guidedCliEvidence.runnerPreset === "fixture" &&
+    guidedCliEvidence.maxLoops === 3 &&
+    guidedCliEvidence.cycles >= 1 &&
+    guidedCliEvidence.cycles <= 3 &&
+    guidedCliEvidence.executionAttempts >= 1 &&
+    guidedCliEvidence.successfulExecutions >= 1 &&
+    guidedCliEvidence.stopReason !== "continue" &&
+    guidedCliEvidence.allChecksPassed;
   const runnerKitEvidenceVerified = runnerKitEvidence.summaryReadable &&
     runnerKitEvidence.wrapperWritten &&
     runnerKitEvidence.presetValid &&
@@ -424,6 +517,10 @@ function buildSummary({
     configuredPresetEvidenceVerified,
     taskEntryPassed: byId.get("task-entry")?.passed === true,
     taskEntryEvidenceVerified,
+    apiRoleSmokePassed: byId.get("api-role-smoke")?.passed === true,
+    apiRoleSmokeEvidenceVerified,
+    guidedCliPassed: byId.get("guided-cli")?.passed === true,
+    guidedCliEvidenceVerified,
     runnerKitPassed: byId.get("runner-kit")?.passed === true,
     runnerKitEvidenceVerified,
     fixtureCodingLoopPassed: byId.get("fixture-coding-loop")?.passed === true,
@@ -432,6 +529,8 @@ function buildSummary({
       gatewayEvidenceVerified &&
       configuredPresetEvidenceVerified &&
       taskEntryEvidenceVerified &&
+      apiRoleSmokeEvidenceVerified &&
+      guidedCliEvidenceVerified &&
       runnerKitEvidenceVerified &&
       fixturePatchVerified
   };
@@ -446,16 +545,20 @@ function buildSummary({
       gatewayAutoWorkSummary: relativePath(path.join(outputDir, "gateway-auto-work", "summary.json")),
       configuredPresetBridgeSummary: relativePath(path.join(outputDir, "configured-preset-bridge", "summary.json")),
       taskEntrySummary: relativePath(path.join(outputDir, "task-entry", "summary.json")),
+      apiRoleSmokeSummary: relativePath(path.join(outputDir, "api-role-smoke", "summary.json")),
+      guidedCliSummary: relativePath(path.join(outputDir, "guided-cli", "summary.json")),
       runnerKitSummary: relativePath(path.join(outputDir, "runner-kit", "summary.json")),
       fixtureCodingLoopSummary: relativePath(path.join(outputDir, "fixture-coding-loop", "summary.json")),
       gatewayAutoWork: gatewayEvidence,
       configuredPresetBridge: configuredPresetEvidence,
       taskEntry: taskEntryEvidence,
+      apiRoleSmoke: apiRoleSmokeEvidence,
+      guidedCli: guidedCliEvidence,
       runnerKit: runnerKitEvidence,
       fixtureCodingLoop: fixtureEvidence
     },
     claimBoundary: [
-      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
+      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, separated provider-role governance, a bounded guided CLI loop, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
       "It does not prove a real OpenClaw/OpenHands/Hermes run, arbitrary desktop control, production deployment, Git push, or completion of real backlog work.",
       "External CLI runners should be invoked as governed adapters that return Naikaku receipts and evidence, not as unbounded host automation."
     ]
@@ -545,6 +648,61 @@ function readTaskEntryEvidence(filePath: string): TaskEntryEvidence {
     handoffTaskFiles: numberOrZero(counts.handoffTaskFiles),
     externalRunnerStarted: claims.externalRunnerStarted === true,
     completion: claims.completion === true,
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
+function readApiRoleSmokeEvidence(filePath: string): ApiRoleSmokeEvidence {
+  const parsed = readJsonIfExists<{
+    mode?: unknown;
+    roles?: unknown[];
+    decision?: {
+      decision?: unknown;
+    } | null;
+    checks?: {
+      roleOutputsParsed?: unknown;
+      noExternalRunnerStarted?: unknown;
+      noGitOrDeploy?: unknown;
+    } & Record<string, unknown>;
+  }>(filePath);
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    mode: stringOrNull(parsed?.mode),
+    roles: Array.isArray(parsed?.roles) ? parsed.roles.length : 0,
+    decision: stringOrNull(parsed?.decision?.decision),
+    roleOutputsParsed: checks.roleOutputsParsed === true,
+    noExternalRunnerStarted: checks.noExternalRunnerStarted === true,
+    noGitOrDeploy: checks.noGitOrDeploy === true,
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
+function readGuidedCliEvidence(filePath: string): GuidedCliEvidence {
+  const parsed = readJsonIfExists<{
+    executor?: unknown;
+    runnerPreset?: unknown;
+    maxLoops?: unknown;
+    cycles?: unknown[];
+    final?: {
+      stopReason?: unknown;
+      executionAttempts?: unknown;
+      successfulExecutions?: unknown;
+    };
+    checks?: Record<string, unknown>;
+  }>(filePath);
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    executor: stringOrNull(parsed?.executor),
+    runnerPreset: stringOrNull(parsed?.runnerPreset),
+    stopReason: stringOrNull(parsed?.final?.stopReason),
+    maxLoops: numberOrZero(parsed?.maxLoops),
+    cycles: Array.isArray(parsed?.cycles) ? parsed.cycles.length : 0,
+    executionAttempts: numberOrZero(parsed?.final?.executionAttempts),
+    successfulExecutions: numberOrZero(parsed?.final?.successfulExecutions),
     allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
   };
 }
@@ -691,8 +849,8 @@ function printHelp() {
     "  -h, --help           Show this help.",
     "",
     "The check builds the app, runs targeted MVP tests, exercises the gateway auto-work endpoint,",
-    "runs a configured CLI preset bridge, proves the one-mission task entry, generates a local runner",
-    "wrapper kit, and runs the fixture coding loop that patches a generated repository and verifies receipts/evidence."
+    "runs a configured CLI preset bridge, proves the one-mission task entry, proves separated API role governance, proves the guided CLI loop,",
+    "generates a local runner wrapper kit, and runs the fixture coding loop that patches a generated repository and verifies receipts/evidence."
   ].join("\n"));
 }
 
@@ -724,6 +882,10 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- configured preset evidence: ${summary.checks.configuredPresetEvidenceVerified ? "pass" : "fail"}`,
     `- task entry: ${summary.checks.taskEntryPassed ? "pass" : "fail"}`,
     `- task entry evidence: ${summary.checks.taskEntryEvidenceVerified ? "pass" : "fail"}`,
+    `- API role smoke: ${summary.checks.apiRoleSmokePassed ? "pass" : "fail"}`,
+    `- API role evidence: ${summary.checks.apiRoleSmokeEvidenceVerified ? "pass" : "fail"}`,
+    `- guided CLI: ${summary.checks.guidedCliPassed ? "pass" : "fail"}`,
+    `- guided CLI evidence: ${summary.checks.guidedCliEvidenceVerified ? "pass" : "fail"}`,
     `- runner kit: ${summary.checks.runnerKitPassed ? "pass" : "fail"}`,
     `- runner kit evidence: ${summary.checks.runnerKitEvidenceVerified ? "pass" : "fail"}`,
     `- fixture coding loop: ${summary.checks.fixtureCodingLoopPassed ? "pass" : "fail"}`,
@@ -749,6 +911,10 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- configured preset jobs/receipts/evidence/artifacts: ${summary.evidence.configuredPresetBridge.adapterCompletedJobs} / ${summary.evidence.configuredPresetBridge.importedReceipts} / ${summary.evidence.configuredPresetBridge.acceptedEvidence} / ${summary.evidence.configuredPresetBridge.verifiedArtifactPaths}`,
     `- task entry summary: ${summary.evidence.taskEntrySummary}`,
     `- task entry mode/handoff/completion: ${summary.evidence.taskEntry.mode || "unknown"} / ${summary.evidence.taskEntry.handoffTaskFiles} / ${summary.evidence.taskEntry.completion ? "claimed" : "not-claimed"}`,
+    `- API role smoke summary: ${summary.evidence.apiRoleSmokeSummary}`,
+    `- API role mode/roles/decision: ${summary.evidence.apiRoleSmoke.mode || "unknown"} / ${summary.evidence.apiRoleSmoke.roles} / ${summary.evidence.apiRoleSmoke.decision || "unknown"}`,
+    `- guided CLI summary: ${summary.evidence.guidedCliSummary}`,
+    `- guided CLI executor/preset/loops/stop: ${summary.evidence.guidedCli.executor || "unknown"} / ${summary.evidence.guidedCli.runnerPreset || "unknown"} / ${summary.evidence.guidedCli.cycles}/${summary.evidence.guidedCli.maxLoops} / ${summary.evidence.guidedCli.stopReason || "unknown"}`,
     `- runner kit summary: ${summary.evidence.runnerKitSummary}`,
     `- runner kit receipts/evidence/artifacts: ${summary.evidence.runnerKit.smokeImportedReceipts} / ${summary.evidence.runnerKit.smokeAcceptedEvidence} / ${summary.evidence.runnerKit.smokeVerifiedArtifactPaths}`,
     `- fixture coding loop summary: ${summary.evidence.fixtureCodingLoopSummary}`,
