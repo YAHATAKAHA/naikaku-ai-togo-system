@@ -1196,6 +1196,24 @@ export interface CodingAgentEngineeringSelfSimulationSummary {
     worktreeChangedFiles: number;
     worktreeUnchangedFiles: number;
   };
+  negativeCases: {
+    failedTestReceipt: {
+      receiptDecision: string;
+      evidenceDecision: string;
+      artifactAuditDecision: string;
+      failedCommands: number;
+      accepted: number;
+    };
+    cleanWorktreeClaim: {
+      claimedChangedFile: string;
+      receiptDecision: string;
+      evidenceDecision: string;
+      artifactAuditDecision: string;
+      worktreeCheckedChangedFiles: number;
+      worktreeChangedFiles: number;
+      worktreeUnchangedFiles: number;
+    };
+  };
   checks: Record<string, boolean>;
   honestyClaim: {
     level: string;

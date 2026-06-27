@@ -57,6 +57,7 @@ async function main() {
   const baselineTranscript = `${artifactPrefix}baseline-test.log`;
   const finalTranscript = `${artifactPrefix}final-test.log`;
   const diffArtifact = `${artifactPrefix}fixture-diff.patch`;
+  const cleanTrackedClaimPath = `${outputRelativeDir}/fixture-workspace/package.json`;
 
   await rm(outputDir, { recursive: true, force: true });
   await mkdir(outputDir, { recursive: true });
@@ -111,6 +112,52 @@ async function main() {
     artifactProbe: localArtifactProbe,
     worktreeProbe: fixtureWorktreeProbe(fixtureDir)
   });
+  const failedTestReceiptReview = reviewCodingAgentSessionReceipt({
+    bundle,
+    receipt: buildSubmittedReceipt({
+      bundle,
+      changedFilePath,
+      final: baseline,
+      baselineTranscript,
+      finalTranscript: baselineTranscript,
+      diffArtifact,
+      generatedAt: options.generatedAt
+    }),
+    generatedAt: options.generatedAt
+  });
+  const failedTestEvidence = buildCodingAgentImplementationEvidence({
+    receipt: failedTestReceiptReview,
+    generatedAt: options.generatedAt
+  });
+  const failedTestArtifactAudit = auditCodingAgentImplementationArtifacts({
+    evidence: failedTestEvidence,
+    generatedAt: options.generatedAt,
+    artifactProbe: localArtifactProbe,
+    worktreeProbe: fixtureWorktreeProbe(fixtureDir)
+  });
+  const cleanWorktreeReceiptReview = reviewCodingAgentSessionReceipt({
+    bundle,
+    receipt: buildSubmittedReceipt({
+      bundle,
+      changedFilePath: cleanTrackedClaimPath,
+      final,
+      baselineTranscript,
+      finalTranscript,
+      diffArtifact,
+      generatedAt: options.generatedAt
+    }),
+    generatedAt: options.generatedAt
+  });
+  const cleanWorktreeEvidence = buildCodingAgentImplementationEvidence({
+    receipt: cleanWorktreeReceiptReview,
+    generatedAt: options.generatedAt
+  });
+  const cleanWorktreeArtifactAudit = auditCodingAgentImplementationArtifacts({
+    evidence: cleanWorktreeEvidence,
+    generatedAt: options.generatedAt,
+    artifactProbe: localArtifactProbe,
+    worktreeProbe: fixtureWorktreeProbe(fixtureDir)
+  });
 
   const gitStatus = runGit(["status", "--porcelain=v1", "--untracked-files=all"], fixtureDir).output.trim();
   const summary = buildSummary({
@@ -127,7 +174,14 @@ async function main() {
     gitStatus,
     receiptReview,
     evidence,
-    artifactAudit
+    artifactAudit,
+    failedTestReceiptReview,
+    failedTestEvidence,
+    failedTestArtifactAudit,
+    cleanTrackedClaimPath,
+    cleanWorktreeReceiptReview,
+    cleanWorktreeEvidence,
+    cleanWorktreeArtifactAudit
   });
 
   await writeJson(path.join(outputDir, "fixture-session-bundle.json"), bundle);
@@ -135,6 +189,12 @@ async function main() {
   await writeJson(path.join(outputDir, "receipt-review.json"), receiptReview);
   await writeJson(path.join(outputDir, "implementation-evidence.json"), evidence);
   await writeJson(path.join(outputDir, "artifact-audit.json"), artifactAudit);
+  await writeJson(path.join(outputDir, "negative-failed-test-receipt-review.json"), failedTestReceiptReview);
+  await writeJson(path.join(outputDir, "negative-failed-test-implementation-evidence.json"), failedTestEvidence);
+  await writeJson(path.join(outputDir, "negative-failed-test-artifact-audit.json"), failedTestArtifactAudit);
+  await writeJson(path.join(outputDir, "negative-clean-worktree-receipt-review.json"), cleanWorktreeReceiptReview);
+  await writeJson(path.join(outputDir, "negative-clean-worktree-implementation-evidence.json"), cleanWorktreeEvidence);
+  await writeJson(path.join(outputDir, "negative-clean-worktree-artifact-audit.json"), cleanWorktreeArtifactAudit);
   await writeJson(path.join(outputDir, "summary.json"), summary);
   await writeFile(path.join(outputDir, "summary.md"), summaryMarkdown(summary), "utf8");
 
@@ -337,7 +397,14 @@ function buildSummary({
   gitStatus,
   receiptReview,
   evidence,
-  artifactAudit
+  artifactAudit,
+  failedTestReceiptReview,
+  failedTestEvidence,
+  failedTestArtifactAudit,
+  cleanTrackedClaimPath,
+  cleanWorktreeReceiptReview,
+  cleanWorktreeEvidence,
+  cleanWorktreeArtifactAudit
 }: {
   generatedAt: string;
   outputRelativeDir: string;
@@ -353,6 +420,13 @@ function buildSummary({
   receiptReview: CodingAgentSessionReceipt;
   evidence: CodingAgentImplementationEvidence;
   artifactAudit: CodingAgentImplementationArtifactAudit;
+  failedTestReceiptReview: CodingAgentSessionReceipt;
+  failedTestEvidence: CodingAgentImplementationEvidence;
+  failedTestArtifactAudit: CodingAgentImplementationArtifactAudit;
+  cleanTrackedClaimPath: string;
+  cleanWorktreeReceiptReview: CodingAgentSessionReceipt;
+  cleanWorktreeEvidence: CodingAgentImplementationEvidence;
+  cleanWorktreeArtifactAudit: CodingAgentImplementationArtifactAudit;
 }): CodingAgentEngineeringSelfSimulationSummary {
   const checks = {
     baselineTestFailedBeforePatch: baseline.exitCode !== 0,
@@ -372,6 +446,18 @@ function buildSummary({
       artifactAudit.summary.fingerprintedPaths === artifactAudit.summary.verifiedPaths &&
       artifactAudit.summary.verifiedPaths >= 4,
     noUnsafeArtifactPaths: artifactAudit.summary.unsafePaths === 0,
+    failedTestClaimRejected:
+      failedTestReceiptReview.decision === "blocked" &&
+      failedTestEvidence.decision === "blocked" &&
+      failedTestEvidence.summary.failedCommands === 1 &&
+      failedTestArtifactAudit.decision === "blocked",
+    cleanWorktreeClaimRejected:
+      cleanWorktreeReceiptReview.decision === "verified" &&
+      cleanWorktreeEvidence.decision === "accepted-for-handoff" &&
+      cleanWorktreeArtifactAudit.decision === "needs-artifacts" &&
+      cleanWorktreeArtifactAudit.summary.worktreeCheckedChangedFiles === 1 &&
+      cleanWorktreeArtifactAudit.summary.worktreeChangedFiles === 0 &&
+      cleanWorktreeArtifactAudit.summary.worktreeUnchangedFiles === 1,
     fixtureBoundaryClear:
       changedFilePath.startsWith(`${outputRelativeDir}/fixture-workspace/`) &&
       baselineTranscript.startsWith(`${outputRelativeDir}/session/`) &&
@@ -415,6 +501,24 @@ function buildSummary({
       worktreeCheckedChangedFiles: artifactAudit.summary.worktreeCheckedChangedFiles,
       worktreeChangedFiles: artifactAudit.summary.worktreeChangedFiles,
       worktreeUnchangedFiles: artifactAudit.summary.worktreeUnchangedFiles
+    },
+    negativeCases: {
+      failedTestReceipt: {
+        receiptDecision: failedTestReceiptReview.decision,
+        evidenceDecision: failedTestEvidence.decision,
+        artifactAuditDecision: failedTestArtifactAudit.decision,
+        failedCommands: failedTestEvidence.summary.failedCommands,
+        accepted: failedTestEvidence.summary.accepted
+      },
+      cleanWorktreeClaim: {
+        claimedChangedFile: cleanTrackedClaimPath,
+        receiptDecision: cleanWorktreeReceiptReview.decision,
+        evidenceDecision: cleanWorktreeEvidence.decision,
+        artifactAuditDecision: cleanWorktreeArtifactAudit.decision,
+        worktreeCheckedChangedFiles: cleanWorktreeArtifactAudit.summary.worktreeCheckedChangedFiles,
+        worktreeChangedFiles: cleanWorktreeArtifactAudit.summary.worktreeChangedFiles,
+        worktreeUnchangedFiles: cleanWorktreeArtifactAudit.summary.worktreeUnchangedFiles
+      }
     },
     checks,
     honestyClaim: {
@@ -649,6 +753,12 @@ function summaryMarkdown(summary: CodingAgentEngineeringSelfSimulationSummary) {
     `- Worktree changed files: ${summary.artifactAudit.worktreeChangedFiles}`,
     `- Transcript mismatches: ${summary.artifactAudit.transcriptContentMismatches}`,
     "",
+    "## Negative Cases",
+    "",
+    `- Failed-test receipt: ${summary.negativeCases.failedTestReceipt.receiptDecision} / ${summary.negativeCases.failedTestReceipt.evidenceDecision} / ${summary.negativeCases.failedTestReceipt.artifactAuditDecision}`,
+    `- Clean worktree claim: ${summary.negativeCases.cleanWorktreeClaim.artifactAuditDecision}`,
+    `- Clean claim unchanged files: ${summary.negativeCases.cleanWorktreeClaim.worktreeUnchangedFiles}`,
+    "",
     "## Checks",
     "",
     ...Object.entries(summary.checks).map(([name, passed]) => `- ${passed ? "pass" : "fail"}: ${name}`),
@@ -672,6 +782,8 @@ function printSummary(summary: CodingAgentEngineeringSelfSimulationSummary) {
   console.log(`Receipt review: ${summary.receipt.decision}`);
   console.log(`Implementation evidence: ${summary.evidence.decision}`);
   console.log(`Artifact audit: ${summary.artifactAudit.decision}`);
+  console.log(`Failed-test negative: ${summary.negativeCases.failedTestReceipt.receiptDecision}, ${summary.negativeCases.failedTestReceipt.artifactAuditDecision}`);
+  console.log(`Clean-worktree negative: ${summary.negativeCases.cleanWorktreeClaim.artifactAuditDecision}, ${summary.negativeCases.cleanWorktreeClaim.worktreeUnchangedFiles} unchanged files`);
   console.log(`Checks: ${passed} pass, ${failed} fail`);
   console.log(`Report: ${path.resolve(summary.outputDir, "summary.json")}`);
 }

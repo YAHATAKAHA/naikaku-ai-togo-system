@@ -206,6 +206,17 @@ function codingAgentEngineeringSelfSimulationCheck(
     && report.artifactAudit.worktreeCheckedChangedFiles === 1
     && report.artifactAudit.worktreeChangedFiles === 1
     && report.artifactAudit.worktreeUnchangedFiles === 0
+    && report.negativeCases.failedTestReceipt.receiptDecision === "blocked"
+    && report.negativeCases.failedTestReceipt.evidenceDecision === "blocked"
+    && report.negativeCases.failedTestReceipt.artifactAuditDecision === "blocked"
+    && report.negativeCases.failedTestReceipt.failedCommands === 1
+    && report.negativeCases.failedTestReceipt.accepted === 0
+    && report.negativeCases.cleanWorktreeClaim.receiptDecision === "verified"
+    && report.negativeCases.cleanWorktreeClaim.evidenceDecision === "accepted-for-handoff"
+    && report.negativeCases.cleanWorktreeClaim.artifactAuditDecision === "needs-artifacts"
+    && report.negativeCases.cleanWorktreeClaim.worktreeCheckedChangedFiles === 1
+    && report.negativeCases.cleanWorktreeClaim.worktreeChangedFiles === 0
+    && report.negativeCases.cleanWorktreeClaim.worktreeUnchangedFiles === 1
     && checksPassed
     && fixtureBoundaryClear;
 
@@ -235,6 +246,17 @@ function codingAgentEngineeringSelfSimulationCheck(
       `Worktree checked changed files: ${report.artifactAudit.worktreeCheckedChangedFiles}`,
       `Worktree changed files: ${report.artifactAudit.worktreeChangedFiles}`,
       `Worktree unchanged files: ${report.artifactAudit.worktreeUnchangedFiles}`,
+      `Failed-test receipt decision: ${report.negativeCases.failedTestReceipt.receiptDecision}`,
+      `Failed-test evidence decision: ${report.negativeCases.failedTestReceipt.evidenceDecision}`,
+      `Failed-test artifact audit: ${report.negativeCases.failedTestReceipt.artifactAuditDecision}`,
+      `Failed-test failed commands: ${report.negativeCases.failedTestReceipt.failedCommands}`,
+      `Clean-worktree claimed file: ${report.negativeCases.cleanWorktreeClaim.claimedChangedFile}`,
+      `Clean-worktree receipt decision: ${report.negativeCases.cleanWorktreeClaim.receiptDecision}`,
+      `Clean-worktree evidence decision: ${report.negativeCases.cleanWorktreeClaim.evidenceDecision}`,
+      `Clean-worktree artifact audit: ${report.negativeCases.cleanWorktreeClaim.artifactAuditDecision}`,
+      `Clean-worktree checked changed files: ${report.negativeCases.cleanWorktreeClaim.worktreeCheckedChangedFiles}`,
+      `Clean-worktree changed files: ${report.negativeCases.cleanWorktreeClaim.worktreeChangedFiles}`,
+      `Clean-worktree unchanged files: ${report.negativeCases.cleanWorktreeClaim.worktreeUnchangedFiles}`,
       `Checks passed: ${checksPassed ? "yes" : "no"}`,
       `Fixture boundary clear: ${fixtureBoundaryClear ? "yes" : "no"}`
     ],

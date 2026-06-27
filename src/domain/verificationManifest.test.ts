@@ -634,6 +634,45 @@ describe("verification manifest", () => {
     expect(engineeringCheck?.evidence).toContain("Worktree changed files: 0");
   });
 
+  it("invalidates the manifest when engineering self-simulation accepts a failed-test receipt", () => {
+    const codingAgentEngineeringSelfSimulation = codingAgentEngineeringSelfSimulationFixture();
+    codingAgentEngineeringSelfSimulation.negativeCases.failedTestReceipt.receiptDecision = "verified";
+    codingAgentEngineeringSelfSimulation.negativeCases.failedTestReceipt.evidenceDecision = "accepted-for-handoff";
+    codingAgentEngineeringSelfSimulation.negativeCases.failedTestReceipt.artifactAuditDecision = "verified";
+    codingAgentEngineeringSelfSimulation.negativeCases.failedTestReceipt.failedCommands = 0;
+    codingAgentEngineeringSelfSimulation.checks.failedTestClaimRejected = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentRunnerLease: codingAgentRunnerLeaseFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentEngineeringSelfSimulation,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      runnerAuthDrill: runnerAuthDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const engineeringCheck = manifest.checks.find((check) =>
+      check.id === "coding-agent-engineering-self-simulation"
+    );
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(engineeringCheck?.status).toBe("fail");
+    expect(engineeringCheck?.evidence).toContain("Failed-test receipt decision: verified");
+  });
+
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
     const codingAgentReport = codingAgentReportFixture();
     codingAgentReport.outOfScope.boardItemsApplied = 1;
@@ -1518,6 +1557,24 @@ function codingAgentEngineeringSelfSimulationFixture(): CodingAgentEngineeringSe
       worktreeChangedFiles: 1,
       worktreeUnchangedFiles: 0
     },
+    negativeCases: {
+      failedTestReceipt: {
+        receiptDecision: "blocked",
+        evidenceDecision: "blocked",
+        artifactAuditDecision: "blocked",
+        failedCommands: 1,
+        accepted: 0
+      },
+      cleanWorktreeClaim: {
+        claimedChangedFile: "output/coding-agent-engineering-self-simulation/fixture-workspace/package.json",
+        receiptDecision: "verified",
+        evidenceDecision: "accepted-for-handoff",
+        artifactAuditDecision: "needs-artifacts",
+        worktreeCheckedChangedFiles: 1,
+        worktreeChangedFiles: 0,
+        worktreeUnchangedFiles: 1
+      }
+    },
     checks: {
       baselineTestFailedBeforePatch: true,
       finalTestPassedAfterPatch: true,
@@ -1529,6 +1586,8 @@ function codingAgentEngineeringSelfSimulationFixture(): CodingAgentEngineeringSe
       transcriptContentMatched: true,
       evidenceArtifactsFingerprinted: true,
       noUnsafeArtifactPaths: true,
+      failedTestClaimRejected: true,
+      cleanWorktreeClaimRejected: true,
       fixtureBoundaryClear: true
     },
     honestyClaim: {
