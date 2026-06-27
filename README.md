@@ -214,6 +214,7 @@ npm run engineering:mvp # one-command adapter registry, engineering simulation, 
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
+npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit
@@ -229,7 +230,7 @@ npm run production:boundary # confirm production verifier rejects dry-run eviden
 npm run verification:manifest # aggregate localization, executor, sandbox capability, security red-team, dispatch, simulation, runner, invocation, intake, self-test, lease, sandbox-runner, engineering-sim, receipt, and release evidence
 npm run release:verify # run all local drills, then verify dry-run scope
 npm run release:verify:production # fail unless the latest report has production evidence
-npm run verify:all # run tests, build, gateway smoke, engineering sim, dry-run verification, production negative gate, and diff check
+npm run verify:all # run tests, build, gateway smoke, engineering sim, auto-work smoke, dry-run verification, production negative gate, and diff check
 npm run build     # type-check and build
 npm run test      # run unit tests
 npm run preview   # preview the production build
@@ -277,7 +278,7 @@ npm run preview   # preview the production build
 
 `npm run release:verify` first runs the localization drill, executor contract drill, sandbox capability drill, security red-team drill, runner auth drill, coding-agent dispatch drill, coding-agent dispatch simulation drill, coding-agent runner manifest drill, coding-agent runner invocation drill, coding-agent runner intake audit drill, coding-agent runner self-test drill, coding-agent runner lease drill, coding-agent sandbox runner drill, coding-agent engineering self-simulation, coding-agent receipt drill, and release rehearsal drill, then turns the latest drill rehearsal into `naikaku.release-verification.v1`, runs the production boundary drill, and finally writes the verification manifest. It fails if localization contracts drift, dispatch packaging assigns held sessions, dispatch simulation overclaims execution readiness, runner manifest queues held work, runner invocation packaging loses ready files or writes held files, runner intake accepts unreadable or overclaimed invocation files, runner intake or sandbox preflight fail their dangerous-command classifier probes, runner self-test overclaims execution, runner lease breaks exclusive ownership or profile-scope rejection, sandbox runner local command/receipt/audit plumbing breaks or overclaims feature completion, engineering self-simulation stops proving fixture edit-test-receipt-audit closure, executor contracts overclaim, sandbox capability readiness or kill-switch behavior drifts, security red-team hostile-input boundaries drift, runner auth scope or rotation boundaries drift, coding-agent evidence gates accept mismatched or out-of-scope sandbox evidence, the production boundary stops rejecting dry-run evidence, warnings, blockers, schema drift, or secret leakage are present, release verification cannot pass for dry-run scope, or the manifest cannot prove every local gate. The workbench panel and local gateway expose the same release verifier for operator review and downloadable JSON. `npm run release:verify:production` is intentionally stricter: it returns code 4 while the evidence claim is still `dry-run`, so a sandbox drill cannot be mistaken for a production handoff.
 
-`npm run verify:all` is the recommended local and CI gate. It runs unit/domain tests, the production build, the gateway runner smoke, the fixture engineering self-simulation, `npm run release:verify`, confirms `npm run release:verify:production` returns code 4, and finishes with `git diff --check`. CI should reuse the same command so local and remote verification share one contract.
+`npm run verify:all` is the recommended local and CI gate. It runs unit/domain tests, the production build, the gateway runner smoke, the fixture engineering self-simulation, the `engineering:auto-work-smoke` external CLI receipt-import path, `npm run release:verify`, confirms `npm run release:verify:production` returns code 4, and finishes with `git diff --check`. CI should reuse the same command so local and remote verification share one contract.
 
 ## Repository Map
 

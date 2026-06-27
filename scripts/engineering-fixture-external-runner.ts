@@ -37,6 +37,7 @@ function main() {
       `session=${job.sessionId}`,
       `title=${job.title}`,
       `generatedAt=${options.generatedAt}`,
+      `runStartedAt=${new Date().toISOString()}`,
       "This file was modified by the Naikaku fixture external runner.",
       ""
     ].join("\n"),
