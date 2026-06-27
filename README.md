@@ -134,14 +134,11 @@ To launch a user-installed command-line adapter and automatically import its ret
 npm run engineering:auto-work -- \
   --mission "Implement the settings panel and run npm test" \
   --adapter-ready \
-  --command openhands \
-  --arg --always-approve \
-  --arg -f \
-  --arg {taskPath} \
+  --runner-preset openhands \
   --worktree .
 ```
 
-`--adapter-ready` is a non-interactive local assertion that the selected adapter is installed, license-reviewed, and approved for this run. It does not grant Mac desktop control, Git push, deploy, external sends, or host-secret access.
+`--runner-preset openhands` expands to `openhands --always-approve -f {taskPath}`; use `--command` and repeated `--arg` flags if the upstream tool needs a different command line. `--adapter-ready` is a non-interactive local assertion that the selected adapter is installed, license-reviewed, and approved for this run. It does not grant Mac desktop control, Git push, deploy, external sends, or host-secret access.
 
 ```bash
 npm run engineering:adapters

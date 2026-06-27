@@ -9,6 +9,8 @@ import {
 import type { SupportedLocale } from "../src/i18n";
 import { supportedLocales } from "../src/i18n";
 
+type RunnerPreset = "openhands" | "fixture";
+
 interface EngineeringAutoWorkOptions {
   mission: string | null;
   missionFile: string | null;
@@ -16,11 +18,13 @@ interface EngineeringAutoWorkOptions {
   locale: SupportedLocale;
   adapterId: ExternalRunnerAdapterId;
   adapterReady: boolean;
+  runnerPreset: RunnerPreset | null;
   commandOverride: string | null;
   argOverride: string[];
   maxJobs: number;
   timeoutMs: number;
   worktreeDir: string;
+  worktreeDirExplicit: boolean;
   requireReceipt: boolean;
   generatedAt: string;
   help: boolean;
@@ -41,6 +45,7 @@ interface EngineeringAutoWorkSummary {
   locale: SupportedLocale;
   adapterId: ExternalRunnerAdapterId;
   mode: "prepared-only" | "external-run-attempted";
+  runnerPreset: RunnerPreset | null;
   commandOverride: string | null;
   maxJobs: number;
   worktreeDir: string;
@@ -95,6 +100,7 @@ async function main() {
     printHelp();
     return;
   }
+  applyRunnerPreset(options);
 
   const outputDir = path.resolve(options.outputDir);
   const simulationDir = path.join(outputDir, "simulate");
@@ -337,6 +343,7 @@ function buildSummary({
     locale: options.locale,
     adapterId: options.adapterId,
     mode: shouldRunExternal ? "external-run-attempted" : "prepared-only",
+    runnerPreset: options.runnerPreset,
     commandOverride: options.commandOverride,
     maxJobs: options.maxJobs,
     worktreeDir: options.worktreeDir,
@@ -393,7 +400,7 @@ function buildSummary({
             "Run release verification before accepting real Development Board completion."
           ]
         : [
-            "Add --adapter-ready --command <cli> --arg ... to launch a user-installed adapter.",
+            "Add --adapter-ready --runner-preset openhands, or --adapter-ready --command <cli> --arg ..., to launch a user-installed adapter.",
             "Keep --max-jobs 1 until the adapter reliably returns Naikaku receipts."
           ]
     }
@@ -461,6 +468,7 @@ function summaryMarkdown(summary: EngineeringAutoWorkSummary) {
     `Locale: ${summary.locale}`,
     `Adapter: ${summary.adapterId}`,
     `Mode: ${summary.mode}`,
+    `Runner preset: ${summary.runnerPreset ?? "none"}`,
     `Mission: ${summary.mission}`,
     "",
     "## Decisions",
@@ -521,11 +529,13 @@ function parseArgs(args: string[]): EngineeringAutoWorkOptions {
     locale: "ja",
     adapterId: "openhands-coding-agent",
     adapterReady: false,
+    runnerPreset: null,
     commandOverride: null,
     argOverride: [],
     maxJobs: 1,
     timeoutMs: 180_000,
     worktreeDir: ".",
+    worktreeDirExplicit: false,
     requireReceipt: true,
     generatedAt: new Date().toISOString(),
     help: false
@@ -553,6 +563,9 @@ function parseArgs(args: string[]): EngineeringAutoWorkOptions {
       index += 1;
     } else if (arg === "--adapter-ready") {
       options.adapterReady = true;
+    } else if (arg === "--runner-preset") {
+      options.runnerPreset = parseRunnerPreset(requireValue(args, index, arg));
+      index += 1;
     } else if (arg === "--command") {
       options.commandOverride = requireValue(args, index, arg);
       index += 1;
@@ -567,6 +580,7 @@ function parseArgs(args: string[]): EngineeringAutoWorkOptions {
       index += 1;
     } else if (arg === "--worktree") {
       options.worktreeDir = requireValue(args, index, arg);
+      options.worktreeDirExplicit = true;
       index += 1;
     } else if (arg === "--no-require-receipt") {
       options.requireReceipt = false;
@@ -585,6 +599,34 @@ function parseArgs(args: string[]): EngineeringAutoWorkOptions {
   return options;
 }
 
+function applyRunnerPreset(options: EngineeringAutoWorkOptions) {
+  if (!options.runnerPreset || options.commandOverride) return;
+
+  if (options.runnerPreset === "openhands") {
+    options.adapterId = "openhands-coding-agent";
+    options.commandOverride = "openhands";
+    options.argOverride = ["--always-approve", "-f", "{taskPath}"];
+    return;
+  }
+
+  options.adapterId = "openhands-coding-agent";
+  options.adapterReady = true;
+  const fixtureWorktree = path.join(options.outputDir, "fixture-worktree").replace(/\\/g, "/");
+  if (!options.worktreeDirExplicit) {
+    options.worktreeDir = fixtureWorktree;
+  }
+  options.commandOverride = "tsx";
+  options.argOverride = [
+    "scripts/engineering-fixture-external-runner.ts",
+    "--job",
+    "{jobPath}",
+    "--worktree",
+    options.worktreeDir,
+    "--generated-at",
+    options.generatedAt
+  ];
+}
+
 function requireValue(args: string[], index: number, name: string) {
   const value = args[index + 1];
   if (!value || value.startsWith("--")) {
@@ -599,6 +641,11 @@ function requireArgValue(args: string[], index: number, name: string) {
     throw new Error(`${name} requires a value.`);
   }
   return value;
+}
+
+function parseRunnerPreset(value: string): RunnerPreset {
+  if (value === "openhands" || value === "fixture") return value;
+  throw new Error("Unsupported runner preset. Use one of: openhands, fixture.");
 }
 
 function parseAdapterId(value: string): ExternalRunnerAdapterId {
@@ -628,7 +675,8 @@ function printHelp() {
     "  npm run engineering:auto-work -- --mission \"Implement X\"",
     "",
     "External CLI mode:",
-    "  npm run engineering:auto-work -- --mission \"Implement X\" --adapter-ready --command openhands --arg --always-approve --arg -f --arg {taskPath}",
+    "  npm run engineering:auto-work -- --mission \"Implement X\" --adapter-ready --runner-preset openhands",
+    "  npm run engineering:auto-work -- --mission \"Smoke\" --runner-preset fixture",
     "",
     "Options:",
     "  --mission, -m <text>       Mission text. Positional text also works.",
@@ -637,6 +685,7 @@ function printHelp() {
     "  --out <dir>                Output directory. Default: output/engineering-auto-work.",
     `  --adapter <id>             Adapter id. Default: openhands-coding-agent.`,
     "  --adapter-ready            Record selected adapter as installed, license-reviewed, and approved for this run.",
+    "  --runner-preset <name>      Command preset: openhands or fixture.",
     "  --command <cmd>            User-installed external runner CLI to invoke.",
     "  --arg <arg>                Repeatable runner arg. Supports {jobPath}, {taskPath}, {receiptDraftPath}, {sessionId}.",
     "  --max-jobs <number>        Max adapter jobs to launch. Default: 1.",
