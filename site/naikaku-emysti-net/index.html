@@ -3,16 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Naikaku AI Togo System | EMYSTI</title>
+    <title>Naikaku AI 統合システム | EMYSTI</title>
     <meta
       name="description"
-      content="Naikaku AI Togo System is a Japan-born multi-model AI cabinet workbench by EMYSTI. Download the public-source developer preview and run governed AI coding workflows locally."
+      content="Naikaku AI 統合システムは、EMYSTI が開発する日本語主導の多モデル AI 内閣制ワークベンチです。公開ソースの macOS Developer Preview をダウンロードできます。"
     />
     <link rel="canonical" href="https://naikaku.emysti.net/" />
-    <meta property="og:title" content="Naikaku AI Togo System | EMYSTI" />
+    <meta property="og:title" content="Naikaku AI 統合システム | EMYSTI" />
     <meta
       property="og:description"
-      content="A governed multi-model AI cabinet workbench for planning, coding runners, sandboxed execution, critique, supervision, and evidence-based iteration."
+      content="日本語主導で、英語・中国語にも対応する、多モデル AI 内閣制ワークベンチ。計画、コード実行、監督、批評、証拠付き反復を統合します。"
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://naikaku.emysti.net/" />
@@ -43,6 +43,7 @@
         margin: 0;
         background: var(--paper);
         color: var(--ink);
+        overflow-x: hidden;
       }
 
       a {
@@ -107,13 +108,22 @@
         padding: clamp(54px, 8vw, 104px) clamp(20px, 5vw, 72px) 54px;
       }
 
+      .hero > *,
+      .download > *,
+      .grid > *,
+      .api-row > *,
+      .language-row > * {
+        min-width: 0;
+      }
+
       .hero h1 {
         max-width: 760px;
         margin: 0;
-        font-size: clamp(44px, 7vw, 92px);
-        line-height: 0.95;
+        font-size: clamp(42px, 6.5vw, 86px);
+        line-height: 1;
         font-weight: 780;
         letter-spacing: 0;
+        overflow-wrap: anywhere;
       }
 
       .lead {
@@ -122,6 +132,7 @@
         font-size: clamp(18px, 2vw, 23px);
         line-height: 1.55;
         color: var(--muted);
+        overflow-wrap: anywhere;
       }
 
       .jp {
@@ -130,6 +141,25 @@
         font-size: 16px;
         line-height: 1.8;
         color: #303437;
+        overflow-wrap: anywhere;
+      }
+
+      .translation {
+        max-width: 650px;
+        margin: 18px 0 0;
+        padding-left: 14px;
+        border-left: 3px solid rgba(19, 21, 22, 0.12);
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+      }
+
+      .translation strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink);
+        font-size: 13px;
       }
 
       .actions {
@@ -168,6 +198,7 @@
       }
 
       .hero-media {
+        margin: 0;
         background: var(--white);
         border: 1px solid rgba(19, 21, 22, 0.1);
         border-radius: 8px;
@@ -178,6 +209,7 @@
       .hero-media img {
         display: block;
         width: 100%;
+        max-width: 100%;
         height: auto;
       }
 
@@ -214,6 +246,7 @@
       .tile li {
         color: var(--muted);
         line-height: 1.65;
+        overflow-wrap: anywhere;
       }
 
       .tile p {
@@ -231,6 +264,7 @@
         font-size: clamp(32px, 4vw, 54px);
         line-height: 1.04;
         letter-spacing: 0;
+        overflow-wrap: anywhere;
       }
 
       .download {
@@ -301,6 +335,12 @@
         gap: 18px;
       }
 
+      .language-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr;
+        gap: 18px;
+      }
+
       .accent-blue {
         border-top: 4px solid var(--blue);
       }
@@ -332,8 +372,25 @@
 
         .hero,
         .download,
-        .api-row {
+        .api-row,
+        .language-row {
           grid-template-columns: 1fr;
+        }
+
+        .hero h1 {
+          font-size: clamp(34px, 10.5vw, 48px);
+          line-height: 1.05;
+          word-break: break-all;
+        }
+
+        .hero-media {
+          width: 100%;
+          max-width: 100%;
+        }
+
+        .section-title {
+          font-size: clamp(28px, 8.5vw, 40px);
+          word-break: break-all;
         }
 
         .hero-media {
@@ -342,6 +399,40 @@
 
         .grid {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .hero,
+        .band,
+        .nav {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .hero > div,
+        .hero-media,
+        .section-title,
+        .lead,
+        .jp,
+        .translation,
+        .grid,
+        .download,
+        .api-row,
+        .language-row {
+          width: 100%;
+          max-width: 342px;
+        }
+
+        .nav-links {
+          max-width: 342px;
+          row-gap: 10px;
+        }
+
+        .button {
+          min-width: 0;
+          padding-left: 16px;
+          padding-right: 16px;
         }
       }
     </style>
@@ -354,7 +445,7 @@
           <span>Naikaku AI Togo System</span>
         </a>
         <div class="nav-links">
-          <a href="#download">Download</a>
+          <a href="#download">ダウンロード</a>
           <a href="#api">API</a>
           <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system">GitHub</a>
           <a href="https://www.emysti.net">EMYSTI</a>
@@ -363,19 +454,29 @@
 
       <section class="hero">
         <div>
-          <h1>AI work should pass through a cabinet.</h1>
+          <h1>AI の仕事に、内閣制の統合を。</h1>
           <p class="lead">
-            Naikaku is a Japan-born multi-model AI workbench for governed planning,
-            coding runners, sandboxed execution, critique, supervision, and evidence-based iteration.
+            Naikaku AI 統合システムは、計画、コード実行、サンドボックス、
+            批評、監督、証拠付き反復をひとつの運用画面にまとめる、
+            日本発の多モデル AI 内閣制ワークベンチです。
           </p>
           <p class="jp">
-            日本語を主言語に、英語・簡体字中国語・繁体字中国語・韓国語を扱う
-            AI 内閣制統合システムです。ユーザー自身の API キーでも、将来の
-            EMYSTI API Gateway でも動く設計を目指しています。
+            日本語を主言語に、英語・中国語にも対応。ユーザー自身の API キーでも、
+            将来の EMYSTI API Gateway でも動く設計を目指しています。
+          </p>
+          <p class="translation" lang="en">
+            <strong>English</strong>
+            A governed multi-model AI cabinet workbench for planning, coding runners,
+            sandboxed execution, critique, supervision, and evidence-based iteration.
+          </p>
+          <p class="translation" lang="zh-Hans">
+            <strong>中文</strong>
+            面向多模型 AI 协作的内阁制工作台，支持规划、代码执行、沙箱运行、
+            批评监督和基于证据的迭代。
           </p>
           <div class="actions">
-            <a class="button primary" href="#download">Download v0.1.0</a>
-            <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system">View source</a>
+            <a class="button primary" href="#download">v0.1.0 をダウンロード</a>
+            <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system">ソースを見る</a>
           </div>
         </div>
         <figure class="hero-media">
@@ -387,27 +488,54 @@
       </section>
 
       <section class="band white">
-        <h2 class="section-title">One mission, several supervised roles, auditable work.</h2>
+        <h2 class="section-title">ひとつの依頼を、複数の役割で監督し、証拠付きで進める。</h2>
         <div class="grid">
           <article class="tile accent-blue">
-            <h3>Cabinet governance</h3>
+            <h3>内閣制ガバナンス</h3>
             <p>
-              Prime minister, critic, supervisor, execution, safety, memory, and scoring roles can
-              vote before runner work continues.
+              首相、批評、監督、実行、安全、記憶、採点などの役割が、
+              ランナー実行の前後で判断と確認を行います。
             </p>
           </article>
           <article class="tile accent-green">
-            <h3>Bring your own API</h3>
+            <h3>自分の API を使える</h3>
             <p>
-              Use OpenAI-compatible providers, OpenRouter, Anthropic, Aliyun DashScope/Qwen,
-              Gemini, local models, or a custom endpoint.
+              OpenAI 互換、OpenRouter、Anthropic、Aliyun DashScope/Qwen、Gemini、
+              ローカルモデル、独自エンドポイントを役割ごとに設定できます。
             </p>
           </article>
           <article class="tile accent-gold">
-            <h3>Runner boundaries</h3>
+            <h3>実行権限の境界</h3>
             <p>
-              Local coding agents and computer-control tools sit behind presets, readiness checks,
-              receipts, evidence review, and artifact audit.
+              コーディングエージェントや PC 操作ツールは、プリセット、準備確認、
+              実行記録、証拠レビュー、成果物監査の後ろに置きます。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band">
+        <h2 class="section-title">日本語を主軸に、英語と中国語でも伝わる設計。</h2>
+        <div class="language-row">
+          <article class="tile">
+            <h3>日本語</h3>
+            <p>
+              操作画面、説明、判断ログ、公開ページは日本語を主言語にします。
+              日本の企業、開発者、現場導入を前提にした言葉で設計します。
+            </p>
+          </article>
+          <article class="tile">
+            <h3>English</h3>
+            <p>
+              Core product concepts, release notes, and developer instructions remain understandable
+              for international contributors and API-provider integrations.
+            </p>
+          </article>
+          <article class="tile">
+            <h3>中文</h3>
+            <p>
+              面向中文用户和贡献者保留清晰说明，方便理解项目定位、下载方式、
+              API 接入和非商业授权边界。
             </p>
           </article>
         </div>
@@ -416,10 +544,10 @@
       <section class="band" id="download">
         <div class="download">
           <div>
-            <h2 class="section-title">Download the macOS developer preview.</h2>
+            <h2 class="section-title">macOS Developer Preview をダウンロード。</h2>
             <p class="lead">
-              The first release is intentionally honest: not a signed Mac app yet, but a downloadable
-              package that lets technical users run the public-source workbench locally.
+              最初の公開版は、まだ署名済みの Mac アプリではありません。
+              技術ユーザーがローカルで実行できる開発者向けアーカイブとして提供します。
             </p>
             <pre><code>tar -xzf naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz
 cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
@@ -428,49 +556,49 @@ npm run dev</code></pre>
           </div>
           <aside class="release-card">
             <h2>v0.1.0</h2>
-            <p>Mac Developer Preview. Node.js 22 or newer recommended.</p>
+            <p>Mac Developer Preview。Node.js 22 以上を推奨します。</p>
             <div class="release-links">
-              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz">tar.gz <span>Download</span></a>
-              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.zip">zip <span>Download</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz">tar.gz <span>ダウンロード</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.zip">zip <span>ダウンロード</span></a>
               <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/CHECKSUMS-SHA256.txt">checksums <span>SHA-256</span></a>
-              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/latest">release notes <span>GitHub</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/latest">リリースノート <span>GitHub</span></a>
             </div>
           </aside>
         </div>
       </section>
 
       <section class="band white" id="api">
-        <h2 class="section-title">API freedom now, EMYSTI gateway later.</h2>
+        <h2 class="section-title">自分の API でも、将来の EMYSTI Gateway でも。</h2>
         <div class="api-row">
           <article class="tile">
-            <h3>Use my own API keys</h3>
+            <h3>自分の API キーを使う</h3>
             <ul>
-              <li>Provider, endpoint, model, and API-key alias per role.</li>
-              <li>Session-only secret handling through the local gateway.</li>
-              <li>Local replay provider for no-cost plumbing tests.</li>
+              <li>役割ごとに provider、endpoint、model、API-key alias を設定。</li>
+              <li>ローカル gateway 経由でセッション単位の secret を扱う設計。</li>
+              <li>費用を使わずに配線確認できる local replay provider。</li>
             </ul>
           </article>
           <article class="tile">
-            <h3>Use EMYSTI API Gateway</h3>
+            <h3>EMYSTI API Gateway を使う</h3>
             <ul>
-              <li>Planned official endpoint for routing, billing, audit, and model fallback.</li>
-              <li>Designed to sit beside BYO keys rather than replace them.</li>
-              <li>Future fit for teams that want fewer provider accounts and cleaner cost control.</li>
+              <li>ルーティング、課金、監査、モデル fallback の公式入口として計画。</li>
+              <li>ユーザー所有の API キーを置き換えるのではなく、隣に置く設計。</li>
+              <li>複数 provider 契約やコスト管理を簡単にしたいチーム向け。</li>
             </ul>
           </article>
         </div>
       </section>
 
       <section class="band">
-        <h2 class="section-title">Public source, noncommercial license.</h2>
+        <h2 class="section-title">公開ソース、非商用ライセンス。</h2>
         <p class="lead">
-          Naikaku AI Togo System is published by 合同会社EMYSTI for noncommercial use under
-          the PolyForm Noncommercial License 1.0.0. Commercial use, SaaS, resale, paid
-          integrations, client delivery, or commercial modification requires separate written permission.
+          Naikaku AI Togo System は、合同会社EMYSTI が PolyForm Noncommercial License 1.0.0
+          のもとで非商用利用向けに公開しています。商用利用、SaaS、再販売、有償統合、
+          顧客納品、商用改造には別途書面による許諾が必要です。
         </p>
         <div class="actions">
           <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/blob/main/LICENSE">License</a>
-          <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/blob/main/COMMERCIAL-LICENSE.md">Commercial terms</a>
+          <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/blob/main/COMMERCIAL-LICENSE.md">商用利用について</a>
         </div>
       </section>
     </main>
