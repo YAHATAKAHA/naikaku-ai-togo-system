@@ -6,6 +6,7 @@ import { buildCodingAgentDispatchArchive } from "../src/domain/codingAgentDispat
 import { auditCodingAgentDispatchArchive } from "../src/domain/codingAgentDispatchArchiveAudit";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerIntakeAudit } from "../src/domain/codingAgentRunnerIntakeAudit";
 import { buildCodingAgentRunnerInvocationPackage } from "../src/domain/codingAgentRunnerInvocation";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
@@ -39,6 +40,7 @@ interface LocaleDrillResult {
   simulationDecision: string;
   runnerManifestDecision: string;
   runnerInvocationDecision: string;
+  runnerIntakeDecision: string;
   runnerSelfTestDecision: string;
   sandboxRunnerPreflightDecision: string;
   receiptDecision: string;
@@ -53,6 +55,7 @@ interface LocaleDrillResult {
   runnerTasks: number;
   runnerInvocationReadyInvocations: number;
   runnerInvocationFiles: number;
+  runnerIntakeAccepted: number;
   runnerSelfTestWouldRun: number;
   runnerSelfTestNotExecutedCommands: number;
   sandboxRunnerPreflightReadyTasks: number;
@@ -68,6 +71,7 @@ interface LocaleDrillResult {
     simulationContractStable: boolean;
     runnerManifestContractStable: boolean;
     runnerInvocationContractStable: boolean;
+    runnerIntakeContractStable: boolean;
     runnerSelfTestContractStable: boolean;
     sandboxRunnerPreflightContractStable: boolean;
     copyReady: boolean;
@@ -98,6 +102,7 @@ interface LocalizationDrillSummary {
     runnerTasks: number;
     runnerInvocationReadyInvocations: number;
     runnerInvocationFiles: number;
+    runnerIntakeAccepted: number;
     runnerSelfTestWouldRun: number;
     runnerSelfTestNotExecutedCommands: number;
     sandboxRunnerPreflightReadyTasks: number;
@@ -179,6 +184,7 @@ async function main() {
         0
       ),
       runnerInvocationFiles: locales.reduce((total, item) => total + item.runnerInvocationFiles, 0),
+      runnerIntakeAccepted: locales.reduce((total, item) => total + item.runnerIntakeAccepted, 0),
       runnerSelfTestWouldRun: locales.reduce((total, item) => total + item.runnerSelfTestWouldRun, 0),
       runnerSelfTestNotExecutedCommands: locales.reduce(
         (total, item) => total + item.runnerSelfTestNotExecutedCommands,
@@ -196,7 +202,7 @@ async function main() {
     },
     honestyClaim: {
       level: "local-drill",
-      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, dispatch manifests, dispatch simulations, runner manifests, runner invocation packages, runner self-tests, sandbox runner preflights, assignment drills, and receipt templates without changing machine contracts.",
+      claim: "This drill verifies that every supported operator locale can generate coding-agent briefs, review reports, session bundles, dispatch manifests, dispatch simulations, runner manifests, runner invocation packages, runner intake audits, runner self-tests, sandbox runner preflights, assignment drills, and receipt templates without changing machine contracts.",
       limitations: [
         "It does not run a browser UI screenshot pass.",
         "It does not call model providers, external coding agents, runners, deploy targets, or Git remotes.",
@@ -280,6 +286,10 @@ async function runLocaleDrill({
     invocationBasePath: `output/localization-drill/${locale}/runner-invocations`,
     generatedAt
   });
+  const runnerIntake = buildCodingAgentRunnerIntakeAudit({
+    invocationPackage: runnerInvocation,
+    generatedAt
+  });
   const runnerSelfTest = buildCodingAgentRunnerSelfTest({
     manifest: runnerManifest,
     generatedAt
@@ -301,6 +311,10 @@ async function runLocaleDrill({
       review.operatorLocale === locale &&
       bundle.operatorLocale === locale &&
       drill.operatorLocale === locale &&
+      runnerManifest.operatorLocale === locale &&
+      runnerInvocation.operatorLocale === locale &&
+      runnerIntake.operatorLocale === locale &&
+      runnerSelfTest.operatorLocale === locale &&
       receipt.operatorLocale === locale,
     promptLanguageInstruction: briefs.briefs.every((brief) =>
       brief.prompt.includes(`Operator language: ${locale}.`) &&
@@ -404,6 +418,27 @@ async function runLocaleDrill({
         item.runnerInstructions.some((instruction) => instruction.includes("Return the completed receipt")) &&
         item.expectedEvidenceArtifacts.every((artifact) => artifact.path.startsWith(item.evidenceArtifactPrefix))
       ),
+    runnerIntakeContractStable:
+      runnerIntake.operatorLocale === locale &&
+      runnerIntake.sourceDecision === "package-ready" &&
+      runnerIntake.decision === "accepted-for-runner" &&
+      runnerIntake.summary.acceptedIntakes === runnerInvocation.summary.readyInvocations &&
+      runnerIntake.summary.invocationFiles === runnerInvocation.summary.invocationFiles &&
+      runnerIntake.summary.receiptDraftPaths === runnerInvocation.summary.receiptDraftPaths &&
+      runnerIntake.summary.sourceBlockedChecks === 0 &&
+      runnerIntake.summary.completedCommandResults === 0 &&
+      runnerIntake.summary.unsafePaths === 0 &&
+      runnerIntake.items.every((item) =>
+        item.intakeStatus === "accepted-for-runner" &&
+        item.invocationPath?.startsWith(`output/localization-drill/${locale}/runner-invocations/`) &&
+        item.commands.every((command) =>
+          command.status === "pending-real-execution" &&
+          command.exitCode === null &&
+          Boolean(command.transcriptRef?.startsWith(item.evidenceArtifactPrefix))
+        ) &&
+        item.runnerInstructions.some((instruction) => instruction.includes("Return the completed receipt")) &&
+        item.expectedEvidenceArtifacts.every((artifact) => artifact.path.startsWith(item.evidenceArtifactPrefix))
+      ),
     runnerSelfTestContractStable:
       runnerSelfTest.operatorLocale === locale &&
       runnerSelfTest.sourceDecision === "runner-ready" &&
@@ -465,6 +500,7 @@ async function runLocaleDrill({
     simulationDecision: simulation.decision,
     runnerManifestDecision: runnerManifest.decision,
     runnerInvocationDecision: runnerInvocation.decision,
+    runnerIntakeDecision: runnerIntake.decision,
     runnerSelfTestDecision: runnerSelfTest.decision,
     sandboxRunnerPreflightDecision: sandboxRunnerPreflight.decision,
     receiptDecision: receipt.decision,
@@ -479,6 +515,7 @@ async function runLocaleDrill({
     runnerTasks: runnerManifest.summary.runnerTasks,
     runnerInvocationReadyInvocations: runnerInvocation.summary.readyInvocations,
     runnerInvocationFiles: runnerInvocation.summary.invocationFiles,
+    runnerIntakeAccepted: runnerIntake.summary.acceptedIntakes,
     runnerSelfTestWouldRun: runnerSelfTest.summary.wouldRun,
     runnerSelfTestNotExecutedCommands: runnerSelfTest.summary.notExecutedCommands,
     sandboxRunnerPreflightReadyTasks: sandboxRunnerPreflight.summary.readyTasks,
@@ -498,6 +535,7 @@ async function runLocaleDrill({
   await writeJson(path.join(localeDir, "dispatch-simulation.json"), simulation);
   await writeJson(path.join(localeDir, "runner-manifest.json"), runnerManifest);
   await writeJson(path.join(localeDir, "runner-invocation-package.json"), runnerInvocation);
+  await writeJson(path.join(localeDir, "runner-intake-audit.json"), runnerIntake);
   await writeJson(path.join(localeDir, "runner-self-test.json"), runnerSelfTest);
   await writeJson(path.join(localeDir, "sandbox-runner-preflight.json"), sandboxRunnerPreflight);
   await writeJson(path.join(localeDir, "session-drill.json"), drill);
@@ -591,6 +629,7 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
     `- Runner tasks: ${summary.summary.runnerTasks}`,
     `- Runner invocation ready: ${summary.summary.runnerInvocationReadyInvocations}`,
     `- Runner invocation files: ${summary.summary.runnerInvocationFiles}`,
+    `- Runner intake accepted: ${summary.summary.runnerIntakeAccepted}`,
     `- Runner self-test would-run: ${summary.summary.runnerSelfTestWouldRun}`,
     `- Runner self-test not-executed commands: ${summary.summary.runnerSelfTestNotExecutedCommands}`,
     `- Sandbox runner preflight ready tasks: ${summary.summary.sandboxRunnerPreflightReadyTasks}`,
@@ -613,6 +652,7 @@ function summaryMarkdown(summary: LocalizationDrillSummary) {
       `- Simulation: ${item.simulationDecision} (${item.simulationReadyForAgent} ready, ${item.simulationReceiptDrafts} receipt drafts)`,
       `- Runner manifest: ${item.runnerManifestDecision} (${item.runnerReadyTasks} ready, ${item.runnerTasks} runner tasks)`,
       `- Runner invocation: ${item.runnerInvocationDecision} (${item.runnerInvocationReadyInvocations} ready, ${item.runnerInvocationFiles} files)`,
+      `- Runner intake: ${item.runnerIntakeDecision} (${item.runnerIntakeAccepted} accepted)`,
       `- Runner self-test: ${item.runnerSelfTestDecision} (${item.runnerSelfTestWouldRun} would-run, ${item.runnerSelfTestNotExecutedCommands} not-executed commands)`,
       `- Sandbox runner preflight: ${item.sandboxRunnerPreflightDecision} (${item.sandboxRunnerPreflightReadyTasks} ready, ${item.sandboxRunnerPreflightExpectedProcessExecutions} expected processes)`,
       `- Receipt: ${item.receiptDecision} (${item.pendingReceiptItems} pending)`,
@@ -680,7 +720,7 @@ Options:
 
 The drill verifies Japanese-first locale order and runs the coding-agent handoff,
 dispatch archive audit, dispatch simulation, runner manifest, runner invocation,
-runner self-test, and sandbox runner preflight chain for ja,
+runner intake audit, runner self-test, and sandbox runner preflight chain for ja,
 en, zh-Hans, zh-Hant, and ko without executing real agents.`);
 }
 
@@ -694,7 +734,7 @@ function printSummary(summary: LocalizationDrillSummary) {
       `[${status}] ${item.locale}: ${item.briefs} briefs, ${item.readySessions} ready sessions, ` +
       `${item.wouldAssign} would assign, ${item.dispatchReady} dispatch ready, ` +
       `${item.simulationReadyForAgent} simulation ready, ${item.runnerTasks} runner tasks, ` +
-      `${item.runnerInvocationFiles} invocation files, ` +
+      `${item.runnerInvocationFiles} invocation files, ${item.runnerIntakeAccepted} intake accepted, ` +
       `${item.runnerSelfTestWouldRun} self-test would-run, ` +
       `${item.sandboxRunnerPreflightReadyTasks} sandbox preflight ready, receipt ${item.receiptDecision}` +
       (item.failures.length ? `, failures: ${item.failures.join(", ")}` : "")

@@ -2,6 +2,7 @@ import type {
   CodingAgentDispatchDrillSummary,
   CodingAgentDispatchSimulationSummary,
   CodingAgentReceiptDrillSummary,
+  CodingAgentRunnerIntakeAuditDrillSummary,
   CodingAgentRunnerInvocationDrillSummary,
   CodingAgentRunnerManifestDrillSummary,
   CodingAgentRunnerSelfTestDrillSummary,
@@ -29,6 +30,7 @@ export interface BuildVerificationManifestInput {
   codingAgentDispatchSimulation: CodingAgentDispatchSimulationSummary;
   codingAgentRunnerManifest: CodingAgentRunnerManifestDrillSummary;
   codingAgentRunnerInvocation: CodingAgentRunnerInvocationDrillSummary;
+  codingAgentRunnerIntake: CodingAgentRunnerIntakeAuditDrillSummary;
   codingAgentRunnerSelfTest: CodingAgentRunnerSelfTestDrillSummary;
   codingAgentSandboxRunner: CodingAgentSandboxRunnerDrillSummary;
   codingAgentReport: CodingAgentReceiptDrillSummary;
@@ -42,6 +44,7 @@ export interface BuildVerificationManifestInput {
     codingAgentDispatchSimulation: string;
     codingAgentRunnerManifest: string;
     codingAgentRunnerInvocation: string;
+    codingAgentRunnerIntakeAudit: string;
     codingAgentRunnerSelfTest: string;
     codingAgentSandboxRunner: string;
     codingAgentReceiptDrill: string;
@@ -57,6 +60,7 @@ export function buildVerificationManifest({
   codingAgentDispatchSimulation,
   codingAgentRunnerManifest,
   codingAgentRunnerInvocation,
+  codingAgentRunnerIntake,
   codingAgentRunnerSelfTest,
   codingAgentSandboxRunner,
   codingAgentReport,
@@ -72,6 +76,7 @@ export function buildVerificationManifest({
     codingAgentSimulationCheck(codingAgentDispatchSimulation),
     codingAgentRunnerManifestCheck(codingAgentRunnerManifest),
     codingAgentRunnerInvocationCheck(codingAgentRunnerInvocation),
+    codingAgentRunnerIntakeCheck(codingAgentRunnerIntake),
     codingAgentRunnerSelfTestCheck(codingAgentRunnerSelfTest),
     codingAgentSandboxRunnerCheck(codingAgentSandboxRunner),
     codingAgentValidCheck(codingAgentReport),
@@ -96,6 +101,7 @@ export function buildVerificationManifest({
       codingAgentDispatchSimulationGeneratedAt: codingAgentDispatchSimulation.generatedAt,
       codingAgentRunnerManifestGeneratedAt: codingAgentRunnerManifest.generatedAt,
       codingAgentRunnerInvocationGeneratedAt: codingAgentRunnerInvocation.generatedAt,
+      codingAgentRunnerIntakeAuditGeneratedAt: codingAgentRunnerIntake.generatedAt,
       codingAgentRunnerSelfTestGeneratedAt: codingAgentRunnerSelfTest.generatedAt,
       codingAgentSandboxRunnerGeneratedAt: codingAgentSandboxRunner.generatedAt,
       codingAgentGeneratedAt: codingAgentReport.generatedAt,
@@ -120,7 +126,7 @@ export function buildVerificationManifest({
       limitations: [
         "It reads existing local drill outputs and release verification output; it does not rerun commands itself.",
         "It does not prove production runner, provider, browser, deploy target, external service, or Git remote execution.",
-        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner self-test, sandbox runner, receipt, and release verification source reports attached."
+        "It is valid only with the referenced localization, executor, production boundary, dispatch, dispatch simulation, runner manifest, runner invocation, runner intake audit, runner self-test, sandbox runner, receipt, and release verification source reports attached."
       ],
       productionRequirements: [
         "Attach authenticated production runner evidence before external handoff.",
@@ -284,6 +290,65 @@ function codingAgentRunnerInvocationCheck(report: CodingAgentRunnerInvocationDri
     nextAction: ok
       ? "Keep the invocation package summary attached before handing per-task files to governed coding-agent runners."
       : "Restore invocation packaging so only runner-ready tasks receive executable handoff files."
+  };
+}
+
+function codingAgentRunnerIntakeCheck(report: CodingAgentRunnerIntakeAuditDrillSummary): VerificationManifestCheck {
+  const checksPassed = Object.values(report.checks).every(Boolean);
+  const ok = report.schema === "naikaku.coding-agent-runner-intake-audit-drill.v1"
+    && report.source.runnerInvocationDecision === "package-ready"
+    && report.source.readyInvocations > 0
+    && report.source.invocationFiles === report.source.readyInvocations
+    && report.source.commandContracts > 0
+    && report.source.receiptDraftPaths === report.source.readyInvocations
+    && report.valid.decision === "accepted-for-runner"
+    && report.valid.acceptedIntakes === report.source.invocationFiles
+    && report.valid.blockedIntakes === 0
+    && report.valid.invocationFiles === report.valid.acceptedIntakes
+    && report.valid.invocationFilesFound === report.valid.invocationFiles
+    && report.valid.markdownFilesFound === report.valid.invocationFiles
+    && report.valid.commandContracts === report.source.commandContracts
+    && report.valid.expectedEvidenceArtifacts > 0
+    && report.valid.receiptDraftPaths === report.valid.acceptedIntakes
+    && report.valid.unsafePaths === 0
+    && report.valid.sourceBlockedChecks === 0
+    && report.valid.completedCommandResults === 0
+    && report.productionHeld.decision === "needs-review"
+    && report.productionHeld.acceptedIntakes === 0
+    && report.productionHeld.invocationFiles === 0
+    && report.productionHeld.invocationFilesFound === 0
+    && report.productionHeld.receiptDraftPaths === 0
+    && report.productionHeld.unsafePaths === 0
+    && checksPassed;
+
+  return {
+    id: "coding-agent-runner-intake-audit",
+    status: ok ? "pass" : "fail",
+    summary: ok
+      ? "Coding-agent runner intake audit accepted only readable ready invocation files and kept production-held sessions unaccepted."
+      : "Coding-agent runner intake audit did not preserve readable-file, pending-command, or production-held boundaries.",
+    evidence: [
+      `Schema: ${report.schema}`,
+      `Runner invocation decision: ${report.source.runnerInvocationDecision}`,
+      `Source ready invocations: ${report.source.readyInvocations}`,
+      `Source invocation files: ${report.source.invocationFiles}`,
+      `Source command contracts: ${report.source.commandContracts}`,
+      `Intake decision: ${report.valid.decision}`,
+      `Accepted intakes: ${report.valid.acceptedIntakes}`,
+      `Blocked intakes: ${report.valid.blockedIntakes}`,
+      `Invocation files: ${report.valid.invocationFiles}`,
+      `Invocation files found: ${report.valid.invocationFilesFound}`,
+      `Markdown files found: ${report.valid.markdownFilesFound}`,
+      `Completed command results: ${report.valid.completedCommandResults}`,
+      `Source blocked checks: ${report.valid.sourceBlockedChecks}`,
+      `Unsafe paths: ${report.valid.unsafePaths}`,
+      `Production-held decision: ${report.productionHeld.decision}`,
+      `Production-held accepted intakes: ${report.productionHeld.acceptedIntakes}`,
+      `Production-held invocation files found: ${report.productionHeld.invocationFilesFound}`
+    ],
+    nextAction: ok
+      ? "Keep the intake audit summary attached before a governed runner consumes invocation files."
+      : "Restore runner intake auditing so only readable, package-ready invocation files can reach coding runners."
   };
 }
 
@@ -569,6 +634,8 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     locale.runnerInvocationDecision === "package-ready" &&
     locale.runnerInvocationReadyInvocations === locale.runnerTasks &&
     locale.runnerInvocationFiles === locale.runnerInvocationReadyInvocations &&
+    locale.runnerIntakeDecision === "accepted-for-runner" &&
+    locale.runnerIntakeAccepted === locale.runnerInvocationReadyInvocations &&
     locale.runnerSelfTestDecision === "self-test-ready" &&
     locale.runnerSelfTestWouldRun === locale.runnerTasks &&
     locale.runnerSelfTestNotExecutedCommands > 0 &&
@@ -576,6 +643,7 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     Boolean(locale.checks.simulationContractStable) &&
     Boolean(locale.checks.runnerManifestContractStable) &&
     Boolean(locale.checks.runnerInvocationContractStable) &&
+    Boolean(locale.checks.runnerIntakeContractStable) &&
     Boolean(locale.checks.runnerSelfTestContractStable)
   );
   const ok = report.schema === "naikaku.localization-drill.v1"
@@ -589,6 +657,7 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
     && report.summary.runnerTasks === report.summary.dispatchReady
     && report.summary.runnerInvocationReadyInvocations === report.summary.runnerTasks
     && report.summary.runnerInvocationFiles === report.summary.runnerInvocationReadyInvocations
+    && report.summary.runnerIntakeAccepted === report.summary.runnerInvocationReadyInvocations
     && report.summary.runnerSelfTestWouldRun === report.summary.runnerTasks
     && report.summary.runnerSelfTestNotExecutedCommands > 0
     && report.summary.simulationReadyForAgent > 0
@@ -616,6 +685,7 @@ function localizationDrillCheck(report: LocalizationDrillSummary): VerificationM
       `Runner tasks: ${report.summary.runnerTasks}`,
       `Runner invocation ready: ${report.summary.runnerInvocationReadyInvocations}`,
       `Runner invocation files: ${report.summary.runnerInvocationFiles}`,
+      `Runner intake accepted: ${report.summary.runnerIntakeAccepted}`,
       `Runner self-test would-run: ${report.summary.runnerSelfTestWouldRun}`,
       `Runner self-test not-executed commands: ${report.summary.runnerSelfTestNotExecutedCommands}`,
       `Pending receipt items: ${report.summary.pendingReceiptItems}`,
