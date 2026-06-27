@@ -116,11 +116,12 @@ The workbench defaults to `dry-run`. Switch to `live providers` only when the ga
 For a basic command-line MVP flow, run a mission through the supervised engineering simulator:
 
 ```bash
+npm run engineering:adapters
 npm run engineering:simulate -- --mission "Implement the settings panel and run npm test"
 npm run engineering:run-local
 ```
 
-The first command writes `output/engineering-simulate/summary.md` plus JSON contracts for the launch profile, self-simulation, launch queue, runner manifest, Mac readiness, and Mac contract. The second command consumes that package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. It does not control macOS, commit, push, deploy, or send messages.
+The adapter command writes `output/engineering-adapters/adapter-registry.json` and `.md`, listing the built-in local runner plus external candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP runners, and Hermes-style runtimes. `engineering:simulate` writes `output/engineering-simulate/summary.md` plus JSON contracts for the launch profile, self-simulation, launch queue, runner manifest, Mac readiness, Mac contract, and adapter registry. `engineering:run-local` consumes that package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. It does not control macOS, commit, push, deploy, or send messages.
 
 For desktop or browser control, Naikaku should use existing open-source runners as adapters instead of rebuilding the control layer. OpenClaw-style desktop control, OpenHands/Codex-style coding agents, browser-use or Playwright browser runners, Hammerspoon Mac automation, E2B-style desktop sandboxes, and MCP tool runners can plug in behind the same approval, allowlist, log, receipt, and artifact-audit contracts. Compatible licenses and attribution must be checked before vendoring code; the safer default is invoking user-installed runners through scoped adapter processes.
 
@@ -142,6 +143,7 @@ npm run coding-agent:runner-lease # self-simulate exclusive runner task leasing 
 npm run coding-agent:sandbox-runner # execute allowlisted local verification commands and audit drill receipts
 npm run coding-agent:gateway-smoke # start local gateway and prove lease-gated sandbox execution over HTTP
 npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its test, and verify receipt/audit evidence
+npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:simulate # prepare a mission's launch profile, self-simulation, queue, runner contracts, and Mac readiness without executing work
 npm run engineering:run-local # consume engineering:simulate output, run preflight-allowed local commands, and write receipts/evidence
 npm run coding-agent:drill # self-simulate valid, mismatched, and sandbox-prefix coding-agent receipt evidence

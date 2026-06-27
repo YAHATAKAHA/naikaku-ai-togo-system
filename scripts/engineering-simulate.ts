@@ -20,6 +20,7 @@ import { buildEngineeringLaunchQueue } from "../src/domain/engineeringLaunchQueu
 import { buildEngineeringMacRunnerContract } from "../src/domain/engineeringMacRunnerContract";
 import { buildEngineeringMacRunnerReadiness } from "../src/domain/engineeringMacRunnerReadiness";
 import { buildEngineeringSelfSimulationReport } from "../src/domain/engineeringSelfSimulation";
+import { buildExternalRunnerAdapterRegistry } from "../src/domain/externalRunnerAdapters";
 import { createDefaultWorkspace } from "../src/domain/storage";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import type { SupportedLocale } from "../src/i18n";
@@ -208,6 +209,9 @@ async function main() {
     readiness: macReadiness,
     generatedAt: options.generatedAt
   });
+  const adapterRegistry = buildExternalRunnerAdapterRegistry({
+    generatedAt: options.generatedAt
+  });
   const files = {
     summary: "summary.json",
     markdown: "summary.md",
@@ -217,6 +221,7 @@ async function main() {
     executionReceipt: "execution-receipt.json",
     macReadiness: "mac-runner-readiness.json",
     macContract: "mac-runner-contract.json",
+    adapterRegistry: "adapter-registry.json",
     sessionBundle: "session-bundle.json",
     runnerManifest: "runner-manifest.json",
     runnerInvocation: "runner-invocation.json",
@@ -278,6 +283,7 @@ async function main() {
   await writeJson(path.join(outputDir, files.executionReceipt), executionReceipt);
   await writeJson(path.join(outputDir, files.macReadiness), macReadiness);
   await writeJson(path.join(outputDir, files.macContract), macContract);
+  await writeJson(path.join(outputDir, files.adapterRegistry), adapterRegistry);
   await writeJson(path.join(outputDir, files.sessionBundle), bundle);
   await writeJson(path.join(outputDir, files.runnerManifest), runnerManifest);
   await writeJson(path.join(outputDir, files.runnerInvocation), runnerInvocation);
