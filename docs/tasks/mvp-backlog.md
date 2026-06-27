@@ -65,6 +65,7 @@ Acceptance:
 - Operators can run a runner lease drill that proves one scoped runner owns a task at a time, same-runner retries are idempotent, competing runners are blocked, expired leases can be reclaimed, wrong-profile runners are denied, and production-held sessions receive no active leases.
 - Gateway sandbox-runner execution rejects missing, expired, mismatched, unissued, or wrong-runner lease ledgers before any command starts.
 - Operators can run a coding-agent sandbox runner drill that executes only allowlisted local verification commands, writes transcripts/evidence/receipt/audit artifacts, and keeps the result separate from Development Board completion.
+- Operators and CI can run a local gateway smoke that starts scoped runner auth, proves missing and unissued sandbox-runner leases are blocked over HTTP, then executes with a gateway-issued lease.
 - Operators can export a receipt template, import a filled receipt, and review it without treating structural evidence as independent command execution.
 - Operators can export a coding-agent implementation evidence summary from reviewed receipts without treating the summary as independent execution proof.
 - Operators can have accepted and locally artifact-audited coding-agent implementation evidence mark matched Development Board items done while blocked, incomplete, artifact-unverified, and unmatched items remain held for review.

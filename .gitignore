@@ -17,6 +17,7 @@ output/coding-agent-runner-intake-audit
 output/coding-agent-runner-self-test
 output/coding-agent-runner-lease
 output/coding-agent-sandbox-runner
+output/coding-agent-gateway-runner-smoke
 output/rehearsal
 output/rehearsal-drill
 output/release-drill

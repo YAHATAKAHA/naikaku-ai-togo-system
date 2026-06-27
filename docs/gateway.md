@@ -1304,6 +1304,14 @@ Response:
 
 A `sandbox-runner-verified` decision proves the local command/evidence/receipt/audit plumbing can run inside the current workspace. It must not be treated as proof that feature implementation work was done by a real coding agent.
 
+For a reproducible local HTTP check, run:
+
+```bash
+npm run coding-agent:gateway-smoke
+```
+
+The smoke starts a temporary `127.0.0.1` gateway with synthetic scoped runner credentials, proves `/v1/development/coding-briefs/sandbox-runner` rejects missing and fabricated unissued lease ledgers with `409`, claims a lease through `/v1/development/coding-briefs/runner-lease`, then executes the sandbox-runner route with the gateway-issued lease.
+
 ### `POST /v1/development/coding-briefs/session-drill`
 
 Simulates assignment decisions for a previously built coding-agent session bundle. This endpoint does not call a model provider, external coding agent, shell, browser, deploy target, external service, or Git remote. It only reports which sessions would be assignable in a governed sandbox and which must stay held.

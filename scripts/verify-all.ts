@@ -21,6 +21,11 @@ const steps: CommandStep[] = [
     args: ["run", "build"]
   },
   {
+    label: "Gateway runner smoke with scoped auth, lease blocking, issued lease execution, and sandbox evidence",
+    command: npmCommand,
+    args: ["run", "coding-agent:gateway-smoke"]
+  },
+  {
     label: "Dry-run release verification with localization, executor, sandbox capability, security red-team, runner auth, coding-agent dispatch/simulation/runner/invocation/intake/self-test/lease/sandbox-runner/receipt drills and manifest",
     command: npmCommand,
     args: ["run", "release:verify"]
