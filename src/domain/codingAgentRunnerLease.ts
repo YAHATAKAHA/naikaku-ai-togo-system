@@ -6,8 +6,10 @@ import type {
   CodingAgentRunnerLeaseItemStatus,
   CodingAgentRunnerLeaseLedger,
   CodingAgentRunnerLeaseRecord,
+  CodingAgentRunnerLeaseValidation,
   CodingAgentRunnerSelfTest,
   CodingAgentRunnerSelfTestItem,
+  CodingAgentSandboxRunnerPreflight,
   ExecutorProfileId
 } from "./types";
 
@@ -25,6 +27,20 @@ export interface ClaimCodingAgentRunnerLeaseInput {
   allowedExecutorProfiles: ExecutorProfileId[];
   requestedSessionId?: string;
   attemptedAt?: string;
+}
+
+export interface ClaimAvailableCodingAgentRunnerLeasesInput {
+  ledger: CodingAgentRunnerLeaseLedger;
+  runnerId: string;
+  allowedExecutorProfiles: ExecutorProfileId[];
+  attemptedAt?: string;
+}
+
+export interface ValidateCodingAgentRunnerLeaseInput {
+  ledger: CodingAgentRunnerLeaseLedger;
+  preflight: CodingAgentSandboxRunnerPreflight;
+  runnerId: string;
+  checkedAt?: string;
 }
 
 export function buildCodingAgentRunnerLeaseLedger({
@@ -169,6 +185,113 @@ export function claimCodingAgentRunnerLease({
       ? "Expired lease was reclaimed by a scoped runner."
       : "Lease granted to a scoped runner."
   });
+}
+
+export function claimAvailableCodingAgentRunnerLeases({
+  ledger,
+  runnerId,
+  allowedExecutorProfiles,
+  attemptedAt = new Date().toISOString()
+}: ClaimAvailableCodingAgentRunnerLeasesInput): CodingAgentRunnerLeaseLedger {
+  let next = ledger;
+  const claimableSessionIds = ledger.items
+    .filter((item) =>
+      item.sourceSelfTestStatus === "would-run" &&
+      allowedExecutorProfiles.includes(item.executorProfileId)
+    )
+    .map((item) => item.sessionId);
+
+  for (const sessionId of claimableSessionIds) {
+    next = claimCodingAgentRunnerLease({
+      ledger: next,
+      runnerId,
+      allowedExecutorProfiles,
+      requestedSessionId: sessionId,
+      attemptedAt
+    });
+  }
+
+  return next;
+}
+
+export function validateCodingAgentRunnerLeaseForPreflight({
+  ledger,
+  preflight,
+  runnerId,
+  checkedAt = new Date().toISOString()
+}: ValidateCodingAgentRunnerLeaseInput): CodingAgentRunnerLeaseValidation {
+  const checkedAtMs = Date.parse(checkedAt);
+  const readyItems = preflight.items.filter((item) => item.preflightStatus === "ready");
+  const acceptedLeaseIds: string[] = [];
+  const missingSessionIds: string[] = [];
+  const expiredSessionIds: string[] = [];
+  const runnerMismatchSessionIds: string[] = [];
+  const profileMismatchSessionIds: string[] = [];
+  const sourceMismatch = ledger.sourceSchema !== preflight.sourceSchema ||
+    ledger.sourceDecision !== preflight.sourceDecision ||
+    ledger.runId !== preflight.runId ||
+    ledger.operatorLocale !== preflight.operatorLocale;
+
+  for (const item of readyItems) {
+    const lease = ledger.leases.find((candidate) =>
+      candidate.sessionId === item.sessionId &&
+      candidate.status === "active"
+    );
+
+    if (!lease) {
+      missingSessionIds.push(item.sessionId);
+      continue;
+    }
+
+    if (Number.isFinite(checkedAtMs) && Date.parse(lease.expiresAt) <= checkedAtMs) {
+      expiredSessionIds.push(item.sessionId);
+      continue;
+    }
+
+    if (lease.runnerId !== runnerId) {
+      runnerMismatchSessionIds.push(item.sessionId);
+      continue;
+    }
+
+    if (lease.executorProfileId !== item.executorProfileId) {
+      profileMismatchSessionIds.push(item.sessionId);
+      continue;
+    }
+
+    acceptedLeaseIds.push(lease.leaseId);
+  }
+
+  const ok = !sourceMismatch &&
+    readyItems.length > 0 &&
+    acceptedLeaseIds.length === readyItems.length &&
+    missingSessionIds.length === 0 &&
+    expiredSessionIds.length === 0 &&
+    runnerMismatchSessionIds.length === 0 &&
+    profileMismatchSessionIds.length === 0;
+
+  return {
+    ok,
+    checkedAt,
+    runnerId,
+    readySessionIds: readyItems.map((item) => item.sessionId),
+    acceptedLeaseIds,
+    missingSessionIds,
+    expiredSessionIds,
+    runnerMismatchSessionIds,
+    profileMismatchSessionIds,
+    unissuedSessionIds: [],
+    sourceMismatch,
+    message: ok
+      ? `Runner ${runnerId} has active leases for ${acceptedLeaseIds.length} ready task(s).`
+      : leaseValidationMessage({
+        readyItems: readyItems.length,
+        sourceMismatch,
+        missingSessionIds,
+        expiredSessionIds,
+        runnerMismatchSessionIds,
+        profileMismatchSessionIds
+      })
+  };
 }
 
 export function serializeCodingAgentRunnerLeaseLedger(ledger: CodingAgentRunnerLeaseLedger) {
@@ -467,4 +590,28 @@ function honestyClaim(): CodingAgentRunnerLeaseLedger["honestyClaim"] {
 
 function hashFor(parts: string[]) {
   return createHash("sha256").update(parts.join("\0")).digest("hex").slice(0, 16);
+}
+
+function leaseValidationMessage({
+  readyItems,
+  sourceMismatch,
+  missingSessionIds,
+  expiredSessionIds,
+  runnerMismatchSessionIds,
+  profileMismatchSessionIds
+}: {
+  readyItems: number;
+  sourceMismatch: boolean;
+  missingSessionIds: string[];
+  expiredSessionIds: string[];
+  runnerMismatchSessionIds: string[];
+  profileMismatchSessionIds: string[];
+}) {
+  if (readyItems === 0) return "No ready preflight tasks were available for lease validation.";
+  if (sourceMismatch) return "Lease ledger does not match the preflight source self-test.";
+  if (missingSessionIds.length) return `Missing active leases for ${missingSessionIds.length} ready task(s).`;
+  if (expiredSessionIds.length) return `Expired leases for ${expiredSessionIds.length} ready task(s).`;
+  if (runnerMismatchSessionIds.length) return `Lease runner mismatch for ${runnerMismatchSessionIds.length} ready task(s).`;
+  if (profileMismatchSessionIds.length) return `Lease executor profile mismatch for ${profileMismatchSessionIds.length} ready task(s).`;
+  return "Lease validation failed.";
 }

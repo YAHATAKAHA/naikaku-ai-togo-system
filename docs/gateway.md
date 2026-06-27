@@ -1089,6 +1089,47 @@ Response:
 
 The response must keep command exit codes null and command status `not-executed`. A self-test-ready decision means the runner contract is consumable, not that a coding agent has completed the task.
 
+### `POST /v1/development/coding-briefs/runner-lease`
+
+Claims runner ownership before sandbox execution. The route uses the same runner authentication and executor profile scope as executor-facing routes. If `requestedSessionId` is omitted, the gateway claims every available would-run task that matches the authenticated runner scope; if it is present, only that session is claimed. Set `claimAll` to `false` to claim one available task. Same-runner retries are idempotent, competing active leases stay denied, expired leases can be reclaimed, and production-held sessions remain unleased. The gateway records issued active lease ids in memory for the current process, so `/v1/development/coding-briefs/sandbox-runner` requires a lease that was claimed from this running gateway.
+
+```json
+{
+  "selfTest": {
+    "schema": "naikaku.coding-agent-runner-self-test.v1",
+    "decision": "self-test-ready",
+    "items": []
+  },
+  "leaseLedger": {
+    "schema": "naikaku.coding-agent-runner-lease.v1"
+  },
+  "requestedSessionId": "coding-brief-team-execution-minister-work-package",
+  "claimAll": true
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-runner-lease.v1",
+  "mode": "runner-task-lease",
+  "decision": "lease-ready",
+  "summary": {
+    "availableTasks": 0,
+    "activeLeases": 8,
+    "expiredLeases": 0,
+    "deniedAttempts": 0
+  },
+  "honestyClaim": {
+    "level": "runner-task-lease",
+    "claim": "This ledger coordinates exclusive runner task ownership before sandbox execution without running commands or claiming implementation work."
+  }
+}
+```
+
+This endpoint does not execute commands. It prepares the lease ledger that `/v1/development/coding-briefs/sandbox-runner` requires before execution. Restarting the gateway clears the local issuance registry, so a runner must claim a fresh lease before executing.
+
 ### `POST /v1/development/coding-briefs/sandbox-runner/preflight`
 
 Consumes a runner self-test plus the matching session bundle and checks whether the sandbox runner may execute. This endpoint does not execute commands. It verifies the self-test status, bundle/session match, local command allowlist, expected transcript/evidence paths, and the honesty boundary before the executable sandbox runner route is called.
@@ -1138,9 +1179,9 @@ A `ready` preflight means the inputs are eligible for the local sandbox runner. 
 
 ### `POST /v1/development/coding-briefs/sandbox-runner`
 
-Consumes a ready runner self-test and the matching session bundle, then executes only the gateway's local sandbox-runner allowlist. Today that allowlist is `npm run test` and `npm run build`. The endpoint writes session-scoped transcripts, changed-file summary placeholders, evidence artifacts, a submitted receipt, receipt review, implementation evidence, and artifact audit. It does not call a model, implement backlog work, browse, control desktops, call MCP tools, call providers, deploy, commit, push, or claim production evidence.
+Consumes a ready runner self-test, the matching session bundle, and an active runner lease ledger, then executes only the gateway's local sandbox-runner allowlist. Today that allowlist is `npm run test` and `npm run build`. The endpoint writes session-scoped transcripts, changed-file summary placeholders, evidence artifacts, a submitted receipt, receipt review, implementation evidence, and artifact audit. It does not call a model, implement backlog work, browse, control desktops, call MCP tools, call providers, deploy, commit, push, or claim production evidence.
 
-The execution route always reruns the sandbox runner preflight server-side before any command starts, even if the caller already used the preflight endpoint. If that server-side preflight is not `ready`, the route returns `409` with the preflight payload and does not execute commands. This prevents direct API callers from bypassing the Workbench preflight step.
+The execution route always reruns the sandbox runner preflight server-side before any command starts, even if the caller already used the preflight endpoint. It then validates the lease ledger against the authenticated runner id, ready preflight sessions, executor profiles, lease expiry times, and the current gateway's in-memory issuance registry. If the server-side preflight is not `ready` or the lease ledger is missing, expired, mismatched, unissued by this gateway process, or owned by another runner, the route returns `409` and does not execute commands. This prevents direct API callers from bypassing the Workbench preflight and lease steps.
 
 If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route requires runner authentication. Scoped credentials additionally enforce executor profile scope.
 
@@ -1155,6 +1196,11 @@ If `NAIKAKU_RUNNER_TOKEN` or `NAIKAKU_RUNNER_CREDENTIALS` is set, this route req
     "schema": "naikaku.coding-agent-session-bundle.v1",
     "decision": "ready",
     "sessions": []
+  },
+  "leaseLedger": {
+    "schema": "naikaku.coding-agent-runner-lease.v1",
+    "decision": "lease-ready",
+    "leases": []
   },
   "sandboxPolicy": {
     "killSwitchArmed": true,
@@ -1174,7 +1220,43 @@ Blocked preflight response:
     "schema": "naikaku.coding-agent-sandbox-runner-preflight.v1",
     "decision": "blocked"
   },
-  "gatewayRunnerId": "local-gateway",
+  "gatewayRunnerId": "anonymous-dev-runner",
+  "authMode": "development-open"
+}
+```
+
+Blocked lease response:
+
+```json
+{
+  "ok": false,
+  "message": "Sandbox runner lease is not valid; execution was not started.",
+  "leaseValidation": {
+    "ok": false,
+    "missingSessionIds": ["coding-brief-team-execution-minister-work-package"],
+    "expiredSessionIds": [],
+    "runnerMismatchSessionIds": [],
+    "unissuedSessionIds": []
+  },
+  "gatewayRunnerId": "anonymous-dev-runner",
+  "authMode": "development-open"
+}
+```
+
+Blocked unissued lease response:
+
+```json
+{
+  "ok": false,
+  "message": "Sandbox runner lease was not issued by this gateway; execution was not started.",
+  "leaseValidation": {
+    "ok": false,
+    "missingSessionIds": [],
+    "expiredSessionIds": [],
+    "runnerMismatchSessionIds": [],
+    "unissuedSessionIds": ["coding-brief-team-execution-minister-work-package"]
+  },
+  "gatewayRunnerId": "anonymous-dev-runner",
   "authMode": "development-open"
 }
 ```
@@ -1208,6 +1290,11 @@ Response:
   },
   "artifactAudit": {
     "schema": "naikaku.coding-agent-implementation-artifact-audit.v1"
+  },
+  "leaseValidation": {
+    "ok": true,
+    "acceptedLeaseIds": ["lease-..."],
+    "unissuedSessionIds": []
   },
   "honestyClaim": {
     "level": "local-sandbox-runner-drill"

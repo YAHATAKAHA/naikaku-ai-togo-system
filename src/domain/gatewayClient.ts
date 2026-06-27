@@ -12,6 +12,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
+  CodingAgentRunnerLeaseLedger,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -778,9 +779,33 @@ export async function createCodingAgentRunnerSelfTestViaGateway(
   return (await response.json()) as CodingAgentRunnerSelfTest;
 }
 
+export async function createCodingAgentRunnerLeaseViaGateway(
+  selfTest: CodingAgentRunnerSelfTest,
+  leaseLedger?: CodingAgentRunnerLeaseLedger,
+  requestedSessionId?: string,
+  claimAll = true,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-lease`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ selfTest, leaseLedger, requestedSessionId, claimAll }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway coding agent runner lease failed"));
+  }
+
+  return (await response.json()) as CodingAgentRunnerLeaseLedger;
+}
+
 export async function runCodingAgentSandboxRunnerViaGateway(
   selfTest: CodingAgentRunnerSelfTest,
   bundle: CodingAgentSessionBundle,
+  leaseLedger: CodingAgentRunnerLeaseLedger,
   sandboxPolicy?: SandboxPolicy,
   timeoutMs?: number,
   signal?: AbortSignal
@@ -790,7 +815,7 @@ export async function runCodingAgentSandboxRunnerViaGateway(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ selfTest, bundle, sandboxPolicy, timeoutMs }),
+    body: JSON.stringify({ selfTest, bundle, leaseLedger, sandboxPolicy, timeoutMs }),
     signal
   });
 

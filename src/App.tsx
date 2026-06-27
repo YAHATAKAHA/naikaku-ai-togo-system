@@ -154,6 +154,7 @@ import {
   createCodingAgentDispatchSimulationViaGateway,
   createCodingAgentRunnerIntakeViaGateway,
   createCodingAgentRunnerInvocationViaGateway,
+  createCodingAgentRunnerLeaseViaGateway,
   createCodingAgentRunnerManifestViaGateway,
   createCodingAgentRunnerSelfTestViaGateway,
   createCodingAgentSandboxRunnerPreflightViaGateway,
@@ -2934,9 +2935,13 @@ export function App() {
         return;
       }
 
+      const leaseLedger = await createCodingAgentRunnerLeaseViaGateway(
+        codingAgentRunnerSelfTest
+      );
       const result = await runCodingAgentSandboxRunnerViaGateway(
         codingAgentRunnerSelfTest,
         codingAgentSessionBundle,
+        leaseLedger,
         workspace.sandboxPolicy
       );
 
@@ -2980,6 +2985,11 @@ export function App() {
           preflight: result.preflight.decision,
           preflightExpectedProcessExecutions: result.preflight.summary.expectedProcessExecutions,
           preflightAllowedCommands: result.preflight.summary.allowedCommands,
+          runnerLeaseDecision: leaseLedger.decision,
+          runnerLeaseActiveLeases: leaseLedger.summary.activeLeases,
+          runnerLeaseDeniedAttempts: leaseLedger.summary.deniedAttempts,
+          leaseValidation: result.leaseValidation?.ok ?? null,
+          leaseValidationAcceptedLeases: result.leaseValidation?.acceptedLeaseIds.length ?? null,
           receiptReview: result.receiptReview.decision,
           implementationEvidence: result.implementationEvidence.decision,
           artifactAudit: result.artifactAudit.decision,

@@ -11,6 +11,12 @@ import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispa
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
 import { buildCodingAgentRunnerIntakeAudit } from "../src/domain/codingAgentRunnerIntakeAudit";
 import { buildCodingAgentRunnerInvocationPackage } from "../src/domain/codingAgentRunnerInvocation";
+import {
+  buildCodingAgentRunnerLeaseLedger,
+  claimAvailableCodingAgentRunnerLeases,
+  claimCodingAgentRunnerLease,
+  validateCodingAgentRunnerLeaseForPreflight
+} from "../src/domain/codingAgentRunnerLease";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
 import { buildCodingAgentSandboxRunnerPreflight } from "../src/domain/codingAgentSandboxRunnerPreflight";
@@ -45,6 +51,8 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerIntakeAudit,
   CodingAgentRunnerInvocationPackage,
+  CodingAgentRunnerLeaseLedger,
+  CodingAgentRunnerLeaseValidation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -90,6 +98,17 @@ import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolic
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
 const host = process.env.NAIKAKU_GATEWAY_HOST || "127.0.0.1";
 const corsOrigin = process.env.NAIKAKU_CORS_ORIGIN || "http://127.0.0.1:5173";
+const issuedCodingAgentRunnerLeases = new Map<string, {
+  leaseId: string;
+  sessionId: string;
+  runnerId: string;
+  executorProfileId: ExecutorProfileId;
+  sourceSchema: CodingAgentRunnerLeaseLedger["sourceSchema"];
+  sourceDecision: CodingAgentRunnerLeaseLedger["sourceDecision"];
+  runId?: string;
+  operatorLocale: string;
+  expiresAt: string;
+}>();
 
 const server = createServer(async (request, response) => {
   setCors(response);
@@ -131,6 +150,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-runner-invocation",
           "coding-agent-runner-intake-audit",
           "coding-agent-runner-self-test",
+          "coding-agent-runner-lease",
           "coding-agent-sandbox-runner-preflight",
           "coding-agent-sandbox-runner",
           "coding-agent-session-drill",
@@ -873,6 +893,57 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-lease") {
+      const auth = authorizeExecutorRequest(request, response);
+      if (!auth) return;
+
+      const body = await readJson<{
+        selfTest?: CodingAgentRunnerSelfTest;
+        leaseLedger?: CodingAgentRunnerLeaseLedger;
+        requestedSessionId?: string;
+        claimAll?: boolean;
+      }>(request);
+      if (body.selfTest?.schema !== "naikaku.coding-agent-runner-self-test.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "selfTest with schema naikaku.coding-agent-runner-self-test.v1 is required."
+        });
+        return;
+      }
+      if (body.leaseLedger && body.leaseLedger.schema !== "naikaku.coding-agent-runner-lease.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "leaseLedger with schema naikaku.coding-agent-runner-lease.v1 is required."
+        });
+        return;
+      }
+
+      const sourceLedger = body.leaseLedger || buildCodingAgentRunnerLeaseLedger({
+        selfTest: body.selfTest
+      });
+      const leaseLedger = body.requestedSessionId || body.claimAll === false
+        ? claimCodingAgentRunnerLease({
+          ledger: sourceLedger,
+          runnerId: auth.runnerId,
+          allowedExecutorProfiles: auth.allowedExecutorProfiles,
+          requestedSessionId: body.requestedSessionId
+        })
+        : claimAvailableCodingAgentRunnerLeases({
+          ledger: sourceLedger,
+          runnerId: auth.runnerId,
+          allowedExecutorProfiles: auth.allowedExecutorProfiles
+        });
+      rememberIssuedCodingAgentRunnerLeases(leaseLedger);
+
+      sendJson(response, 200, {
+        ...leaseLedger,
+        gatewayRunnerId: auth.runnerId,
+        authMode: auth.mode,
+        gatewayRunnerScope: runnerScopePayload(auth)
+      });
+      return;
+    }
+
     if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/sandbox-runner/preflight") {
       const body = await readJson<{
         selfTest?: CodingAgentRunnerSelfTest;
@@ -909,6 +980,7 @@ const server = createServer(async (request, response) => {
       const body = await readJson<{
         selfTest?: CodingAgentRunnerSelfTest;
         bundle?: CodingAgentSessionBundle;
+        leaseLedger?: CodingAgentRunnerLeaseLedger;
         sandboxPolicy?: SandboxPolicy;
         timeoutMs?: number;
       }>(request);
@@ -923,6 +995,16 @@ const server = createServer(async (request, response) => {
         sendJson(response, 422, {
           ok: false,
           message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      if (body.leaseLedger?.schema !== "naikaku.coding-agent-runner-lease.v1") {
+        sendJson(response, 409, {
+          ok: false,
+          message: "Sandbox runner execution requires an active runner lease ledger.",
+          gatewayRunnerId: auth.runnerId,
+          authMode: auth.mode,
+          gatewayRunnerScope: runnerScopePayload(auth)
         });
         return;
       }
@@ -952,6 +1034,39 @@ const server = createServer(async (request, response) => {
         });
         return;
       }
+      const leaseValidation: CodingAgentRunnerLeaseValidation = validateCodingAgentRunnerLeaseForPreflight({
+        ledger: body.leaseLedger,
+        preflight,
+        runnerId: auth.runnerId
+      });
+      if (!leaseValidation.ok) {
+        sendJson(response, 409, {
+          ok: false,
+          message: "Sandbox runner lease is not valid; execution was not started.",
+          preflight,
+          leaseValidation,
+          gatewayRunnerId: auth.runnerId,
+          authMode: auth.mode,
+          gatewayRunnerScope: runnerScopePayload(auth)
+        });
+        return;
+      }
+      const gatewayIssuedLeaseValidation = validateGatewayIssuedCodingAgentRunnerLeases({
+        ledger: body.leaseLedger,
+        validation: leaseValidation
+      });
+      if (!gatewayIssuedLeaseValidation.ok) {
+        sendJson(response, 409, {
+          ok: false,
+          message: "Sandbox runner lease was not issued by this gateway; execution was not started.",
+          preflight,
+          leaseValidation: gatewayIssuedLeaseValidation,
+          gatewayRunnerId: auth.runnerId,
+          authMode: auth.mode,
+          gatewayRunnerScope: runnerScopePayload(auth)
+        });
+        return;
+      }
       const result: CodingAgentSandboxRunnerResult = await runCodingAgentSandboxRunner({
         selfTest: body.selfTest,
         bundle: body.bundle,
@@ -962,7 +1077,8 @@ const server = createServer(async (request, response) => {
         ...result,
         gatewayRunnerId: auth.runnerId,
         authMode: auth.mode,
-        gatewayRunnerScope: runnerScopePayload(auth)
+        gatewayRunnerScope: runnerScopePayload(auth),
+        leaseValidation: gatewayIssuedLeaseValidation
       });
       return;
     }
@@ -1169,6 +1285,70 @@ function ensureRunnerCanAccessProfiles({
     auditTags: ["runner-auth", "scope-denied", auth.runnerId, ...deniedProfiles]
   });
   return false;
+}
+
+function rememberIssuedCodingAgentRunnerLeases(ledger: CodingAgentRunnerLeaseLedger) {
+  pruneIssuedCodingAgentRunnerLeases(new Date().toISOString());
+
+  for (const lease of ledger.leases) {
+    if (lease.status !== "active") continue;
+    issuedCodingAgentRunnerLeases.set(lease.leaseId, {
+      leaseId: lease.leaseId,
+      sessionId: lease.sessionId,
+      runnerId: lease.runnerId,
+      executorProfileId: lease.executorProfileId,
+      sourceSchema: ledger.sourceSchema,
+      sourceDecision: ledger.sourceDecision,
+      runId: ledger.runId,
+      operatorLocale: ledger.operatorLocale,
+      expiresAt: lease.expiresAt
+    });
+  }
+}
+
+function validateGatewayIssuedCodingAgentRunnerLeases({
+  ledger,
+  validation
+}: {
+  ledger: CodingAgentRunnerLeaseLedger;
+  validation: CodingAgentRunnerLeaseValidation;
+}): CodingAgentRunnerLeaseValidation {
+  pruneIssuedCodingAgentRunnerLeases(validation.checkedAt);
+  const acceptedLeaseIds = new Set(validation.acceptedLeaseIds);
+  const unissuedSessionIds = ledger.leases
+    .filter((lease) => lease.status === "active" && acceptedLeaseIds.has(lease.leaseId))
+    .filter((lease) => {
+      const issued = issuedCodingAgentRunnerLeases.get(lease.leaseId);
+      return !issued ||
+        issued.sessionId !== lease.sessionId ||
+        issued.runnerId !== validation.runnerId ||
+        issued.executorProfileId !== lease.executorProfileId ||
+        issued.sourceSchema !== ledger.sourceSchema ||
+        issued.sourceDecision !== ledger.sourceDecision ||
+        issued.runId !== ledger.runId ||
+        issued.operatorLocale !== ledger.operatorLocale;
+    })
+    .map((lease) => lease.sessionId);
+
+  if (unissuedSessionIds.length === 0) return validation;
+
+  return {
+    ...validation,
+    ok: false,
+    unissuedSessionIds,
+    message: `Lease ids were not issued by this gateway for ${unissuedSessionIds.length} ready task(s).`
+  };
+}
+
+function pruneIssuedCodingAgentRunnerLeases(now: string) {
+  const nowMs = Date.parse(now);
+  if (!Number.isFinite(nowMs)) return;
+
+  for (const [leaseId, lease] of issuedCodingAgentRunnerLeases.entries()) {
+    if (Date.parse(lease.expiresAt) <= nowMs) {
+      issuedCodingAgentRunnerLeases.delete(leaseId);
+    }
+  }
 }
 
 function authorizeExecutorRequest(

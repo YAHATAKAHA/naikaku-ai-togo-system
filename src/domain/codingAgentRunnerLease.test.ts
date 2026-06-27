@@ -8,11 +8,14 @@ import { buildCodingAgentDispatchSimulation } from "./codingAgentDispatchSimulat
 import { buildCodingAgentRunnerManifest } from "./codingAgentRunnerManifest";
 import {
   buildCodingAgentRunnerLeaseLedger,
+  claimAvailableCodingAgentRunnerLeases,
   claimCodingAgentRunnerLease,
   serializeCodingAgentRunnerLeaseLedger,
-  serializeCodingAgentRunnerLeaseLedgerMarkdown
+  serializeCodingAgentRunnerLeaseLedgerMarkdown,
+  validateCodingAgentRunnerLeaseForPreflight
 } from "./codingAgentRunnerLease";
 import { buildCodingAgentRunnerSelfTest } from "./codingAgentRunnerSelfTest";
+import { buildCodingAgentSandboxRunnerPreflight } from "./codingAgentSandboxRunnerPreflight";
 import { buildCodingAgentSessionBundle } from "./codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "./codingAgentSessionDrill";
 import { buildDevelopmentBoard } from "./developmentBoard";
@@ -135,6 +138,107 @@ describe("coding agent runner lease", () => {
     expect(ledger.attempts.at(-1)?.reason).toContain(firstTask.executorProfileId);
   });
 
+  it("validates active leases for every ready preflight task", () => {
+    const bundle = defaultBundle();
+    const selfTest = defaultSelfTest(bundle);
+    const preflight = buildCodingAgentSandboxRunnerPreflight({ selfTest, bundle });
+    const ledger = claimAvailableCodingAgentRunnerLeases({
+      ledger: buildCodingAgentRunnerLeaseLedger({
+        selfTest,
+        leaseTtlMs: 60_000
+      }),
+      runnerId: "runner-alpha",
+      allowedExecutorProfiles: ["shell-container", "browser-sandbox", "desktop-vm", "mcp-proxy", "human-approval"],
+      attemptedAt: "2026-06-27T00:00:00.000Z"
+    });
+    const validation = validateCodingAgentRunnerLeaseForPreflight({
+      ledger,
+      preflight,
+      runnerId: "runner-alpha",
+      checkedAt: "2026-06-27T00:00:30.000Z"
+    });
+
+    expect(ledger.summary.activeLeases).toBe(preflight.summary.readyTasks);
+    expect(validation.ok).toBe(true);
+    expect(validation.acceptedLeaseIds).toHaveLength(preflight.summary.readyTasks);
+    expect(validation.missingSessionIds).toEqual([]);
+    expect(validation.unissuedSessionIds).toEqual([]);
+  });
+
+  it("fails validation when ready tasks are missing leases", () => {
+    const bundle = defaultBundle();
+    const selfTest = defaultSelfTest(bundle);
+    const preflight = buildCodingAgentSandboxRunnerPreflight({ selfTest, bundle });
+    const ledger = buildCodingAgentRunnerLeaseLedger({ selfTest });
+    const validation = validateCodingAgentRunnerLeaseForPreflight({
+      ledger,
+      preflight,
+      runnerId: "runner-alpha",
+      checkedAt: "2026-06-27T00:00:30.000Z"
+    });
+
+    expect(validation.ok).toBe(false);
+    expect(validation.missingSessionIds).toHaveLength(preflight.summary.readyTasks);
+    expect(validation.message).toContain("Missing active leases");
+  });
+
+  it("fails validation when leases belong to another runner or are expired", () => {
+    const bundle = defaultBundle();
+    const selfTest = defaultSelfTest(bundle);
+    const preflight = buildCodingAgentSandboxRunnerPreflight({ selfTest, bundle });
+    const ledger = claimAvailableCodingAgentRunnerLeases({
+      ledger: buildCodingAgentRunnerLeaseLedger({
+        selfTest,
+        leaseTtlMs: 60_000
+      }),
+      runnerId: "runner-alpha",
+      allowedExecutorProfiles: ["shell-container", "browser-sandbox", "desktop-vm", "mcp-proxy", "human-approval"],
+      attemptedAt: "2026-06-27T00:00:00.000Z"
+    });
+    const wrongRunner = validateCodingAgentRunnerLeaseForPreflight({
+      ledger,
+      preflight,
+      runnerId: "runner-beta",
+      checkedAt: "2026-06-27T00:00:30.000Z"
+    });
+    const expired = validateCodingAgentRunnerLeaseForPreflight({
+      ledger,
+      preflight,
+      runnerId: "runner-alpha",
+      checkedAt: "2026-06-27T00:02:00.000Z"
+    });
+
+    expect(wrongRunner.ok).toBe(false);
+    expect(wrongRunner.runnerMismatchSessionIds).toHaveLength(preflight.summary.readyTasks);
+    expect(expired.ok).toBe(false);
+    expect(expired.expiredSessionIds).toHaveLength(preflight.summary.readyTasks);
+  });
+
+  it("fails validation when the lease ledger came from a different self-test source", () => {
+    const bundle = defaultBundle();
+    const selfTest = defaultSelfTest(bundle);
+    const preflight = buildCodingAgentSandboxRunnerPreflight({ selfTest, bundle });
+    const ledger = claimAvailableCodingAgentRunnerLeases({
+      ledger: {
+        ...buildCodingAgentRunnerLeaseLedger({ selfTest }),
+        runId: "different-run"
+      },
+      runnerId: "runner-alpha",
+      allowedExecutorProfiles: ["shell-container", "browser-sandbox", "desktop-vm", "mcp-proxy", "human-approval"],
+      attemptedAt: "2026-06-27T00:00:00.000Z"
+    });
+    const validation = validateCodingAgentRunnerLeaseForPreflight({
+      ledger,
+      preflight,
+      runnerId: "runner-alpha",
+      checkedAt: "2026-06-27T00:00:30.000Z"
+    });
+
+    expect(validation.ok).toBe(false);
+    expect(validation.sourceMismatch).toBe(true);
+    expect(validation.message).toContain("does not match");
+  });
+
   it("keeps production-held self-tests out of the lease queue", () => {
     const selfTest = productionHeldSelfTest();
     const ledger = buildCodingAgentRunnerLeaseLedger({ selfTest });
@@ -166,8 +270,8 @@ describe("coding agent runner lease", () => {
   });
 });
 
-function defaultSelfTest() {
-  const manifest = defaultRunnerManifest();
+function defaultSelfTest(bundle?: ReturnType<typeof defaultBundle>) {
+  const manifest = defaultRunnerManifest(bundle);
   return buildCodingAgentRunnerSelfTest({
     manifest,
     generatedAt: manifest.generatedAt
@@ -190,8 +294,8 @@ function productionHeldSelfTest() {
   return buildCodingAgentRunnerSelfTest({ manifest });
 }
 
-function defaultRunnerManifest() {
-  const simulation = defaultSimulation();
+function defaultRunnerManifest(bundle?: ReturnType<typeof defaultBundle>) {
+  const simulation = defaultSimulation(bundle);
   return buildCodingAgentRunnerManifest({
     simulation,
     receiptDraftPaths: draftPathsFor(simulation),
@@ -199,8 +303,7 @@ function defaultRunnerManifest() {
   });
 }
 
-function defaultSimulation() {
-  const bundle = defaultBundle();
+function defaultSimulation(bundle = defaultBundle()) {
   const dispatch = buildCodingAgentDispatchManifest({
     bundle,
     drill: buildCodingAgentSessionDrill({ bundle }),

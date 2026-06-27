@@ -2426,6 +2426,21 @@ export interface CodingAgentRunnerLeaseLedger {
   };
 }
 
+export interface CodingAgentRunnerLeaseValidation {
+  ok: boolean;
+  checkedAt: string;
+  runnerId: string;
+  readySessionIds: string[];
+  acceptedLeaseIds: string[];
+  missingSessionIds: string[];
+  expiredSessionIds: string[];
+  runnerMismatchSessionIds: string[];
+  profileMismatchSessionIds: string[];
+  unissuedSessionIds: string[];
+  sourceMismatch: boolean;
+  message: string;
+}
+
 export type CodingAgentSandboxRunnerPreflightDecision =
   | "ready"
   | "needs-review"
@@ -2598,6 +2613,7 @@ export interface CodingAgentSandboxRunnerResult {
   artifactAudit: CodingAgentImplementationArtifactAudit;
   gatewayRunnerId?: string;
   authMode?: string;
+  leaseValidation?: CodingAgentRunnerLeaseValidation;
   honestyClaim: {
     level: "local-sandbox-runner-drill";
     claim: string;
