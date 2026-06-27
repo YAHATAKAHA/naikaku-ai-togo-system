@@ -84,7 +84,15 @@ To answer "does this actually automate anything?" from a fresh checkout, run the
 npm run open-source:mvp-check
 ```
 
-It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+
+To build a local wrapper kit for an external CLI runner:
+
+```bash
+npm run engineering:runner-kit -- --mission "Connect my local coding runner and return Naikaku evidence"
+```
+
+It writes `output/engineering-runner-kit/README.md`, a fixed `runner-preset.example.json`, a runnable `runner-wrapper-example.mjs`, sample handoff/job files, and a self-test summary. The wrapper example consumes Naikaku adapter job JSON and writes the required receipt/evidence artifacts; replace its internals with a real OpenHands/OpenClaw/Hammerspoon/browser-use/MCP command while keeping the same receipt contract.
 
 For the local JSON gateway:
 
@@ -261,6 +269,7 @@ npm run engineering:auto-work # prepare a mission, optionally launch an adapter 
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
 npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fixture coding loop in one contributor-facing check
+npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit
@@ -282,7 +291,7 @@ npm run test      # run unit tests
 npm run preview   # preview the production build
 ```
 
-`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, a configured preset CLI bridge, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
+`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, a configured preset CLI bridge, the runner wrapper kit smoke, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
 
 `npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, remediation plan, remediation issue drafts, and redaction checks. It exits non-zero for blockers and writes JSON, Markdown, issue draft, and reviewable `gh issue create` script artifacts under `output/rehearsal`. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 
