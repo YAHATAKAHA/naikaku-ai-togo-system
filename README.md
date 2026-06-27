@@ -86,7 +86,7 @@ To answer "does this actually automate anything?" from a fresh checkout, run the
 npm run open-source:mvp-check
 ```
 
-It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, proves separated API-role governance in mock mode, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, proves separated API-role governance in mock mode, proves both local and API-style guided runner loops, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
 
 To enter one task from the command line without learning the whole pipeline:
 
@@ -108,9 +108,12 @@ To run the same cabinet loop without the browser:
 
 ```bash
 npm run engineering:guided -- --max-loops 3 --runner-preset fixture --adapter-ready "Prove a bounded unattended cabinet loop"
+npm run engineering:guided -- --cabinet-mode api-mock --max-loops 2 --runner-preset fixture --adapter-ready "Let separated roles supervise auto work"
+OPENAI_API_KEY=... npm run engineering:guided -- --cabinet-mode api --cabinet-model <model> --cabinet-api-key-alias OPENAI_API_KEY --runner-preset fixture --adapter-ready "Let real provider roles supervise auto work"
+OPENAI_MODEL=<model> OPENAI_API_KEY=... npm run engineering:guided-openai -- "Let OpenAI-backed roles vote before the fixture runner"
 ```
 
-`engineering:guided` writes `naikaku.guided-engineering-cycle.v1` under `output/engineering-guided`. Each cycle writes a cabinet run before any executor starts, then runs either the governed Codex smoke or a fixed `engineering:auto-work` runner preset. `ship`, `block`, failed execution evidence, or the configured loop limit stops the run. Use `--runner-preset openclaw-local --adapter-ready`, `--runner-preset openhands`, or another configured preset after the local CLI and license have been reviewed; the command still cannot accept arbitrary browser shell from the UI, push Git, deploy, grant Mac desktop control, or claim real backlog completion without returned receipts and artifact audits.
+`engineering:guided` writes `naikaku.guided-engineering-cycle.v1` under `output/engineering-guided`. Each cycle writes a local cabinet run or separated API-role cabinet summary before any executor starts, then runs either the governed Codex smoke or a fixed `engineering:auto-work` runner preset. `--cabinet-mode local` is the deterministic no-provider path, `--cabinet-mode api-mock` proves the same role split without network, and `--cabinet-mode api` calls the configured provider before allowing execution. `ship`, cabinet block, failed execution evidence, or the configured loop limit stops the run. Use `--runner-preset openclaw-local --adapter-ready`, `--runner-preset openhands`, or another configured preset after the local CLI and license have been reviewed; the command still cannot accept arbitrary browser shell from the UI, push Git, deploy, grant Mac desktop control, or claim real backlog completion without returned receipts and artifact audits.
 
 To prove the local adapter idea with installed tools, run:
 
@@ -132,6 +135,7 @@ To prove the same role split through a model-provider API instead of Codex CLI:
 
 ```bash
 npm run cabinet:api-role-smoke -- --mock
+OPENAI_MODEL=<model> OPENAI_API_KEY=... npm run cabinet:api-role-smoke:openai "Review this engineering mission"
 OPENAI_API_KEY=... npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias OPENAI_API_KEY "Review this engineering mission"
 OPENROUTER_API_KEY=... npm run cabinet:api-role-smoke -- --provider openrouter --model openai/<model> --api-key-alias OPENROUTER_API_KEY
 ```
@@ -168,7 +172,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, engineering auto-work, engineering runner readiness, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner intake audit, coding agent runner self-test, coding agent runner lease, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, engineering auto-work, engineering guided loop, engineering runner readiness, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner intake audit, coding agent runner self-test, coding agent runner lease, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, the legacy shared-token mode is still supported:
 
@@ -207,7 +211,7 @@ npm run gateway
 npm run dev
 ```
 
-Enter the task in the engineering mission box, set `Auto loops` to 1, 2, or 3, then click `Vote and execute` to run the cabinet first and automatically continue into the governed Codex smoke. Each loop re-runs the cabinet vote before execution; `ship`, `block`, a failed execution proof, or the configured loop limit stops the unattended run. Use `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen without the cabinet step, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. These paths write under `output/` and do not modify the main repository.
+Enter the task in the engineering mission box, set `Auto loops` to 1, 2, or 3, choose the cabinet mode, then click `Vote and execute` to run the cabinet first and automatically continue into the governed runner. `Local cabinet` is the no-provider path, `Separated API-role mock` proves the role split without network, and `Separated API-role live` lets the page send provider/model/endpoint/API-key-alias settings to `/v1/engineering/guided` so the gateway can call OpenAI/OpenRouter/Anthropic/Gemini/custom roles before execution. The browser sends aliases such as `OPENAI_API_KEY`, not raw secrets. Each loop re-runs the cabinet vote before execution; `ship`, `block`, a failed execution proof, or the configured loop limit stops the unattended run. Use `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen without the cabinet step, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. These paths write under `output/` and do not modify the main repository.
 
 The browser calls the local gateway endpoint `/v1/engineering/auto-work` for fixture and preset runners, starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository.
 
@@ -337,18 +341,21 @@ npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its te
 npm run engineering:mvp # one-command adapter registry, engineering simulation, external handoff, adapter self-test, local verification, fixture coding loop, and honest claim summary
 npm run engineering:guided # command-line cabinet vote -> governed executor -> bounded continue loop
 npm run engineering:guided-smoke # prove the guided CLI loop with the safe fixture runner
+npm run engineering:guided-api-smoke # prove separated API-style roles can authorize the guided runner loop
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
 npm run naikaku:task # one-mission task entry for prepare, self-test, codex-smoke, or fixed runner-preset modes
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
-npm run open-source:mvp-check # build, targeted tests, gateway auto-work, API role smoke, guided CLI, runner kit, and fixture coding loop
+npm run engineering:guided-openai # call OpenAI-backed cabinet roles, then run a bounded fixture runner after approval
+npm run open-source:mvp-check # build, targeted tests, gateway auto-work, API role smoke, guided loops, runner kit, and fixture coding loop
 npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
 npm run local-tools:smoke # generate a tiny cabinet-vote project and probe local OpenClaw/Hammerspoon adapters
 npm run cabinet:codex-smoke # call Codex CLI as separate cabinet roles, then vote locally
 npm run cabinet:api-role-smoke # call provider API or mock as separate cabinet roles, then vote locally
 npm run cabinet:api-role-smoke:mock # no-network provider-role proof for CI and contributor smoke tests
+npm run cabinet:api-role-smoke:openai # call OpenAI as Prime Minister, Critic, and Supervisor when OPENAI_API_KEY and model are set
 npm run codex:engineer-smoke # let Codex patch a generated tiny project and return local evidence
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
@@ -372,7 +379,7 @@ npm run test      # run unit tests
 npm run preview   # preview the production build
 ```
 
-`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, a configured preset CLI bridge, the runner wrapper kit smoke, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
+`npm run open-source:mvp-check` is the recommended first command for contributors who want to validate the current MVP without configuring providers or installing external automation tools. It runs the production build, a focused test set for localization and engineering runner contracts, the gateway-backed fixture auto-work path, a configured preset CLI bridge, separated API-role governance, local and API-style guided loops, the runner wrapper kit smoke, and the fixture coding-agent self-simulation. The generated summary names both the evidence paths and the claim boundary, so a passing check means local governed automation works, not that Naikaku has secretly run a real desktop/coding agent or modified product backlog code.
 
 `npm run rehearsal` runs the same delivery self-check used by the workbench: cabinet dry-run, automation runbook, executor evidence, release bundle, release notes, remediation plan, remediation issue drafts, and redaction checks. It exits non-zero for blockers and writes JSON, Markdown, issue draft, and reviewable `gh issue create` script artifacts under `output/rehearsal`. Use `npm run rehearsal:strict` when warnings should fail CI or final handoff.
 

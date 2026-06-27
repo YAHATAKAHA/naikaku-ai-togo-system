@@ -20,6 +20,7 @@ import type {
   CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerReport,
   CodingAgentSessionBundle,
+  ProviderKind,
   DevelopmentIssueDrafts
 } from "../domain/types";
 import type { EngineeringLaunchProfile } from "../domain/engineeringLaunchProfile";
@@ -32,6 +33,7 @@ import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
   EngineeringCodexSmokeGatewayResponse,
+  EngineeringGuidedCabinetMode,
   EngineeringRunnerPreset,
   EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport
@@ -88,6 +90,11 @@ interface EngineeringLaunchpadProps {
     maxCycles: number;
   };
   guidedCycleMaxRuns: number;
+  guidedCabinetMode: EngineeringGuidedCabinetMode;
+  guidedCabinetProvider: ProviderKind;
+  guidedCabinetEndpoint: string;
+  guidedCabinetModel: string;
+  guidedCabinetApiKeyAlias: string;
   runnerReadinessState: {
     status: "idle" | "loading" | "ready" | "error";
     message: string;
@@ -104,6 +111,11 @@ interface EngineeringLaunchpadProps {
   onAutoWorkAdapterReadyChange: (ready: boolean) => void;
   onAutoWorkWorktreeChange: (worktree: string) => void;
   onGuidedCycleMaxRunsChange: (maxRuns: number) => void;
+  onGuidedCabinetModeChange: (mode: EngineeringGuidedCabinetMode) => void;
+  onGuidedCabinetProviderChange: (provider: ProviderKind) => void;
+  onGuidedCabinetEndpointChange: (endpoint: string) => void;
+  onGuidedCabinetModelChange: (model: string) => void;
+  onGuidedCabinetApiKeyAliasChange: (alias: string) => void;
   onRefreshRunnerReadiness: () => void;
   onEnableRunnerPresetTemplate: (templateId: string) => void;
   onFocusMission: () => void;
@@ -152,6 +164,11 @@ export function EngineeringLaunchpad({
   codexSmokeState,
   guidedCycleState,
   guidedCycleMaxRuns,
+  guidedCabinetMode,
+  guidedCabinetProvider,
+  guidedCabinetEndpoint,
+  guidedCabinetModel,
+  guidedCabinetApiKeyAlias,
   runnerReadinessState,
   runnerPresets,
   runnerPresetTemplates,
@@ -161,6 +178,11 @@ export function EngineeringLaunchpad({
   onAutoWorkAdapterReadyChange,
   onAutoWorkWorktreeChange,
   onGuidedCycleMaxRunsChange,
+  onGuidedCabinetModeChange,
+  onGuidedCabinetProviderChange,
+  onGuidedCabinetEndpointChange,
+  onGuidedCabinetModelChange,
+  onGuidedCabinetApiKeyAliasChange,
   onRefreshRunnerReadiness,
   onEnableRunnerPresetTemplate,
   onFocusMission,
@@ -198,6 +220,7 @@ export function EngineeringLaunchpad({
     runStatus === "running";
   const runnerReadinessReport = runnerReadinessState.report;
   const guidedCycleOptions = [1, 2, 3];
+  const guidedCabinetProviderOptions: ProviderKind[] = ["openai", "openrouter", "anthropic", "google", "local", "custom"];
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
     !["prepared", "fixture", "openhands"].includes(preset.id)
@@ -353,6 +376,58 @@ export function EngineeringLaunchpad({
               ))}
             </select>
           </label>
+          <label>
+            <span>{copy.guidedCabinetModeLabel}</span>
+            <select
+              value={guidedCabinetMode}
+              onChange={(event) => onGuidedCabinetModeChange(event.target.value as EngineeringGuidedCabinetMode)}
+            >
+              <option value="local">{copy.guidedCabinetModeLocal}</option>
+              <option value="api-mock">{copy.guidedCabinetModeApiMock}</option>
+              <option value="api">{copy.guidedCabinetModeApi}</option>
+            </select>
+          </label>
+          {guidedCabinetMode === "api" ? (
+            <>
+              <label>
+                <span>{copy.guidedCabinetProviderLabel}</span>
+                <select
+                  value={guidedCabinetProvider}
+                  onChange={(event) => onGuidedCabinetProviderChange(event.target.value as ProviderKind)}
+                >
+                  {guidedCabinetProviderOptions.map((provider) => (
+                    <option value={provider} key={provider}>
+                      {provider}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>{copy.guidedCabinetModelLabel}</span>
+                <input
+                  value={guidedCabinetModel}
+                  onChange={(event) => onGuidedCabinetModelChange(event.target.value)}
+                  placeholder={copy.guidedCabinetModelPlaceholder}
+                />
+              </label>
+              <label>
+                <span>{copy.guidedCabinetApiKeyAliasLabel}</span>
+                <input
+                  value={guidedCabinetApiKeyAlias}
+                  onChange={(event) => onGuidedCabinetApiKeyAliasChange(event.target.value)}
+                  placeholder="OPENAI_API_KEY"
+                />
+              </label>
+              <label>
+                <span>{copy.guidedCabinetEndpointLabel}</span>
+                <input
+                  value={guidedCabinetEndpoint}
+                  onChange={(event) => onGuidedCabinetEndpointChange(event.target.value)}
+                  placeholder={copy.guidedCabinetEndpointPlaceholder}
+                />
+              </label>
+            </>
+          ) : null}
           <label className="engineering-auto-work-check">
             <input
               type="checkbox"

@@ -89,6 +89,16 @@ export interface EngineeringLaunchpadCopy {
   autoWorkSelfTesting: string;
   autoWorkCodexSmoke: string;
   autoWorkCodexSmoking: string;
+  guidedCabinetModeLabel: string;
+  guidedCabinetModeLocal: string;
+  guidedCabinetModeApiMock: string;
+  guidedCabinetModeApi: string;
+  guidedCabinetProviderLabel: string;
+  guidedCabinetModelLabel: string;
+  guidedCabinetModelPlaceholder: string;
+  guidedCabinetApiKeyAliasLabel: string;
+  guidedCabinetEndpointLabel: string;
+  guidedCabinetEndpointPlaceholder: string;
   guidedCycleLimitLabel: string;
   guidedCycleLimitOption: (count: number) => string;
   guidedCycleRun: string;
@@ -99,6 +109,7 @@ export interface EngineeringLaunchpadCopy {
   guidedCycleCompleted: (cycles: number, total: number, decision: string, outputDir: string) => string;
   guidedCycleBlocked: (cycle: number, total: number, decision: string) => string;
   guidedCycleFailed: (cycle: number, total: number) => string;
+  guidedCycleGatewayFailed: (message: string) => string;
   guidedCycleSummary: (cycles: number, total: number) => string;
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
@@ -558,6 +569,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "Codex に小工程を任せる",
       autoWorkCodexSmoking: "Codex 実行中",
+      guidedCabinetModeLabel: "内閣モード",
+      guidedCabinetModeLocal: "ローカル内閣",
+      guidedCabinetModeApiMock: "分離 API 役割 mock",
+      guidedCabinetModeApi: "分離 API 役割 live",
+      guidedCabinetProviderLabel: "役割 provider",
+      guidedCabinetModelLabel: "役割 model",
+      guidedCabinetModelPlaceholder: "OPENAI_MODEL または model 名",
+      guidedCabinetApiKeyAliasLabel: "API key alias",
+      guidedCabinetEndpointLabel: "Endpoint 任意",
+      guidedCabinetEndpointPlaceholder: "provider 既定を使用",
       guidedCycleLimitLabel: "継続上限",
       guidedCycleLimitOption: (count) => `${count} 周まで`,
       guidedCycleRun: "投票して実行",
@@ -570,6 +591,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 周で停止: 内閣 ${decision}。実行せず監査結果を確認してください。`,
       guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 周で停止: 実行証拠の取得に失敗しました。`,
+      guidedCycleGatewayFailed: (message) => `一括サイクル gateway が失敗しました: ${message}`,
       guidedCycleSummary: (cycles, total) => `継続 ${cycles}/${total} 周`,
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
@@ -1038,6 +1060,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "Self-testing",
       autoWorkCodexSmoke: "Let Codex handle a tiny job",
       autoWorkCodexSmoking: "Codex running",
+      guidedCabinetModeLabel: "Cabinet mode",
+      guidedCabinetModeLocal: "Local cabinet",
+      guidedCabinetModeApiMock: "Separated API-role mock",
+      guidedCabinetModeApi: "Separated API-role live",
+      guidedCabinetProviderLabel: "Role provider",
+      guidedCabinetModelLabel: "Role model",
+      guidedCabinetModelPlaceholder: "OPENAI_MODEL or model name",
+      guidedCabinetApiKeyAliasLabel: "API key alias",
+      guidedCabinetEndpointLabel: "Endpoint optional",
+      guidedCabinetEndpointPlaceholder: "Use provider default",
       guidedCycleLimitLabel: "Auto loops",
       guidedCycleLimitOption: (count) => `Up to ${count}`,
       guidedCycleRun: "Vote and execute",
@@ -1050,6 +1082,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCycleBlocked: (cycle, total, decision) =>
         `Stopped at cycle ${cycle}/${total}: cabinet ${decision}. Review the audit before execution.`,
       guidedCycleFailed: (cycle, total) => `Stopped at cycle ${cycle}/${total}: execution evidence failed.`,
+      guidedCycleGatewayFailed: (message) => `Guided cycle gateway failed: ${message}`,
       guidedCycleSummary: (cycles, total) => `${cycles}/${total} cycles`,
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
@@ -1518,6 +1551,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自测中",
       autoWorkCodexSmoke: "让 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 执行中",
+      guidedCabinetModeLabel: "内阁模式",
+      guidedCabinetModeLocal: "本地内阁",
+      guidedCabinetModeApiMock: "分角色 API mock",
+      guidedCabinetModeApi: "分角色 API live",
+      guidedCabinetProviderLabel: "角色 provider",
+      guidedCabinetModelLabel: "角色模型",
+      guidedCabinetModelPlaceholder: "OPENAI_MODEL 或模型名",
+      guidedCabinetApiKeyAliasLabel: "API key 别名",
+      guidedCabinetEndpointLabel: "Endpoint 可选",
+      guidedCabinetEndpointPlaceholder: "使用 provider 默认值",
       guidedCycleLimitLabel: "自动轮数",
       guidedCycleLimitOption: (count) => `最多 ${count} 轮`,
       guidedCycleRun: "投票并执行",
@@ -1530,6 +1573,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 轮停止：内阁 ${decision}。请先看审计结果，不继续执行。`,
       guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 轮停止：执行证据获取失败。`,
+      guidedCycleGatewayFailed: (message) => `一键循环 gateway 失败：${message}`,
       guidedCycleSummary: (cycles, total) => `已继续 ${cycles}/${total} 轮`,
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
@@ -1998,6 +2042,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "自測中",
       autoWorkCodexSmoke: "讓 Codex 做小工程",
       autoWorkCodexSmoking: "Codex 執行中",
+      guidedCabinetModeLabel: "內閣模式",
+      guidedCabinetModeLocal: "本地內閣",
+      guidedCabinetModeApiMock: "分角色 API mock",
+      guidedCabinetModeApi: "分角色 API live",
+      guidedCabinetProviderLabel: "角色 provider",
+      guidedCabinetModelLabel: "角色模型",
+      guidedCabinetModelPlaceholder: "OPENAI_MODEL 或模型名",
+      guidedCabinetApiKeyAliasLabel: "API key 別名",
+      guidedCabinetEndpointLabel: "Endpoint 可選",
+      guidedCabinetEndpointPlaceholder: "使用 provider 預設值",
       guidedCycleLimitLabel: "自動輪數",
       guidedCycleLimitOption: (count) => `最多 ${count} 輪`,
       guidedCycleRun: "投票並執行",
@@ -2010,6 +2064,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 輪停止：內閣 ${decision}。請先看審計結果，不繼續執行。`,
       guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 輪停止：執行證據取得失敗。`,
+      guidedCycleGatewayFailed: (message) => `一鍵循環 gateway 失敗：${message}`,
       guidedCycleSummary: (cycles, total) => `已繼續 ${cycles}/${total} 輪`,
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
@@ -2478,6 +2533,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkSelfTesting: "자체 테스트 중",
       autoWorkCodexSmoke: "Codex에 작은 작업 맡기기",
       autoWorkCodexSmoking: "Codex 실행 중",
+      guidedCabinetModeLabel: "내각 모드",
+      guidedCabinetModeLocal: "로컬 내각",
+      guidedCabinetModeApiMock: "분리 API 역할 mock",
+      guidedCabinetModeApi: "분리 API 역할 live",
+      guidedCabinetProviderLabel: "역할 provider",
+      guidedCabinetModelLabel: "역할 모델",
+      guidedCabinetModelPlaceholder: "OPENAI_MODEL 또는 모델명",
+      guidedCabinetApiKeyAliasLabel: "API key alias",
+      guidedCabinetEndpointLabel: "Endpoint 선택",
+      guidedCabinetEndpointPlaceholder: "provider 기본값 사용",
       guidedCycleLimitLabel: "자동 반복",
       guidedCycleLimitOption: (count) => `최대 ${count}회`,
       guidedCycleRun: "투표 후 실행",
@@ -2490,6 +2555,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCycleBlocked: (cycle, total, decision) =>
         `${cycle}/${total}회차에서 중지: 내각 ${decision}. 감사 결과를 먼저 확인하세요.`,
       guidedCycleFailed: (cycle, total) => `${cycle}/${total}회차에서 중지: 실행 증거 수집에 실패했습니다.`,
+      guidedCycleGatewayFailed: (message) => `원클릭 사이클 gateway 실패: ${message}`,
       guidedCycleSummary: (cycles, total) => `${cycles}/${total}회 진행`,
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",

@@ -182,6 +182,64 @@ export interface EngineeringCodexSmokeGatewayResponse {
   stderrTail: string;
 }
 
+export type EngineeringGuidedCabinetMode = "local" | "api-mock" | "api";
+
+export interface EngineeringGuidedGatewayRequest {
+  mission: string;
+  locale?: string;
+  cabinetMode?: EngineeringGuidedCabinetMode;
+  cabinetProvider?: string;
+  cabinetEndpoint?: string;
+  cabinetModel?: string;
+  cabinetApiKeyAlias?: string;
+  runnerPreset?: EngineeringAutoWorkGatewayPreset;
+  adapterReady?: boolean;
+  worktree?: string;
+  maxLoops?: number;
+  outputDir?: string;
+  timeoutMs?: number;
+}
+
+export interface EngineeringGuidedGatewayResponse {
+  schema: "naikaku.engineering-guided-gateway.v1";
+  ok: boolean;
+  decision: "completed" | "failed" | "blocked";
+  message: string;
+  cabinetMode: EngineeringGuidedCabinetMode;
+  preset: EngineeringAutoWorkGatewayPreset;
+  adapterReady: boolean;
+  maxLoops: number;
+  exitCode: number | null;
+  signal: string | null;
+  outputDir: string;
+  summaryPath: string;
+  summary: {
+    schema?: "naikaku.guided-engineering-cycle.v1";
+    cabinetMode?: EngineeringGuidedCabinetMode;
+    maxLoops?: number;
+    final?: {
+      decision?: string;
+      stopReason?: string;
+      cyclesCompleted?: number;
+      executionAttempts?: number;
+      successfulExecutions?: number;
+    };
+    checks?: Record<string, boolean>;
+  } | null;
+  checks: {
+    pass: number;
+    fail: number;
+  };
+  command: {
+    command: string;
+    args: string[];
+    cwd: string;
+    timeoutMs: number;
+  } | null;
+  stdoutTail: string;
+  stderrTail: string;
+}
+
 export interface EngineeringRunnerPreset {
   id: EngineeringAutoWorkGatewayPreset;
   label: string;
@@ -1172,6 +1230,26 @@ export async function runEngineeringCodexSmokeViaGateway(
   }
 
   return (await response.json()) as EngineeringCodexSmokeGatewayResponse;
+}
+
+export async function runEngineeringGuidedViaGateway(
+  request: EngineeringGuidedGatewayRequest,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/guided`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(request),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway guided engineering failed"));
+  }
+
+  return (await response.json()) as EngineeringGuidedGatewayResponse;
 }
 
 export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSignal) {

@@ -48,6 +48,8 @@ interface OpenSourceMvpCheckSummary {
     apiRoleSmokeEvidenceVerified: boolean;
     guidedCliPassed: boolean;
     guidedCliEvidenceVerified: boolean;
+    guidedApiCliPassed: boolean;
+    guidedApiCliEvidenceVerified: boolean;
     runnerKitPassed: boolean;
     runnerKitEvidenceVerified: boolean;
     fixtureCodingLoopPassed: boolean;
@@ -60,6 +62,7 @@ interface OpenSourceMvpCheckSummary {
     taskEntrySummary: string;
     apiRoleSmokeSummary: string;
     guidedCliSummary: string;
+    guidedApiCliSummary: string;
     runnerKitSummary: string;
     fixtureCodingLoopSummary: string;
     gatewayAutoWork: GatewayAutoWorkEvidence;
@@ -67,6 +70,7 @@ interface OpenSourceMvpCheckSummary {
     taskEntry: TaskEntryEvidence;
     apiRoleSmoke: ApiRoleSmokeEvidence;
     guidedCli: GuidedCliEvidence;
+    guidedApiCli: GuidedCliEvidence;
     runnerKit: RunnerKitEvidence;
     fixtureCodingLoop: FixtureCodingLoopEvidence;
   };
@@ -123,6 +127,7 @@ interface TaskEntryEvidence {
 
 interface GuidedCliEvidence {
   summaryReadable: boolean;
+  cabinetMode: string | null;
   executor: string | null;
   runnerPreset: string | null;
   stopReason: string | null;
@@ -246,6 +251,7 @@ function buildSteps({
         "src/i18n.test.ts",
         "server/engineeringAutoWorkGateway.test.ts",
         "server/engineeringCodexSmokeGateway.test.ts",
+        "server/engineeringGuidedGateway.test.ts",
         "server/engineeringRunnerPresets.test.ts",
         "server/engineeringRunnerReadiness.test.ts",
         "src/domain/engineeringSelfSimulation.test.ts"
@@ -358,6 +364,32 @@ function buildSteps({
       proves: "The command-line operator path can run cabinet vote -> governed fixed runner -> bounded continue/stop without browser interaction."
     },
     {
+      id: "guided-api-cli",
+      label: "Guided API-role cabinet loop",
+      command: npmCommand,
+      args: [
+        "run",
+        "engineering:guided",
+        "--",
+        "--cabinet-mode",
+        "api-mock",
+        "--mission",
+        "Guided API-role smoke: separate cabinet roles vote before each fixed runner execution",
+        "--max-loops",
+        "2",
+        "--runner-preset",
+        "fixture",
+        "--adapter-ready",
+        "--out",
+        path.join(outputDir, "guided-api-cli"),
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z",
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      proves: "The command-line operator path can run separated Prime/Critic/Supervisor role calls before each governed runner execution and stop at a bounded loop limit."
+    },
+    {
       id: "runner-kit",
       label: "External runner wrapper kit",
       command: npmCommand,
@@ -445,6 +477,7 @@ function buildSummary({
   const taskEntryEvidence = readTaskEntryEvidence(path.join(outputDir, "task-entry", "summary.json"));
   const apiRoleSmokeEvidence = readApiRoleSmokeEvidence(path.join(outputDir, "api-role-smoke", "summary.json"));
   const guidedCliEvidence = readGuidedCliEvidence(path.join(outputDir, "guided-cli", "summary.json"));
+  const guidedApiCliEvidence = readGuidedCliEvidence(path.join(outputDir, "guided-api-cli", "summary.json"));
   const runnerKitEvidence = readRunnerKitEvidence(path.join(outputDir, "runner-kit", "summary.json"));
   const fixtureEvidence = readFixtureEvidence(path.join(outputDir, "fixture-coding-loop", "summary.json"));
   const gatewayEvidenceVerified = gatewayEvidence.summaryReadable &&
@@ -489,6 +522,16 @@ function buildSummary({
     guidedCliEvidence.successfulExecutions >= 1 &&
     guidedCliEvidence.stopReason !== "continue" &&
     guidedCliEvidence.allChecksPassed;
+  const guidedApiCliEvidenceVerified = guidedApiCliEvidence.summaryReadable &&
+    guidedApiCliEvidence.cabinetMode === "api-mock" &&
+    guidedApiCliEvidence.executor === "auto-work" &&
+    guidedApiCliEvidence.runnerPreset === "fixture" &&
+    guidedApiCliEvidence.maxLoops === 2 &&
+    guidedApiCliEvidence.cycles === 2 &&
+    guidedApiCliEvidence.executionAttempts === 2 &&
+    guidedApiCliEvidence.successfulExecutions === 2 &&
+    guidedApiCliEvidence.stopReason === "limit-reached" &&
+    guidedApiCliEvidence.allChecksPassed;
   const runnerKitEvidenceVerified = runnerKitEvidence.summaryReadable &&
     runnerKitEvidence.wrapperWritten &&
     runnerKitEvidence.presetValid &&
@@ -521,6 +564,8 @@ function buildSummary({
     apiRoleSmokeEvidenceVerified,
     guidedCliPassed: byId.get("guided-cli")?.passed === true,
     guidedCliEvidenceVerified,
+    guidedApiCliPassed: byId.get("guided-api-cli")?.passed === true,
+    guidedApiCliEvidenceVerified,
     runnerKitPassed: byId.get("runner-kit")?.passed === true,
     runnerKitEvidenceVerified,
     fixtureCodingLoopPassed: byId.get("fixture-coding-loop")?.passed === true,
@@ -531,6 +576,7 @@ function buildSummary({
       taskEntryEvidenceVerified &&
       apiRoleSmokeEvidenceVerified &&
       guidedCliEvidenceVerified &&
+      guidedApiCliEvidenceVerified &&
       runnerKitEvidenceVerified &&
       fixturePatchVerified
   };
@@ -547,6 +593,7 @@ function buildSummary({
       taskEntrySummary: relativePath(path.join(outputDir, "task-entry", "summary.json")),
       apiRoleSmokeSummary: relativePath(path.join(outputDir, "api-role-smoke", "summary.json")),
       guidedCliSummary: relativePath(path.join(outputDir, "guided-cli", "summary.json")),
+      guidedApiCliSummary: relativePath(path.join(outputDir, "guided-api-cli", "summary.json")),
       runnerKitSummary: relativePath(path.join(outputDir, "runner-kit", "summary.json")),
       fixtureCodingLoopSummary: relativePath(path.join(outputDir, "fixture-coding-loop", "summary.json")),
       gatewayAutoWork: gatewayEvidence,
@@ -554,11 +601,12 @@ function buildSummary({
       taskEntry: taskEntryEvidence,
       apiRoleSmoke: apiRoleSmokeEvidence,
       guidedCli: guidedCliEvidence,
+      guidedApiCli: guidedApiCliEvidence,
       runnerKit: runnerKitEvidence,
       fixtureCodingLoop: fixtureEvidence
     },
     claimBoundary: [
-      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, separated provider-role governance, a bounded guided CLI loop, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
+      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, separated provider-role governance, bounded local/API-role guided CLI loops, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
       "It does not prove a real OpenClaw/OpenHands/Hermes run, arbitrary desktop control, production deployment, Git push, or completion of real backlog work.",
       "External CLI runners should be invoked as governed adapters that return Naikaku receipts and evidence, not as unbounded host automation."
     ]
@@ -681,6 +729,7 @@ function readApiRoleSmokeEvidence(filePath: string): ApiRoleSmokeEvidence {
 
 function readGuidedCliEvidence(filePath: string): GuidedCliEvidence {
   const parsed = readJsonIfExists<{
+    cabinetMode?: unknown;
     executor?: unknown;
     runnerPreset?: unknown;
     maxLoops?: unknown;
@@ -696,6 +745,7 @@ function readGuidedCliEvidence(filePath: string): GuidedCliEvidence {
 
   return {
     summaryReadable: Boolean(parsed),
+    cabinetMode: stringOrNull(parsed?.cabinetMode),
     executor: stringOrNull(parsed?.executor),
     runnerPreset: stringOrNull(parsed?.runnerPreset),
     stopReason: stringOrNull(parsed?.final?.stopReason),
@@ -849,7 +899,7 @@ function printHelp() {
     "  -h, --help           Show this help.",
     "",
     "The check builds the app, runs targeted MVP tests, exercises the gateway auto-work endpoint,",
-    "runs a configured CLI preset bridge, proves the one-mission task entry, proves separated API role governance, proves the guided CLI loop,",
+    "runs a configured CLI preset bridge, proves the one-mission task entry, proves separated API role governance, proves local and API-role guided CLI loops,",
     "generates a local runner wrapper kit, and runs the fixture coding loop that patches a generated repository and verifies receipts/evidence."
   ].join("\n"));
 }
@@ -886,6 +936,8 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- API role evidence: ${summary.checks.apiRoleSmokeEvidenceVerified ? "pass" : "fail"}`,
     `- guided CLI: ${summary.checks.guidedCliPassed ? "pass" : "fail"}`,
     `- guided CLI evidence: ${summary.checks.guidedCliEvidenceVerified ? "pass" : "fail"}`,
+    `- guided API-role CLI: ${summary.checks.guidedApiCliPassed ? "pass" : "fail"}`,
+    `- guided API-role evidence: ${summary.checks.guidedApiCliEvidenceVerified ? "pass" : "fail"}`,
     `- runner kit: ${summary.checks.runnerKitPassed ? "pass" : "fail"}`,
     `- runner kit evidence: ${summary.checks.runnerKitEvidenceVerified ? "pass" : "fail"}`,
     `- fixture coding loop: ${summary.checks.fixtureCodingLoopPassed ? "pass" : "fail"}`,
@@ -914,7 +966,9 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- API role smoke summary: ${summary.evidence.apiRoleSmokeSummary}`,
     `- API role mode/roles/decision: ${summary.evidence.apiRoleSmoke.mode || "unknown"} / ${summary.evidence.apiRoleSmoke.roles} / ${summary.evidence.apiRoleSmoke.decision || "unknown"}`,
     `- guided CLI summary: ${summary.evidence.guidedCliSummary}`,
-    `- guided CLI executor/preset/loops/stop: ${summary.evidence.guidedCli.executor || "unknown"} / ${summary.evidence.guidedCli.runnerPreset || "unknown"} / ${summary.evidence.guidedCli.cycles}/${summary.evidence.guidedCli.maxLoops} / ${summary.evidence.guidedCli.stopReason || "unknown"}`,
+    `- guided CLI cabinet/executor/preset/loops/stop: ${summary.evidence.guidedCli.cabinetMode || "unknown"} / ${summary.evidence.guidedCli.executor || "unknown"} / ${summary.evidence.guidedCli.runnerPreset || "unknown"} / ${summary.evidence.guidedCli.cycles}/${summary.evidence.guidedCli.maxLoops} / ${summary.evidence.guidedCli.stopReason || "unknown"}`,
+    `- guided API-role CLI summary: ${summary.evidence.guidedApiCliSummary}`,
+    `- guided API-role cabinet/executor/preset/loops/stop: ${summary.evidence.guidedApiCli.cabinetMode || "unknown"} / ${summary.evidence.guidedApiCli.executor || "unknown"} / ${summary.evidence.guidedApiCli.runnerPreset || "unknown"} / ${summary.evidence.guidedApiCli.cycles}/${summary.evidence.guidedApiCli.maxLoops} / ${summary.evidence.guidedApiCli.stopReason || "unknown"}`,
     `- runner kit summary: ${summary.evidence.runnerKitSummary}`,
     `- runner kit receipts/evidence/artifacts: ${summary.evidence.runnerKit.smokeImportedReceipts} / ${summary.evidence.runnerKit.smokeAcceptedEvidence} / ${summary.evidence.runnerKit.smokeVerifiedArtifactPaths}`,
     `- fixture coding loop summary: ${summary.evidence.fixtureCodingLoopSummary}`,

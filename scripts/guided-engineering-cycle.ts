@@ -4,11 +4,12 @@ import path from "node:path";
 import { defaultMission, defaultRoles, defaultSandboxPolicy } from "../src/data/defaultCabinet";
 import { decideGuidedCycleContinuation, type GuidedCycleStopReason } from "../src/domain/guidedEngineeringCycle";
 import { runCabinetMission } from "../src/domain/orchestrator";
-import type { CabinetRun, CabinetScore } from "../src/domain/types";
+import type { CabinetScore } from "../src/domain/types";
 import type { SupportedLocale } from "../src/i18n";
 import { supportedLocales } from "../src/i18n";
 
 type GuidedExecutor = "codex-smoke" | "auto-work";
+type GuidedCabinetMode = "local" | "api-mock" | "api";
 
 interface GuidedEngineeringOptions {
   mission: string | null;
@@ -16,6 +17,11 @@ interface GuidedEngineeringOptions {
   outputDir: string;
   locale: SupportedLocale;
   maxLoops: number;
+  cabinetMode: GuidedCabinetMode;
+  cabinetProvider: string;
+  cabinetEndpoint: string | null;
+  cabinetModel: string | null;
+  cabinetApiKeyAlias: string | null;
   executor: GuidedExecutor;
   runnerPreset: string | null;
   adapterReady: boolean;
@@ -79,12 +85,40 @@ interface CodexEngineerSmokeSummary {
   checks: Record<string, boolean>;
 }
 
+interface ApiRoleSmokeSummary {
+  schema: "naikaku.cabinet-api-role-smoke.v1";
+  mode: "mock" | "live-provider";
+  outputDir: string;
+  roles: unknown[];
+  decision: {
+    decision: "approved" | "revise" | "blocked";
+    reason: string;
+    executionAuthorized: boolean;
+  } | null;
+  checks: Record<string, boolean>;
+}
+
+interface CabinetCycleDecision {
+  id: string;
+  path: string;
+  mode: GuidedCabinetMode;
+  decision: CabinetScore["decision"];
+  overall: number;
+  executionAuthorized: boolean;
+  reason: string;
+  command: CommandRun | null;
+}
+
 interface GuidedCycleItem {
   cycle: number;
   cabinetRunId: string;
   cabinetRunPath: string;
+  cabinetMode: GuidedCabinetMode;
   cabinetDecision: CabinetScore["decision"];
   cabinetOverall: number;
+  cabinetExecutionAuthorized: boolean;
+  cabinetReason: string;
+  cabinetCommand: CommandRun | null;
   executor: GuidedExecutor;
   runnerPreset: string | null;
   executionAttempted: boolean;
@@ -103,6 +137,7 @@ interface GuidedEngineeringSummary {
   mission: string;
   locale: SupportedLocale;
   maxLoops: number;
+  cabinetMode: GuidedCabinetMode;
   executor: GuidedExecutor;
   runnerPreset: string | null;
   cycles: GuidedCycleItem[];
@@ -138,20 +173,18 @@ async function main() {
     const cycleDir = path.join(outputDir, `cycle-${String(cycle).padStart(2, "0")}`);
     await mkdir(cycleDir, { recursive: true });
 
-    const cabinetRun = runCabinetMission({
+    const cabinet = await runCabinetCycle({
+      cycle,
       mission: cycleMission(mission, cycles),
-      roles: defaultRoles,
-      sandboxPolicy: defaultSandboxPolicy
+      cycleDir,
+      options
     });
-    const cabinetRunPath = path.join(cycleDir, "cabinet-run.json");
-    await writeFile(cabinetRunPath, `${JSON.stringify(cabinetRun, null, 2)}\n`, "utf8");
-    finalDecision = cabinetRun.score.decision;
+    finalDecision = cabinet.decision;
 
-    if (cabinetRun.score.decision === "block") {
+    if (!cabinet.executionAuthorized || cabinet.decision === "block") {
       const stopped = stopBeforeExecution({
         cycle,
-        cabinetRun,
-        cabinetRunPath,
+        cabinet,
         options,
         stopReason: "cabinet-blocked"
       });
@@ -167,7 +200,7 @@ async function main() {
       options
     });
     const continuation = decideGuidedCycleContinuation({
-      cabinetDecision: cabinetRun.score.decision,
+      cabinetDecision: cabinet.decision,
       executionOk: execution.executionOk,
       cycle,
       maxCycles: options.maxLoops
@@ -175,10 +208,14 @@ async function main() {
 
     cycles.push({
       cycle,
-      cabinetRunId: cabinetRun.id,
-      cabinetRunPath: relativePath(cabinetRunPath),
-      cabinetDecision: cabinetRun.score.decision,
-      cabinetOverall: cabinetRun.score.overall,
+      cabinetRunId: cabinet.id,
+      cabinetRunPath: cabinet.path,
+      cabinetMode: cabinet.mode,
+      cabinetDecision: cabinet.decision,
+      cabinetOverall: cabinet.overall,
+      cabinetExecutionAuthorized: cabinet.executionAuthorized,
+      cabinetReason: cabinet.reason,
+      cabinetCommand: cabinet.command,
       executor: options.executor,
       runnerPreset: execution.runnerPreset,
       executionAttempted: true,
@@ -213,25 +250,130 @@ async function main() {
   }
 }
 
+async function runCabinetCycle({
+  cycle,
+  mission,
+  cycleDir,
+  options
+}: {
+  cycle: number;
+  mission: string;
+  cycleDir: string;
+  options: GuidedEngineeringOptions;
+}): Promise<CabinetCycleDecision> {
+  if (options.cabinetMode === "local") {
+    const cabinetRun = runCabinetMission({
+      mission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const cabinetRunPath = path.join(cycleDir, "cabinet-run.json");
+    await writeFile(cabinetRunPath, `${JSON.stringify(cabinetRun, null, 2)}\n`, "utf8");
+    return {
+      id: cabinetRun.id,
+      path: relativePath(cabinetRunPath),
+      mode: "local",
+      decision: cabinetRun.score.decision,
+      overall: cabinetRun.score.overall,
+      executionAuthorized: cabinetRun.score.decision !== "block",
+      reason: `local-score-${cabinetRun.score.decision}`,
+      command: null
+    };
+  }
+
+  return runApiCabinetCycle({
+    cycle,
+    mission,
+    cycleDir,
+    options
+  });
+}
+
+async function runApiCabinetCycle({
+  cycle,
+  mission,
+  cycleDir,
+  options
+}: {
+  cycle: number;
+  mission: string;
+  cycleDir: string;
+  options: GuidedEngineeringOptions;
+}): Promise<CabinetCycleDecision> {
+  const cabinetDir = path.join(cycleDir, "api-cabinet");
+  const args = [
+    "run",
+    "cabinet:api-role-smoke",
+    "--",
+    "--mission",
+    mission,
+    "--out",
+    relativePath(cabinetDir),
+    "--generated-at",
+    options.generatedAt
+  ];
+
+  if (options.cabinetMode === "api-mock") {
+    args.push("--mock");
+  } else {
+    args.push("--provider", options.cabinetProvider);
+    if (options.cabinetEndpoint) {
+      args.push("--endpoint", options.cabinetEndpoint);
+    }
+    if (options.cabinetModel) {
+      args.push("--model", options.cabinetModel);
+    }
+    if (options.cabinetApiKeyAlias) {
+      args.push("--api-key-alias", options.cabinetApiKeyAlias);
+    }
+  }
+
+  const command = await runCommand({
+    label: "cabinet-api-role-smoke",
+    args
+  });
+  const summaryPath = path.join(cabinetDir, "summary.json");
+  const summary = await readJsonIfExists<ApiRoleSmokeSummary>(summaryPath);
+  const checksPassed = allChecksPassed(summary?.checks);
+  const decision = summary?.decision;
+  const executionAuthorized = command.exitCode === 0 &&
+    checksPassed &&
+    decision?.decision === "approved" &&
+    decision.executionAuthorized;
+
+  return {
+    id: `api-cabinet-cycle-${cycle}`,
+    path: relativePath(summaryPath),
+    mode: options.cabinetMode,
+    decision: executionAuthorized ? "revise" : "block",
+    overall: executionAuthorized ? 72 : 0,
+    executionAuthorized,
+    reason: decision?.reason || (summary ? "api-cabinet-not-authorized" : "missing-api-cabinet-summary"),
+    command
+  };
+}
+
 function stopBeforeExecution({
   cycle,
-  cabinetRun,
-  cabinetRunPath,
+  cabinet,
   options,
   stopReason
 }: {
   cycle: number;
-  cabinetRun: CabinetRun;
-  cabinetRunPath: string;
+  cabinet: CabinetCycleDecision;
   options: GuidedEngineeringOptions;
   stopReason: GuidedCycleStopReason;
 }): GuidedCycleItem {
   return {
     cycle,
-    cabinetRunId: cabinetRun.id,
-    cabinetRunPath: relativePath(cabinetRunPath),
-    cabinetDecision: cabinetRun.score.decision,
-    cabinetOverall: cabinetRun.score.overall,
+    cabinetRunId: cabinet.id,
+    cabinetRunPath: cabinet.path,
+    cabinetMode: cabinet.mode,
+    cabinetDecision: cabinet.decision,
+    cabinetOverall: cabinet.overall,
+    cabinetExecutionAuthorized: cabinet.executionAuthorized,
+    cabinetReason: cabinet.reason,
+    cabinetCommand: cabinet.command,
     executor: options.executor,
     runnerPreset: options.runnerPreset,
     executionAttempted: false,
@@ -380,9 +522,13 @@ function buildSummary({
     missionPresent: mission.trim().length > 0,
     maxLoopsWithinLimit: options.maxLoops >= 1 && options.maxLoops <= 3,
     cabinetVotedEveryCycle: cycles.length > 0 && cycles.every((cycle) => Boolean(cycle.cabinetRunId)),
+    cabinetModeRecorded: cycles.length > 0 && cycles.every((cycle) => cycle.cabinetMode === options.cabinetMode),
     noUnboundedLoop: cycles.length <= options.maxLoops,
     executionOnlyAfterCabinetApproval: cycles.every((cycle) =>
-      cycle.cabinetDecision === "block" ? !cycle.executionAttempted : true
+      cycle.executionAttempted ? cycle.cabinetExecutionAuthorized && cycle.cabinetDecision !== "block" : true
+    ),
+    apiCabinetEvidenceWrittenWhenUsed: options.cabinetMode === "local" || cycles.every((cycle) =>
+      cycle.cabinetRunPath.endsWith("summary.json") && Boolean(cycle.cabinetCommand)
     ),
     executorEvidenceWrittenWhenAttempted: cycles.every((cycle) =>
       cycle.executionAttempted ? Boolean(cycle.executorSummaryPath) : true
@@ -403,6 +549,7 @@ function buildSummary({
     mission,
     locale: options.locale,
     maxLoops: options.maxLoops,
+    cabinetMode: options.cabinetMode,
     executor: options.executor,
     runnerPreset: options.executor === "codex-smoke" ? "codex-cli" : options.runnerPreset,
     cycles,
@@ -416,7 +563,8 @@ function buildSummary({
     checks,
     claimBoundary: [
       "This command is the non-interactive cabinet loop: one mission enters, cabinet votes, an approved executor runs, then the loop decides whether to continue.",
-      "Every cycle writes a cabinet run artifact before any executor command starts.",
+      "Every cycle writes a local cabinet run or separated API-role cabinet summary before any executor command starts.",
+      "API cabinet mode blocks execution when provider calls fail, role JSON cannot be parsed, the audit blocks, or the motion is not execution-authorized.",
       "Codex mode is scoped to a generated tiny project; auto-work mode can launch only a configured fixed runner preset or prepare handoff files.",
       "The loop stops on cabinet block, failed execution evidence, ship, or the configured max loop count.",
       "It does not grant arbitrary Mac control, host-secret access, Git push, deploy, purchases, external sends, or product backlog completion by itself."
@@ -500,6 +648,7 @@ function summaryMarkdown(summary: GuidedEngineeringSummary) {
     `Generated: ${summary.generatedAt}`,
     `Output: ${summary.outputDir}`,
     `Locale: ${summary.locale}`,
+    `Cabinet mode: ${summary.cabinetMode}`,
     `Executor: ${summary.executor}`,
     `Runner preset: ${summary.runnerPreset || "none"}`,
     `Max loops: ${summary.maxLoops}`,
@@ -518,7 +667,10 @@ function summaryMarkdown(summary: GuidedEngineeringSummary) {
     ...summary.cycles.flatMap((cycle) => [
       `### Cycle ${cycle.cycle}`,
       "",
+      `- cabinet mode: ${cycle.cabinetMode}`,
       `- cabinet: ${cycle.cabinetDecision} (${cycle.cabinetOverall})`,
+      `- cabinet authorized: ${cycle.cabinetExecutionAuthorized ? "yes" : "no"}`,
+      `- cabinet reason: ${cycle.cabinetReason}`,
       `- executor: ${cycle.executor}`,
       `- runner preset: ${cycle.runnerPreset || "none"}`,
       `- execution attempted: ${cycle.executionAttempted ? "yes" : "no"}`,
@@ -526,6 +678,7 @@ function summaryMarkdown(summary: GuidedEngineeringSummary) {
       `- executor decision: ${cycle.executorDecision}`,
       `- stop reason: ${cycle.stopReason}`,
       `- cabinet run: ${cycle.cabinetRunPath}`,
+      `- cabinet command: ${cycle.cabinetCommand ? cycle.cabinetCommand.command : "local"}`,
       `- executor summary: ${cycle.executorSummaryPath || "not-run"}`,
       ""
     ]),
@@ -545,6 +698,7 @@ function printSummary(summary: GuidedEngineeringSummary) {
   const failed = Object.values(summary.checks).length - passed;
   console.log("Guided engineering cycle: " + (failed === 0 ? "ready" : "needs-review"));
   console.log(`- output: ${summary.outputDir}`);
+  console.log(`- cabinet mode: ${summary.cabinetMode}`);
   console.log(`- executor: ${summary.executor}`);
   console.log(`- final: ${summary.final.decision} / ${summary.final.stopReason}`);
   console.log(`- cycles: ${summary.cycles.length}/${summary.maxLoops}`);
@@ -559,6 +713,11 @@ function parseArgs(args: string[]): GuidedEngineeringOptions {
     outputDir: "output/engineering-guided",
     locale: "ja",
     maxLoops: 1,
+    cabinetMode: "local",
+    cabinetProvider: "openai",
+    cabinetEndpoint: null,
+    cabinetModel: null,
+    cabinetApiKeyAlias: null,
     executor: "codex-smoke",
     runnerPreset: null,
     adapterReady: false,
@@ -587,6 +746,25 @@ function parseArgs(args: string[]): GuidedEngineeringOptions {
       index += 1;
     } else if (arg === "--max-loops" || arg === "--loops") {
       options.maxLoops = parseMaxLoops(requireValue(args, index, arg));
+      index += 1;
+    } else if (arg === "--cabinet-mode") {
+      options.cabinetMode = parseCabinetMode(requireValue(args, index, arg));
+      index += 1;
+    } else if (arg === "--api-cabinet") {
+      options.cabinetMode = "api";
+    } else if (arg === "--api-cabinet-mock") {
+      options.cabinetMode = "api-mock";
+    } else if (arg === "--cabinet-provider") {
+      options.cabinetProvider = requireValue(args, index, arg);
+      index += 1;
+    } else if (arg === "--cabinet-endpoint") {
+      options.cabinetEndpoint = requireValue(args, index, arg);
+      index += 1;
+    } else if (arg === "--cabinet-model") {
+      options.cabinetModel = requireValue(args, index, arg);
+      index += 1;
+    } else if (arg === "--cabinet-api-key-alias") {
+      options.cabinetApiKeyAlias = requireValue(args, index, arg);
       index += 1;
     } else if (arg === "--executor") {
       options.executor = parseExecutor(requireValue(args, index, arg));
@@ -625,6 +803,11 @@ function parseArgs(args: string[]): GuidedEngineeringOptions {
 function parseExecutor(value: string): GuidedExecutor {
   if (value === "codex-smoke" || value === "auto-work") return value;
   throw new Error("Unsupported executor. Use codex-smoke or auto-work.");
+}
+
+function parseCabinetMode(value: string): GuidedCabinetMode {
+  if (value === "local" || value === "api-mock" || value === "api") return value;
+  throw new Error("Unsupported cabinet mode. Use local, api-mock, or api.");
 }
 
 function parseMaxLoops(value: string) {
@@ -683,12 +866,21 @@ function printHelp() {
     "  npm run engineering:guided -- --mission \"Implement X and run npm test\"",
     "  npm run engineering:guided -- --max-loops 3 --codex-smoke \"Prove governed Codex coding\"",
     "  npm run engineering:guided -- --runner-preset fixture --adapter-ready \"Run the safe fixture adapter\"",
+    "  npm run engineering:guided -- --cabinet-mode api-mock --runner-preset fixture --adapter-ready \"Run separated mock roles before execution\"",
+    "  npm run engineering:guided -- --cabinet-mode api --cabinet-model <model> --cabinet-api-key-alias OPENAI_API_KEY --runner-preset fixture --adapter-ready \"Run separated provider roles before execution\"",
     "  npm run engineering:guided -- --runner-preset openclaw-local --adapter-ready \"Run my approved OpenClaw preset\"",
     "",
     "Options:",
     "  --mission, -m <text>       Mission text. Positional text also works.",
     "  --mission-file <path>      Read mission text from a file.",
     "  --max-loops, --loops <n>   1, 2, or 3. Default: 1.",
+    "  --cabinet-mode <mode>      local, api-mock, or api. Default: local.",
+    "  --api-cabinet              Shortcut for --cabinet-mode api.",
+    "  --api-cabinet-mock         Shortcut for --cabinet-mode api-mock.",
+    "  --cabinet-provider <kind>  Provider for API cabinet mode. Default: openai.",
+    "  --cabinet-endpoint <url>   Provider endpoint override for API cabinet mode.",
+    "  --cabinet-model <name>     Provider model for API cabinet mode.",
+    "  --cabinet-api-key-alias <ENV> Environment variable name containing the API key.",
     "  --executor <name>          codex-smoke or auto-work. Default: codex-smoke.",
     "  --codex-smoke              Shortcut for --executor codex-smoke.",
     "  --runner-preset <id>       Fixed auto-work runner preset id; switches executor to auto-work.",
@@ -700,7 +892,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This command runs the same cabinet idea without the browser: vote, execute a governed runner, inspect evidence, and continue only within the configured loop limit."
+    "This command runs the same cabinet idea without the browser: vote through a local or separated API-role cabinet, execute a governed runner, inspect evidence, and continue only within the configured loop limit."
   ].join("\n"));
 }
 

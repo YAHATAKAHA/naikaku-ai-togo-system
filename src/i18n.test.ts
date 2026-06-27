@@ -93,6 +93,16 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.autoWorkSelfTesting).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkCodexSmoke).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkCodexSmoking).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModeLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModeLocal).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModeApiMock).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModeApi).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetProviderLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModelLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetModelPlaceholder).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetApiKeyAliasLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetEndpointLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetEndpointPlaceholder).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleLimitLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleLimitOption(3)).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleRun).toBeTruthy();
@@ -103,6 +113,7 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.guidedCycleCompleted(1, 3, "ship", "output/codex")).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleBlocked(1, 3, "block")).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleFailed(1, 3)).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCycleGatewayFailed("offline")).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleSummary(1, 3)).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkAdapterNeedsReady("openclaw-local")).toBeTruthy();
       expect(copy.engineeringLaunchpad.codexSmokeIdle).toBeTruthy();
