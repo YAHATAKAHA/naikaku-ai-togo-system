@@ -20,6 +20,7 @@ It must stay safe to clone, inspect, fork, package, and publish. Do not add priv
 - API keys, tokens, cookies, private keys, `.pem`, `.key`, raw environment dumps, or local vault exports.
 - Customer data, private logs, screenshots containing private information, or internal business notes.
 - Paid-provider usage records, billing data, or private model prompts that are not meant for public release.
+- Internal roadmaps, private backlog notes, unpublished strategy notes, or private deployment checklists.
 
 ## Release Rule
 
@@ -40,7 +41,7 @@ If private material is ever committed:
 Before publishing:
 
 - `git status --short` is clean.
-- `git ls-files site deploy infra/private` returns nothing.
+- `git ls-files site deploy infra/private docs/internal docs/tasks` returns nothing.
 - `git ls-files '*.pem' '*.key' '.env*'` shows only approved public examples.
 - `npm run public-scope:check` passes.
 - Secret scans report no raw keys, tokens, cookies, or production endpoints beyond public documentation links.

@@ -12,7 +12,7 @@ const trackedFiles = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" 
 
 const findings: Finding[] = [];
 
-const forbiddenPathPrefixes = ["site/", "deploy/", "infra/private/", ".keys/", "output/"];
+const forbiddenPathPrefixes = ["site/", "deploy/", "infra/private/", "docs/internal/", "docs/tasks/", ".keys/", "output/"];
 const forbiddenExactFiles = new Set([".env", ".env.local"]);
 const forbiddenExtensions = [".pem", ".key", ".p12", ".mobileprovision"];
 

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Japan-born multi-model AI cabinet workbench for governed planning, coding runners, sandboxed execution, critique, supervision, and evidence-based iteration.",
   "license": "PolyForm-Noncommercial-1.0.0",
-  "homepage": "https://www.emysti.net",
+  "homepage": "https://naikaku.emysti.net",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YAHATAKAHA/naikaku-ai-togo-system.git"
