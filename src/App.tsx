@@ -97,6 +97,12 @@ import {
   serializeDevelopmentBoardExport,
   serializeDevelopmentIssueDraftsExport,
   serializeDevelopmentIssueGhScriptExport,
+  serializeEngineeringExecutionReceiptExport,
+  serializeEngineeringExecutionReceiptMarkdownExport,
+  serializeEngineeringLaunchQueueExport,
+  serializeEngineeringLaunchQueueMarkdownExport,
+  serializeEngineeringSelfSimulationExport,
+  serializeEngineeringSelfSimulationMarkdownExport,
   serializeExecutorEvidenceExport,
   serializeMemoryLog,
   serializeProviderReadinessExport,
@@ -132,7 +138,12 @@ import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt
 import { executorProfiles } from "./data/defaultCabinet";
 import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
+import { buildEngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
 import { buildEngineeringLaunchProfile } from "./domain/engineeringLaunchProfile";
+import { buildEngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
+import { buildEngineeringMacRunnerContract } from "./domain/engineeringMacRunnerContract";
+import { buildEngineeringMacRunnerReadiness } from "./domain/engineeringMacRunnerReadiness";
+import { buildEngineeringSelfSimulationReport } from "./domain/engineeringSelfSimulation";
 import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
@@ -184,6 +195,9 @@ import {
   testProviderViaGateway
 } from "./domain/gatewayClient";
 import type { LedgerSummary } from "./domain/gatewayClient";
+import type { EngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
+import type { EngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
+import type { EngineeringSelfSimulationReport } from "./domain/engineeringSelfSimulation";
 import type {
   AutomationAction,
   AutomationApprovalDecision,
@@ -324,6 +338,15 @@ export function App() {
   const [codingAgentSessionReceiptMarkdownLink, setCodingAgentSessionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentImplementationEvidenceLink, setCodingAgentImplementationEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentImplementationEvidenceMarkdownLink, setCodingAgentImplementationEvidenceMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringSelfSimulation, setEngineeringSelfSimulation] = useState<EngineeringSelfSimulationReport | null>(null);
+  const [engineeringSelfSimulationLink, setEngineeringSelfSimulationLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringSelfSimulationMarkdownLink, setEngineeringSelfSimulationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringLaunchQueue, setEngineeringLaunchQueue] = useState<EngineeringLaunchQueue | null>(null);
+  const [engineeringLaunchQueueLink, setEngineeringLaunchQueueLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringLaunchQueueMarkdownLink, setEngineeringLaunchQueueMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringExecutionReceipt, setEngineeringExecutionReceipt] = useState<EngineeringExecutionReceipt | null>(null);
+  const [engineeringExecutionReceiptLink, setEngineeringExecutionReceiptLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringExecutionReceiptMarkdownLink, setEngineeringExecutionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -473,6 +496,57 @@ export function App() {
       run,
       workspace.mission
     ]
+  );
+  const currentEngineeringSelfSimulation =
+    engineeringSelfSimulation?.missionFingerprint === engineeringLaunchProfile.missionFingerprint
+      ? engineeringSelfSimulation
+      : null;
+  const currentEngineeringSelfSimulationLink = currentEngineeringSelfSimulation
+    ? engineeringSelfSimulationLink
+    : null;
+  const currentEngineeringSelfSimulationMarkdownLink = currentEngineeringSelfSimulation
+    ? engineeringSelfSimulationMarkdownLink
+    : null;
+  const currentEngineeringLaunchQueue = currentEngineeringSelfSimulation
+    ? engineeringLaunchQueue
+    : null;
+  const currentEngineeringLaunchQueueLink = currentEngineeringLaunchQueue
+    ? engineeringLaunchQueueLink
+    : null;
+  const currentEngineeringLaunchQueueMarkdownLink = currentEngineeringLaunchQueue
+    ? engineeringLaunchQueueMarkdownLink
+    : null;
+  const currentEngineeringExecutionReceipt = currentEngineeringSelfSimulation
+    ? engineeringExecutionReceipt
+    : null;
+  const currentEngineeringExecutionReceiptLink = currentEngineeringExecutionReceipt
+    ? engineeringExecutionReceiptLink
+    : null;
+  const currentEngineeringExecutionReceiptMarkdownLink = currentEngineeringExecutionReceipt
+    ? engineeringExecutionReceiptMarkdownLink
+    : null;
+  const engineeringMacRunnerReadiness = useMemo(
+    () =>
+      buildEngineeringMacRunnerReadiness({
+        profile: engineeringLaunchProfile,
+        selfSimulation: currentEngineeringSelfSimulation,
+        launchQueue: currentEngineeringLaunchQueue,
+        executionReceipt: currentEngineeringExecutionReceipt
+      }),
+    [
+      currentEngineeringExecutionReceipt,
+      currentEngineeringLaunchQueue,
+      currentEngineeringSelfSimulation,
+      engineeringLaunchProfile
+    ]
+  );
+  const engineeringMacRunnerContract = useMemo(
+    () =>
+      buildEngineeringMacRunnerContract({
+        profile: engineeringLaunchProfile,
+        readiness: engineeringMacRunnerReadiness
+      }),
+    [engineeringLaunchProfile, engineeringMacRunnerReadiness]
   );
   const productReadinessReport = useMemo<ProductReadinessReport>(
     () =>
@@ -1172,6 +1246,8 @@ export function App() {
     setCodingAgentRunnerSelfTest(null);
     setCodingAgentSandboxRunnerPreflight(null);
     setCodingAgentSandboxRunnerReport(null);
+    setEngineeringLaunchQueue(null);
+    setEngineeringExecutionReceipt(null);
     if (codingAgentDispatchManifestLink) {
       URL.revokeObjectURL(codingAgentDispatchManifestLink.href);
       setCodingAgentDispatchManifestLink(null);
@@ -1251,6 +1327,22 @@ export function App() {
     if (codingAgentSandboxRunnerReportMarkdownLink) {
       URL.revokeObjectURL(codingAgentSandboxRunnerReportMarkdownLink.href);
       setCodingAgentSandboxRunnerReportMarkdownLink(null);
+    }
+    if (engineeringLaunchQueueLink) {
+      URL.revokeObjectURL(engineeringLaunchQueueLink.href);
+      setEngineeringLaunchQueueLink(null);
+    }
+    if (engineeringLaunchQueueMarkdownLink) {
+      URL.revokeObjectURL(engineeringLaunchQueueMarkdownLink.href);
+      setEngineeringLaunchQueueMarkdownLink(null);
+    }
+    if (engineeringExecutionReceiptLink) {
+      URL.revokeObjectURL(engineeringExecutionReceiptLink.href);
+      setEngineeringExecutionReceiptLink(null);
+    }
+    if (engineeringExecutionReceiptMarkdownLink) {
+      URL.revokeObjectURL(engineeringExecutionReceiptMarkdownLink.href);
+      setEngineeringExecutionReceiptMarkdownLink(null);
     }
   }
 
@@ -2794,14 +2886,146 @@ export function App() {
     setCodingAgentSandboxRunnerPreflightMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  function createEngineeringSelfSimulationDownload(report: EngineeringSelfSimulationReport) {
+    const blob = new Blob([serializeEngineeringSelfSimulationExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeEngineeringSelfSimulationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? safeFileStem(report.runId) : report.missionFingerprint;
+    const fileName = `naikaku-engineering-self-simulation-${runSlug}.json`;
+    const markdownFileName = `naikaku-engineering-self-simulation-${runSlug}.md`;
+
+    if (engineeringSelfSimulationLink) {
+      URL.revokeObjectURL(engineeringSelfSimulationLink.href);
+    }
+    if (engineeringSelfSimulationMarkdownLink) {
+      URL.revokeObjectURL(engineeringSelfSimulationMarkdownLink.href);
+    }
+
+    setEngineeringSelfSimulationLink({ href: url, fileName });
+    setEngineeringSelfSimulationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
+  function createEngineeringLaunchQueueDownload(report: EngineeringLaunchQueue) {
+    const blob = new Blob([serializeEngineeringLaunchQueueExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeEngineeringLaunchQueueMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
+    const fileName = `naikaku-engineering-launch-queue-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-engineering-launch-queue-${runSlug}-${report.operatorLocale}.md`;
+
+    if (engineeringLaunchQueueLink) {
+      URL.revokeObjectURL(engineeringLaunchQueueLink.href);
+    }
+    if (engineeringLaunchQueueMarkdownLink) {
+      URL.revokeObjectURL(engineeringLaunchQueueMarkdownLink.href);
+    }
+
+    setEngineeringLaunchQueueLink({ href: url, fileName });
+    setEngineeringLaunchQueueMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
+  function createEngineeringExecutionReceiptDownload(report: EngineeringExecutionReceipt) {
+    const blob = new Blob([serializeEngineeringExecutionReceiptExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeEngineeringExecutionReceiptMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
+    const fileName = `naikaku-engineering-execution-receipt-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-engineering-execution-receipt-${runSlug}-${report.operatorLocale}.md`;
+
+    if (engineeringExecutionReceiptLink) {
+      URL.revokeObjectURL(engineeringExecutionReceiptLink.href);
+    }
+    if (engineeringExecutionReceiptMarkdownLink) {
+      URL.revokeObjectURL(engineeringExecutionReceiptMarkdownLink.href);
+    }
+
+    setEngineeringExecutionReceiptLink({ href: url, fileName });
+    setEngineeringExecutionReceiptMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
+  function refreshEngineeringExecutionReceipt({
+    launchQueue = engineeringLaunchQueue,
+    sandboxRunnerReport = codingAgentSandboxRunnerReport,
+    sessionReceipt = codingAgentSessionReceipt,
+    implementationEvidence = null,
+    artifactAudit = null,
+    reconciliation = null,
+    generatedAt
+  }: {
+    launchQueue?: EngineeringLaunchQueue | null;
+    sandboxRunnerReport?: CodingAgentSandboxRunnerReport | null;
+    sessionReceipt?: CodingAgentSessionReceipt | null;
+    implementationEvidence?: CodingAgentImplementationEvidence | null;
+    artifactAudit?: CodingAgentImplementationArtifactAudit | null;
+    reconciliation?: CodingAgentImplementationReconciliation | null;
+    generatedAt?: string;
+  } = {}) {
+    const report = buildEngineeringExecutionReceipt({
+      launchQueue,
+      sandboxRunnerReport,
+      sessionReceipt,
+      implementationEvidence,
+      artifactAudit,
+      reconciliation,
+      generatedAt
+    });
+    setEngineeringExecutionReceipt(report);
+    createEngineeringExecutionReceiptDownload(report);
+    return report;
+  }
+
+  function refreshEngineeringLaunchQueue({
+    runnerManifest = codingAgentRunnerManifest,
+    runnerInvocation = codingAgentRunnerInvocation,
+    runnerIntake = codingAgentRunnerIntake,
+    runnerSelfTest = codingAgentRunnerSelfTest,
+    sandboxRunnerPreflight = codingAgentSandboxRunnerPreflight,
+    generatedAt
+  }: {
+    runnerManifest?: CodingAgentRunnerManifest | null;
+    runnerInvocation?: CodingAgentRunnerInvocationPackage | null;
+    runnerIntake?: CodingAgentRunnerIntakeAudit | null;
+    runnerSelfTest?: CodingAgentRunnerSelfTest | null;
+    sandboxRunnerPreflight?: CodingAgentSandboxRunnerPreflight | null;
+    generatedAt?: string;
+  } = {}) {
+    const queue = buildEngineeringLaunchQueue({
+      runnerManifest,
+      runnerInvocation,
+      runnerIntake,
+      runnerSelfTest,
+      sandboxRunnerPreflight,
+      generatedAt
+    });
+    setEngineeringLaunchQueue(queue);
+    createEngineeringLaunchQueueDownload(queue);
+    refreshEngineeringExecutionReceipt({
+      launchQueue: queue,
+      sandboxRunnerReport: null,
+      sessionReceipt: null,
+      implementationEvidence: null,
+      artifactAudit: null,
+      reconciliation: null,
+      generatedAt: queue.generatedAt
+    });
+    return queue;
+  }
+
   async function prepareCodingAgentSandboxRunnerPreflight({
     bundle,
     runnerSelfTest,
-    updateStatus = false
+    updateStatus = false,
+    updateLaunchQueue = false,
+    preferLocalOnly = false
   }: {
     bundle: CodingAgentSessionBundle;
     runnerSelfTest: CodingAgentRunnerSelfTest;
     updateStatus?: boolean;
+    updateLaunchQueue?: boolean;
+    preferLocalOnly?: boolean;
   }) {
     let preflight = buildCodingAgentSandboxRunnerPreflight({
       selfTest: runnerSelfTest,
@@ -2811,19 +3035,28 @@ export function App() {
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
 
-    try {
-      preflight = await createCodingAgentSandboxRunnerPreflightViaGateway(
-        runnerSelfTest,
-        bundle,
-        workspace.sandboxPolicy
-      );
-      source = "gateway";
-    } catch (error) {
-      gatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        preflight = await createCodingAgentSandboxRunnerPreflightViaGateway(
+          runnerSelfTest,
+          bundle,
+          workspace.sandboxPolicy
+        );
+        source = "gateway";
+      } catch (error) {
+        gatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
 
     setCodingAgentSandboxRunnerPreflight(preflight);
     createCodingAgentSandboxRunnerPreflightDownload(preflight);
+    if (updateLaunchQueue) {
+      refreshEngineeringLaunchQueue({
+        runnerSelfTest,
+        sandboxRunnerPreflight: preflight,
+        generatedAt: preflight.generatedAt
+      });
+    }
     if (updateStatus) {
       setRunState({
         status: source === "gateway" ? "gateway" : "local",
@@ -2915,7 +3148,8 @@ export function App() {
     await prepareCodingAgentSandboxRunnerPreflight({
       bundle: codingAgentSessionBundle,
       runnerSelfTest: codingAgentRunnerSelfTest,
-      updateStatus: true
+      updateStatus: true,
+      updateLaunchQueue: true
     });
   }
 
@@ -2946,7 +3180,8 @@ export function App() {
     try {
       const { preflight } = await prepareCodingAgentSandboxRunnerPreflight({
         bundle: codingAgentSessionBundle,
-        runnerSelfTest: codingAgentRunnerSelfTest
+        runnerSelfTest: codingAgentRunnerSelfTest,
+        updateLaunchQueue: true
       });
 
       if (preflight.decision !== "ready") {
@@ -2979,6 +3214,18 @@ export function App() {
       createCodingAgentSandboxRunnerReportDownload(result.report);
       createCodingAgentSessionReceiptDownload(result.receiptReview);
       createCodingAgentImplementationEvidenceLinks(result.implementationEvidence);
+      const launchQueue = refreshEngineeringLaunchQueue({
+        sandboxRunnerPreflight: result.preflight,
+        generatedAt: result.preflight.generatedAt
+      });
+      const executionReceipt = refreshEngineeringExecutionReceipt({
+        launchQueue,
+        sandboxRunnerReport: result.report,
+        sessionReceipt: result.receiptReview,
+        implementationEvidence: result.implementationEvidence,
+        artifactAudit: result.artifactAudit,
+        generatedAt: result.report.generatedAt
+      });
       setRunState({
         status: "gateway",
         message: copy.codingBriefs.statusSandboxRunnerGateway(
@@ -3020,6 +3267,8 @@ export function App() {
           receiptReview: result.receiptReview.decision,
           implementationEvidence: result.implementationEvidence.decision,
           artifactAudit: result.artifactAudit.decision,
+          engineeringExecutionReceipt: executionReceipt.decision,
+          engineeringCanClaimCompletion: executionReceipt.canClaimCompletion,
           gatewayRunnerId: result.gatewayRunnerId || null,
           authMode: result.authMode || "development-open"
         }
@@ -3056,7 +3305,9 @@ export function App() {
     return `output/coding-agent-runner-invocation/${runSlug}-${report.operatorLocale}/invocations`;
   }
 
-  async function exportCodingAgentDispatchManifest() {
+  async function exportCodingAgentDispatchManifest({
+    preferLocalOnly = false
+  }: { preferLocalOnly?: boolean } = {}) {
     const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
       review: codingAgentBriefReview,
@@ -3067,11 +3318,13 @@ export function App() {
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
 
-    try {
-      manifest = await createCodingAgentDispatchManifestViaGateway(bundle, drill);
-      source = "gateway";
-    } catch (error) {
-      gatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        manifest = await createCodingAgentDispatchManifestViaGateway(bundle, drill);
+        source = "gateway";
+      } catch (error) {
+        gatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
     const archive = buildCodingAgentDispatchArchive({
       bundle,
@@ -3090,11 +3343,13 @@ export function App() {
     let simulationSource: "gateway" | "local" = "local";
     let simulationGatewayError: string | null = null;
 
-    try {
-      simulation = await createCodingAgentDispatchSimulationViaGateway(manifest, archiveAudit);
-      simulationSource = "gateway";
-    } catch (error) {
-      simulationGatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        simulation = await createCodingAgentDispatchSimulationViaGateway(manifest, archiveAudit);
+        simulationSource = "gateway";
+      } catch (error) {
+        simulationGatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
     const receiptDraftPaths = receiptDraftPathsForSimulation(simulation);
     let runnerManifest = buildCodingAgentRunnerManifest({
@@ -3105,11 +3360,13 @@ export function App() {
     let runnerManifestSource: "gateway" | "local" = "local";
     let runnerManifestGatewayError: string | null = null;
 
-    try {
-      runnerManifest = await createCodingAgentRunnerManifestViaGateway(simulation, receiptDraftPaths);
-      runnerManifestSource = "gateway";
-    } catch (error) {
-      runnerManifestGatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        runnerManifest = await createCodingAgentRunnerManifestViaGateway(simulation, receiptDraftPaths);
+        runnerManifestSource = "gateway";
+      } catch (error) {
+        runnerManifestGatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
     const invocationBasePath = invocationBasePathForRunnerManifest(runnerManifest);
     let runnerInvocation = buildCodingAgentRunnerInvocationPackage({
@@ -3120,11 +3377,13 @@ export function App() {
     let runnerInvocationSource: "gateway" | "local" = "local";
     let runnerInvocationGatewayError: string | null = null;
 
-    try {
-      runnerInvocation = await createCodingAgentRunnerInvocationViaGateway(runnerManifest, invocationBasePath);
-      runnerInvocationSource = "gateway";
-    } catch (error) {
-      runnerInvocationGatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        runnerInvocation = await createCodingAgentRunnerInvocationViaGateway(runnerManifest, invocationBasePath);
+        runnerInvocationSource = "gateway";
+      } catch (error) {
+        runnerInvocationGatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
     let runnerIntake = buildCodingAgentRunnerIntakeAudit({
       invocationPackage: runnerInvocation,
@@ -3134,14 +3393,16 @@ export function App() {
     let runnerIntakeSource: "gateway" | "local" = "local";
     let runnerIntakeGatewayError: string | null = null;
 
-    try {
-      runnerIntake = await createCodingAgentRunnerIntakeViaGateway(
-        runnerInvocation,
-        workspace.sandboxPolicy
-      );
-      runnerIntakeSource = "gateway";
-    } catch (error) {
-      runnerIntakeGatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        runnerIntake = await createCodingAgentRunnerIntakeViaGateway(
+          runnerInvocation,
+          workspace.sandboxPolicy
+        );
+        runnerIntakeSource = "gateway";
+      } catch (error) {
+        runnerIntakeGatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
     let runnerSelfTest = buildCodingAgentRunnerSelfTest({
       manifest: runnerManifest,
@@ -3150,11 +3411,13 @@ export function App() {
     let runnerSelfTestSource: "gateway" | "local" = "local";
     let runnerSelfTestGatewayError: string | null = null;
 
-    try {
-      runnerSelfTest = await createCodingAgentRunnerSelfTestViaGateway(runnerManifest);
-      runnerSelfTestSource = "gateway";
-    } catch (error) {
-      runnerSelfTestGatewayError = error instanceof Error ? error.message : "unknown";
+    if (!preferLocalOnly) {
+      try {
+        runnerSelfTest = await createCodingAgentRunnerSelfTestViaGateway(runnerManifest);
+        runnerSelfTestSource = "gateway";
+      } catch (error) {
+        runnerSelfTestGatewayError = error instanceof Error ? error.message : "unknown";
+      }
     }
 
     setCodingAgentBriefReview(bundle.review);
@@ -3185,8 +3448,44 @@ export function App() {
     createCodingAgentRunnerSelfTestDownload(runnerSelfTest);
     const sandboxRunnerPreflightResult = await prepareCodingAgentSandboxRunnerPreflight({
       bundle,
-      runnerSelfTest
+      runnerSelfTest,
+      preferLocalOnly
     });
+    const launchQueue = refreshEngineeringLaunchQueue({
+      runnerManifest,
+      runnerInvocation,
+      runnerIntake,
+      runnerSelfTest,
+      sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
+      generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt
+    });
+    setEngineeringLaunchQueue(launchQueue);
+    createEngineeringLaunchQueueDownload(launchQueue);
+    const selfSimulationProfile = buildEngineeringLaunchProfile({
+      mission: workspace.mission,
+      activeRoles: activeRoles.length,
+      run,
+      briefs: codingAgentBriefs,
+      sessionBundle: bundle,
+      runnerManifest,
+      runnerSelfTest,
+      sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
+      sandboxRunnerReport: codingAgentSandboxRunnerReport
+    });
+    const engineeringSelfSimulationReport = buildEngineeringSelfSimulationReport({
+      profile: selfSimulationProfile,
+      run,
+      briefs: codingAgentBriefs,
+      sessionBundle: bundle,
+      dispatchSimulation: simulation,
+      runnerManifest,
+      runnerSelfTest,
+      sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
+      sandboxRunnerReport: codingAgentSandboxRunnerReport,
+      generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt
+    });
+    setEngineeringSelfSimulation(engineeringSelfSimulationReport);
+    createEngineeringSelfSimulationDownload(engineeringSelfSimulationReport);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -3240,6 +3539,10 @@ export function App() {
         sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight.decision,
         sandboxRunnerPreflightReady: sandboxRunnerPreflightResult.preflight.summary.readyTasks,
         sandboxRunnerPreflightBlocked: sandboxRunnerPreflightResult.preflight.summary.blockedTasks,
+        engineeringLaunchQueue: launchQueue.decision,
+        engineeringLaunchQueueReadyToRun: launchQueue.summary.readyToRun,
+        engineeringLaunchQueueReadyToHandoff: launchQueue.summary.readyToHandoff,
+        engineeringLaunchQueueBlocked: launchQueue.summary.blocked,
         sandboxRunnerPreflightSource: sandboxRunnerPreflightResult.source,
         sandboxRunnerPreflightGatewayError: sandboxRunnerPreflightResult.gatewayError,
         unsafePaths: manifest.summary.unsafePaths,
@@ -3361,6 +3664,46 @@ export function App() {
         gatewayError: runnerSelfTestGatewayError
       }
     });
+    recordAudit({
+      type: "development.engineering_self_simulation.completed",
+      severity: engineeringSelfSimulationReport.decision === "simulated-ready"
+        ? "success"
+        : engineeringSelfSimulationReport.decision === "approval-required" || engineeringSelfSimulationReport.decision === "needs-review"
+          ? "warning"
+          : "error",
+      summary: `Engineering self-simulation completed: ${engineeringSelfSimulationReport.decision}.`,
+      runId: engineeringSelfSimulationReport.runId,
+      metadata: {
+        decision: engineeringSelfSimulationReport.decision,
+        briefs: engineeringSelfSimulationReport.summary.briefs,
+        implementableBriefs: engineeringSelfSimulationReport.summary.implementableBriefs,
+        readySessions: engineeringSelfSimulationReport.summary.readySessions,
+        heldSessions: engineeringSelfSimulationReport.summary.heldSessions,
+        runnerTasks: engineeringSelfSimulationReport.summary.runnerTasks,
+        wouldRunTasks: engineeringSelfSimulationReport.summary.wouldRunTasks,
+        allowedCommands: engineeringSelfSimulationReport.summary.allowedCommands,
+        blockedCommands: engineeringSelfSimulationReport.summary.blockedCommands,
+        approvalItems: engineeringSelfSimulationReport.summary.approvalItems,
+        expectedEvidenceArtifacts: engineeringSelfSimulationReport.summary.expectedEvidenceArtifacts,
+        simulatedOnly: engineeringSelfSimulationReport.summary.simulatedOnly,
+        localOnly: preferLocalOnly
+      }
+    });
+
+    return {
+      bundle,
+      drill,
+      manifest,
+      archive,
+      archiveAudit,
+      simulation,
+      runnerManifest,
+      runnerInvocation,
+      runnerIntake,
+      runnerSelfTest,
+      sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
+      engineeringSelfSimulation: engineeringSelfSimulationReport
+    };
   }
 
   function createCodingAgentSessionReceiptDownload(report: CodingAgentSessionReceipt) {
@@ -3550,6 +3893,15 @@ export function App() {
         artifactAuditError
       }
     });
+    refreshEngineeringExecutionReceipt({
+      launchQueue: engineeringLaunchQueue,
+      sandboxRunnerReport: codingAgentSandboxRunnerReport,
+      sessionReceipt: receipt,
+      implementationEvidence: evidence,
+      artifactAudit,
+      reconciliation,
+      generatedAt: artifactAudit.generatedAt
+    });
 
     return {
       evidence,
@@ -3587,6 +3939,15 @@ export function App() {
     }
     createCodingAgentSessionReceiptDownload(receipt);
     clearCodingAgentImplementationEvidence();
+    refreshEngineeringExecutionReceipt({
+      launchQueue: engineeringLaunchQueue,
+      sandboxRunnerReport: null,
+      sessionReceipt: receipt,
+      implementationEvidence: null,
+      artifactAudit: null,
+      reconciliation: null,
+      generatedAt: receipt.generatedAt
+    });
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
       message: source === "gateway"
@@ -3983,7 +4344,9 @@ export function App() {
   }
 
   function focusMissionBrief() {
-    const missionInput = document.getElementById("mission");
+    const missionInput =
+      document.getElementById("engineering-mission") ||
+      document.getElementById("mission");
     missionInput?.scrollIntoView({ behavior: "smooth", block: "center" });
     missionInput?.focus();
   }
@@ -3998,6 +4361,19 @@ export function App() {
 
   async function prepareEngineeringPackFromLaunchpad() {
     await exportCodingAgentDispatchManifest();
+  }
+
+  async function runEngineeringSelfSimulationFromLaunchpad() {
+    const result = await exportCodingAgentDispatchManifest({ preferLocalOnly: true });
+    setRunState({
+      status: "local",
+      message: copy.engineeringLaunchpad.selfSimulationStatus(
+        result.engineeringSelfSimulation.decision,
+        result.engineeringSelfSimulation.summary.readySessions,
+        result.engineeringSelfSimulation.summary.allowedCommands,
+        result.engineeringSelfSimulation.summary.expectedEvidenceArtifacts
+      )
+    });
   }
 
   return (
@@ -4096,7 +4472,19 @@ export function App() {
             copy={copy.engineeringLaunchpad}
             activeRoles={activeRoles.length}
             run={run}
+            mission={workspace.mission}
             profile={engineeringLaunchProfile}
+            selfSimulation={currentEngineeringSelfSimulation}
+            selfSimulationJsonLink={currentEngineeringSelfSimulationLink}
+            selfSimulationMarkdownLink={currentEngineeringSelfSimulationMarkdownLink}
+            launchQueue={currentEngineeringLaunchQueue}
+            launchQueueJsonLink={currentEngineeringLaunchQueueLink}
+            launchQueueMarkdownLink={currentEngineeringLaunchQueueMarkdownLink}
+            executionReceipt={currentEngineeringExecutionReceipt}
+            executionReceiptJsonLink={currentEngineeringExecutionReceiptLink}
+            executionReceiptMarkdownLink={currentEngineeringExecutionReceiptMarkdownLink}
+            macRunnerReadiness={engineeringMacRunnerReadiness}
+            macRunnerContract={engineeringMacRunnerContract}
             briefs={codingAgentBriefs}
             sessionBundle={codingAgentSessionBundle}
             runnerManifest={codingAgentRunnerManifest}
@@ -4105,8 +4493,10 @@ export function App() {
             sandboxRunnerReport={codingAgentSandboxRunnerReport}
             issueDrafts={developmentIssueDrafts}
             runStatus={runState.status}
+            onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
             onFocusMission={focusMissionBrief}
             onApplyMissionTemplate={applyEngineeringMissionTemplate}
+            onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

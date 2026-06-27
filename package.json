@@ -19,6 +19,7 @@
     "coding-agent:sandbox-runner": "tsx scripts/coding-agent-sandbox-runner-drill.ts --self-test-dir output/coding-agent-runner-self-test --out output/coding-agent-sandbox-runner",
     "coding-agent:gateway-smoke": "tsx scripts/coding-agent-gateway-runner-smoke.ts --out output/coding-agent-gateway-runner-smoke",
     "coding-agent:engineering-sim": "tsx scripts/coding-agent-engineering-self-simulation.ts --out output/coding-agent-engineering-self-simulation",
+    "engineering:simulate": "tsx scripts/engineering-simulate.ts --out output/engineering-simulate",
     "coding-agent:drill": "tsx scripts/coding-agent-receipt-drill.ts --out output/coding-agent-receipt-drill",
     "localization:drill": "tsx scripts/localization-drill.ts --out output/localization-drill",
     "executor:drill": "tsx scripts/executor-contract-drill.ts --out output/executor-contract-drill",

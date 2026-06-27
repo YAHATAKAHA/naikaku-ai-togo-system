@@ -8,6 +8,10 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 
 Naikaku's north star is a Japan-first governed coding cabinet. It should feel closer to a careful Codex-style operator bench than a generic chatbot: cabinet roles plan software work, generate implementation briefs, run only approved sandbox actions, import completion receipts, verify local artifacts, and then update the Development Board. Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported as first-class locales. OpenClaw-style computer control, desktop sandboxes, browser automation, shell runners, and MCP tools should plug in as governed executor profiles, not as unbounded host power.
 
+## Current Reality
+
+This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement. Today it can show one clear mission input, split that mission into supervised cabinet/coding-agent work, prepare runner contracts, run local dry-run drills, and keep receipt/evidence gates honest. It does not currently control the Mac desktop, operate arbitrary apps, run live multi-agent implementation by itself, or push/deploy without an external runner and explicit approval. If a capability is not wired, the UI should say so.
+
 ## What Exists Now
 
 - A React/Vite TypeScript workbench.
@@ -109,6 +113,14 @@ Approval and evidence ledger files default to `.naikaku-data`; set `NAIKAKU_LEDG
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 
+For a basic command-line MVP flow, run a mission through the supervised engineering simulator:
+
+```bash
+npm run engineering:simulate -- --mission "Implement the settings panel and run npm test"
+```
+
+This writes `output/engineering-simulate/summary.md` plus JSON contracts for the launch profile, self-simulation, launch queue, runner manifest, Mac readiness, and Mac contract. It prepares work; it does not edit files, run implementation commands, control macOS, commit, push, deploy, or send messages.
+
 ## Scripts
 
 ```bash
@@ -127,6 +139,7 @@ npm run coding-agent:runner-lease # self-simulate exclusive runner task leasing 
 npm run coding-agent:sandbox-runner # execute allowlisted local verification commands and audit drill receipts
 npm run coding-agent:gateway-smoke # start local gateway and prove lease-gated sandbox execution over HTTP
 npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its test, and verify receipt/audit evidence
+npm run engineering:simulate # prepare a mission's launch profile, self-simulation, queue, runner contracts, and Mac readiness without executing work
 npm run coding-agent:drill # self-simulate valid, mismatched, and sandbox-prefix coding-agent receipt evidence
 npm run localization:drill # self-simulate coding-agent handoff in every supported operator language
 npm run executor:drill # self-simulate every sandbox executor profile and evidence contract

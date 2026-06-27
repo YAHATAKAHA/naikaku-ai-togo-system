@@ -29,6 +29,21 @@ import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkd
 import { serializeCodingAgentSessionReceipt, serializeCodingAgentSessionReceiptMarkdown } from "./codingAgentSessionReceipt";
 import { serializeDevelopmentBoard } from "./developmentBoard";
 import { serializeDevelopmentIssueDrafts, serializeDevelopmentIssueGhScript } from "./developmentIssues";
+import {
+  serializeEngineeringSelfSimulationMarkdown,
+  serializeEngineeringSelfSimulationReport,
+  type EngineeringSelfSimulationReport
+} from "./engineeringSelfSimulation";
+import {
+  serializeEngineeringLaunchQueue,
+  serializeEngineeringLaunchQueueMarkdown,
+  type EngineeringLaunchQueue
+} from "./engineeringLaunchQueue";
+import {
+  serializeEngineeringExecutionReceipt,
+  serializeEngineeringExecutionReceiptMarkdown,
+  type EngineeringExecutionReceipt
+} from "./engineeringExecutionReceipt";
 import { serializeExecutorEvidenceBundle } from "./executorRunner";
 import { serializeMemoryEntries } from "./memory";
 import { serializeProviderReadinessMatrix } from "./providerReadiness";
@@ -563,6 +578,30 @@ export function serializeCodingAgentImplementationEvidenceExport(report: CodingA
 
 export function serializeCodingAgentImplementationEvidenceMarkdownExport(report: CodingAgentImplementationEvidence) {
   return serializeCodingAgentImplementationEvidenceMarkdown(report);
+}
+
+export function serializeEngineeringSelfSimulationExport(report: EngineeringSelfSimulationReport) {
+  return serializeEngineeringSelfSimulationReport(report);
+}
+
+export function serializeEngineeringSelfSimulationMarkdownExport(report: EngineeringSelfSimulationReport) {
+  return serializeEngineeringSelfSimulationMarkdown(report);
+}
+
+export function serializeEngineeringLaunchQueueExport(report: EngineeringLaunchQueue) {
+  return serializeEngineeringLaunchQueue(report);
+}
+
+export function serializeEngineeringLaunchQueueMarkdownExport(report: EngineeringLaunchQueue) {
+  return serializeEngineeringLaunchQueueMarkdown(report);
+}
+
+export function serializeEngineeringExecutionReceiptExport(report: EngineeringExecutionReceipt) {
+  return serializeEngineeringExecutionReceipt(report);
+}
+
+export function serializeEngineeringExecutionReceiptMarkdownExport(report: EngineeringExecutionReceipt) {
+  return serializeEngineeringExecutionReceiptMarkdown(report);
 }
 
 export function serializeRoleWorkspaceScaffoldsExport(scaffolds: RoleWorkspaceScaffolds) {

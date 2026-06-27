@@ -62,15 +62,107 @@ export interface EngineeringLaunchpadCopy {
   permissionModeLabel: string;
   launchStageLabel: string;
   nextActionLabel: string;
+  entryLabel: string;
+  entryTitle: string;
+  entryBody: string;
+  realityLabel: string;
+  realityCodeLabel: string;
+  realityMacLabel: string;
+  realityExternalLabel: string;
+  realityCodeStatus: (hasVerifiedExecution: boolean, canRunCodeSandbox: boolean, missionReady: boolean, hasSelfSimulation: boolean) => string;
+  realityMacStatus: (canControlMacDesktop: boolean) => string;
+  realityExternalStatus: (externalWriteRequested: boolean) => string;
+  missionInputHelp: string;
+  macScopeLabel: string;
+  macScopeItems: string[];
+  macRunnerLabel: string;
+  macRunnerPermissionsLabel: string;
+  macRunnerAdaptersLabel: string;
+  macRunnerNextActionsLabel: string;
+  macRunnerHonestyLabel: string;
+  macRunnerHonestyClaim: (canControlMacDesktop: boolean) => string;
+  macRunnerHonestyLimit: string;
+  macRunnerContractLabel: string;
+  macRunnerContractChecksLabel: string;
+  macRunnerContractDeniedLabel: string;
+  macRunnerContractInstructionsLabel: string;
+  missionInputLabel: string;
+  missionInputPlaceholder: string;
   missionDraftLabel: string;
   missionDraftScore: (score: number, present: number, missing: number, recommended: number) => string;
   capabilitiesLabel: string;
   signalsLabel: string;
   unlockChecklistLabel: string;
+  selfSimulationLabel: string;
+  selfSimulationEmpty: string;
+  selfSimulationEmptyDetail: string;
+  selfSimulationNextActionsLabel: string;
+  selfSimulationHonestyLabel: string;
+  permissionRequestLabel: string;
+  permissionRequestDeniedLabel: string;
+  capabilityGapLabel: string;
+  capabilityGapHonestyLabel: string;
+  launchQueueLabel: string;
+  launchQueueEmpty: string;
+  launchQueueChecklistLabel: string;
+  launchQueueHonestyLabel: string;
+  executionReceiptLabel: string;
+  executionReceiptEmpty: string;
+  executionReceiptClaimsLabel: string;
+  executionReceiptHonestyLabel: string;
+  handoffReceiptLabel: string;
+  handoffOperatorScriptLabel: string;
+  completionGateLabel: string;
+  completionGateNextActionLabel: string;
+  completionGateBlockedClaimsLabel: string;
+  selfSimulationSummary: (readySessions: number, heldSessions: number, allowedCommands: number, evidenceArtifacts: number) => string;
+  selfSimulationStatus: (decision: string, readySessions: number, allowedCommands: number, evidenceArtifacts: number) => string;
+  permissionRequestSummary: (requests: number, askBeforeUse: number, deniedDefaults: number) => string;
+  capabilityGapSummary: (engineeringReadiness: number, macRuntimeReadiness: number, canPrepareEngineering: boolean, canControlMacDesktop: boolean) => string;
+  launchQueueSummary: (readyToRun: number, readyToHandoff: number, held: number, allowedCommands: number, evidenceArtifacts: number) => string;
+  executionReceiptSummary: (executedTasks: number, verifiedReceipts: number, acceptedEvidence: number, verifiedArtifacts: number, canClaimCompletion: boolean) => string;
+  macRunnerSummary: (readyCapabilities: number, approvalRequired: number, runtimeNeeded: number, deniedByDefault: number, availableAdapters: number) => string;
+  macRunnerContractSummary: (totalActions: number, readyForApproval: number, needsRuntime: number, blocked: number, evidenceTargets: number, requiredPermissions: number) => string;
+  handoffReceiptSummary: (canHandOff: boolean, canRunSandbox: boolean, approvalItems: number, evidenceArtifacts: number) => string;
+  completionGateSummary: (canClaimCompletion: boolean, canClaimCodeChanged: boolean, canClaimExternalWrite: boolean) => string;
   state: (state: string) => string;
   permissionMode: (mode: string) => string;
   launchStage: (stage: string) => string;
   nextAction: (action: string) => string;
+  selfSimulationDecision: (decision: string) => string;
+  selfSimulationStage: (stage: string) => string;
+  selfSimulationStageStatus: (status: string) => string;
+  selfSimulationCapability: (capability: string) => string;
+  selfSimulationCapabilityStatus: (status: string) => string;
+  permissionRequestDecision: (decision: string) => string;
+  permissionRequestMode: (mode: string) => string;
+  capabilityGapDecision: (decision: string) => string;
+  capabilityGapItem: (item: string) => string;
+  capabilityGapStatus: (status: string) => string;
+  launchQueueDecision: (decision: string) => string;
+  launchQueueStatus: (status: string) => string;
+  executionReceiptDecision: (decision: string) => string;
+  executionReceiptStatus: (status: string) => string;
+  macRunnerDecision: (decision: string) => string;
+  macRunnerCapability: (capability: string) => string;
+  macRunnerCapabilityStatus: (status: string) => string;
+  macRunnerPermission: (permission: string) => string;
+  macRunnerPermissionStatus: (status: string) => string;
+  macRunnerAdapter: (adapter: string) => string;
+  macRunnerAdapterStatus: (status: string) => string;
+  macRunnerNextAction: (action: string) => string;
+  macRunnerContractDecision: (decision: string) => string;
+  macRunnerContractAction: (action: string) => string;
+  macRunnerContractActionStatus: (status: string) => string;
+  macRunnerContractCheckStatus: (status: string) => string;
+  macRunnerContractDeniedAction: (action: string) => string;
+  macRunnerContractInstruction: (instruction: string) => string;
+  handoffReceiptDecision: (decision: string) => string;
+  handoffLane: (lane: string) => string;
+  handoffLaneStatus: (status: string) => string;
+  completionGateDecision: (decision: string) => string;
+  completionGateCheck: (check: string) => string;
+  completionGateCheckStatus: (status: string) => string;
   capability: (capability: string) => string;
   capabilityStatus: (status: string) => string;
   missionDraftItem: (item: string) => string;
@@ -89,6 +181,13 @@ export interface EngineeringLaunchpadCopy {
   runSandbox: string;
   exportIssues: string;
   applyMissionTemplate: string;
+  runSelfSimulation: string;
+  downloadSelfSimulationJson: string;
+  downloadSelfSimulationMarkdown: string;
+  downloadLaunchQueueJson: string;
+  downloadLaunchQueueMarkdown: string;
+  downloadExecutionReceiptJson: string;
+  downloadExecutionReceiptMarkdown: string;
   steps: Array<{
     title: string;
     body: string;
@@ -349,15 +448,122 @@ const copies: Record<SupportedLocale, AppCopy> = {
       permissionModeLabel: "権限モード",
       launchStageLabel: "起動段階",
       nextActionLabel: "次の操作",
+      entryLabel: "開始入口",
+      entryTitle: "ここに工程タスクを入力して監督組を動かします",
+      entryBody: "まず mission brief を書き、自己模擬で監督役同士の復盤、権限境界、runner キューを確認します。実行や Mac 操作は証拠と承認がそろうまで進みません。",
+      realityLabel: "今の実能力",
+      realityCodeLabel: "コード工程",
+      realityMacLabel: "Mac 操作",
+      realityExternalLabel: "外部書込",
+      realityCodeStatus: (verified, canRun, missionReady, simulated) =>
+        verified ? "実行証拠あり" : canRun ? "未実行・準備済み" : simulated ? "agent 引き渡し準備中" : missionReady ? "自己模擬待ち" : "入力待ち",
+      realityMacStatus: (canControl) => canControl ? "承認済み runner のみ" : "未接続",
+      realityExternalStatus: (requested) => requested ? "未承認で停止" : "既定で拒否",
+      missionInputHelp: "ここがユーザーの入力欄です。リポジトリ、やりたい変更、検証コマンド、Mac 権限の要否を書いてから自己模擬を押します。",
+      macScopeLabel: "Mac版の実用範囲",
+      macScopeItems: [
+        "通常はリポジトリ内のコード作成、テスト、ビルド、証拠回収まで",
+        "ブラウザ/Mac操作/MCPは runner ごとの allowlist と人間承認が必要",
+        "無制限のコンピュータ操作、秘密情報、push/deploy は既定で拒否"
+      ],
+      macRunnerLabel: "Mac runner 準備度",
+      macRunnerPermissionsLabel: "必要権限",
+      macRunnerAdaptersLabel: "接続候補",
+      macRunnerNextActionsLabel: "次の実装操作",
+      macRunnerHonestyLabel: "Mac操作の正直境界",
+      macRunnerHonestyClaim: (canControl) =>
+        canControl
+          ? "このミッション範囲では、承認済みの Mac runner だけがデスクトップ操作できます。"
+          : "Naikaku は監督付きのコーディング工程を準備できますが、Mac デスクトップ操作は権限、adapter runtime、action log、receipt がそろうまで未接続です。",
+      macRunnerHonestyLimit: "この readiness は権限を付与しません。Accessibility、画面収録、Automation、MCP、push/deploy は別途承認が必要です。",
+      macRunnerContractLabel: "Mac runner 契約",
+      macRunnerContractChecksLabel: "契約チェック",
+      macRunnerContractDeniedLabel: "拒否される動作",
+      macRunnerContractInstructionsLabel: "Runner 指示",
+      missionInputLabel: "ここに工程タスクを入力",
+      missionInputPlaceholder: "例: Mac 版を中心に、ユーザーがこの欄へタスクを入れると監督役が復盤し、coding agent がリポジトリ内で実装、npm run test / npm run build、証拠回収を行う。Git push と Mac 操作は人間承認。",
       missionDraftLabel: "ミッション体検",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
       capabilitiesLabel: "必要な Mac 工程能力",
       signalsLabel: "検出したミッション信号",
       unlockChecklistLabel: "工程解放チェックリスト",
+      selfSimulationLabel: "自己シミュレーション",
+      selfSimulationEmpty: "未実行",
+      selfSimulationEmptyDetail: "ローカルだけで監督、agent、runner、preflight の流れを演習できます。",
+      selfSimulationNextActionsLabel: "次の操作",
+      selfSimulationHonestyLabel: "正直境界",
+      permissionRequestLabel: "権限リクエスト",
+      permissionRequestDeniedLabel: "デフォルト拒否",
+      capabilityGapLabel: "能力差分",
+      capabilityGapHonestyLabel: "比較の正直境界",
+      launchQueueLabel: "工程起動キュー",
+      launchQueueEmpty: "未準備",
+      launchQueueChecklistLabel: "Runner 手順",
+      launchQueueHonestyLabel: "キューの正直境界",
+      executionReceiptLabel: "実行回填レシート",
+      executionReceiptEmpty: "未回填",
+      executionReceiptClaimsLabel: "宣言可否",
+      executionReceiptHonestyLabel: "回填の正直境界",
+      handoffReceiptLabel: "Agent 引き渡し受領書",
+      handoffOperatorScriptLabel: "運用手順",
+      completionGateLabel: "完了宣言ゲート",
+      completionGateNextActionLabel: "受入前の次操作",
+      completionGateBlockedClaimsLabel: "まだ言えないこと",
+      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held・許可コマンド ${commands}・証拠 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) => `自己シミュレーション ${jaEngineeringSelfSimulationDecision(decision)}: ready ${ready}、許可コマンド ${commands}、証拠 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) => `${requests}件要求・実行前確認 ${ask}・既定拒否 ${denied}`,
+      capabilityGapSummary: (engineering, mac, prepare, control) =>
+        `工程準備 ${engineering}%・Mac runtime ${mac}%・工程準備 ${prepare ? "可" : "未完"}・Mac 操作 ${control ? "可" : "未接続"}`,
+      launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
+        `実行可 ${runReady}・引き渡し可 ${handoffReady}・保留 ${held}・許可コマンド ${commands}・証拠 ${evidence}`,
+      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+        `実行 ${executed}・検証済み receipt ${receipts}・受理証拠 ${evidence}・確認済み artifact ${artifacts}・完了宣言 ${claim ? "可" : "不可"}`,
+      macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
+        `ready能力 ${ready}・承認待ち ${approvals}・runtime必要 ${runtime}・既定拒否 ${denied}・adapter ${adapters}`,
+      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+        `動作 ${total}・承認待ち ${approval}・runtime必要 ${runtime}・停止 ${blocked}・証拠 ${evidence}・権限 ${permissions}`,
+      handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
+        `Agent 引き渡し ${handoff ? "可" : "未完"}・Sandbox ${sandbox ? "実行可" : "待機"}・承認 ${approvals}・予定証拠 ${evidence}`,
+      completionGateSummary: (complete, codeChanged, externalWrite) =>
+        `完了宣言 ${complete ? "可" : "不可"}・コード変更 ${codeChanged ? "証拠あり" : "未証明"}・外部書き込み ${externalWrite ? "検討可" : "未承認"}`,
       state: jaEngineeringLaunchState,
       permissionMode: jaEngineeringPermissionMode,
       launchStage: jaEngineeringLaunchStage,
       nextAction: jaEngineeringNextAction,
+      selfSimulationDecision: jaEngineeringSelfSimulationDecision,
+      selfSimulationStage: jaEngineeringSelfSimulationStage,
+      selfSimulationStageStatus: jaEngineeringSelfSimulationStageStatus,
+      selfSimulationCapability: jaEngineeringSelfSimulationCapability,
+      selfSimulationCapabilityStatus: jaEngineeringSelfSimulationCapabilityStatus,
+      permissionRequestDecision: jaEngineeringPermissionRequestDecision,
+      permissionRequestMode: jaEngineeringPermissionRequestMode,
+      capabilityGapDecision: jaEngineeringCapabilityGapDecision,
+      capabilityGapItem: jaEngineeringCapabilityGapItem,
+      capabilityGapStatus: jaEngineeringCapabilityGapStatus,
+      launchQueueDecision: jaEngineeringLaunchQueueDecision,
+      launchQueueStatus: jaEngineeringLaunchQueueStatus,
+      executionReceiptDecision: jaEngineeringExecutionReceiptDecision,
+      executionReceiptStatus: jaEngineeringExecutionReceiptStatus,
+      macRunnerDecision: jaEngineeringMacRunnerDecision,
+      macRunnerCapability: jaEngineeringMacRunnerCapability,
+      macRunnerCapabilityStatus: jaEngineeringMacRunnerCapabilityStatus,
+      macRunnerPermission: jaEngineeringMacRunnerPermission,
+      macRunnerPermissionStatus: jaEngineeringMacRunnerPermissionStatus,
+      macRunnerAdapter: jaEngineeringMacRunnerAdapter,
+      macRunnerAdapterStatus: jaEngineeringMacRunnerAdapterStatus,
+      macRunnerNextAction: jaEngineeringMacRunnerNextAction,
+      macRunnerContractDecision: jaEngineeringMacRunnerContractDecision,
+      macRunnerContractAction: jaEngineeringMacRunnerContractAction,
+      macRunnerContractActionStatus: jaEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus: jaEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction: jaEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction: jaEngineeringMacRunnerContractInstruction,
+      handoffReceiptDecision: jaEngineeringHandoffDecision,
+      handoffLane: jaEngineeringHandoffLane,
+      handoffLaneStatus: jaEngineeringHandoffLaneStatus,
+      completionGateDecision: jaEngineeringCompletionGateDecision,
+      completionGateCheck: jaEngineeringCompletionGateCheck,
+      completionGateCheckStatus: jaEngineeringCompletionGateCheckStatus,
       capability: jaEngineeringCapability,
       capabilityStatus: jaEngineeringCapabilityStatus,
       missionDraftItem: jaEngineeringMissionDraftItem,
@@ -376,6 +582,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runSandbox: "ローカル実行",
       exportIssues: "Issue script",
       applyMissionTemplate: "Brief 整形",
+      runSelfSimulation: "自己模擬",
+      downloadSelfSimulationJson: "模擬 JSON",
+      downloadSelfSimulationMarkdown: "模擬 MD",
+      downloadLaunchQueueJson: "起動キュー JSON",
+      downloadLaunchQueueMarkdown: "起動キュー MD",
+      downloadExecutionReceiptJson: "回填レシート JSON",
+      downloadExecutionReceiptMarkdown: "回填レシート MD",
       steps: [
         {
           title: "1. ミッション入力",
@@ -647,15 +860,122 @@ const copies: Record<SupportedLocale, AppCopy> = {
       permissionModeLabel: "Permission mode",
       launchStageLabel: "Launch stage",
       nextActionLabel: "Next action",
+      entryLabel: "Start here",
+      entryTitle: "Type the engineering task here, then start supervisor review",
+      entryBody: "Write the mission brief first. Self-simulation rehearses supervisor review, permission boundaries, and runner queue readiness before any coding or Mac operation is claimed.",
+      realityLabel: "Actual capability now",
+      realityCodeLabel: "Code work",
+      realityMacLabel: "Mac control",
+      realityExternalLabel: "External write",
+      realityCodeStatus: (verified, canRun, missionReady, simulated) =>
+        verified ? "execution evidenced" : canRun ? "not run; ready" : simulated ? "agent handoff preparing" : missionReady ? "waiting for self-simulation" : "waiting for input",
+      realityMacStatus: (canControl) => canControl ? "approved runner only" : "not connected",
+      realityExternalStatus: (requested) => requested ? "blocked until approved" : "denied by default",
+      missionInputHelp: "This is the user input field. Include the repo target, desired change, verification commands, and whether Mac permissions are needed, then run self-simulation.",
+      macScopeLabel: "Mac app capability scope",
+      macScopeItems: [
+        "Default scope: code changes inside the repo, tests, build, and evidence collection",
+        "Browser, Mac desktop, and MCP control require runner allowlists plus human approval",
+        "Unbounded computer control, secrets, push, and deploy are denied by default"
+      ],
+      macRunnerLabel: "Mac runner readiness",
+      macRunnerPermissionsLabel: "Required permissions",
+      macRunnerAdaptersLabel: "Adapter candidates",
+      macRunnerNextActionsLabel: "Next implementation actions",
+      macRunnerHonestyLabel: "Mac control honesty boundary",
+      macRunnerHonestyClaim: (canControl) =>
+        canControl
+          ? "Only the approved Mac runner may control the desktop for this mission scope."
+          : "Naikaku can prepare supervised coding work now; Mac desktop control remains disconnected until permissions, adapter runtime, action logs, and receipts exist.",
+      macRunnerHonestyLimit: "This readiness report does not grant Accessibility, Screen Recording, Automation, MCP, push, or deploy permission.",
+      macRunnerContractLabel: "Mac runner contract",
+      macRunnerContractChecksLabel: "Contract checks",
+      macRunnerContractDeniedLabel: "Denied actions",
+      macRunnerContractInstructionsLabel: "Runner instructions",
+      missionInputLabel: "Type the engineering task here",
+      missionInputPlaceholder: "Example: Focus on the Mac app path. When the user enters a task here, supervisors review it and the coding agent edits the repo, runs npm run test / npm run build, and collects evidence. Git push and Mac control require human approval.",
       missionDraftLabel: "Mission check",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
       capabilitiesLabel: "Required Mac engineering capabilities",
       signalsLabel: "Detected mission signals",
       unlockChecklistLabel: "Engineering unlock checklist",
+      selfSimulationLabel: "Self-simulation",
+      selfSimulationEmpty: "Not run",
+      selfSimulationEmptyDetail: "Rehearse supervision, agents, runner, and preflight locally without executing work.",
+      selfSimulationNextActionsLabel: "Next actions",
+      selfSimulationHonestyLabel: "Honesty boundary",
+      permissionRequestLabel: "Permission request",
+      permissionRequestDeniedLabel: "Denied by default",
+      capabilityGapLabel: "Capability gap",
+      capabilityGapHonestyLabel: "Comparison boundary",
+      launchQueueLabel: "Engineering launch queue",
+      launchQueueEmpty: "Not prepared",
+      launchQueueChecklistLabel: "Runner checklist",
+      launchQueueHonestyLabel: "Queue honesty boundary",
+      executionReceiptLabel: "Execution receipt",
+      executionReceiptEmpty: "No receipt",
+      executionReceiptClaimsLabel: "Claim gate",
+      executionReceiptHonestyLabel: "Receipt honesty boundary",
+      handoffReceiptLabel: "Agent handoff receipt",
+      handoffOperatorScriptLabel: "Operator script",
+      completionGateLabel: "Completion claim gate",
+      completionGateNextActionLabel: "Next before acceptance",
+      completionGateBlockedClaimsLabel: "Blocked claims",
+      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held, ${commands} allowed commands, ${evidence} evidence`,
+      selfSimulationStatus: (decision, ready, commands, evidence) => `Self-simulation ${enEngineeringSelfSimulationDecision(decision)}: ${ready} ready sessions, ${commands} allowed commands, ${evidence} evidence artifacts.`,
+      permissionRequestSummary: (requests, ask, denied) => `${requests} requests, ${ask} ask-before-use, ${denied} denied defaults`,
+      capabilityGapSummary: (engineering, mac, prepare, control) =>
+        `engineering ${engineering}%, Mac runtime ${mac}%, prepare ${prepare ? "yes" : "no"}, Mac control ${control ? "yes" : "not connected"}`,
+      launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
+        `${runReady} ready to run, ${handoffReady} ready to handoff, ${held} held, ${commands} allowed commands, ${evidence} evidence`,
+      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+        `${executed} executed, ${receipts} verified receipts, ${evidence} accepted evidence, ${artifacts} verified artifacts, completion ${claim ? "claimable" : "blocked"}`,
+      macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
+        `${ready} ready capabilities, ${approvals} approvals, ${runtime} runtime gaps, ${denied} denied defaults, ${adapters} adapters`,
+      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+        `${total} actions, ${approval} approvals, ${runtime} runtime gaps, ${blocked} blocked, ${evidence} evidence targets, ${permissions} permissions`,
+      handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
+        `agent handoff ${handoff ? "ready" : "not ready"}, sandbox ${sandbox ? "runnable" : "waiting"}, approvals ${approvals}, expected evidence ${evidence}`,
+      completionGateSummary: (complete, codeChanged, externalWrite) =>
+        `completion ${complete ? "claimable" : "not claimable"}, code changes ${codeChanged ? "evidenced" : "unproven"}, external write ${externalWrite ? "reviewable" : "not approved"}`,
       state: enEngineeringLaunchState,
       permissionMode: enEngineeringPermissionMode,
       launchStage: enEngineeringLaunchStage,
       nextAction: enEngineeringNextAction,
+      selfSimulationDecision: enEngineeringSelfSimulationDecision,
+      selfSimulationStage: enEngineeringSelfSimulationStage,
+      selfSimulationStageStatus: enEngineeringSelfSimulationStageStatus,
+      selfSimulationCapability: enEngineeringSelfSimulationCapability,
+      selfSimulationCapabilityStatus: enEngineeringSelfSimulationCapabilityStatus,
+      permissionRequestDecision: enEngineeringPermissionRequestDecision,
+      permissionRequestMode: enEngineeringPermissionRequestMode,
+      capabilityGapDecision: enEngineeringCapabilityGapDecision,
+      capabilityGapItem: enEngineeringCapabilityGapItem,
+      capabilityGapStatus: enEngineeringCapabilityGapStatus,
+      launchQueueDecision: enEngineeringLaunchQueueDecision,
+      launchQueueStatus: enEngineeringLaunchQueueStatus,
+      executionReceiptDecision: enEngineeringExecutionReceiptDecision,
+      executionReceiptStatus: enEngineeringExecutionReceiptStatus,
+      macRunnerDecision: enEngineeringMacRunnerDecision,
+      macRunnerCapability: enEngineeringMacRunnerCapability,
+      macRunnerCapabilityStatus: enEngineeringMacRunnerCapabilityStatus,
+      macRunnerPermission: enEngineeringMacRunnerPermission,
+      macRunnerPermissionStatus: enEngineeringMacRunnerPermissionStatus,
+      macRunnerAdapter: enEngineeringMacRunnerAdapter,
+      macRunnerAdapterStatus: enEngineeringMacRunnerAdapterStatus,
+      macRunnerNextAction: enEngineeringMacRunnerNextAction,
+      macRunnerContractDecision: enEngineeringMacRunnerContractDecision,
+      macRunnerContractAction: enEngineeringMacRunnerContractAction,
+      macRunnerContractActionStatus: enEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus: enEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction: enEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction: enEngineeringMacRunnerContractInstruction,
+      handoffReceiptDecision: enEngineeringHandoffDecision,
+      handoffLane: enEngineeringHandoffLane,
+      handoffLaneStatus: enEngineeringHandoffLaneStatus,
+      completionGateDecision: enEngineeringCompletionGateDecision,
+      completionGateCheck: enEngineeringCompletionGateCheck,
+      completionGateCheckStatus: enEngineeringCompletionGateCheckStatus,
       capability: enEngineeringCapability,
       capabilityStatus: enEngineeringCapabilityStatus,
       missionDraftItem: enEngineeringMissionDraftItem,
@@ -674,6 +994,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runSandbox: "Run local sandbox",
       exportIssues: "Issue script",
       applyMissionTemplate: "Shape brief",
+      runSelfSimulation: "Self-simulate",
+      downloadSelfSimulationJson: "Simulation JSON",
+      downloadSelfSimulationMarkdown: "Simulation MD",
+      downloadLaunchQueueJson: "Launch queue JSON",
+      downloadLaunchQueueMarkdown: "Launch queue MD",
+      downloadExecutionReceiptJson: "Execution receipt JSON",
+      downloadExecutionReceiptMarkdown: "Execution receipt MD",
       steps: [
         {
           title: "1. Enter the mission",
@@ -945,15 +1272,122 @@ const copies: Record<SupportedLocale, AppCopy> = {
       permissionModeLabel: "权限模式",
       launchStageLabel: "启动阶段",
       nextActionLabel: "下一步",
+      entryLabel: "从这里开始",
+      entryTitle: "在这里输入工程任务，然后启动监督组复盘",
+      entryBody: "先把任务写进 mission brief。自己模拟会让监督角色复盘边界、权限和 runner 队列；没有真实证据前，不会宣称已经写代码或完成。",
+      realityLabel: "现在真实能力",
+      realityCodeLabel: "代码工程",
+      realityMacLabel: "Mac 控制",
+      realityExternalLabel: "外部写入",
+      realityCodeStatus: (verified, canRun, missionReady, simulated) =>
+        verified ? "已有执行证据" : canRun ? "未执行，仅准备好" : simulated ? "agent 交付准备中" : missionReady ? "等待自己模拟" : "等待输入",
+      realityMacStatus: (canControl) => canControl ? "仅批准 runner 可用" : "未接入",
+      realityExternalStatus: (requested) => requested ? "未审批，已停止" : "默认拒绝",
+      missionInputHelp: "这里就是用户输入入口。写清仓库目标、要改什么、验证命令，以及是否需要 Mac 权限，然后点自己模拟。",
+      macScopeLabel: "Mac 版能力范围",
+      macScopeItems: [
+        "默认范围：仓库内写代码、跑测试/构建、收集证据",
+        "浏览器、Mac 桌面、MCP 控制需要 runner allowlist 和人工批准",
+        "无限制电脑控制、秘密信息、push、deploy 默认拒绝"
+      ],
+      macRunnerLabel: "Mac runner 就绪度",
+      macRunnerPermissionsLabel: "需要的权限",
+      macRunnerAdaptersLabel: "可接入适配器",
+      macRunnerNextActionsLabel: "下一步工程动作",
+      macRunnerHonestyLabel: "Mac 控制诚实边界",
+      macRunnerHonestyClaim: (canControl) =>
+        canControl
+          ? "只有已批准的 Mac runner 可以在本任务范围内控制桌面。"
+          : "Naikaku 现在可以准备受监督的编程工程；Mac 桌面控制要等权限、适配器 runtime、动作日志和收据都齐了才算接入。",
+      macRunnerHonestyLimit: "这份 readiness 不会授予辅助功能、屏幕录制、自动化、MCP、push 或 deploy 权限。",
+      macRunnerContractLabel: "Mac runner 合约",
+      macRunnerContractChecksLabel: "合约检查",
+      macRunnerContractDeniedLabel: "拒绝的动作",
+      macRunnerContractInstructionsLabel: "Runner 指令",
+      missionInputLabel: "在这里输入工程任务",
+      missionInputPlaceholder: "例：以 Mac 版为主，用户在这个输入框填写任务后，监督角色先复盘，coding agent 再在仓库内实现、运行 npm run test / npm run build、收集证据；Git push 和 Mac 控制必须人工审核。",
       missionDraftLabel: "任务体检",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "识别到的任务信号",
       unlockChecklistLabel: "工程解锁清单",
+      selfSimulationLabel: "自己模拟",
+      selfSimulationEmpty: "未运行",
+      selfSimulationEmptyDetail: "仅在本地演练监督、agent、runner 和 preflight，不执行真实工程。",
+      selfSimulationNextActionsLabel: "下一步",
+      selfSimulationHonestyLabel: "诚实边界",
+      permissionRequestLabel: "权限请求",
+      permissionRequestDeniedLabel: "默认拒绝",
+      capabilityGapLabel: "能力差距",
+      capabilityGapHonestyLabel: "对比边界",
+      launchQueueLabel: "工程启动队列",
+      launchQueueEmpty: "未准备",
+      launchQueueChecklistLabel: "Runner 步骤",
+      launchQueueHonestyLabel: "队列诚实边界",
+      executionReceiptLabel: "执行回填收据",
+      executionReceiptEmpty: "未回填",
+      executionReceiptClaimsLabel: "声明闸门",
+      executionReceiptHonestyLabel: "回填诚实边界",
+      handoffReceiptLabel: "Agent 交付收据",
+      handoffOperatorScriptLabel: "操作步骤",
+      completionGateLabel: "完工声明闸门",
+      completionGateNextActionLabel: "验收前下一步",
+      completionGateBlockedClaimsLabel: "现在不能说",
+      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held，允许命令 ${commands}，证据 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) => `自己模拟 ${zhHansEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允许命令 ${commands}，证据 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) => `${requests} 项请求，执行前确认 ${ask}，默认拒绝 ${denied}`,
+      capabilityGapSummary: (engineering, mac, prepare, control) =>
+        `工程准备 ${engineering}%，Mac runtime ${mac}%，准备工程${prepare ? "可行" : "未完成"}，Mac 控制${control ? "可行" : "未接入"}`,
+      launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
+        `可本地跑 ${runReady}，可交给 agent ${handoffReady}，保留 ${held}，允许命令 ${commands}，证据 ${evidence}`,
+      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+        `已执行 ${executed}，已验证收据 ${receipts}，已接受证据 ${evidence}，已验证工件 ${artifacts}，完工声明${claim ? "可说" : "不可说"}`,
+      macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
+        `ready 能力 ${ready}，待审批 ${approvals}，缺 runtime ${runtime}，默认拒绝 ${denied}，adapter ${adapters}`,
+      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+        `动作 ${total}，待审批 ${approval}，缺 runtime ${runtime}，阻止 ${blocked}，证据 ${evidence}，权限 ${permissions}`,
+      handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
+        `交给 agent ${handoff ? "可行" : "未就绪"}，沙箱${sandbox ? "可运行" : "等待"}，审批 ${approvals}，预计证据 ${evidence}`,
+      completionGateSummary: (complete, codeChanged, externalWrite) =>
+        `完工声明${complete ? "可说" : "不可说"}，代码改动${codeChanged ? "有证据" : "未证明"}，外部写入${externalWrite ? "可进入审查" : "未批准"}`,
       state: zhHansEngineeringLaunchState,
       permissionMode: zhHansEngineeringPermissionMode,
       launchStage: zhHansEngineeringLaunchStage,
       nextAction: zhHansEngineeringNextAction,
+      selfSimulationDecision: zhHansEngineeringSelfSimulationDecision,
+      selfSimulationStage: zhHansEngineeringSelfSimulationStage,
+      selfSimulationStageStatus: zhHansEngineeringSelfSimulationStageStatus,
+      selfSimulationCapability: zhHansEngineeringSelfSimulationCapability,
+      selfSimulationCapabilityStatus: zhHansEngineeringSelfSimulationCapabilityStatus,
+      permissionRequestDecision: zhHansEngineeringPermissionRequestDecision,
+      permissionRequestMode: zhHansEngineeringPermissionRequestMode,
+      capabilityGapDecision: zhHansEngineeringCapabilityGapDecision,
+      capabilityGapItem: zhHansEngineeringCapabilityGapItem,
+      capabilityGapStatus: zhHansEngineeringCapabilityGapStatus,
+      launchQueueDecision: zhHansEngineeringLaunchQueueDecision,
+      launchQueueStatus: zhHansEngineeringLaunchQueueStatus,
+      executionReceiptDecision: zhHansEngineeringExecutionReceiptDecision,
+      executionReceiptStatus: zhHansEngineeringExecutionReceiptStatus,
+      macRunnerDecision: zhHansEngineeringMacRunnerDecision,
+      macRunnerCapability: zhHansEngineeringMacRunnerCapability,
+      macRunnerCapabilityStatus: zhHansEngineeringMacRunnerCapabilityStatus,
+      macRunnerPermission: zhHansEngineeringMacRunnerPermission,
+      macRunnerPermissionStatus: zhHansEngineeringMacRunnerPermissionStatus,
+      macRunnerAdapter: zhHansEngineeringMacRunnerAdapter,
+      macRunnerAdapterStatus: zhHansEngineeringMacRunnerAdapterStatus,
+      macRunnerNextAction: zhHansEngineeringMacRunnerNextAction,
+      macRunnerContractDecision: zhHansEngineeringMacRunnerContractDecision,
+      macRunnerContractAction: zhHansEngineeringMacRunnerContractAction,
+      macRunnerContractActionStatus: zhHansEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus: zhHansEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction: zhHansEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction: zhHansEngineeringMacRunnerContractInstruction,
+      handoffReceiptDecision: zhHansEngineeringHandoffDecision,
+      handoffLane: zhHansEngineeringHandoffLane,
+      handoffLaneStatus: zhHansEngineeringHandoffLaneStatus,
+      completionGateDecision: zhHansEngineeringCompletionGateDecision,
+      completionGateCheck: zhHansEngineeringCompletionGateCheck,
+      completionGateCheckStatus: zhHansEngineeringCompletionGateCheckStatus,
       capability: zhHansEngineeringCapability,
       capabilityStatus: zhHansEngineeringCapabilityStatus,
       missionDraftItem: zhHansEngineeringMissionDraftItem,
@@ -972,6 +1406,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runSandbox: "本地沙箱运行",
       exportIssues: "Issue 脚本",
       applyMissionTemplate: "整理任务",
+      runSelfSimulation: "自己模拟",
+      downloadSelfSimulationJson: "模拟 JSON",
+      downloadSelfSimulationMarkdown: "模拟 MD",
+      downloadLaunchQueueJson: "启动队列 JSON",
+      downloadLaunchQueueMarkdown: "启动队列 MD",
+      downloadExecutionReceiptJson: "回填收据 JSON",
+      downloadExecutionReceiptMarkdown: "回填收据 MD",
       steps: [
         {
           title: "1. 输入任务",
@@ -1243,15 +1684,122 @@ const copies: Record<SupportedLocale, AppCopy> = {
       permissionModeLabel: "權限模式",
       launchStageLabel: "啟動階段",
       nextActionLabel: "下一步",
+      entryLabel: "從這裡開始",
+      entryTitle: "在這裡輸入工程任務，然後啟動監督組復盤",
+      entryBody: "先把任務寫進 mission brief。自己模擬會讓監督角色復盤邊界、權限和 runner 佇列；沒有真實證據前，不會宣稱已經寫程式或完成。",
+      realityLabel: "現在真實能力",
+      realityCodeLabel: "程式工程",
+      realityMacLabel: "Mac 控制",
+      realityExternalLabel: "外部寫入",
+      realityCodeStatus: (verified, canRun, missionReady, simulated) =>
+        verified ? "已有執行證據" : canRun ? "未執行，僅準備好" : simulated ? "agent 交付準備中" : missionReady ? "等待自己模擬" : "等待輸入",
+      realityMacStatus: (canControl) => canControl ? "僅批准 runner 可用" : "未接入",
+      realityExternalStatus: (requested) => requested ? "未審批，已停止" : "預設拒絕",
+      missionInputHelp: "這裡就是使用者輸入入口。寫清倉庫目標、要改什麼、驗證命令，以及是否需要 Mac 權限，然後點自己模擬。",
+      macScopeLabel: "Mac 版能力範圍",
+      macScopeItems: [
+        "預設範圍：倉庫內寫程式、跑測試/建置、收集證據",
+        "瀏覽器、Mac 桌面、MCP 控制需要 runner allowlist 和人工批准",
+        "無限制電腦控制、秘密資訊、push、deploy 預設拒絕"
+      ],
+      macRunnerLabel: "Mac runner 就緒度",
+      macRunnerPermissionsLabel: "需要的權限",
+      macRunnerAdaptersLabel: "可接入適配器",
+      macRunnerNextActionsLabel: "下一步工程動作",
+      macRunnerHonestyLabel: "Mac 控制誠實邊界",
+      macRunnerHonestyClaim: (canControl) =>
+        canControl
+          ? "只有已批准的 Mac runner 可以在本任務範圍內控制桌面。"
+          : "Naikaku 現在可以準備受監督的編程工程；Mac 桌面控制要等權限、適配器 runtime、動作日誌和收據都齊了才算接入。",
+      macRunnerHonestyLimit: "這份 readiness 不會授予輔助使用、螢幕錄製、自動化、MCP、push 或 deploy 權限。",
+      macRunnerContractLabel: "Mac runner 合約",
+      macRunnerContractChecksLabel: "合約檢查",
+      macRunnerContractDeniedLabel: "拒絕的動作",
+      macRunnerContractInstructionsLabel: "Runner 指令",
+      missionInputLabel: "在這裡輸入工程任務",
+      missionInputPlaceholder: "例：以 Mac 版為主，使用者在這個輸入框填寫任務後，監督角色先復盤，coding agent 再在倉庫內實作、執行 npm run test / npm run build、收集證據；Git push 和 Mac 控制必須人工審核。",
       missionDraftLabel: "任務體檢",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "識別到的任務信號",
       unlockChecklistLabel: "工程解鎖清單",
+      selfSimulationLabel: "自己模擬",
+      selfSimulationEmpty: "未執行",
+      selfSimulationEmptyDetail: "僅在本地演練監督、agent、runner 和 preflight，不執行真實工程。",
+      selfSimulationNextActionsLabel: "下一步",
+      selfSimulationHonestyLabel: "誠實邊界",
+      permissionRequestLabel: "權限請求",
+      permissionRequestDeniedLabel: "預設拒絕",
+      capabilityGapLabel: "能力差距",
+      capabilityGapHonestyLabel: "對比邊界",
+      launchQueueLabel: "工程啟動佇列",
+      launchQueueEmpty: "未準備",
+      launchQueueChecklistLabel: "Runner 步驟",
+      launchQueueHonestyLabel: "佇列誠實邊界",
+      executionReceiptLabel: "執行回填收據",
+      executionReceiptEmpty: "未回填",
+      executionReceiptClaimsLabel: "聲明閘門",
+      executionReceiptHonestyLabel: "回填誠實邊界",
+      handoffReceiptLabel: "Agent 交付收據",
+      handoffOperatorScriptLabel: "操作步驟",
+      completionGateLabel: "完工聲明閘門",
+      completionGateNextActionLabel: "驗收前下一步",
+      completionGateBlockedClaimsLabel: "現在不能說",
+      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held，允許命令 ${commands}，證據 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) => `自己模擬 ${zhHantEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允許命令 ${commands}，證據 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) => `${requests} 項請求，執行前確認 ${ask}，預設拒絕 ${denied}`,
+      capabilityGapSummary: (engineering, mac, prepare, control) =>
+        `工程準備 ${engineering}%，Mac runtime ${mac}%，準備工程${prepare ? "可行" : "未完成"}，Mac 控制${control ? "可行" : "未接入"}`,
+      launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
+        `可本地跑 ${runReady}，可交給 agent ${handoffReady}，保留 ${held}，允許命令 ${commands}，證據 ${evidence}`,
+      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+        `已執行 ${executed}，已驗證收據 ${receipts}，已接受證據 ${evidence}，已驗證工件 ${artifacts}，完工聲明${claim ? "可說" : "不可說"}`,
+      macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
+        `ready 能力 ${ready}，待審批 ${approvals}，缺 runtime ${runtime}，預設拒絕 ${denied}，adapter ${adapters}`,
+      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+        `動作 ${total}，待審批 ${approval}，缺 runtime ${runtime}，阻止 ${blocked}，證據 ${evidence}，權限 ${permissions}`,
+      handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
+        `交給 agent ${handoff ? "可行" : "未就緒"}，沙箱${sandbox ? "可執行" : "等待"}，審批 ${approvals}，預計證據 ${evidence}`,
+      completionGateSummary: (complete, codeChanged, externalWrite) =>
+        `完工聲明${complete ? "可說" : "不可說"}，程式碼改動${codeChanged ? "有證據" : "未證明"}，外部寫入${externalWrite ? "可進入審查" : "未批准"}`,
       state: zhHantEngineeringLaunchState,
       permissionMode: zhHantEngineeringPermissionMode,
       launchStage: zhHantEngineeringLaunchStage,
       nextAction: zhHantEngineeringNextAction,
+      selfSimulationDecision: zhHantEngineeringSelfSimulationDecision,
+      selfSimulationStage: zhHantEngineeringSelfSimulationStage,
+      selfSimulationStageStatus: zhHantEngineeringSelfSimulationStageStatus,
+      selfSimulationCapability: zhHantEngineeringSelfSimulationCapability,
+      selfSimulationCapabilityStatus: zhHantEngineeringSelfSimulationCapabilityStatus,
+      permissionRequestDecision: zhHantEngineeringPermissionRequestDecision,
+      permissionRequestMode: zhHantEngineeringPermissionRequestMode,
+      capabilityGapDecision: zhHantEngineeringCapabilityGapDecision,
+      capabilityGapItem: zhHantEngineeringCapabilityGapItem,
+      capabilityGapStatus: zhHantEngineeringCapabilityGapStatus,
+      launchQueueDecision: zhHantEngineeringLaunchQueueDecision,
+      launchQueueStatus: zhHantEngineeringLaunchQueueStatus,
+      executionReceiptDecision: zhHantEngineeringExecutionReceiptDecision,
+      executionReceiptStatus: zhHantEngineeringExecutionReceiptStatus,
+      macRunnerDecision: zhHantEngineeringMacRunnerDecision,
+      macRunnerCapability: zhHantEngineeringMacRunnerCapability,
+      macRunnerCapabilityStatus: zhHantEngineeringMacRunnerCapabilityStatus,
+      macRunnerPermission: zhHantEngineeringMacRunnerPermission,
+      macRunnerPermissionStatus: zhHantEngineeringMacRunnerPermissionStatus,
+      macRunnerAdapter: zhHantEngineeringMacRunnerAdapter,
+      macRunnerAdapterStatus: zhHantEngineeringMacRunnerAdapterStatus,
+      macRunnerNextAction: zhHantEngineeringMacRunnerNextAction,
+      macRunnerContractDecision: zhHantEngineeringMacRunnerContractDecision,
+      macRunnerContractAction: zhHantEngineeringMacRunnerContractAction,
+      macRunnerContractActionStatus: zhHantEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus: zhHantEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction: zhHantEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction: zhHantEngineeringMacRunnerContractInstruction,
+      handoffReceiptDecision: zhHantEngineeringHandoffDecision,
+      handoffLane: zhHantEngineeringHandoffLane,
+      handoffLaneStatus: zhHantEngineeringHandoffLaneStatus,
+      completionGateDecision: zhHantEngineeringCompletionGateDecision,
+      completionGateCheck: zhHantEngineeringCompletionGateCheck,
+      completionGateCheckStatus: zhHantEngineeringCompletionGateCheckStatus,
       capability: zhHantEngineeringCapability,
       capabilityStatus: zhHantEngineeringCapabilityStatus,
       missionDraftItem: zhHantEngineeringMissionDraftItem,
@@ -1270,6 +1818,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runSandbox: "本地沙箱執行",
       exportIssues: "Issue 腳本",
       applyMissionTemplate: "整理任務",
+      runSelfSimulation: "自己模擬",
+      downloadSelfSimulationJson: "模擬 JSON",
+      downloadSelfSimulationMarkdown: "模擬 MD",
+      downloadLaunchQueueJson: "啟動佇列 JSON",
+      downloadLaunchQueueMarkdown: "啟動佇列 MD",
+      downloadExecutionReceiptJson: "回填收據 JSON",
+      downloadExecutionReceiptMarkdown: "回填收據 MD",
       steps: [
         {
           title: "1. 輸入任務",
@@ -1541,15 +2096,122 @@ const copies: Record<SupportedLocale, AppCopy> = {
       permissionModeLabel: "권한 모드",
       launchStageLabel: "시작 단계",
       nextActionLabel: "다음 작업",
+      entryLabel: "여기서 시작",
+      entryTitle: "여기에 엔지니어링 작업을 입력하고 감독 리뷰를 시작",
+      entryBody: "먼저 mission brief를 작성합니다. 자체 시뮬레이션은 실제 코딩이나 Mac 조작을 주장하기 전에 감독 리뷰, 권한 경계, runner 큐를 점검합니다.",
+      realityLabel: "현재 실제 능력",
+      realityCodeLabel: "코드 작업",
+      realityMacLabel: "Mac 제어",
+      realityExternalLabel: "외부 쓰기",
+      realityCodeStatus: (verified, canRun, missionReady, simulated) =>
+        verified ? "실행 증거 있음" : canRun ? "미실행・준비됨" : simulated ? "agent 인계 준비 중" : missionReady ? "자체 시뮬레이션 대기" : "입력 대기",
+      realityMacStatus: (canControl) => canControl ? "승인된 runner만 가능" : "미연결",
+      realityExternalStatus: (requested) => requested ? "미승인으로 중지" : "기본 거부",
+      missionInputHelp: "이곳이 사용자 입력 칸입니다. 저장소 대상, 변경 내용, 검증 명령, Mac 권한 필요 여부를 적고 자체 시뮬레이션을 실행합니다.",
+      macScopeLabel: "Mac 앱 기능 범위",
+      macScopeItems: [
+        "기본 범위: 저장소 안 코드 변경, 테스트, 빌드, 증거 수집",
+        "브라우저, Mac 데스크톱, MCP 제어는 runner allowlist와 사람 승인 필요",
+        "무제한 컴퓨터 제어, 비밀값, push, deploy는 기본 거부"
+      ],
+      macRunnerLabel: "Mac runner 준비도",
+      macRunnerPermissionsLabel: "필요 권한",
+      macRunnerAdaptersLabel: "연결 후보 adapter",
+      macRunnerNextActionsLabel: "다음 구현 작업",
+      macRunnerHonestyLabel: "Mac 제어 정직 경계",
+      macRunnerHonestyClaim: (canControl) =>
+        canControl
+          ? "승인된 Mac runner만 이 미션 범위에서 데스크톱을 제어할 수 있습니다."
+          : "Naikaku는 감독된 코딩 작업을 준비할 수 있지만, Mac 데스크톱 제어는 권한, adapter runtime, action log, receipt가 있어야 연결됩니다.",
+      macRunnerHonestyLimit: "이 readiness는 손쉬운 사용, 화면 기록, 자동화, MCP, push, deploy 권한을 부여하지 않습니다.",
+      macRunnerContractLabel: "Mac runner contract",
+      macRunnerContractChecksLabel: "Contract checks",
+      macRunnerContractDeniedLabel: "거부 동작",
+      macRunnerContractInstructionsLabel: "Runner 지시",
+      missionInputLabel: "여기에 엔지니어링 작업 입력",
+      missionInputPlaceholder: "예: Mac 앱을 중심으로, 사용자가 이 입력 칸에 작업을 넣으면 감독 역할이 먼저 리뷰하고 coding agent가 저장소를 수정, npm run test / npm run build 실행, 증거 수집을 합니다. Git push와 Mac 제어는 사람 승인.",
       missionDraftLabel: "미션 점검",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
       capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
       signalsLabel: "감지된 미션 신호",
       unlockChecklistLabel: "엔지니어링 잠금 해제 체크리스트",
+      selfSimulationLabel: "자체 시뮬레이션",
+      selfSimulationEmpty: "미실행",
+      selfSimulationEmptyDetail: "감독, agent, runner, preflight 흐름을 로컬에서만 리허설합니다.",
+      selfSimulationNextActionsLabel: "다음 작업",
+      selfSimulationHonestyLabel: "정직 경계",
+      permissionRequestLabel: "권한 요청",
+      permissionRequestDeniedLabel: "기본 거부",
+      capabilityGapLabel: "기능 격차",
+      capabilityGapHonestyLabel: "비교 경계",
+      launchQueueLabel: "엔지니어링 시작 큐",
+      launchQueueEmpty: "미준비",
+      launchQueueChecklistLabel: "Runner 절차",
+      launchQueueHonestyLabel: "큐 정직 경계",
+      executionReceiptLabel: "실행 회신 영수증",
+      executionReceiptEmpty: "회신 없음",
+      executionReceiptClaimsLabel: "선언 게이트",
+      executionReceiptHonestyLabel: "회신 정직 경계",
+      handoffReceiptLabel: "Agent 인계 영수증",
+      handoffOperatorScriptLabel: "운영 절차",
+      completionGateLabel: "완료 선언 게이트",
+      completionGateNextActionLabel: "수락 전 다음 작업",
+      completionGateBlockedClaimsLabel: "아직 말할 수 없는 것",
+      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held・허용 명령 ${commands}・증거 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) => `자체 시뮬레이션 ${koEngineeringSelfSimulationDecision(decision)}: ready ${ready}, 허용 명령 ${commands}, 증거 ${evidence}.`,
+      permissionRequestSummary: (requests, ask, denied) => `${requests}개 요청・사용 전 확인 ${ask}개・기본 거부 ${denied}개`,
+      capabilityGapSummary: (engineering, mac, prepare, control) =>
+        `엔지니어링 ${engineering}%・Mac runtime ${mac}%・준비 ${prepare ? "가능" : "미완"}・Mac 제어 ${control ? "가능" : "미연결"}`,
+      launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
+        `실행 가능 ${runReady}・인계 가능 ${handoffReady}・보류 ${held}・허용 명령 ${commands}・증거 ${evidence}`,
+      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+        `실행 ${executed}・검증 receipt ${receipts}・수락 증거 ${evidence}・검증 artifact ${artifacts}・완료 선언 ${claim ? "가능" : "불가"}`,
+      macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
+        `ready 기능 ${ready}・승인 대기 ${approvals}・runtime 필요 ${runtime}・기본 거부 ${denied}・adapter ${adapters}`,
+      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+        `동작 ${total}・승인 대기 ${approval}・runtime 필요 ${runtime}・차단 ${blocked}・증거 ${evidence}・권한 ${permissions}`,
+      handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
+        `agent 인계 ${handoff ? "가능" : "미준비"}・sandbox ${sandbox ? "실행 가능" : "대기"}・승인 ${approvals}・예상 증거 ${evidence}`,
+      completionGateSummary: (complete, codeChanged, externalWrite) =>
+        `완료 선언 ${complete ? "가능" : "불가"}・코드 변경 ${codeChanged ? "증거 있음" : "미증명"}・외부 쓰기 ${externalWrite ? "검토 가능" : "미승인"}`,
       state: koEngineeringLaunchState,
       permissionMode: koEngineeringPermissionMode,
       launchStage: koEngineeringLaunchStage,
       nextAction: koEngineeringNextAction,
+      selfSimulationDecision: koEngineeringSelfSimulationDecision,
+      selfSimulationStage: koEngineeringSelfSimulationStage,
+      selfSimulationStageStatus: koEngineeringSelfSimulationStageStatus,
+      selfSimulationCapability: koEngineeringSelfSimulationCapability,
+      selfSimulationCapabilityStatus: koEngineeringSelfSimulationCapabilityStatus,
+      permissionRequestDecision: koEngineeringPermissionRequestDecision,
+      permissionRequestMode: koEngineeringPermissionRequestMode,
+      capabilityGapDecision: koEngineeringCapabilityGapDecision,
+      capabilityGapItem: koEngineeringCapabilityGapItem,
+      capabilityGapStatus: koEngineeringCapabilityGapStatus,
+      launchQueueDecision: koEngineeringLaunchQueueDecision,
+      launchQueueStatus: koEngineeringLaunchQueueStatus,
+      executionReceiptDecision: koEngineeringExecutionReceiptDecision,
+      executionReceiptStatus: koEngineeringExecutionReceiptStatus,
+      macRunnerDecision: koEngineeringMacRunnerDecision,
+      macRunnerCapability: koEngineeringMacRunnerCapability,
+      macRunnerCapabilityStatus: koEngineeringMacRunnerCapabilityStatus,
+      macRunnerPermission: koEngineeringMacRunnerPermission,
+      macRunnerPermissionStatus: koEngineeringMacRunnerPermissionStatus,
+      macRunnerAdapter: koEngineeringMacRunnerAdapter,
+      macRunnerAdapterStatus: koEngineeringMacRunnerAdapterStatus,
+      macRunnerNextAction: koEngineeringMacRunnerNextAction,
+      macRunnerContractDecision: koEngineeringMacRunnerContractDecision,
+      macRunnerContractAction: koEngineeringMacRunnerContractAction,
+      macRunnerContractActionStatus: koEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus: koEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction: koEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction: koEngineeringMacRunnerContractInstruction,
+      handoffReceiptDecision: koEngineeringHandoffDecision,
+      handoffLane: koEngineeringHandoffLane,
+      handoffLaneStatus: koEngineeringHandoffLaneStatus,
+      completionGateDecision: koEngineeringCompletionGateDecision,
+      completionGateCheck: koEngineeringCompletionGateCheck,
+      completionGateCheckStatus: koEngineeringCompletionGateCheckStatus,
       capability: koEngineeringCapability,
       capabilityStatus: koEngineeringCapabilityStatus,
       missionDraftItem: koEngineeringMissionDraftItem,
@@ -1568,6 +2230,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runSandbox: "로컬 샌드박스 실행",
       exportIssues: "Issue script",
       applyMissionTemplate: "미션 정리",
+      runSelfSimulation: "자체 시뮬레이션",
+      downloadSelfSimulationJson: "시뮬레이션 JSON",
+      downloadSelfSimulationMarkdown: "시뮬레이션 MD",
+      downloadLaunchQueueJson: "시작 큐 JSON",
+      downloadLaunchQueueMarkdown: "시작 큐 MD",
+      downloadExecutionReceiptJson: "회신 영수증 JSON",
+      downloadExecutionReceiptMarkdown: "회신 영수증 MD",
       steps: [
         {
           title: "1. 미션 입력",
@@ -2600,6 +3269,1852 @@ function koEngineeringNextAction(action: string) {
     "run-sandbox": "로컬 샌드박스 실행",
     "review-evidence": "증거 검토",
     "request-approval": "승인 요청"
+  });
+}
+
+function jaEngineeringSelfSimulationDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "入力が必要",
+    "simulated-ready": "模擬準備済み",
+    "approval-required": "承認が必要",
+    "needs-review": "レビュー要",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringSelfSimulationDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "needs mission",
+    "simulated-ready": "simulated ready",
+    "approval-required": "approval required",
+    "needs-review": "needs review",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringSelfSimulationDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "需要任务",
+    "simulated-ready": "模拟就绪",
+    "approval-required": "需要审批",
+    "needs-review": "需要审查",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringSelfSimulationDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "需要任務",
+    "simulated-ready": "模擬就緒",
+    "approval-required": "需要審批",
+    "needs-review": "需要審查",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringSelfSimulationDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "미션 필요",
+    "simulated-ready": "시뮬레이션 준비됨",
+    "approval-required": "승인 필요",
+    "needs-review": "검토 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringSelfSimulationStage(stage: string) {
+  return engineeringLabel(stage, {
+    mission: "ミッション",
+    cabinet: "内閣",
+    briefs: "Brief",
+    sessions: "Session",
+    dispatch: "Dispatch",
+    runner: "Runner",
+    preflight: "Preflight",
+    evidence: "証拠"
+  });
+}
+
+function enEngineeringSelfSimulationStage(stage: string) {
+  return engineeringLabel(stage, {
+    mission: "mission",
+    cabinet: "cabinet",
+    briefs: "briefs",
+    sessions: "sessions",
+    dispatch: "dispatch",
+    runner: "runner",
+    preflight: "preflight",
+    evidence: "evidence"
+  });
+}
+
+function zhHansEngineeringSelfSimulationStage(stage: string) {
+  return engineeringLabel(stage, {
+    mission: "任务",
+    cabinet: "内阁",
+    briefs: "Brief",
+    sessions: "会话",
+    dispatch: "分发",
+    runner: "Runner",
+    preflight: "预检",
+    evidence: "证据"
+  });
+}
+
+function zhHantEngineeringSelfSimulationStage(stage: string) {
+  return engineeringLabel(stage, {
+    mission: "任務",
+    cabinet: "內閣",
+    briefs: "Brief",
+    sessions: "會話",
+    dispatch: "分發",
+    runner: "Runner",
+    preflight: "預檢",
+    evidence: "證據"
+  });
+}
+
+function koEngineeringSelfSimulationStage(stage: string) {
+  return engineeringLabel(stage, {
+    mission: "미션",
+    cabinet: "내각",
+    briefs: "Brief",
+    sessions: "세션",
+    dispatch: "Dispatch",
+    runner: "Runner",
+    preflight: "Preflight",
+    evidence: "증거"
+  });
+}
+
+function jaEngineeringSelfSimulationStageStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "停止",
+    waiting: "待機"
+  });
+}
+
+function enEngineeringSelfSimulationStageStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "pass",
+    warn: "warn",
+    block: "block",
+    waiting: "waiting"
+  });
+}
+
+function zhHansEngineeringSelfSimulationStageStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通过",
+    warn: "注意",
+    block: "阻止",
+    waiting: "等待"
+  });
+}
+
+function zhHantEngineeringSelfSimulationStageStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "阻止",
+    waiting: "等待"
+  });
+}
+
+function koEngineeringSelfSimulationStageStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "통과",
+    warn: "주의",
+    block: "차단",
+    waiting: "대기"
+  });
+}
+
+function jaEngineeringSelfSimulationCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "code-writing": "コード作成",
+    "allowlisted-shell": "許可 shell",
+    "browser-assist": "ブラウザ補助",
+    "mac-desktop": "Mac 操作",
+    "mcp-tools": "MCP",
+    "external-writes": "外部書き込み"
+  });
+}
+
+function enEngineeringSelfSimulationCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "code-writing": "code writing",
+    "allowlisted-shell": "allowlisted shell",
+    "browser-assist": "browser assist",
+    "mac-desktop": "Mac desktop",
+    "mcp-tools": "MCP tools",
+    "external-writes": "external writes"
+  });
+}
+
+function zhHansEngineeringSelfSimulationCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "code-writing": "写代码",
+    "allowlisted-shell": "允许 shell",
+    "browser-assist": "浏览器辅助",
+    "mac-desktop": "Mac 桌面",
+    "mcp-tools": "MCP 工具",
+    "external-writes": "外部写入"
+  });
+}
+
+function zhHantEngineeringSelfSimulationCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "code-writing": "寫程式",
+    "allowlisted-shell": "允許 shell",
+    "browser-assist": "瀏覽器輔助",
+    "mac-desktop": "Mac 桌面",
+    "mcp-tools": "MCP 工具",
+    "external-writes": "外部寫入"
+  });
+}
+
+function koEngineeringSelfSimulationCapability(capability: string) {
+  return engineeringLabel(capability, {
+    "code-writing": "코드 작성",
+    "allowlisted-shell": "허용 shell",
+    "browser-assist": "브라우저 보조",
+    "mac-desktop": "Mac 데스크톱",
+    "mcp-tools": "MCP 도구",
+    "external-writes": "외부 쓰기"
+  });
+}
+
+function jaEngineeringSelfSimulationCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "準備済み",
+    simulated: "模擬",
+    "approval-required": "承認必要",
+    "not-requested": "未要求",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringSelfSimulationCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    simulated: "simulated",
+    "approval-required": "approval",
+    "not-requested": "not requested",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringSelfSimulationCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已准备",
+    simulated: "已模拟",
+    "approval-required": "需审批",
+    "not-requested": "未请求",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringSelfSimulationCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已準備",
+    simulated: "已模擬",
+    "approval-required": "需審批",
+    "not-requested": "未請求",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringSelfSimulationCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "준비됨",
+    simulated: "시뮬레이션",
+    "approval-required": "승인 필요",
+    "not-requested": "요청 없음",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringPermissionRequestDecision(decision: string) {
+  return engineeringLabel(decision, {
+    ready: "ローカル準備済み",
+    "approval-required": "承認が必要",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringPermissionRequestDecision(decision: string) {
+  return engineeringLabel(decision, {
+    ready: "local ready",
+    "approval-required": "approval required",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringPermissionRequestDecision(decision: string) {
+  return engineeringLabel(decision, {
+    ready: "本地就绪",
+    "approval-required": "需要审批",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringPermissionRequestDecision(decision: string) {
+  return engineeringLabel(decision, {
+    ready: "本地就緒",
+    "approval-required": "需要審批",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringPermissionRequestDecision(decision: string) {
+  return engineeringLabel(decision, {
+    ready: "로컬 준비됨",
+    "approval-required": "승인 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringPermissionRequestMode(mode: string) {
+  return engineeringLabel(mode, {
+    "default-local": "ローカル既定",
+    "ask-before-use": "使用前確認",
+    "not-requested": "未要求",
+    blocked: "拒否"
+  });
+}
+
+function enEngineeringPermissionRequestMode(mode: string) {
+  return engineeringLabel(mode, {
+    "default-local": "local default",
+    "ask-before-use": "ask before use",
+    "not-requested": "not requested",
+    blocked: "denied"
+  });
+}
+
+function zhHansEngineeringPermissionRequestMode(mode: string) {
+  return engineeringLabel(mode, {
+    "default-local": "本地默认",
+    "ask-before-use": "使用前确认",
+    "not-requested": "未请求",
+    blocked: "拒绝"
+  });
+}
+
+function zhHantEngineeringPermissionRequestMode(mode: string) {
+  return engineeringLabel(mode, {
+    "default-local": "本地預設",
+    "ask-before-use": "使用前確認",
+    "not-requested": "未請求",
+    blocked: "拒絕"
+  });
+}
+
+function koEngineeringPermissionRequestMode(mode: string) {
+  return engineeringLabel(mode, {
+    "default-local": "로컬 기본",
+    "ask-before-use": "사용 전 확인",
+    "not-requested": "요청 없음",
+    blocked: "거부"
+  });
+}
+
+function jaEngineeringCapabilityGapDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "engineering-ready": "工程準備中",
+    "agent-ready": "Agent 準備済み",
+    "runtime-needed": "Runtime 要接続",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringCapabilityGapDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "engineering-ready": "engineering ready",
+    "agent-ready": "agent ready",
+    "runtime-needed": "runtime needed",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringCapabilityGapDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "engineering-ready": "工程准备中",
+    "agent-ready": "Agent 就绪",
+    "runtime-needed": "需要运行时",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringCapabilityGapDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "engineering-ready": "工程準備中",
+    "agent-ready": "Agent 就緒",
+    "runtime-needed": "需要執行時",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringCapabilityGapDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "engineering-ready": "엔지니어링 준비",
+    "agent-ready": "agent 준비됨",
+    "runtime-needed": "runtime 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringCapabilityGapItem(item: string) {
+  return engineeringLabel(item, {
+    "supervised-coding": "監督付きコード作成",
+    "local-shell": "ローカル shell",
+    "browser-automation": "ブラウザ自動化",
+    "mac-desktop-control": "Mac デスクトップ操作",
+    "mcp-connectors": "MCP connector",
+    "external-writes": "外部書き込み"
+  });
+}
+
+function enEngineeringCapabilityGapItem(item: string) {
+  return engineeringLabel(item, {
+    "supervised-coding": "supervised coding",
+    "local-shell": "local shell",
+    "browser-automation": "browser automation",
+    "mac-desktop-control": "Mac desktop control",
+    "mcp-connectors": "MCP connectors",
+    "external-writes": "external writes"
+  });
+}
+
+function zhHansEngineeringCapabilityGapItem(item: string) {
+  return engineeringLabel(item, {
+    "supervised-coding": "监督式写代码",
+    "local-shell": "本地 shell",
+    "browser-automation": "浏览器自动化",
+    "mac-desktop-control": "Mac 桌面控制",
+    "mcp-connectors": "MCP 连接器",
+    "external-writes": "外部写入"
+  });
+}
+
+function zhHantEngineeringCapabilityGapItem(item: string) {
+  return engineeringLabel(item, {
+    "supervised-coding": "監督式寫程式",
+    "local-shell": "本地 shell",
+    "browser-automation": "瀏覽器自動化",
+    "mac-desktop-control": "Mac 桌面控制",
+    "mcp-connectors": "MCP 連接器",
+    "external-writes": "外部寫入"
+  });
+}
+
+function koEngineeringCapabilityGapItem(item: string) {
+  return engineeringLabel(item, {
+    "supervised-coding": "감독형 코드 작성",
+    "local-shell": "로컬 shell",
+    "browser-automation": "브라우저 자동화",
+    "mac-desktop-control": "Mac 데스크톱 제어",
+    "mcp-connectors": "MCP 커넥터",
+    "external-writes": "외부 쓰기"
+  });
+}
+
+function jaEngineeringCapabilityGapStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "準備済み",
+    simulated: "模擬",
+    "approval-required": "承認必要",
+    missing: "未接続",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringCapabilityGapStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    simulated: "simulated",
+    "approval-required": "approval",
+    missing: "missing",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringCapabilityGapStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已准备",
+    simulated: "已模拟",
+    "approval-required": "需审批",
+    missing: "未接入",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringCapabilityGapStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已準備",
+    simulated: "已模擬",
+    "approval-required": "需審批",
+    missing: "未接入",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringCapabilityGapStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "준비됨",
+    simulated: "시뮬레이션",
+    "approval-required": "승인 필요",
+    missing: "미연결",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringLaunchQueueDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-prepared": "未準備",
+    "queue-ready": "引き渡し準備済み",
+    "preflight-ready": "ローカル実行準備済み",
+    "needs-review": "確認待ち",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringLaunchQueueDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-prepared": "not prepared",
+    "queue-ready": "queue ready",
+    "preflight-ready": "preflight ready",
+    "needs-review": "needs review",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringLaunchQueueDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-prepared": "未准备",
+    "queue-ready": "可交给 agent",
+    "preflight-ready": "可本地执行",
+    "needs-review": "需要复核",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringLaunchQueueDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-prepared": "未準備",
+    "queue-ready": "可交給 agent",
+    "preflight-ready": "可本地執行",
+    "needs-review": "需要複核",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringLaunchQueueDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-prepared": "미준비",
+    "queue-ready": "인계 준비됨",
+    "preflight-ready": "로컬 실행 준비됨",
+    "needs-review": "검토 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringLaunchQueueStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-to-run": "実行可",
+    "ready-to-handoff": "引き渡し可",
+    held: "保留",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringLaunchQueueStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-to-run": "ready to run",
+    "ready-to-handoff": "ready to handoff",
+    held: "held",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringLaunchQueueStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-to-run": "可本地跑",
+    "ready-to-handoff": "可交给 agent",
+    held: "保留",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringLaunchQueueStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-to-run": "可本地跑",
+    "ready-to-handoff": "可交給 agent",
+    held: "保留",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringLaunchQueueStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-to-run": "실행 가능",
+    "ready-to-handoff": "인계 가능",
+    held: "보류",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringExecutionReceiptDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-started": "未回填",
+    "runner-reported": "Runner 報告あり",
+    "needs-evidence": "証拠不足",
+    "needs-artifacts": "Artifact 要確認",
+    accepted: "受理",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringExecutionReceiptDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-started": "not started",
+    "runner-reported": "runner reported",
+    "needs-evidence": "needs evidence",
+    "needs-artifacts": "needs artifacts",
+    accepted: "accepted",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringExecutionReceiptDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-started": "未回填",
+    "runner-reported": "Runner 已报告",
+    "needs-evidence": "缺少证据",
+    "needs-artifacts": "需验证工件",
+    accepted: "已接受",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringExecutionReceiptDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-started": "未回填",
+    "runner-reported": "Runner 已報告",
+    "needs-evidence": "缺少證據",
+    "needs-artifacts": "需驗證工件",
+    accepted: "已接受",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringExecutionReceiptDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-started": "회신 없음",
+    "runner-reported": "runner 보고됨",
+    "needs-evidence": "증거 필요",
+    "needs-artifacts": "artifact 확인 필요",
+    accepted: "수락",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringExecutionReceiptStatus(status: string) {
+  return engineeringLabel(status, {
+    "not-run": "未実行",
+    reported: "報告あり",
+    "needs-evidence": "証拠不足",
+    "needs-artifacts": "Artifact不足",
+    accepted: "受理",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringExecutionReceiptStatus(status: string) {
+  return engineeringLabel(status, {
+    "not-run": "not run",
+    reported: "reported",
+    "needs-evidence": "needs evidence",
+    "needs-artifacts": "needs artifacts",
+    accepted: "accepted",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringExecutionReceiptStatus(status: string) {
+  return engineeringLabel(status, {
+    "not-run": "未运行",
+    reported: "已报告",
+    "needs-evidence": "缺证据",
+    "needs-artifacts": "缺工件",
+    accepted: "已接受",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringExecutionReceiptStatus(status: string) {
+  return engineeringLabel(status, {
+    "not-run": "未執行",
+    reported: "已報告",
+    "needs-evidence": "缺證據",
+    "needs-artifacts": "缺工件",
+    accepted: "已接受",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringExecutionReceiptStatus(status: string) {
+  return engineeringLabel(status, {
+    "not-run": "미실행",
+    reported: "보고됨",
+    "needs-evidence": "증거 필요",
+    "needs-artifacts": "artifact 필요",
+    accepted: "수락",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringMacRunnerDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "入力待ち",
+    "code-ready": "コード工程準備",
+    "approval-required": "承認待ち",
+    "runtime-needed": "Mac runtime 必要",
+    "evidence-ready": "証拠受理済み"
+  });
+}
+
+function enEngineeringMacRunnerDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "needs mission",
+    "code-ready": "code ready",
+    "approval-required": "approval required",
+    "runtime-needed": "runtime needed",
+    "evidence-ready": "evidence ready"
+  });
+}
+
+function zhHansEngineeringMacRunnerDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "等待输入",
+    "code-ready": "代码工程就绪",
+    "approval-required": "需要审批",
+    "runtime-needed": "需要 Mac runtime",
+    "evidence-ready": "证据已接受"
+  });
+}
+
+function zhHantEngineeringMacRunnerDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "等待輸入",
+    "code-ready": "程式工程就緒",
+    "approval-required": "需要審批",
+    "runtime-needed": "需要 Mac runtime",
+    "evidence-ready": "證據已接受"
+  });
+}
+
+function koEngineeringMacRunnerDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "needs-mission": "미션 필요",
+    "code-ready": "코드 준비",
+    "approval-required": "승인 필요",
+    "runtime-needed": "Mac runtime 필요",
+    "evidence-ready": "증거 수락됨"
+  });
+}
+
+function jaEngineeringMacRunnerCapability(capability: string) {
+  return engineeringLabel(capability, macRunnerCapabilityLabels("ja"));
+}
+
+function enEngineeringMacRunnerCapability(capability: string) {
+  return engineeringLabel(capability, macRunnerCapabilityLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerCapability(capability: string) {
+  return engineeringLabel(capability, macRunnerCapabilityLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerCapability(capability: string) {
+  return engineeringLabel(capability, macRunnerCapabilityLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerCapability(capability: string) {
+  return engineeringLabel(capability, macRunnerCapabilityLabels("ko"));
+}
+
+function jaEngineeringMacRunnerCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    planned: "準備可",
+    "approval-required": "承認必要",
+    "needs-runtime": "runtime必要",
+    blocked: "停止",
+    "not-requested": "未要求"
+  });
+}
+
+function enEngineeringMacRunnerCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    planned: "planned",
+    "approval-required": "approval",
+    "needs-runtime": "needs runtime",
+    blocked: "blocked",
+    "not-requested": "not requested"
+  });
+}
+
+function zhHansEngineeringMacRunnerCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "就绪",
+    planned: "可准备",
+    "approval-required": "需审批",
+    "needs-runtime": "缺 runtime",
+    blocked: "阻止",
+    "not-requested": "未请求"
+  });
+}
+
+function zhHantEngineeringMacRunnerCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "就緒",
+    planned: "可準備",
+    "approval-required": "需審批",
+    "needs-runtime": "缺 runtime",
+    blocked: "阻止",
+    "not-requested": "未請求"
+  });
+}
+
+function koEngineeringMacRunnerCapabilityStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "준비됨",
+    planned: "준비 가능",
+    "approval-required": "승인 필요",
+    "needs-runtime": "runtime 필요",
+    blocked: "차단",
+    "not-requested": "요청 없음"
+  });
+}
+
+function jaEngineeringMacRunnerPermission(permission: string) {
+  return engineeringLabel(permission, macRunnerPermissionLabels("ja"));
+}
+
+function enEngineeringMacRunnerPermission(permission: string) {
+  return engineeringLabel(permission, macRunnerPermissionLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerPermission(permission: string) {
+  return engineeringLabel(permission, macRunnerPermissionLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerPermission(permission: string) {
+  return engineeringLabel(permission, macRunnerPermissionLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerPermission(permission: string) {
+  return engineeringLabel(permission, macRunnerPermissionLabels("ko"));
+}
+
+function jaEngineeringMacRunnerPermissionStatus(status: string) {
+  return engineeringLabel(status, {
+    "granted-by-policy": "方針内",
+    "ask-before-use": "使用前確認",
+    "not-requested": "未要求",
+    "denied-by-default": "既定拒否",
+    missing: "不足"
+  });
+}
+
+function enEngineeringMacRunnerPermissionStatus(status: string) {
+  return engineeringLabel(status, {
+    "granted-by-policy": "policy granted",
+    "ask-before-use": "ask first",
+    "not-requested": "not requested",
+    "denied-by-default": "denied by default",
+    missing: "missing"
+  });
+}
+
+function zhHansEngineeringMacRunnerPermissionStatus(status: string) {
+  return engineeringLabel(status, {
+    "granted-by-policy": "策略内允许",
+    "ask-before-use": "使用前确认",
+    "not-requested": "未请求",
+    "denied-by-default": "默认拒绝",
+    missing: "缺失"
+  });
+}
+
+function zhHantEngineeringMacRunnerPermissionStatus(status: string) {
+  return engineeringLabel(status, {
+    "granted-by-policy": "策略內允許",
+    "ask-before-use": "使用前確認",
+    "not-requested": "未請求",
+    "denied-by-default": "預設拒絕",
+    missing: "缺失"
+  });
+}
+
+function koEngineeringMacRunnerPermissionStatus(status: string) {
+  return engineeringLabel(status, {
+    "granted-by-policy": "정책 허용",
+    "ask-before-use": "사용 전 확인",
+    "not-requested": "요청 없음",
+    "denied-by-default": "기본 거부",
+    missing: "부족"
+  });
+}
+
+function jaEngineeringMacRunnerAdapter(adapter: string) {
+  return engineeringLabel(adapter, macRunnerAdapterLabels("ja"));
+}
+
+function enEngineeringMacRunnerAdapter(adapter: string) {
+  return engineeringLabel(adapter, macRunnerAdapterLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerAdapter(adapter: string) {
+  return engineeringLabel(adapter, macRunnerAdapterLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerAdapter(adapter: string) {
+  return engineeringLabel(adapter, macRunnerAdapterLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerAdapter(adapter: string) {
+  return engineeringLabel(adapter, macRunnerAdapterLabels("ko"));
+}
+
+function jaEngineeringMacRunnerAdapterStatus(status: string) {
+  return engineeringLabel(status, {
+    "available-now": "利用可",
+    "paperwork-ready": "文書準備",
+    "approval-required": "承認必要",
+    "needs-runtime": "runtime必要",
+    "denied-by-default": "既定拒否",
+    "not-requested": "未要求"
+  });
+}
+
+function enEngineeringMacRunnerAdapterStatus(status: string) {
+  return engineeringLabel(status, {
+    "available-now": "available",
+    "paperwork-ready": "paperwork ready",
+    "approval-required": "approval",
+    "needs-runtime": "needs runtime",
+    "denied-by-default": "denied",
+    "not-requested": "not requested"
+  });
+}
+
+function zhHansEngineeringMacRunnerAdapterStatus(status: string) {
+  return engineeringLabel(status, {
+    "available-now": "可用",
+    "paperwork-ready": "文书就绪",
+    "approval-required": "需审批",
+    "needs-runtime": "缺 runtime",
+    "denied-by-default": "默认拒绝",
+    "not-requested": "未请求"
+  });
+}
+
+function zhHantEngineeringMacRunnerAdapterStatus(status: string) {
+  return engineeringLabel(status, {
+    "available-now": "可用",
+    "paperwork-ready": "文書就緒",
+    "approval-required": "需審批",
+    "needs-runtime": "缺 runtime",
+    "denied-by-default": "預設拒絕",
+    "not-requested": "未請求"
+  });
+}
+
+function koEngineeringMacRunnerAdapterStatus(status: string) {
+  return engineeringLabel(status, {
+    "available-now": "사용 가능",
+    "paperwork-ready": "문서 준비",
+    "approval-required": "승인 필요",
+    "needs-runtime": "runtime 필요",
+    "denied-by-default": "기본 거부",
+    "not-requested": "요청 없음"
+  });
+}
+
+function jaEngineeringMacRunnerNextAction(action: string) {
+  return engineeringLabel(action, {
+    "write-mission": "工程タスク、対象リポジトリ、検証コマンド、承認境界を入力する。",
+    "prepare-dispatch-package": "自己模擬を実行し、coding-agent dispatch package を準備する。",
+    "approve-browser-profile": "ブラウザ自動化前に隔離プロファイルと URL 範囲を承認する。",
+    "connect-mac-adapter": "Mac adapter を接続し、Accessibility、画面収録、Automation 範囲、action log、kill switch を承認する。",
+    "allowlist-mcp-tools": "使用する MCP tool と引数を allowlist に入れる。",
+    "approve-external-writes": "Git push、deploy、issue 作成、message send などを承認または削除する。",
+    "run-or-import-receipts": "governed local runner を実行するか、receipt、transcript、diff、artifact を取り込む。",
+    "review-accepted-evidence": "受理済み証拠を確認し、board 更新可否を判断する。"
+  });
+}
+
+function enEngineeringMacRunnerNextAction(action: string) {
+  return engineeringLabel(action, {
+    "write-mission": "Write the engineering task, target repository, verification commands, and approval boundary.",
+    "prepare-dispatch-package": "Run self-simulation and prepare the coding-agent dispatch package before execution.",
+    "approve-browser-profile": "Approve an isolated browser profile and URL scope before browser automation.",
+    "connect-mac-adapter": "Connect a governed Mac adapter, then approve Accessibility, Screen Recording, Automation scope, action logs, and kill switch.",
+    "allowlist-mcp-tools": "Name each MCP tool and arguments in an allowlist before use.",
+    "approve-external-writes": "Approve or remove Git push, deploy, issue creation, message sends, and other external writes.",
+    "run-or-import-receipts": "Run the governed local runner or import completed receipts, transcripts, diffs, and artifacts.",
+    "review-accepted-evidence": "Review the accepted evidence, then decide whether the board can be updated."
+  });
+}
+
+function zhHansEngineeringMacRunnerNextAction(action: string) {
+  return engineeringLabel(action, {
+    "write-mission": "填写工程任务、目标仓库、验证命令和审批边界。",
+    "prepare-dispatch-package": "先运行自己模拟，再准备 coding-agent dispatch package。",
+    "approve-browser-profile": "浏览器自动化前先批准隔离 profile 和 URL 范围。",
+    "connect-mac-adapter": "接入受治理的 Mac adapter，并批准辅助功能、屏幕录制、自动化范围、动作日志和 kill switch。",
+    "allowlist-mcp-tools": "把每个 MCP tool 和参数写进 allowlist。",
+    "approve-external-writes": "批准或移除 Git push、deploy、issue 创建、消息发送等外部写入。",
+    "run-or-import-receipts": "运行受治理的本地 runner，或导入 receipt、transcript、diff 和 artifact。",
+    "review-accepted-evidence": "审查已接受证据，再决定是否更新 board。"
+  });
+}
+
+function zhHantEngineeringMacRunnerNextAction(action: string) {
+  return engineeringLabel(action, {
+    "write-mission": "填寫工程任務、目標倉庫、驗證命令和審批邊界。",
+    "prepare-dispatch-package": "先執行自己模擬，再準備 coding-agent dispatch package。",
+    "approve-browser-profile": "瀏覽器自動化前先批准隔離 profile 和 URL 範圍。",
+    "connect-mac-adapter": "接入受治理的 Mac adapter，並批准輔助使用、螢幕錄製、自動化範圍、動作日誌和 kill switch。",
+    "allowlist-mcp-tools": "把每個 MCP tool 和參數寫進 allowlist。",
+    "approve-external-writes": "批准或移除 Git push、deploy、issue 建立、訊息傳送等外部寫入。",
+    "run-or-import-receipts": "執行受治理的本地 runner，或匯入 receipt、transcript、diff 和 artifact。",
+    "review-accepted-evidence": "審查已接受證據，再決定是否更新 board。"
+  });
+}
+
+function koEngineeringMacRunnerNextAction(action: string) {
+  return engineeringLabel(action, {
+    "write-mission": "엔지니어링 작업, 대상 저장소, 검증 명령, 승인 경계를 작성합니다.",
+    "prepare-dispatch-package": "실행 전에 자체 시뮬레이션을 실행하고 coding-agent dispatch package를 준비합니다.",
+    "approve-browser-profile": "브라우저 자동화 전에 격리 profile과 URL 범위를 승인합니다.",
+    "connect-mac-adapter": "통제된 Mac adapter를 연결하고 손쉬운 사용, 화면 기록, 자동화 범위, action log, kill switch를 승인합니다.",
+    "allowlist-mcp-tools": "각 MCP tool과 인자를 allowlist에 명시합니다.",
+    "approve-external-writes": "Git push, deploy, issue 생성, 메시지 전송 등 외부 쓰기를 승인하거나 제거합니다.",
+    "run-or-import-receipts": "통제된 로컬 runner를 실행하거나 receipt, transcript, diff, artifact를 가져옵니다.",
+    "review-accepted-evidence": "수락된 증거를 검토한 뒤 board 업데이트 여부를 결정합니다."
+  });
+}
+
+function jaEngineeringMacRunnerContractDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-requested": "未要求",
+    "draft-ready": "contract 草案",
+    "approval-required": "承認必要",
+    "runtime-needed": "runtime必要",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringMacRunnerContractDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-requested": "not requested",
+    "draft-ready": "draft ready",
+    "approval-required": "approval required",
+    "runtime-needed": "runtime needed",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringMacRunnerContractDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-requested": "未请求",
+    "draft-ready": "合约草案就绪",
+    "approval-required": "需要审批",
+    "runtime-needed": "需要 runtime",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringMacRunnerContractDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-requested": "未請求",
+    "draft-ready": "合約草案就緒",
+    "approval-required": "需要審批",
+    "runtime-needed": "需要 runtime",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringMacRunnerContractDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-requested": "요청 없음",
+    "draft-ready": "contract 초안",
+    "approval-required": "승인 필요",
+    "runtime-needed": "runtime 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringMacRunnerContractAction(action: string) {
+  return engineeringLabel(action, macRunnerContractActionLabels("ja"));
+}
+
+function enEngineeringMacRunnerContractAction(action: string) {
+  return engineeringLabel(action, macRunnerContractActionLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerContractAction(action: string) {
+  return engineeringLabel(action, macRunnerContractActionLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerContractAction(action: string) {
+  return engineeringLabel(action, macRunnerContractActionLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerContractAction(action: string) {
+  return engineeringLabel(action, macRunnerContractActionLabels("ko"));
+}
+
+function jaEngineeringMacRunnerContractActionStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-for-approval": "承認待ち",
+    "needs-runtime": "runtime必要",
+    blocked: "停止",
+    "not-requested": "未要求"
+  });
+}
+
+function enEngineeringMacRunnerContractActionStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-for-approval": "ready for approval",
+    "needs-runtime": "needs runtime",
+    blocked: "blocked",
+    "not-requested": "not requested"
+  });
+}
+
+function zhHansEngineeringMacRunnerContractActionStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-for-approval": "等待审批",
+    "needs-runtime": "缺 runtime",
+    blocked: "阻止",
+    "not-requested": "未请求"
+  });
+}
+
+function zhHantEngineeringMacRunnerContractActionStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-for-approval": "等待審批",
+    "needs-runtime": "缺 runtime",
+    blocked: "阻止",
+    "not-requested": "未請求"
+  });
+}
+
+function koEngineeringMacRunnerContractActionStatus(status: string) {
+  return engineeringLabel(status, {
+    "ready-for-approval": "승인 대기",
+    "needs-runtime": "runtime 필요",
+    blocked: "차단",
+    "not-requested": "요청 없음"
+  });
+}
+
+function jaEngineeringMacRunnerContractCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "停止"
+  });
+}
+
+function enEngineeringMacRunnerContractCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "pass",
+    warn: "warn",
+    block: "block"
+  });
+}
+
+function zhHansEngineeringMacRunnerContractCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通过",
+    warn: "注意",
+    block: "阻止"
+  });
+}
+
+function zhHantEngineeringMacRunnerContractCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "阻止"
+  });
+}
+
+function koEngineeringMacRunnerContractCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "통과",
+    warn: "주의",
+    block: "차단"
+  });
+}
+
+function jaEngineeringMacRunnerContractDeniedAction(action: string) {
+  return engineeringLabel(action, macRunnerContractDeniedLabels("ja"));
+}
+
+function enEngineeringMacRunnerContractDeniedAction(action: string) {
+  return engineeringLabel(action, macRunnerContractDeniedLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerContractDeniedAction(action: string) {
+  return engineeringLabel(action, macRunnerContractDeniedLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerContractDeniedAction(action: string) {
+  return engineeringLabel(action, macRunnerContractDeniedLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerContractDeniedAction(action: string) {
+  return engineeringLabel(action, macRunnerContractDeniedLabels("ko"));
+}
+
+function jaEngineeringMacRunnerContractInstruction(instruction: string) {
+  return engineeringLabel(instruction, macRunnerContractInstructionLabels("ja"));
+}
+
+function enEngineeringMacRunnerContractInstruction(instruction: string) {
+  return engineeringLabel(instruction, macRunnerContractInstructionLabels("en"));
+}
+
+function zhHansEngineeringMacRunnerContractInstruction(instruction: string) {
+  return engineeringLabel(instruction, macRunnerContractInstructionLabels("zh-Hans"));
+}
+
+function zhHantEngineeringMacRunnerContractInstruction(instruction: string) {
+  return engineeringLabel(instruction, macRunnerContractInstructionLabels("zh-Hant"));
+}
+
+function koEngineeringMacRunnerContractInstruction(instruction: string) {
+  return engineeringLabel(instruction, macRunnerContractInstructionLabels("ko"));
+}
+
+function macRunnerContractDeniedLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "host-secrets": "ホスト秘密情報、keychain、cookie、raw env を読まない",
+      "out-of-scope-control": "承認範囲外の app、URL、window、screen を操作しない",
+      "bypass-evidence": "action log、receipt、redaction、artifact audit を省略しない",
+      "kill-switch-bypass": "kill switch 後、または証拠保存失敗後に続行しない",
+      "unapproved-external-write": "未承認の Git push、deploy、issue、message、purchase を行わない"
+    },
+    en: {
+      "host-secrets": "Do not read host secrets, keychain items, cookies, or raw env.",
+      "out-of-scope-control": "Do not control apps, URLs, windows, or screens outside approval scope.",
+      "bypass-evidence": "Do not bypass action logs, receipts, redaction, or artifact audit.",
+      "kill-switch-bypass": "Do not continue after kill switch or evidence write failure.",
+      "unapproved-external-write": "Do not perform unapproved Git push, deploy, issue, message, or purchase."
+    },
+    "zh-Hans": {
+      "host-secrets": "不得读取主机秘密、keychain、cookie 或原始环境变量",
+      "out-of-scope-control": "不得控制审批范围外的 app、URL、窗口或屏幕",
+      "bypass-evidence": "不得跳过动作日志、收据、脱敏报告或工件审计",
+      "kill-switch-bypass": "kill switch 触发或证据写入失败后不得继续",
+      "unapproved-external-write": "不得执行未审批的 Git push、deploy、issue、消息或购买"
+    },
+    "zh-Hant": {
+      "host-secrets": "不得讀取主機秘密、keychain、cookie 或原始環境變數",
+      "out-of-scope-control": "不得控制審批範圍外的 app、URL、視窗或螢幕",
+      "bypass-evidence": "不得跳過動作日誌、收據、脫敏報告或工件稽核",
+      "kill-switch-bypass": "kill switch 觸發或證據寫入失敗後不得繼續",
+      "unapproved-external-write": "不得執行未審批的 Git push、deploy、issue、訊息或購買"
+    },
+    ko: {
+      "host-secrets": "호스트 비밀값, keychain, cookie, raw env를 읽지 않습니다",
+      "out-of-scope-control": "승인 범위 밖의 app, URL, window, screen을 제어하지 않습니다",
+      "bypass-evidence": "action log, receipt, redaction, artifact audit를 건너뛰지 않습니다",
+      "kill-switch-bypass": "kill switch 또는 증거 쓰기 실패 뒤 계속하지 않습니다",
+      "unapproved-external-write": "승인 없는 Git push, deploy, issue, message, purchase를 실행하지 않습니다"
+    }
+  };
+  return labels[locale];
+}
+
+function macRunnerContractInstructionLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "do-not-start": "この mission は Mac 操作を要求していないため adapter を開始しない。",
+      "audit-only": "contract は監査文脈として保持するだけにする。",
+      "require-approval": "ask-before-use 権限の exact approval record がそろうまで実行しない。",
+      "load-scoped-runtime": "承認済み adapter runtime と target app/URL scope だけを読み込む。",
+      "write-evidence": "action log、screenshot、receipt、redaction report を action prefix 配下へ保存する。",
+      "return-receipt": "完了 receipt または refusal を返し、この草案だけで成功主張しない。",
+      "stop-on-risk": "kill switch、credential prompt、host secret、未承認外部書き込み、証拠保存失敗で即停止する。"
+    },
+    en: {
+      "do-not-start": "Do not start a Mac adapter; this mission did not request Mac control.",
+      "audit-only": "Keep this contract for audit context only.",
+      "require-approval": "Do not execute until all ask-before-use permissions have exact approval records.",
+      "load-scoped-runtime": "Load only the approved adapter runtime and target app or URL scope.",
+      "write-evidence": "Write action logs, screenshots, receipts, and redaction reports under the action prefix.",
+      "return-receipt": "Return a completed receipt or refusal; never claim success from this draft alone.",
+      "stop-on-risk": "Stop on kill switch, credential prompt, host secret, unapproved external write, or evidence failure."
+    },
+    "zh-Hans": {
+      "do-not-start": "本任务未请求 Mac 控制，不启动 Mac adapter。",
+      "audit-only": "该合约只作为审计上下文保留。",
+      "require-approval": "所有使用前确认权限都有精确审批记录前不得执行。",
+      "load-scoped-runtime": "只加载已批准的 adapter runtime 和目标 app/URL 范围。",
+      "write-evidence": "把动作日志、截图、收据和脱敏报告写到 action prefix 下。",
+      "return-receipt": "返回完成收据或拒绝收据，不能只靠草案声称成功。",
+      "stop-on-risk": "遇到 kill switch、凭证提示、主机秘密、未审批外部写入或证据失败立即停止。"
+    },
+    "zh-Hant": {
+      "do-not-start": "本任務未請求 Mac 控制，不啟動 Mac adapter。",
+      "audit-only": "該合約只作為稽核上下文保留。",
+      "require-approval": "所有使用前確認權限都有精確審批記錄前不得執行。",
+      "load-scoped-runtime": "只載入已批准的 adapter runtime 和目標 app/URL 範圍。",
+      "write-evidence": "把動作日誌、截圖、收據和脫敏報告寫到 action prefix 下。",
+      "return-receipt": "返回完成收據或拒絕收據，不能只靠草案聲稱成功。",
+      "stop-on-risk": "遇到 kill switch、憑證提示、主機秘密、未審批外部寫入或證據失敗立即停止。"
+    },
+    ko: {
+      "do-not-start": "이 미션은 Mac 제어를 요청하지 않았으므로 Mac adapter를 시작하지 않습니다.",
+      "audit-only": "이 contract는 감사 맥락으로만 보관합니다.",
+      "require-approval": "ask-before-use 권한의 정확한 승인 기록이 있기 전에는 실행하지 않습니다.",
+      "load-scoped-runtime": "승인된 adapter runtime과 대상 app/URL scope만 로드합니다.",
+      "write-evidence": "action log, screenshot, receipt, redaction report를 action prefix 아래에 씁니다.",
+      "return-receipt": "완료 receipt 또는 refusal을 반환하고 초안만으로 성공을 주장하지 않습니다.",
+      "stop-on-risk": "kill switch, credential prompt, host secret, 미승인 외부 쓰기, 증거 실패 시 즉시 중지합니다."
+    }
+  };
+  return labels[locale];
+}
+
+function macRunnerContractActionLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "observe-screen": "画面観察",
+      click: "クリック",
+      "type-text": "テキスト入力",
+      "press-hotkey": "ホットキー",
+      "focus-app": "App フォーカス",
+      "move-window": "ウィンドウ移動",
+      "clipboard-read": "クリップボード読取",
+      "clipboard-write": "クリップボード書込",
+      "browser-open-url": "URL を開く",
+      "external-write": "外部書き込み"
+    },
+    en: {
+      "observe-screen": "observe screen",
+      click: "click",
+      "type-text": "type text",
+      "press-hotkey": "press hotkey",
+      "focus-app": "focus app",
+      "move-window": "move window",
+      "clipboard-read": "clipboard read",
+      "clipboard-write": "clipboard write",
+      "browser-open-url": "open URL",
+      "external-write": "external write"
+    },
+    "zh-Hans": {
+      "observe-screen": "观察屏幕",
+      click: "点击",
+      "type-text": "输入文本",
+      "press-hotkey": "快捷键",
+      "focus-app": "聚焦 App",
+      "move-window": "移动窗口",
+      "clipboard-read": "读取剪贴板",
+      "clipboard-write": "写入剪贴板",
+      "browser-open-url": "打开 URL",
+      "external-write": "外部写入"
+    },
+    "zh-Hant": {
+      "observe-screen": "觀察螢幕",
+      click: "點擊",
+      "type-text": "輸入文字",
+      "press-hotkey": "快捷鍵",
+      "focus-app": "聚焦 App",
+      "move-window": "移動視窗",
+      "clipboard-read": "讀取剪貼簿",
+      "clipboard-write": "寫入剪貼簿",
+      "browser-open-url": "打開 URL",
+      "external-write": "外部寫入"
+    },
+    ko: {
+      "observe-screen": "화면 관찰",
+      click: "클릭",
+      "type-text": "텍스트 입력",
+      "press-hotkey": "단축키",
+      "focus-app": "앱 focus",
+      "move-window": "window 이동",
+      "clipboard-read": "클립보드 읽기",
+      "clipboard-write": "클립보드 쓰기",
+      "browser-open-url": "URL 열기",
+      "external-write": "외부 쓰기"
+    }
+  };
+  return labels[locale];
+}
+
+function macRunnerCapabilityLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "repo-coding": "リポジトリ実装",
+      "allowlisted-shell": "許可済み shell",
+      "browser-automation": "ブラウザ操作",
+      "screen-observation": "画面観察",
+      "keyboard-mouse": "キーボード/マウス",
+      "app-window-control": "App/window 操作",
+      clipboard: "クリップボード",
+      "mcp-tools": "MCP ツール",
+      "external-writes": "外部書き込み"
+    },
+    en: {
+      "repo-coding": "repo coding",
+      "allowlisted-shell": "allowlisted shell",
+      "browser-automation": "browser automation",
+      "screen-observation": "screen observation",
+      "keyboard-mouse": "keyboard/mouse",
+      "app-window-control": "app/window control",
+      clipboard: "clipboard",
+      "mcp-tools": "MCP tools",
+      "external-writes": "external writes"
+    },
+    "zh-Hans": {
+      "repo-coding": "仓库编程",
+      "allowlisted-shell": "允许 shell",
+      "browser-automation": "浏览器自动化",
+      "screen-observation": "屏幕观察",
+      "keyboard-mouse": "键盘/鼠标",
+      "app-window-control": "App/window 控制",
+      clipboard: "剪贴板",
+      "mcp-tools": "MCP 工具",
+      "external-writes": "外部写入"
+    },
+    "zh-Hant": {
+      "repo-coding": "倉庫編程",
+      "allowlisted-shell": "允許 shell",
+      "browser-automation": "瀏覽器自動化",
+      "screen-observation": "螢幕觀察",
+      "keyboard-mouse": "鍵盤/滑鼠",
+      "app-window-control": "App/window 控制",
+      clipboard: "剪貼簿",
+      "mcp-tools": "MCP 工具",
+      "external-writes": "外部寫入"
+    },
+    ko: {
+      "repo-coding": "저장소 코딩",
+      "allowlisted-shell": "허용 shell",
+      "browser-automation": "브라우저 자동화",
+      "screen-observation": "화면 관찰",
+      "keyboard-mouse": "키보드/마우스",
+      "app-window-control": "앱/window 제어",
+      clipboard: "클립보드",
+      "mcp-tools": "MCP 도구",
+      "external-writes": "외부 쓰기"
+    }
+  };
+  return labels[locale];
+}
+
+function macRunnerPermissionLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "repo-worktree": "Repo worktree",
+      "output-directory": "output/ 証拠",
+      "shell-allowlist": "Shell allowlist",
+      "browser-profile": "隔離ブラウザ",
+      "mac-accessibility": "Accessibility",
+      "mac-screen-recording": "画面収録",
+      "mac-automation": "Automation",
+      "mcp-allowlist": "MCP allowlist",
+      "external-write-approval": "外部書き込み承認",
+      "host-secrets": "ホスト秘密情報"
+    },
+    en: {
+      "repo-worktree": "repo worktree",
+      "output-directory": "output/ evidence",
+      "shell-allowlist": "shell allowlist",
+      "browser-profile": "isolated browser",
+      "mac-accessibility": "Accessibility",
+      "mac-screen-recording": "Screen Recording",
+      "mac-automation": "Automation",
+      "mcp-allowlist": "MCP allowlist",
+      "external-write-approval": "external write approval",
+      "host-secrets": "host secrets"
+    },
+    "zh-Hans": {
+      "repo-worktree": "仓库 worktree",
+      "output-directory": "output/ 证据",
+      "shell-allowlist": "Shell 白名单",
+      "browser-profile": "隔离浏览器",
+      "mac-accessibility": "辅助功能",
+      "mac-screen-recording": "屏幕录制",
+      "mac-automation": "自动化",
+      "mcp-allowlist": "MCP 白名单",
+      "external-write-approval": "外部写入审批",
+      "host-secrets": "主机秘密"
+    },
+    "zh-Hant": {
+      "repo-worktree": "倉庫 worktree",
+      "output-directory": "output/ 證據",
+      "shell-allowlist": "Shell 白名單",
+      "browser-profile": "隔離瀏覽器",
+      "mac-accessibility": "輔助使用",
+      "mac-screen-recording": "螢幕錄製",
+      "mac-automation": "自動化",
+      "mcp-allowlist": "MCP 白名單",
+      "external-write-approval": "外部寫入審批",
+      "host-secrets": "主機秘密"
+    },
+    ko: {
+      "repo-worktree": "저장소 worktree",
+      "output-directory": "output/ 증거",
+      "shell-allowlist": "Shell allowlist",
+      "browser-profile": "격리 브라우저",
+      "mac-accessibility": "손쉬운 사용",
+      "mac-screen-recording": "화면 기록",
+      "mac-automation": "자동화",
+      "mcp-allowlist": "MCP allowlist",
+      "external-write-approval": "외부 쓰기 승인",
+      "host-secrets": "호스트 비밀값"
+    }
+  };
+  return labels[locale];
+}
+
+function macRunnerAdapterLabels(locale: SupportedLocale) {
+  const labels = {
+    ja: {
+      "codex-style-coding-agent": "Codex型 coding agent",
+      "browser-profile-runner": "Browser runner",
+      "hammerspoon-adapter": "Hammerspoon adapter",
+      "openclaw-style-desktop": "OpenClaw型 desktop",
+      "mcp-tool-runner": "MCP runner",
+      "external-write-gateway": "外部書き込み gateway"
+    },
+    en: {
+      "codex-style-coding-agent": "Codex-style coding agent",
+      "browser-profile-runner": "browser runner",
+      "hammerspoon-adapter": "Hammerspoon adapter",
+      "openclaw-style-desktop": "OpenClaw-style desktop",
+      "mcp-tool-runner": "MCP runner",
+      "external-write-gateway": "external write gateway"
+    },
+    "zh-Hans": {
+      "codex-style-coding-agent": "Codex 式编程代理",
+      "browser-profile-runner": "浏览器 runner",
+      "hammerspoon-adapter": "Hammerspoon 适配器",
+      "openclaw-style-desktop": "OpenClaw 式桌面",
+      "mcp-tool-runner": "MCP runner",
+      "external-write-gateway": "外部写入网关"
+    },
+    "zh-Hant": {
+      "codex-style-coding-agent": "Codex 式編程代理",
+      "browser-profile-runner": "瀏覽器 runner",
+      "hammerspoon-adapter": "Hammerspoon 適配器",
+      "openclaw-style-desktop": "OpenClaw 式桌面",
+      "mcp-tool-runner": "MCP runner",
+      "external-write-gateway": "外部寫入閘道"
+    },
+    ko: {
+      "codex-style-coding-agent": "Codex식 코딩 agent",
+      "browser-profile-runner": "브라우저 runner",
+      "hammerspoon-adapter": "Hammerspoon adapter",
+      "openclaw-style-desktop": "OpenClaw식 desktop",
+      "mcp-tool-runner": "MCP runner",
+      "external-write-gateway": "외부 쓰기 gateway"
+    }
+  };
+  return labels[locale];
+}
+
+function jaEngineeringHandoffDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-ready": "未準備",
+    "agent-pack-ready": "Agent 引き渡し可",
+    "approval-gated": "承認ゲートあり",
+    "evidence-review": "証拠レビュー"
+  });
+}
+
+function enEngineeringHandoffDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-ready": "not ready",
+    "agent-pack-ready": "agent pack ready",
+    "approval-gated": "approval gated",
+    "evidence-review": "evidence review"
+  });
+}
+
+function zhHansEngineeringHandoffDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-ready": "未就绪",
+    "agent-pack-ready": "Agent 包就绪",
+    "approval-gated": "审批闸门",
+    "evidence-review": "证据审查"
+  });
+}
+
+function zhHantEngineeringHandoffDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-ready": "未就緒",
+    "agent-pack-ready": "Agent 包就緒",
+    "approval-gated": "審批閘門",
+    "evidence-review": "證據審查"
+  });
+}
+
+function koEngineeringHandoffDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "not-ready": "미준비",
+    "agent-pack-ready": "agent pack 준비됨",
+    "approval-gated": "승인 게이트",
+    "evidence-review": "증거 검토"
+  });
+}
+
+function jaEngineeringHandoffLane(lane: string) {
+  return engineeringLabel(lane, {
+    supervision: "監督",
+    "coding-agent": "Coding agent",
+    runner: "Runner",
+    approval: "承認",
+    evidence: "証拠"
+  });
+}
+
+function enEngineeringHandoffLane(lane: string) {
+  return engineeringLabel(lane, {
+    supervision: "supervision",
+    "coding-agent": "coding agent",
+    runner: "runner",
+    approval: "approval",
+    evidence: "evidence"
+  });
+}
+
+function zhHansEngineeringHandoffLane(lane: string) {
+  return engineeringLabel(lane, {
+    supervision: "监督",
+    "coding-agent": "编程代理",
+    runner: "Runner",
+    approval: "审批",
+    evidence: "证据"
+  });
+}
+
+function zhHantEngineeringHandoffLane(lane: string) {
+  return engineeringLabel(lane, {
+    supervision: "監督",
+    "coding-agent": "編程代理",
+    runner: "Runner",
+    approval: "審批",
+    evidence: "證據"
+  });
+}
+
+function koEngineeringHandoffLane(lane: string) {
+  return engineeringLabel(lane, {
+    supervision: "감독",
+    "coding-agent": "코딩 에이전트",
+    runner: "Runner",
+    approval: "승인",
+    evidence: "증거"
+  });
+}
+
+function jaEngineeringHandoffLaneStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "準備済み",
+    waiting: "待機",
+    "approval-required": "承認必要",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringHandoffLaneStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "ready",
+    waiting: "waiting",
+    "approval-required": "approval",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringHandoffLaneStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已准备",
+    waiting: "等待",
+    "approval-required": "需审批",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringHandoffLaneStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "已準備",
+    waiting: "等待",
+    "approval-required": "需審批",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringHandoffLaneStatus(status: string) {
+  return engineeringLabel(status, {
+    ready: "준비됨",
+    waiting: "대기",
+    "approval-required": "승인 필요",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringCompletionGateDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "simulation-only": "模擬のみ",
+    "evidence-ready": "証拠あり",
+    "needs-evidence": "証拠不足",
+    blocked: "停止"
+  });
+}
+
+function enEngineeringCompletionGateDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "simulation-only": "simulation only",
+    "evidence-ready": "evidence ready",
+    "needs-evidence": "needs evidence",
+    blocked: "blocked"
+  });
+}
+
+function zhHansEngineeringCompletionGateDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "simulation-only": "仅模拟",
+    "evidence-ready": "证据就绪",
+    "needs-evidence": "缺少证据",
+    blocked: "已阻止"
+  });
+}
+
+function zhHantEngineeringCompletionGateDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "simulation-only": "僅模擬",
+    "evidence-ready": "證據就緒",
+    "needs-evidence": "缺少證據",
+    blocked: "已阻止"
+  });
+}
+
+function koEngineeringCompletionGateDecision(decision: string) {
+  return engineeringLabel(decision, {
+    "simulation-only": "시뮬레이션만",
+    "evidence-ready": "증거 준비됨",
+    "needs-evidence": "증거 부족",
+    blocked: "차단"
+  });
+}
+
+function jaEngineeringCompletionGateCheck(check: string) {
+  return engineeringLabel(check, {
+    "real-run-report": "実行報告",
+    "changed-files": "変更要約",
+    "command-transcripts": "Transcript",
+    "evidence-artifacts": "証拠",
+    "command-results": "コマンド結果",
+    "approval-boundary": "承認境界"
+  });
+}
+
+function enEngineeringCompletionGateCheck(check: string) {
+  return engineeringLabel(check, {
+    "real-run-report": "run report",
+    "changed-files": "changed files",
+    "command-transcripts": "transcripts",
+    "evidence-artifacts": "evidence",
+    "command-results": "command results",
+    "approval-boundary": "approval boundary"
+  });
+}
+
+function zhHansEngineeringCompletionGateCheck(check: string) {
+  return engineeringLabel(check, {
+    "real-run-report": "运行报告",
+    "changed-files": "改动摘要",
+    "command-transcripts": "命令记录",
+    "evidence-artifacts": "证据工件",
+    "command-results": "命令结果",
+    "approval-boundary": "审批边界"
+  });
+}
+
+function zhHantEngineeringCompletionGateCheck(check: string) {
+  return engineeringLabel(check, {
+    "real-run-report": "執行報告",
+    "changed-files": "改動摘要",
+    "command-transcripts": "命令紀錄",
+    "evidence-artifacts": "證據工件",
+    "command-results": "命令結果",
+    "approval-boundary": "審批邊界"
+  });
+}
+
+function koEngineeringCompletionGateCheck(check: string) {
+  return engineeringLabel(check, {
+    "real-run-report": "실행 보고",
+    "changed-files": "변경 요약",
+    "command-transcripts": "명령 기록",
+    "evidence-artifacts": "증거",
+    "command-results": "명령 결과",
+    "approval-boundary": "승인 경계"
+  });
+}
+
+function jaEngineeringCompletionGateCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "不足"
+  });
+}
+
+function enEngineeringCompletionGateCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "pass",
+    warn: "warn",
+    block: "missing"
+  });
+}
+
+function zhHansEngineeringCompletionGateCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通过",
+    warn: "注意",
+    block: "缺失"
+  });
+}
+
+function zhHantEngineeringCompletionGateCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "通過",
+    warn: "注意",
+    block: "缺失"
+  });
+}
+
+function koEngineeringCompletionGateCheckStatus(status: string) {
+  return engineeringLabel(status, {
+    pass: "통과",
+    warn: "주의",
+    block: "부족"
   });
 }
 
