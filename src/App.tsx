@@ -4427,11 +4427,21 @@ export function App() {
     });
   }
 
-  async function runEngineeringAutoWorkFromLaunchpad() {
+  async function runEngineeringAutoWorkFromLaunchpad({
+    preset = engineeringAutoWorkPreset,
+    adapterReadyOverride,
+    worktreeOverride,
+    timeoutMs
+  }: {
+    preset?: EngineeringAutoWorkGatewayPreset;
+    adapterReadyOverride?: boolean;
+    worktreeOverride?: string;
+    timeoutMs?: number;
+  } = {}) {
     const mission = workspace.mission.trim();
-    const adapterReady = engineeringAutoWorkPreset === "fixture" || engineeringAutoWorkAdapterReady;
-    const selectedPreset = engineeringRunnerPresets.find((preset) => preset.id === engineeringAutoWorkPreset);
-    const requiresAdapterReady = selectedPreset?.requiresAdapterReady || engineeringAutoWorkPreset === "openhands";
+    const adapterReady = preset === "fixture" || (adapterReadyOverride ?? engineeringAutoWorkAdapterReady);
+    const selectedPreset = engineeringRunnerPresets.find((candidate) => candidate.id === preset);
+    const requiresAdapterReady = selectedPreset?.requiresAdapterReady || preset === "openhands";
 
     if (!mission) {
       setEngineeringAutoWorkState({
@@ -4444,9 +4454,9 @@ export function App() {
     if (requiresAdapterReady && !adapterReady) {
       setEngineeringAutoWorkState({
         status: "error",
-        message: engineeringAutoWorkPreset === "openhands"
+        message: preset === "openhands"
           ? copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady
-          : copy.engineeringLaunchpad.autoWorkAdapterNeedsReady(engineeringAutoWorkPreset),
+          : copy.engineeringLaunchpad.autoWorkAdapterNeedsReady(preset),
         result: null
       });
       return;
@@ -4454,7 +4464,7 @@ export function App() {
 
     setEngineeringAutoWorkState({
       status: "running",
-      message: copy.engineeringLaunchpad.autoWorkStarting(engineeringAutoWorkPreset),
+      message: copy.engineeringLaunchpad.autoWorkStarting(preset),
       result: null
     });
 
@@ -4462,12 +4472,12 @@ export function App() {
       const result = await runEngineeringAutoWorkViaGateway({
         mission,
         locale,
-        runnerPreset: engineeringAutoWorkPreset,
+        runnerPreset: preset,
         adapterReady,
-        worktree: engineeringAutoWorkPreset === "fixture"
+        worktree: preset === "fixture"
           ? "output/engineering-auto-work-ui/fixture-worktree"
-          : engineeringAutoWorkWorktree.trim() || ".",
-        timeoutMs: engineeringAutoWorkPreset === "openhands" ? 180_000 : 60_000
+          : worktreeOverride?.trim() || engineeringAutoWorkWorktree.trim() || ".",
+        timeoutMs: timeoutMs || (preset === "openhands" ? 180_000 : 60_000)
       });
       const nextStatus = result.ok ? "completed" : "error";
       const message = result.ok
@@ -4514,12 +4524,23 @@ export function App() {
         severity: "error",
         summary: `Engineering auto-work gateway failed: ${errorMessage}.`,
         metadata: {
-          preset: engineeringAutoWorkPreset,
+          preset,
           adapterReady,
           gatewayError: errorMessage
         }
       });
     }
+  }
+
+  async function runEngineeringFixtureSelfTestFromLaunchpad() {
+    updateEngineeringAutoWorkPreset("fixture");
+    setEngineeringAutoWorkAdapterReady(false);
+    await runEngineeringAutoWorkFromLaunchpad({
+      preset: "fixture",
+      adapterReadyOverride: true,
+      worktreeOverride: "output/engineering-auto-work-ui/fixture-worktree",
+      timeoutMs: 60_000
+    });
   }
 
   async function refreshEngineeringRunnerReadinessFromLaunchpad() {
@@ -4764,6 +4785,7 @@ export function App() {
             onApplyMissionTemplate={applyEngineeringMissionTemplate}
             onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}
             onRunAutoWork={() => void runEngineeringAutoWorkFromLaunchpad()}
+            onRunAutoWorkSelfTest={() => void runEngineeringFixtureSelfTestFromLaunchpad()}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

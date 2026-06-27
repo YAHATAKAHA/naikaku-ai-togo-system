@@ -96,6 +96,7 @@ interface EngineeringLaunchpadProps {
   onApplyMissionTemplate: () => void;
   onRunSelfSimulation: () => void;
   onRunAutoWork: () => void;
+  onRunAutoWorkSelfTest: () => void;
   onRunCabinet: () => void;
   onPrepareEngineeringPack: () => void;
   onRunPreflight: () => void;
@@ -146,6 +147,7 @@ export function EngineeringLaunchpad({
   onApplyMissionTemplate,
   onRunSelfSimulation,
   onRunAutoWork,
+  onRunAutoWorkSelfTest,
   onRunCabinet,
   onPrepareEngineeringPack,
   onRunPreflight,
@@ -322,6 +324,14 @@ export function EngineeringLaunchpad({
             disabled={autoWorkState.status === "running" || runStatus === "running"}
           >
             <Terminal size={15} /> {autoWorkState.status === "running" ? copy.autoWorkRunning : copy.autoWorkRun}
+          </button>
+          <button
+            type="button"
+            data-variant="secondary"
+            onClick={onRunAutoWorkSelfTest}
+            disabled={autoWorkState.status === "running" || runStatus === "running"}
+          >
+            <FlaskConical size={15} /> {autoWorkState.status === "running" ? copy.autoWorkSelfTesting : copy.autoWorkSelfTest}
           </button>
         </div>
         <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>

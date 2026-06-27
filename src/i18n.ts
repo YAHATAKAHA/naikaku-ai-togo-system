@@ -85,6 +85,8 @@ export interface EngineeringLaunchpadCopy {
   autoWorkAdapterReadyHelp: string;
   autoWorkRun: string;
   autoWorkRunning: string;
+  autoWorkSelfTest: string;
+  autoWorkSelfTesting: string;
   autoWorkIdle: string;
   autoWorkMissionRequired: string;
   autoWorkOpenHandsNeedsReady: string;
@@ -533,6 +535,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkAdapterReadyHelp: "このボタンはローカル gateway だけを呼びます。push、deploy、無制限の Mac 操作、秘密情報アクセスは許可しません。",
       autoWorkRun: "自動工程を開始",
       autoWorkRunning: "実行中",
+      autoWorkSelfTest: "Fixture 自測",
+      autoWorkSelfTesting: "自測中",
       autoWorkIdle: "まだ自動工程は起動していません。",
       autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
       autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
@@ -987,6 +991,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkAdapterReadyHelp: "This button calls only the local gateway. It does not grant push, deploy, unbounded Mac control, or secret access.",
       autoWorkRun: "Start auto work",
       autoWorkRunning: "Running",
+      autoWorkSelfTest: "Fixture self-test",
+      autoWorkSelfTesting: "Self-testing",
       autoWorkIdle: "Auto work has not started yet.",
       autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
       autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
@@ -1441,6 +1447,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkAdapterReadyHelp: "这个按钮只调用本地 gateway，不授予 push、deploy、无限制 Mac 控制或秘密信息访问。",
       autoWorkRun: "启动自动工程",
       autoWorkRunning: "正在运行",
+      autoWorkSelfTest: "Fixture 自测",
+      autoWorkSelfTesting: "自测中",
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
@@ -1895,6 +1903,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkAdapterReadyHelp: "這個按鈕只呼叫本地 gateway，不授予 push、deploy、無限制 Mac 控制或秘密資訊存取。",
       autoWorkRun: "啟動自動工程",
       autoWorkRunning: "正在執行",
+      autoWorkSelfTest: "Fixture 自測",
+      autoWorkSelfTesting: "自測中",
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
       autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
@@ -2349,6 +2359,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkAdapterReadyHelp: "이 버튼은 로컬 gateway만 호출합니다. push, deploy, 무제한 Mac 제어, 비밀값 접근 권한을 주지 않습니다.",
       autoWorkRun: "자동 엔지니어링 시작",
       autoWorkRunning: "실행 중",
+      autoWorkSelfTest: "Fixture 자체 테스트",
+      autoWorkSelfTesting: "자체 테스트 중",
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
       autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
       autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",

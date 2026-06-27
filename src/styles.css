@@ -862,6 +862,11 @@ a.secondary-button {
   filter: brightness(0.96);
 }
 
+.engineering-auto-work-controls button[data-variant="secondary"] {
+  background: white;
+  color: var(--accent-2);
+}
+
 .engineering-auto-work-result {
   display: flex;
   flex-wrap: wrap;

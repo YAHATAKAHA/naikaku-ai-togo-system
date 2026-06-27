@@ -89,6 +89,8 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.missionDraftStatus("missing")).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkRun).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkSelfTest).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkSelfTesting).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkAdapterNeedsReady("openclaw-local")).toBeTruthy();
       expect(copy.engineeringLaunchpad.runnerPresetTemplatesLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.runnerPresetEnable).toBeTruthy();
