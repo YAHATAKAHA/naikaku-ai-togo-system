@@ -113,7 +113,13 @@ Approval and evidence ledger files default to `.naikaku-data`; set `NAIKAKU_LEDG
 
 The workbench defaults to `dry-run`. Switch to `live providers` only when the gateway has the needed environment variables. Browser storage keeps aliases such as `NAIKAKU_OPENAI_API_KEY`; raw secrets stay server-side.
 
-For a basic command-line MVP flow, run a mission through the supervised engineering simulator:
+For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, and local verification runner:
+
+```bash
+npm run engineering:mvp -- --mission "Implement the settings panel and run npm test"
+```
+
+This writes `output/engineering-mvp/summary.md` and keeps the claim boundary explicit: local commands can run, but code changes and completion are not claimed unless a patch or external coding runner returns accepted evidence. To inspect or run each stage manually:
 
 ```bash
 npm run engineering:adapters
@@ -121,7 +127,7 @@ npm run engineering:simulate -- --mission "Implement the settings panel and run 
 npm run engineering:run-local
 ```
 
-The adapter command writes `output/engineering-adapters/adapter-registry.json` and `.md`, listing the built-in local runner plus external candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP runners, and Hermes-style runtimes. `engineering:simulate` writes `output/engineering-simulate/summary.md` plus JSON contracts for the launch profile, self-simulation, launch queue, runner manifest, Mac readiness, Mac contract, and adapter registry. `engineering:run-local` consumes that package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. It does not control macOS, commit, push, deploy, or send messages.
+The adapter command writes `output/engineering-adapters/adapter-registry.json` and `.md`, listing the built-in local runner plus external candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP runners, and Hermes-style runtimes. `engineering:simulate` writes `output/engineering-simulate/summary.md` plus JSON contracts for the launch profile, self-simulation, launch queue, runner manifest, Mac readiness, Mac contract, and adapter registry. `engineering:run-local` consumes that package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. None of these commands controls macOS, commits, pushes, deploys, or sends messages.
 
 For desktop or browser control, Naikaku should use existing open-source runners as adapters instead of rebuilding the control layer. OpenClaw-style desktop control, OpenHands/Codex-style coding agents, browser-use or Playwright browser runners, Hammerspoon Mac automation, E2B-style desktop sandboxes, and MCP tool runners can plug in behind the same approval, allowlist, log, receipt, and artifact-audit contracts. Compatible licenses and attribution must be checked before vendoring code; the safer default is invoking user-installed runners through scoped adapter processes.
 
@@ -143,6 +149,7 @@ npm run coding-agent:runner-lease # self-simulate exclusive runner task leasing 
 npm run coding-agent:sandbox-runner # execute allowlisted local verification commands and audit drill receipts
 npm run coding-agent:gateway-smoke # start local gateway and prove lease-gated sandbox execution over HTTP
 npm run coding-agent:engineering-sim # patch a fixture Git workspace, run its test, and verify receipt/audit evidence
+npm run engineering:mvp # one-command adapter registry, engineering simulation, local verification, and honest claim summary
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:simulate # prepare a mission's launch profile, self-simulation, queue, runner contracts, and Mac readiness without executing work
 npm run engineering:run-local # consume engineering:simulate output, run preflight-allowed local commands, and write receipts/evidence

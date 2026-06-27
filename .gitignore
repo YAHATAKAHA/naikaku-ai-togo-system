@@ -20,6 +20,7 @@ output/coding-agent-sandbox-runner
 output/coding-agent-gateway-runner-smoke
 output/coding-agent-engineering-self-simulation
 output/engineering-adapters
+output/engineering-mvp
 output/engineering-simulate
 output/engineering-simulate-smoke
 output/engineering-run-local
