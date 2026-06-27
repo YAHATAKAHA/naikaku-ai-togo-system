@@ -23,6 +23,7 @@
     "engineering:adapters": "tsx scripts/engineering-adapters.ts --out output/engineering-adapters",
     "engineering:handoff": "tsx scripts/engineering-handoff.ts --input output/engineering-simulate --out output/engineering-handoff",
     "engineering:mvp": "tsx scripts/engineering-mvp.ts --out output/engineering-mvp",
+    "engineering:review-adapter-run": "tsx scripts/engineering-review-adapter-run.ts",
     "engineering:run-adapter": "tsx scripts/engineering-run-adapter.ts --handoff output/engineering-handoff --out output/engineering-adapter-run",
     "engineering:simulate": "tsx scripts/engineering-simulate.ts --out output/engineering-simulate",
     "engineering:run-local": "tsx scripts/engineering-run-local.ts --input output/engineering-simulate --out output/engineering-run-local",

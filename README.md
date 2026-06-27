@@ -146,6 +146,15 @@ Those flags produce executable job JSON under `output/engineering-handoff/jobs`.
 npm run engineering:run-adapter -- --handoff output/engineering-handoff --max-jobs 1
 ```
 
+Then import the returned receipts into Naikaku review automatically:
+
+```bash
+npm run engineering:review-adapter-run -- \
+  --bundle output/engineering-simulate/session-bundle.json \
+  --adapter-run output/engineering-adapter-run/summary.json \
+  --worktree /path/to/the/runner/worktree
+```
+
 For OpenHands, the default job command is `openhands --always-approve -f <task-file>`. If the upstream tool uses another command line, override it without changing Naikaku:
 
 ```bash
@@ -155,9 +164,9 @@ npm run engineering:run-adapter -- \
   --arg -m --arg openhands.core.main --arg -f --arg {taskPath}
 ```
 
-`engineering:run-adapter` writes stdout/stderr transcripts, one `naikaku.external-runner-adapter-execution-receipt.v1` per job, and a run summary. It also checks whether the external runner wrote the expected Naikaku session receipt after the command started, so stale receipts are not accepted. Add `--require-receipt` when a CI or local smoke should fail unless the external runner produced that receipt. A zero exit code is still not enough to mark work done; Naikaku still needs the returned receipt, implementation evidence, artifact audit, and release verification. `engineering:run-local` consumes the simulation package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. None of these commands controls macOS, commits, pushes, deploys, or sends messages. The fixture coding loop modifies only generated files under the output directory.
+`engineering:run-adapter` writes stdout/stderr transcripts, one `naikaku.external-runner-adapter-execution-receipt.v1` per job, and a run summary. It also checks whether the external runner wrote the expected Naikaku session receipt after the command started, so stale receipts are not accepted. Add `--require-receipt` when a CI or local smoke should fail unless the external runner produced that receipt. `engineering:review-adapter-run` reads that run summary, imports only fresh review-ready receipts, writes a merged submitted receipt, runs receipt review, builds implementation evidence, and audits artifact paths plus optional Git worktree changed-file status. A zero exit code is still not enough to mark work done; Naikaku still needs the returned receipt, implementation evidence, artifact audit, and release verification. `engineering:run-local` consumes the simulation package, runs only preflight-allowed local verification commands, and writes transcripts, receipts, implementation evidence, artifact audit, and execution receipt under `output/engineering-run-local` plus the session evidence prefixes. Without an explicit `--patch-file`, it can claim local command execution but not code changes or completion. None of these commands controls macOS, commits, pushes, deploys, or sends messages. The fixture coding loop modifies only generated files under the output directory.
 
-`engineering:adapter-self-test` is the no-provider proof that the bridge is more than prompt copying: it creates a tiny fixture Git workspace, launches a deterministic fake external CLI runner through adapter job JSON, observes a failing test, patches the fixture, reruns the test, writes a Naikaku session receipt, and verifies receipt/evidence/artifact audit. It modifies only ignored output files and does not claim a real OpenHands model run.
+`engineering:adapter-self-test` is the no-provider proof that the bridge is more than prompt copying: it creates a tiny fixture Git workspace, launches a deterministic fake external CLI runner through adapter job JSON, observes a failing test, patches the fixture, reruns the test, writes a Naikaku session receipt, then calls the same adapter-run review importer to verify receipt/evidence/artifact audit. It modifies only ignored output files and does not claim a real OpenHands model run.
 
 For desktop or browser control, Naikaku should use existing open-source runners as adapters instead of rebuilding the control layer. OpenHands/Codex-style coding agents should handle repository implementation; OpenClaw-style desktop control and Hammerspoon Mac automation should handle approved desktop actions; browser-use or Playwright should handle browser workflows; E2B-style desktops, MCP runners, and Hermes-style runtimes can plug in behind the same approval, allowlist, log, receipt, and artifact-audit contracts. Compatible licenses and attribution must be checked before vendoring code; the safer default is invoking user-installed runners through scoped adapter processes and importing their receipts.
 
@@ -184,6 +193,7 @@ npm run engineering:adapter-self-test # launch a deterministic fake external CLI
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
+npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit
 npm run engineering:simulate # prepare a mission's launch profile, self-simulation, queue, runner contracts, and Mac readiness without executing work
 npm run engineering:run-local # consume engineering:simulate output, run preflight-allowed local commands, and write receipts/evidence
 npm run coding-agent:drill # self-simulate valid, mismatched, and sandbox-prefix coding-agent receipt evidence

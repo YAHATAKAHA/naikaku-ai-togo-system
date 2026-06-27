@@ -20,6 +20,7 @@ output/coding-agent-sandbox-runner
 output/coding-agent-gateway-runner-smoke
 output/coding-agent-engineering-self-simulation
 output/engineering-adapter-self-test
+output/engineering-adapter-review
 output/engineering-adapter-run*
 output/engineering-adapters
 output/engineering-handoff

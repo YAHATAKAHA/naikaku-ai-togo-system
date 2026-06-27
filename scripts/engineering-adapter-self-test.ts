@@ -1,20 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
-import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
-import {
-  buildCodingAgentSessionReceiptTemplate,
-  reviewCodingAgentSessionReceipt
-} from "../src/domain/codingAgentSessionReceipt";
+import { buildCodingAgentSessionReceiptTemplate } from "../src/domain/codingAgentSessionReceipt";
 import type {
   CodingAgentCommandResult,
-  CodingAgentImplementationArtifactAudit,
-  CodingAgentImplementationEvidence,
-  CodingAgentSessionBundle,
-  CodingAgentSessionReceipt
+  CodingAgentSessionBundle
 } from "../src/domain/types";
 import type { ExternalRunnerAdapterJob } from "../src/domain/externalRunnerHandoff";
 
@@ -42,6 +33,41 @@ interface GitCommandResult {
   output: string;
 }
 
+interface AdapterRunReviewSummary {
+  schema: "naikaku.engineering-adapter-run-review.v1";
+  adapterReceipts: {
+    loadedReceipts: number;
+    reviewReadyJobs: number;
+  };
+  receipt: {
+    decision: string;
+    verified: number;
+    failed: number;
+  };
+  evidence: {
+    decision: string;
+    accepted: number;
+    commandResults: number;
+    changedFiles: number;
+  };
+  artifactAudit: {
+    decision: string;
+    verifiedPaths: number;
+    missingPaths: number;
+    worktreeChangedFiles: number;
+    worktreeCheckedChangedFiles: number;
+    transcriptContentChecked: number;
+    transcriptContentMismatches: number;
+  };
+  files: {
+    submittedReceipt: string;
+    receiptReview: string;
+    implementationEvidence: string;
+    artifactAudit: string;
+  };
+  checks: Record<string, boolean>;
+}
+
 interface AdapterSelfTestSummary {
   schema: "naikaku.engineering-adapter-self-test.v1";
   generatedAt: string;
@@ -53,6 +79,17 @@ interface AdapterSelfTestSummary {
     externalReceiptsPresent: number;
     readyForImplementationReview: number;
     adapterExecutionReceiptPath: string | null;
+  };
+  adapterRunReview: {
+    schema: string;
+    loadedReceipts: number;
+    reviewReadyJobs: number;
+    passedChecks: number;
+    failedChecks: number;
+    submittedReceiptPath: string;
+    receiptReviewPath: string;
+    implementationEvidencePath: string;
+    artifactAuditPath: string;
   };
   fixture: {
     workspacePath: string;
@@ -103,6 +140,7 @@ async function main() {
   const fixtureDir = path.join(outputDir, "fixture-workspace");
   const runnerDir = path.join(outputDir, "fake-external-runner");
   const adapterRunDir = path.join(outputDir, "adapter-run");
+  const adapterReviewDir = path.join(outputDir, "adapter-review");
   const artifactPrefix = `${outputRelativeDir}/session/`;
   const baselineTranscript = `${artifactPrefix}baseline-test.log`;
   const finalTranscript = `${artifactPrefix}final-test.log`;
@@ -171,26 +209,23 @@ async function main() {
       adapterExecutionReceiptPath: string;
     }>;
   };
+  const adapterRunReview = runAdapterRunReview({
+    bundlePath: relativePath(path.join(outputDir, "fixture-session-bundle.json")),
+    adapterRunPath: relativePath(path.join(adapterRunDir, "summary.json")),
+    outputDir: relativePath(adapterReviewDir),
+    worktreeDir: relativePath(fixtureDir),
+    generatedAt: options.generatedAt
+  });
+  if (adapterRunReview.exitCode !== 0) {
+    throw new Error(`Adapter run review failed: ${adapterRunReview.output}`);
+  }
+  const adapterRunReviewSummary = JSON.parse(
+    readFileSync(path.join(adapterReviewDir, "summary.json"), "utf8")
+  ) as AdapterRunReviewSummary;
   const runnerResult = JSON.parse(readFileSync(path.resolve(runnerResultPath), "utf8")) as {
     baseline: CommandExecution;
     final: CommandExecution;
   };
-  const submittedReceipt = JSON.parse(readFileSync(path.resolve(submittedReceiptPath), "utf8")) as CodingAgentSessionReceipt;
-  const receiptReview = reviewCodingAgentSessionReceipt({
-    bundle,
-    receipt: submittedReceipt,
-    generatedAt: options.generatedAt
-  });
-  const evidence = buildCodingAgentImplementationEvidence({
-    receipt: receiptReview,
-    generatedAt: options.generatedAt
-  });
-  const artifactAudit = auditCodingAgentImplementationArtifacts({
-    evidence,
-    generatedAt: options.generatedAt,
-    artifactProbe: localArtifactProbe,
-    worktreeProbe: fixtureWorktreeProbe(fixtureDir)
-  });
   const gitStatus = runGit(["status", "--porcelain=v1", "--untracked-files=all"], fixtureDir).output.trim();
   const summary = buildSummary({
     generatedAt: options.generatedAt,
@@ -205,14 +240,9 @@ async function main() {
     diffArtifact,
     gitStatus,
     adapterRunSummary,
-    receiptReview,
-    evidence,
-    artifactAudit
+    adapterRunReviewSummary
   });
 
-  await writeJson(path.join(outputDir, "receipt-review.json"), receiptReview);
-  await writeJson(path.join(outputDir, "implementation-evidence.json"), evidence);
-  await writeJson(path.join(outputDir, "artifact-audit.json"), artifactAudit);
   await writeJson(path.join(outputDir, "summary.json"), summary);
   await writeFile(path.join(outputDir, "summary.md"), summaryMarkdown(summary), "utf8");
 
@@ -469,6 +499,50 @@ function runAdapterBridge({
   };
 }
 
+function runAdapterRunReview({
+  bundlePath,
+  adapterRunPath,
+  outputDir,
+  worktreeDir,
+  generatedAt
+}: {
+  bundlePath: string;
+  adapterRunPath: string;
+  outputDir: string;
+  worktreeDir: string;
+  generatedAt: string;
+}): GitCommandResult {
+  const result = spawnSync("npm", [
+    "exec",
+    "--",
+    "tsx",
+    "scripts/engineering-review-adapter-run.ts",
+    "--bundle",
+    bundlePath,
+    "--adapter-run",
+    adapterRunPath,
+    "--out",
+    outputDir,
+    "--worktree",
+    worktreeDir,
+    "--generated-at",
+    generatedAt
+  ], {
+    cwd: process.cwd(),
+    shell: false,
+    encoding: "utf8",
+    maxBuffer: 4_000_000,
+    env: {
+      ...process.env,
+      CI: "1"
+    }
+  });
+  return {
+    exitCode: typeof result.status === "number" ? result.status : 1,
+    output: `${result.stdout || ""}${result.stderr || ""}`
+  };
+}
+
 function buildSummary({
   generatedAt,
   outputRelativeDir,
@@ -482,9 +556,7 @@ function buildSummary({
   diffArtifact,
   gitStatus,
   adapterRunSummary,
-  receiptReview,
-  evidence,
-  artifactAudit
+  adapterRunReviewSummary
 }: {
   generatedAt: string;
   outputRelativeDir: string;
@@ -507,10 +579,10 @@ function buildSummary({
       adapterExecutionReceiptPath: string;
     }>;
   };
-  receiptReview: CodingAgentSessionReceipt;
-  evidence: CodingAgentImplementationEvidence;
-  artifactAudit: CodingAgentImplementationArtifactAudit;
+  adapterRunReviewSummary: AdapterRunReviewSummary;
 }): AdapterSelfTestSummary {
+  const adapterRunReviewPassedChecks = Object.values(adapterRunReviewSummary.checks).filter(Boolean).length;
+  const adapterRunReviewFailedChecks = Object.values(adapterRunReviewSummary.checks).length - adapterRunReviewPassedChecks;
   const checks = {
     adapterBridgeCompleted: adapterRunSummary.summary.completed === 1,
     adapterExecutionReceiptWritten: Boolean(
@@ -519,18 +591,26 @@ function buildSummary({
     ),
     externalReceiptPresent: adapterRunSummary.summary.externalReceiptsPresent === 1,
     readyForImplementationReview: adapterRunSummary.summary.readyForImplementationReview === 1,
+    adapterRunReviewImportedReceipt:
+      adapterRunReviewSummary.adapterReceipts.loadedReceipts === 1 &&
+      adapterRunReviewSummary.adapterReceipts.reviewReadyJobs === 1,
+    adapterRunReviewVerified: adapterRunReviewFailedChecks === 0,
     baselineTestFailedBeforePatch: baseline.exitCode !== 0,
     finalTestPassedAfterPatch: final.exitCode === 0,
     fixtureGitShowsChangedFile: gitStatus.split(/\r?\n/).some((line) => line.endsWith(changedFixtureFile)),
-    receiptReviewVerified: receiptReview.decision === "verified" && receiptReview.summary.verified === 1,
-    implementationEvidenceAccepted: evidence.decision === "accepted-for-handoff" && evidence.summary.accepted === 1,
-    artifactAuditVerified: artifactAudit.decision === "verified" && artifactAudit.summary.verified === 1,
+    receiptReviewVerified:
+      adapterRunReviewSummary.receipt.decision === "verified" &&
+      adapterRunReviewSummary.receipt.verified === 1,
+    implementationEvidenceAccepted:
+      adapterRunReviewSummary.evidence.decision === "accepted-for-handoff" &&
+      adapterRunReviewSummary.evidence.accepted === 1,
+    artifactAuditVerified: adapterRunReviewSummary.artifactAudit.decision === "verified",
     changedFileWorktreeVerified:
-      artifactAudit.summary.worktreeCheckedChangedFiles === 1 &&
-      artifactAudit.summary.worktreeChangedFiles === 1,
+      adapterRunReviewSummary.artifactAudit.worktreeCheckedChangedFiles === 1 &&
+      adapterRunReviewSummary.artifactAudit.worktreeChangedFiles === 1,
     transcriptContentMatched:
-      artifactAudit.summary.transcriptContentChecked === 1 &&
-      artifactAudit.summary.transcriptContentMismatches === 0,
+      adapterRunReviewSummary.artifactAudit.transcriptContentChecked === 1 &&
+      adapterRunReviewSummary.artifactAudit.transcriptContentMismatches === 0,
     fixtureBoundaryClear:
       changedFilePath.startsWith(`${outputRelativeDir}/fixture-workspace/`) &&
       baselineTranscript.startsWith(`${outputRelativeDir}/session/`) &&
@@ -550,6 +630,17 @@ function buildSummary({
       readyForImplementationReview: adapterRunSummary.summary.readyForImplementationReview,
       adapterExecutionReceiptPath: adapterRunSummary.jobs[0]?.adapterExecutionReceiptPath ?? null
     },
+    adapterRunReview: {
+      schema: adapterRunReviewSummary.schema,
+      loadedReceipts: adapterRunReviewSummary.adapterReceipts.loadedReceipts,
+      reviewReadyJobs: adapterRunReviewSummary.adapterReceipts.reviewReadyJobs,
+      passedChecks: adapterRunReviewPassedChecks,
+      failedChecks: adapterRunReviewFailedChecks,
+      submittedReceiptPath: adapterRunReviewSummary.files.submittedReceipt,
+      receiptReviewPath: adapterRunReviewSummary.files.receiptReview,
+      implementationEvidencePath: adapterRunReviewSummary.files.implementationEvidence,
+      artifactAuditPath: adapterRunReviewSummary.files.artifactAudit
+    },
     fixture: {
       workspacePath: fixtureRelativeDir,
       changedFile: changedFilePath,
@@ -561,22 +652,22 @@ function buildSummary({
       diffArtifact
     },
     receipt: {
-      decision: receiptReview.decision,
-      verified: receiptReview.summary.verified,
-      failed: receiptReview.summary.failed
+      decision: adapterRunReviewSummary.receipt.decision,
+      verified: adapterRunReviewSummary.receipt.verified,
+      failed: adapterRunReviewSummary.receipt.failed
     },
     evidence: {
-      decision: evidence.decision,
-      accepted: evidence.summary.accepted,
-      commandResults: evidence.summary.commandResults,
-      changedFiles: evidence.summary.changedFiles
+      decision: adapterRunReviewSummary.evidence.decision,
+      accepted: adapterRunReviewSummary.evidence.accepted,
+      commandResults: adapterRunReviewSummary.evidence.commandResults,
+      changedFiles: adapterRunReviewSummary.evidence.changedFiles
     },
     artifactAudit: {
-      decision: artifactAudit.decision,
-      verifiedPaths: artifactAudit.summary.verifiedPaths,
-      missingPaths: artifactAudit.summary.missingPaths,
-      worktreeChangedFiles: artifactAudit.summary.worktreeChangedFiles,
-      transcriptContentMismatches: artifactAudit.summary.transcriptContentMismatches
+      decision: adapterRunReviewSummary.artifactAudit.decision,
+      verifiedPaths: adapterRunReviewSummary.artifactAudit.verifiedPaths,
+      missingPaths: adapterRunReviewSummary.artifactAudit.missingPaths,
+      worktreeChangedFiles: adapterRunReviewSummary.artifactAudit.worktreeChangedFiles,
+      transcriptContentMismatches: adapterRunReviewSummary.artifactAudit.transcriptContentMismatches
     },
     checks,
     honestyClaim: {
@@ -711,7 +802,7 @@ const receipt = {
   mode: "evidence-review",
   sourceSchema: "naikaku.coding-agent-session-bundle.v1",
   bundleDecision: "ready",
-  decision: "needs-review",
+  decision: "needs-evidence",
   operatorLocale: "ja",
   items: [{
     ...config.receiptItem,
@@ -731,9 +822,10 @@ const receipt = {
     nextAction: "Review this receipt through Naikaku implementation evidence and artifact audit."
   }],
   honestyClaim: {
-    level: "adapter-fixture-runner",
+    level: "submitted-evidence-review",
     claim: "Fixture runner wrote this receipt after patching a generated fixture workspace.",
-    limitations: ["This is not a real model-run implementation."]
+    limitations: ["This is not a real model-run implementation."],
+    productionRequirements: ["Replace fixture evidence with authenticated runner transcripts for real Development Board completion."]
   },
   summary: {
     total: 1,
@@ -780,74 +872,6 @@ function cabinetScoreTestSource() {
   ].join("\n");
 }
 
-function localArtifactProbe(relativePath: string) {
-  const fullPath = path.resolve(relativePath);
-  if (!existsSync(fullPath)) {
-    return {
-      exists: false
-    };
-  }
-  const fileStat = statSync(fullPath);
-  const buffer = readFileSync(fullPath);
-  return {
-    exists: true,
-    bytes: fileStat.size,
-    sha256: createHash("sha256").update(buffer).digest("hex"),
-    modifiedAt: fileStat.mtime.toISOString(),
-    text: buffer.toString("utf8")
-  };
-}
-
-function fixtureWorktreeProbe(fixtureDir: string) {
-  return (relativePath: string) => {
-    const fullPath = path.resolve(relativePath);
-    const fixtureRelative = path.relative(fixtureDir, fullPath).replace(/\\/g, "/");
-
-    if (!fixtureRelative || fixtureRelative.startsWith("../") || path.isAbsolute(fixtureRelative)) {
-      return {
-        checked: false,
-        changed: false,
-        status: "unknown" as const,
-        reason: "Changed-file reference is outside the fixture Git workspace."
-      };
-    }
-
-    const status = runGit(["status", "--porcelain=v1", "--untracked-files=all", "--", fixtureRelative], fixtureDir);
-    if (status.exitCode !== 0) {
-      return {
-        checked: false,
-        changed: false,
-        status: "unknown" as const,
-        reason: status.output.trim() || "Fixture Git status failed."
-      };
-    }
-
-    const line = status.output.trim().split(/\r?\n/).filter(Boolean)[0] || "";
-    return {
-      checked: true,
-      changed: Boolean(line),
-      status: worktreeStatusFromPorcelain(line),
-      reason: line
-        ? `Fixture Git status contains ${line}.`
-        : "Fixture Git status is clean for this changed-file reference."
-    };
-  };
-}
-
-function worktreeStatusFromPorcelain(line: string) {
-  if (!line) return "clean" as const;
-  if (line.startsWith("??")) return "untracked" as const;
-  const code = line.slice(0, 2);
-  if (code.includes("U")) return "unmerged" as const;
-  if (code.includes("R")) return "renamed" as const;
-  if (code.includes("C")) return "copied" as const;
-  if (code.includes("D")) return "deleted" as const;
-  if (code.includes("A")) return "added" as const;
-  if (code.includes("T")) return "typechange" as const;
-  if (code.includes("M")) return "modified" as const;
-  return "unknown" as const;
-}
-
 function runGit(args: string[], cwd: string): GitCommandResult {
   const result = spawnSync("git", args, {
     cwd,
@@ -887,6 +911,16 @@ function summaryMarkdown(summary: AdapterSelfTestSummary) {
     `- Ready for implementation review: ${summary.adapterRun.readyForImplementationReview}`,
     `- Adapter execution receipt: ${summary.adapterRun.adapterExecutionReceiptPath ?? "missing"}`,
     "",
+    "## Adapter Run Review",
+    "",
+    `- Loaded receipts: ${summary.adapterRunReview.loadedReceipts}`,
+    `- Review-ready jobs: ${summary.adapterRunReview.reviewReadyJobs}`,
+    `- Checks: ${summary.adapterRunReview.passedChecks} pass, ${summary.adapterRunReview.failedChecks} fail`,
+    `- Submitted receipt: ${summary.adapterRunReview.submittedReceiptPath}`,
+    `- Receipt review: ${summary.adapterRunReview.receiptReviewPath}`,
+    `- Implementation evidence: ${summary.adapterRunReview.implementationEvidencePath}`,
+    `- Artifact audit: ${summary.adapterRunReview.artifactAuditPath}`,
+    "",
     "## Fixture",
     "",
     `- Workspace: ${summary.fixture.workspacePath}`,
@@ -923,6 +957,7 @@ function printSummary(summary: AdapterSelfTestSummary) {
   console.log(`Engineering adapter self-test: ${failed === 0 ? "verified" : "needs-review"}`);
   console.log(`Adapter completed jobs: ${summary.adapterRun.completed}`);
   console.log(`Ready for implementation review: ${summary.adapterRun.readyForImplementationReview}`);
+  console.log(`Adapter run review checks: ${summary.adapterRunReview.passedChecks} pass, ${summary.adapterRunReview.failedChecks} fail`);
   console.log(`Baseline test exit: ${summary.fixture.baselineTestExitCode}`);
   console.log(`Final test exit: ${summary.fixture.finalTestExitCode}`);
   console.log(`Receipt review: ${summary.receipt.decision}`);
