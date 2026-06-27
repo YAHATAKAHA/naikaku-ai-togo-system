@@ -106,7 +106,7 @@ Generated evidence bundles are also upserted into the local evidence ledger and 
 
 Release rehearsal reports include an `evidenceClaim` object so a passing sandbox drill cannot be mistaken for production runner proof. In the current implementation the claim level is `dry-run`; it explicitly states that no shell, browser, desktop, or MCP action was actually executed, then lists the runner identity, real artifact, append-only ledger, and server-side provider-readiness requirements needed for production handoff.
 
-The release verifier makes that boundary executable. The workbench panel, local gateway, and `npm run release:verify` accept clean localization, executor contract, sandbox capability, coding-agent dispatch, coding-agent dispatch simulation, coding-agent runner manifest, coding-agent runner invocation, coding-agent runner intake audit, coding-agent runner self-test, coding-agent sandbox runner, coding-agent receipt, and release dry-run drills as sandbox evidence, then run a production boundary drill and write a verification manifest that records all gates. `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. `npm run verify:all` treats that code 4 as the expected negative gate after tests, build, and dry-run verification pass, and CI should run the same command. This gives CI and operators a hard stop between "the drills work" and "real computer-control backends are safe to release."
+The release verifier makes that boundary executable. The workbench panel, local gateway, and `npm run release:verify` accept clean localization, executor contract, sandbox capability, security red-team, coding-agent dispatch, coding-agent dispatch simulation, coding-agent runner manifest, coding-agent runner invocation, coding-agent runner intake audit, coding-agent runner self-test, coding-agent sandbox runner, coding-agent receipt, and release dry-run drills as sandbox evidence, then run a production boundary drill and write a verification manifest that records all gates. `npm run release:verify:production` returns code 4 until authenticated production runner evidence is attached. `npm run verify:all` treats that code 4 as the expected negative gate after tests, build, and dry-run verification pass, and CI should run the same command. This gives CI and operators a hard stop between "the drills work" and "real computer-control backends are safe to release."
 
 Coding Agent Briefs extend the same boundary to programming agents. They convert development work items into reviewable prompts that tell an implementation agent what to build, which verification commands to run, which executor boundary applies, and which actions are forbidden. The brief explicitly prohibits raw-secret export, unreviewed Git push, production deploys, remote deletes, purchases, and external message sends. It is a handoff artifact, not proof that implementation has happened.
 
@@ -164,6 +164,8 @@ Provider readiness exports include provider, model, endpoint, alias, status, sou
 
 Treat web pages, emails, documents, files, and tool outputs as untrusted. A sandboxed agent can summarize them, but cannot inherit instructions from them. The Safety Auditor role should inspect external content before it affects tools, files, credentials, or outbound messages.
 
+The local security classifier makes this rule executable before real runners attach. It flags prompt-injection overrides, hidden-instruction extraction, credential requests, approval bypass claims, localhost/control-plane access, cloud metadata access, destructive Git/filesystem mutations, production deployments, direct network escape attempts, and external sends. `npm run security:red-team` runs these hostile fixtures plus one safe allowlisted URL through the classifier and sandbox policy. The drill must pass before `npm run release:verify` and the verification manifest can pass, and it records that no browser, shell, MCP, deployment, Git, or network action was executed.
+
 ## Production Gates
 
 Before real computer control is enabled:
@@ -176,5 +178,5 @@ Before real computer control is enabled:
 6. Replace the dry-run executor with authenticated Browser/Shell/Desktop/MCP runner services.
 7. Make runner services emit the evidence required by the Sandbox Capability registry and `naikaku.executor-evidence.v1`.
 8. Replace dry-run evidence placeholders with replayable screenshots, terminal logs, artifact manifests, and tool-call transcripts.
-9. Add red-team tests for prompt injection and localhost/control-plane attacks.
+9. Enforce the red-team classifier server-side for prompt injection, localhost/control-plane attacks, metadata services, credential exfiltration, Git mutations, deployments, and external sends.
 10. Move reviewed memory entries to durable storage with retention and deletion controls.

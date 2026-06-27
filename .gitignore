@@ -23,5 +23,6 @@ output/coding-agent-receipt-drill
 output/localization-drill
 output/executor-contract-drill
 output/sandbox-capability-drill
+output/security-red-team-drill
 output/verification
 .naikaku-data

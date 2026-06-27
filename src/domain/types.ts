@@ -105,6 +105,57 @@ export interface SandboxPolicy {
   maxRunMinutes: number;
 }
 
+export type SecurityThreatCategory =
+  | "prompt-injection"
+  | "credential-exfiltration"
+  | "policy-bypass"
+  | "localhost-control-plane"
+  | "control-plane"
+  | "destructive-action"
+  | "production-deploy"
+  | "external-send"
+  | "network-escape"
+  | "high-impact-action";
+
+export type SecurityClassificationDecision = "allowed" | "needs-approval" | "blocked";
+
+export interface SecurityFinding {
+  id: string;
+  category: SecurityThreatCategory;
+  severity: RiskLevel;
+  evidence: string;
+  summary: string;
+  recommendedAction: string;
+}
+
+export interface SecurityTextClassification {
+  schema: "naikaku.security-text-classification.v1";
+  generatedAt: string;
+  source: string;
+  decision: SecurityClassificationDecision;
+  riskLevel: RiskLevel;
+  findings: SecurityFinding[];
+  summary: string;
+}
+
+export interface SecurityActionClassification {
+  schema: "naikaku.security-action-classification.v1";
+  generatedAt: string;
+  executorProfileId: ExecutorProfileId;
+  action: string;
+  target?: string;
+  riskLevel: RiskLevel;
+  decision: SecurityClassificationDecision;
+  sandboxPolicyDecision: {
+    allowed: boolean;
+    approvalRequired: boolean;
+    reason: string;
+    auditTags: string[];
+  };
+  findings: SecurityFinding[];
+  summary: string;
+}
+
 export interface ExecutorProfile {
   id: ExecutorProfileId;
   label: string;
@@ -1204,6 +1255,50 @@ export interface SandboxCapabilityDrillSummary {
   };
 }
 
+export interface SecurityRedTeamDrillSummary {
+  schema: "naikaku.security-red-team-drill.v1";
+  generatedAt: string;
+  outputDir: string;
+  cases: Array<{
+    caseId: string;
+    title: string;
+    expectedDecision: SecurityClassificationDecision;
+    decision: SecurityClassificationDecision;
+    executorProfileId: ExecutorProfileId;
+    action: string;
+    target?: string;
+    riskLevel: RiskLevel;
+    requiredCategories: SecurityThreatCategory[];
+    findingCategories: SecurityThreatCategory[];
+    findingCount: number;
+    policyAllowed: boolean;
+    policyApprovalRequired: boolean;
+    executed: false;
+    failures: string[];
+  }>;
+  summary: {
+    cases: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    needsApproval: number;
+    allowed: number;
+    findings: number;
+    promptInjectionFindings: number;
+    highImpactFindings: number;
+    controlPlaneFindings: number;
+    secretFindings: number;
+    executedActions: number;
+  };
+  checks: Record<string, boolean>;
+  honestyClaim: {
+    level: string;
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export interface ProductionBoundaryDrillSummary {
   schema: "naikaku.production-boundary-drill.v1";
   generatedAt: string;
@@ -1252,6 +1347,7 @@ export interface VerificationManifest {
     localizationDrill: string;
     executorContractDrill: string;
     sandboxCapabilityDrill: string;
+    securityRedTeamDrill: string;
     productionBoundaryDrill: string;
     releaseVerification: string;
   };
@@ -1267,11 +1363,13 @@ export interface VerificationManifest {
     localizationGeneratedAt: string;
     executorContractGeneratedAt: string;
     sandboxCapabilityGeneratedAt: string;
+    securityRedTeamGeneratedAt: string;
     productionBoundaryGeneratedAt: string;
     releaseVerificationGeneratedAt: string;
     localizationLocales: string[];
     executorProfiles: ExecutorProfileId[];
     sandboxCapabilityProfiles: ExecutorProfileId[];
+    securityRedTeamCases: number;
     productionBoundaryExitCode: number;
     releaseRunId: string;
     releaseScope: string;

@@ -21,7 +21,7 @@ const steps: CommandStep[] = [
     args: ["run", "build"]
   },
   {
-    label: "Dry-run release verification with localization, executor, sandbox capability, coding-agent dispatch/simulation/runner/invocation/intake/self-test/sandbox-runner/receipt drills and manifest",
+    label: "Dry-run release verification with localization, executor, sandbox capability, security red-team, coding-agent dispatch/simulation/runner/invocation/intake/self-test/sandbox-runner/receipt drills and manifest",
     command: npmCommand,
     args: ["run", "release:verify"]
   },

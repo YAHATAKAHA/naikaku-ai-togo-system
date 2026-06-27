@@ -18,6 +18,7 @@ import type {
   ProductionBoundaryDrillSummary,
   ReleaseVerificationReport,
   SandboxCapabilityDrillSummary,
+  SecurityRedTeamDrillSummary,
   VerificationManifest
 } from "../src/domain/types";
 
@@ -33,6 +34,7 @@ interface VerificationManifestOptions {
   localizationDrillPath: string;
   executorContractDrillPath: string;
   sandboxCapabilityDrillPath: string;
+  securityRedTeamDrillPath: string;
   productionBoundaryDrillPath: string;
   releaseVerificationPath: string;
   outputPath: string;
@@ -59,6 +61,7 @@ async function main() {
   const localizationDrill = await loadLocalizationDrill(options.localizationDrillPath);
   const executorContractDrill = await loadExecutorContractDrill(options.executorContractDrillPath);
   const sandboxCapabilityDrill = await loadSandboxCapabilityDrill(options.sandboxCapabilityDrillPath);
+  const securityRedTeamDrill = await loadSecurityRedTeamDrill(options.securityRedTeamDrillPath);
   const productionBoundaryDrill = await loadProductionBoundaryDrill(options.productionBoundaryDrillPath);
   const releaseVerification = await loadReleaseVerification(options.releaseVerificationPath);
   const manifest = buildVerificationManifest({
@@ -73,6 +76,7 @@ async function main() {
     localizationDrill,
     executorContractDrill,
     sandboxCapabilityDrill,
+    securityRedTeamDrill,
     productionBoundaryDrill,
     releaseVerification,
     generatedAt: options.generatedAt,
@@ -88,6 +92,7 @@ async function main() {
       localizationDrill: options.localizationDrillPath,
       executorContractDrill: options.executorContractDrillPath,
       sandboxCapabilityDrill: options.sandboxCapabilityDrillPath,
+      securityRedTeamDrill: options.securityRedTeamDrillPath,
       productionBoundaryDrill: options.productionBoundaryDrillPath,
       releaseVerification: options.releaseVerificationPath
     }
@@ -189,6 +194,14 @@ async function loadSandboxCapabilityDrill(reportPath: string): Promise<SandboxCa
   return parsed;
 }
 
+async function loadSecurityRedTeamDrill(reportPath: string): Promise<SecurityRedTeamDrillSummary> {
+  const parsed = JSON.parse(await readFile(reportPath, "utf8")) as SecurityRedTeamDrillSummary;
+  if (parsed.schema !== "naikaku.security-red-team-drill.v1") {
+    throw new Error("Security red-team drill must use schema naikaku.security-red-team-drill.v1.");
+  }
+  return parsed;
+}
+
 async function loadProductionBoundaryDrill(reportPath: string): Promise<ProductionBoundaryDrillSummary> {
   const parsed = JSON.parse(await readFile(reportPath, "utf8")) as ProductionBoundaryDrillSummary;
   if (parsed.schema !== "naikaku.production-boundary-drill.v1") {
@@ -236,6 +249,7 @@ function parseArgs(args: string[]): VerificationManifestOptions {
     localizationDrillPath: "output/localization-drill/summary.json",
     executorContractDrillPath: "output/executor-contract-drill/summary.json",
     sandboxCapabilityDrillPath: "output/sandbox-capability-drill/summary.json",
+    securityRedTeamDrillPath: "output/security-red-team-drill/summary.json",
     productionBoundaryDrillPath: "output/verification/production-boundary-latest.json",
     releaseVerificationPath: "output/rehearsal-drill/release-verification-latest.json",
     outputPath: "output/verification/verification-manifest-latest.json",
@@ -316,6 +330,12 @@ function parseArgs(args: string[]): VerificationManifestOptions {
       continue;
     }
 
+    if (arg === "--security-red-team-drill") {
+      options.securityRedTeamDrillPath = requireValue(args, index, arg);
+      index += 1;
+      continue;
+    }
+
     if (arg === "--production-boundary-drill") {
       options.productionBoundaryDrillPath = requireValue(args, index, arg);
       index += 1;
@@ -381,6 +401,8 @@ Options:
                                   Read executor contract drill summary.
   --sandbox-capability-drill <path>
                                   Read sandbox capability readiness drill summary.
+  --security-red-team-drill <path>
+                                  Read security red-team drill summary.
   --production-boundary-drill <path>
                                   Read production boundary drill summary.
   --release-verification <path>  Read release verification JSON.
