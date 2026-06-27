@@ -379,6 +379,39 @@ describe("verification manifest", () => {
     expect(intakeCheck?.evidence).toContain("Blocked security classifications: 1");
   });
 
+  it("invalidates the manifest when runner intake does not prove tampered command blocking", () => {
+    const codingAgentRunnerIntake = codingAgentRunnerIntakeAuditFixture();
+    codingAgentRunnerIntake.securityBlocked.decision = "accepted-for-runner";
+    codingAgentRunnerIntake.securityBlocked.blockedIntakes = 0;
+    codingAgentRunnerIntake.securityBlocked.blockedSecurityClassifications = 0;
+    codingAgentRunnerIntake.checks.securityBlockedRejected = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake,
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentSandboxRunner: codingAgentSandboxRunnerFixture(),
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const intakeCheck = manifest.checks.find((check) => check.id === "coding-agent-runner-intake-audit");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(intakeCheck?.status).toBe("fail");
+    expect(intakeCheck?.evidence).toContain("Security-blocked classifications: 0");
+  });
+
   it("invalidates the manifest when runner self-test claims executed commands", () => {
     const codingAgentRunnerSelfTest = codingAgentRunnerSelfTestFixture();
     codingAgentRunnerSelfTest.valid.notExecutedCommands = 15;
@@ -439,6 +472,39 @@ describe("verification manifest", () => {
     expect(manifest.summary.failed).toBe(1);
     expect(sandboxRunnerCheck?.status).toBe("fail");
     expect(sandboxRunnerCheck?.evidence).toContain("Process executions: 0");
+  });
+
+  it("invalidates the manifest when sandbox preflight does not block the tampered allowlisted command", () => {
+    const codingAgentSandboxRunner = codingAgentSandboxRunnerFixture();
+    codingAgentSandboxRunner.securityBlockedPreflight.decision = "ready";
+    codingAgentSandboxRunner.securityBlockedPreflight.blockedCommands = 0;
+    codingAgentSandboxRunner.securityBlockedPreflight.blockedSecurityCommands = 0;
+    codingAgentSandboxRunner.checks.securityClassifierBlocksTamperedCommand = false;
+
+    const manifest = buildVerificationManifest({
+      codingAgentDispatchDrill: codingAgentDispatchFixture(),
+      codingAgentDispatchSimulation: codingAgentDispatchSimulationFixture(),
+      codingAgentRunnerManifest: codingAgentRunnerManifestFixture(),
+      codingAgentRunnerInvocation: codingAgentRunnerInvocationFixture(),
+      codingAgentRunnerIntake: codingAgentRunnerIntakeAuditFixture(),
+      codingAgentRunnerSelfTest: codingAgentRunnerSelfTestFixture(),
+      codingAgentSandboxRunner,
+      codingAgentReport: codingAgentReportFixture(),
+      localizationDrill: localizationDrillFixture(),
+      executorContractDrill: executorContractDrillFixture(),
+      sandboxCapabilityDrill: sandboxCapabilityDrillFixture(),
+      securityRedTeamDrill: securityRedTeamDrillFixture(),
+      productionBoundaryDrill: productionBoundaryDrillFixture(),
+      releaseVerification: releaseVerificationFixture(),
+      generatedAt: "2026-06-27T00:10:00.000Z",
+      inputs
+    });
+    const sandboxRunnerCheck = manifest.checks.find((check) => check.id === "coding-agent-sandbox-runner");
+
+    expect(manifest.decision).toBe("invalid");
+    expect(manifest.summary.failed).toBe(1);
+    expect(sandboxRunnerCheck?.status).toBe("fail");
+    expect(sandboxRunnerCheck?.evidence).toContain("Security preflight blocked security commands: 0");
   });
 
   it("invalidates the manifest when out-of-scope coding-agent evidence updates the board", () => {
@@ -994,6 +1060,14 @@ function codingAgentRunnerIntakeAuditFixture(): CodingAgentRunnerIntakeAuditDril
       unsafePaths: 0,
       blockedSecurityClassifications: 0
     },
+    securityBlocked: {
+      decision: "blocked",
+      acceptedIntakes: 7,
+      blockedIntakes: 1,
+      completedCommandResults: 0,
+      unsafePaths: 0,
+      blockedSecurityClassifications: 1
+    },
     checks: {
       validAccepted: true,
       acceptedMatchesInvocationFiles: true,
@@ -1006,7 +1080,8 @@ function codingAgentRunnerIntakeAuditFixture(): CodingAgentRunnerIntakeAuditDril
       noExecutionClaim: true,
       productionHeldNotAccepted: true,
       productionHeldNoFiles: true,
-      productionHeldNoReceiptDraftPaths: true
+      productionHeldNoReceiptDraftPaths: true,
+      securityBlockedRejected: true
     },
     honestyClaim: {
       level: "runner-invocation-intake-audit",
@@ -1115,6 +1190,18 @@ function codingAgentSandboxRunnerFixture(): CodingAgentSandboxRunnerDrillSummary
       receiptReviewDecision: "blocked",
       artifactAuditDecision: "blocked"
     },
+    securityBlockedPreflight: {
+      decision: "blocked",
+      readyTasks: 7,
+      blockedTasks: 1,
+      allowedCommands: 15,
+      blockedCommands: 1,
+      blockedSecurityCommands: 1,
+      expectedProcessExecutions: 2,
+      expectedCommandResults: 16,
+      tamperedCommand: "git push origin main",
+      dangerousCommandAllowlisted: true
+    },
     checks: {
       validSelfTestReady: true,
       allowedCommandsOnly: true,
@@ -1125,7 +1212,8 @@ function codingAgentSandboxRunnerFixture(): CodingAgentSandboxRunnerDrillSummary
       artifactAuditVerified: true,
       dryRunBoundaryClear: true,
       productionHeldNoExecution: true,
-      productionHeldReceiptBlocked: true
+      productionHeldReceiptBlocked: true,
+      securityClassifierBlocksTamperedCommand: true
     },
     honestyClaim: {
       level: "local-sandbox-runner-drill",

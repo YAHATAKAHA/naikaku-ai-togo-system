@@ -22,7 +22,7 @@ Localization is not just translation. Every locale must preserve the operational
 - Verify: release rehearsal and verification gates distinguish dry-run evidence from production evidence.
 - Govern: operators must see approvals, blockers, warnings, secret boundaries, and next actions clearly.
 
-This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion. In every locale, the default mental model is "Japanese-led AI cabinet that can program under governance," not a generic chat interface. Localized copy must reinforce that the cabinet can think, program, operate approved sandbox tools, and audit itself as one governed loop.
+This is the same direction as a coding agent workbench: the system should help users build software, prepare runnable tasks, execute only inside governed sandbox boundaries, and attach evidence before claiming completion. In every locale, the default mental model is "Japanese-led AI cabinet that can program under governance," not a generic chat interface. Localized copy must reinforce that the cabinet can think, program, operate approved sandbox tools, and audit itself as one governed loop. Computer-control capabilities inspired by Codex/OpenClaw-style runners belong behind this same contract: localized operator summaries may change, but command allowlists, security-classifier decisions, sandbox paths, receipts, and verification evidence stay stable.
 
 ## Implementation Contract
 

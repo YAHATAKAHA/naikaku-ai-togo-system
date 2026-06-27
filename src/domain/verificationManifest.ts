@@ -335,14 +335,20 @@ function codingAgentRunnerIntakeCheck(report: CodingAgentRunnerIntakeAuditDrillS
     && report.productionHeld.receiptDraftPaths === 0
     && report.productionHeld.unsafePaths === 0
     && report.productionHeld.blockedSecurityClassifications === 0
+    && report.securityBlocked.decision === "blocked"
+    && report.securityBlocked.acceptedIntakes < report.source.readyInvocations
+    && report.securityBlocked.blockedIntakes > 0
+    && report.securityBlocked.completedCommandResults === 0
+    && report.securityBlocked.unsafePaths === 0
+    && report.securityBlocked.blockedSecurityClassifications > 0
     && checksPassed;
 
   return {
     id: "coding-agent-runner-intake-audit",
     status: ok ? "pass" : "fail",
     summary: ok
-      ? "Coding-agent runner intake audit accepted only readable ready invocation files and kept production-held sessions unaccepted."
-      : "Coding-agent runner intake audit did not preserve readable-file, pending-command, or production-held boundaries.",
+      ? "Coding-agent runner intake audit accepted only readable ready invocation files, kept production-held sessions unaccepted, and blocked a tampered dangerous command handoff."
+      : "Coding-agent runner intake audit did not preserve readable-file, pending-command, security-classifier, or production-held boundaries.",
     evidence: [
       `Schema: ${report.schema}`,
       `Runner invocation decision: ${report.source.runnerInvocationDecision}`,
@@ -362,11 +368,15 @@ function codingAgentRunnerIntakeCheck(report: CodingAgentRunnerIntakeAuditDrillS
       `Production-held decision: ${report.productionHeld.decision}`,
       `Production-held accepted intakes: ${report.productionHeld.acceptedIntakes}`,
       `Production-held invocation files found: ${report.productionHeld.invocationFilesFound}`,
-      `Production-held blocked security classifications: ${report.productionHeld.blockedSecurityClassifications}`
+      `Production-held blocked security classifications: ${report.productionHeld.blockedSecurityClassifications}`,
+      `Security-blocked decision: ${report.securityBlocked.decision}`,
+      `Security-blocked intakes: ${report.securityBlocked.blockedIntakes}`,
+      `Security-blocked command results: ${report.securityBlocked.completedCommandResults}`,
+      `Security-blocked classifications: ${report.securityBlocked.blockedSecurityClassifications}`
     ],
     nextAction: ok
       ? "Keep the intake audit summary attached before a governed runner consumes invocation files."
-      : "Restore runner intake auditing so only readable, package-ready invocation files can reach coding runners."
+      : "Restore runner intake auditing so only readable, package-ready, security-classifier-clean invocation files can reach coding runners."
   };
 }
 
@@ -451,14 +461,19 @@ function codingAgentSandboxRunnerCheck(report: CodingAgentSandboxRunnerDrillSumm
     && report.productionHeld.processExecutions === 0
     && report.productionHeld.receiptReviewDecision === "blocked"
     && report.productionHeld.artifactAuditDecision === "blocked"
+    && report.securityBlockedPreflight.decision === "blocked"
+    && report.securityBlockedPreflight.dangerousCommandAllowlisted
+    && report.securityBlockedPreflight.blockedTasks > 0
+    && report.securityBlockedPreflight.blockedCommands > 0
+    && report.securityBlockedPreflight.blockedSecurityCommands > 0
     && checksPassed;
 
   return {
     id: "coding-agent-sandbox-runner",
     status: ok ? "pass" : "fail",
     summary: ok
-      ? "Coding-agent sandbox runner executed allowlisted local verification commands and produced auditable drill receipts without bypassing production-held tasks."
-      : "Coding-agent sandbox runner did not preserve allowlist execution, receipt, artifact, or production-held boundaries.",
+      ? "Coding-agent sandbox runner executed allowlisted local verification commands, produced auditable drill receipts, and blocked a deliberately allowlisted dangerous command before execution."
+      : "Coding-agent sandbox runner did not preserve allowlist execution, security-classifier, receipt, artifact, or production-held boundaries.",
     evidence: [
       `Schema: ${report.schema}`,
       `Runner self-test decision: ${report.source.runnerSelfTestDecision}`,
@@ -482,11 +497,16 @@ function codingAgentSandboxRunnerCheck(report: CodingAgentSandboxRunnerDrillSumm
       `Unsafe paths: ${report.valid.unsafePaths}`,
       `Production-held decision: ${report.productionHeld.decision}`,
       `Production-held executions: ${report.productionHeld.processExecutions}`,
-      `Production-held receipt review: ${report.productionHeld.receiptReviewDecision}`
+      `Production-held receipt review: ${report.productionHeld.receiptReviewDecision}`,
+      `Security preflight decision: ${report.securityBlockedPreflight.decision}`,
+      `Security preflight tampered command: ${report.securityBlockedPreflight.tamperedCommand}`,
+      `Security preflight dangerous command allowlisted: ${report.securityBlockedPreflight.dangerousCommandAllowlisted}`,
+      `Security preflight blocked commands: ${report.securityBlockedPreflight.blockedCommands}`,
+      `Security preflight blocked security commands: ${report.securityBlockedPreflight.blockedSecurityCommands}`
     ],
     nextAction: ok
       ? "Keep the sandbox runner drill summary attached as local runner plumbing evidence; replace it with real task receipts before Development Board reconciliation."
-      : "Restore the sandbox runner so only allowlisted local commands execute and production-held tasks remain unrun."
+      : "Restore the sandbox runner so only allowlisted, security-classifier-clean local commands execute and production-held tasks remain unrun."
   };
 }
 

@@ -991,6 +991,14 @@ export interface CodingAgentRunnerIntakeAuditDrillSummary {
     unsafePaths: number;
     blockedSecurityClassifications: number;
   };
+  securityBlocked: {
+    decision: string;
+    acceptedIntakes: number;
+    blockedIntakes: number;
+    completedCommandResults: number;
+    unsafePaths: number;
+    blockedSecurityClassifications: number;
+  };
   checks: Record<string, boolean>;
   honestyClaim: {
     level: string;
@@ -1084,6 +1092,18 @@ export interface CodingAgentSandboxRunnerDrillSummary {
     processExecutions: number;
     receiptReviewDecision: string;
     artifactAuditDecision: string;
+  };
+  securityBlockedPreflight: {
+    decision: string;
+    readyTasks: number;
+    blockedTasks: number;
+    allowedCommands: number;
+    blockedCommands: number;
+    blockedSecurityCommands: number;
+    expectedProcessExecutions: number;
+    expectedCommandResults: number;
+    tamperedCommand: string;
+    dangerousCommandAllowlisted: boolean;
   };
   checks: Record<string, boolean>;
   honestyClaim: {

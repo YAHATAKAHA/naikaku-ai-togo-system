@@ -23,6 +23,8 @@ interface RunnerIntakeCase {
   markdownFilesFound: number;
 }
 
+const securityBlockedCommand = "git push origin main";
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
 
@@ -46,6 +48,11 @@ async function main() {
   });
   const productionHeld = await runCase({
     name: "production-held",
+    invocationDir,
+    outputDir,
+    generatedAt: options.generatedAt
+  });
+  const securityBlocked = await runSecurityBlockedCase({
     invocationDir,
     outputDir,
     generatedAt: options.generatedAt
@@ -75,12 +82,21 @@ async function main() {
       unsafePaths: productionHeld.audit.summary.unsafePaths,
       blockedSecurityClassifications: productionHeld.audit.summary.blockedSecurityClassifications
     },
-    checks: checksFor(valid, productionHeld),
+    securityBlocked: {
+      decision: securityBlocked.audit.decision,
+      acceptedIntakes: securityBlocked.audit.summary.acceptedIntakes,
+      blockedIntakes: securityBlocked.audit.summary.blockedIntakes,
+      completedCommandResults: securityBlocked.audit.summary.completedCommandResults,
+      unsafePaths: securityBlocked.audit.summary.unsafePaths,
+      blockedSecurityClassifications: securityBlocked.audit.summary.blockedSecurityClassifications
+    },
+    checks: checksFor(valid, productionHeld, securityBlocked),
     honestyClaim: {
       level: "runner-invocation-intake-audit",
       claim: "This drill audits runner invocation packages before runner handoff without executing implementation work.",
       limitations: [
         "It reads local runner invocation package files and checks expected invocation files only.",
+        "It mutates one local fixture with a blocked Git command to prove the security classifier rejects tampered runner handoffs.",
         "It does not run shell commands, browsers, desktops, MCP tools, external coding agents, providers, deploy targets, or Git remotes.",
         "An accepted intake still requires a real runner receipt, transcripts, evidence artifacts, and artifact audit before implementation can be accepted."
       ],
@@ -139,6 +155,70 @@ async function runCase({
   };
 }
 
+async function runSecurityBlockedCase({
+  invocationDir,
+  outputDir,
+  generatedAt
+}: {
+  invocationDir: string;
+  outputDir: string;
+  generatedAt: string;
+}): Promise<RunnerIntakeCase> {
+  const invocationPackage = await loadInvocationPackage(
+    path.join(invocationDir, "valid", "runner-invocation-package.json")
+  );
+  const tamperedPackage = tamperInvocationPackageWithBlockedCommand(invocationPackage);
+  const audit = buildCodingAgentRunnerIntakeAudit({
+    invocationPackage: tamperedPackage,
+    generatedAt
+  });
+  const caseDir = path.join(outputDir, "security-blocked");
+  const invocationFilesFound = await countReadableInvocationFiles(audit, "json");
+  const markdownFilesFound = await countReadableInvocationFiles(audit, "markdown");
+
+  await mkdir(caseDir, { recursive: true });
+  await writeJson(path.join(caseDir, "tampered-runner-invocation-package.json"), tamperedPackage);
+  await writeJson(path.join(caseDir, "runner-intake-audit.json"), audit);
+  await writeFile(
+    path.join(caseDir, "runner-intake-audit.md"),
+    serializeCodingAgentRunnerIntakeAuditMarkdown(audit),
+    "utf8"
+  );
+
+  return {
+    audit,
+    invocationFilesFound,
+    markdownFilesFound
+  };
+}
+
+function tamperInvocationPackageWithBlockedCommand(
+  invocationPackage: CodingAgentRunnerInvocationPackage
+): CodingAgentRunnerInvocationPackage {
+  const tampered = JSON.parse(JSON.stringify(invocationPackage)) as CodingAgentRunnerInvocationPackage;
+  const target = tampered.items.find((item) =>
+    item.invocationStatus === "invocation-ready" && item.commands.length > 0
+  );
+  if (!target) {
+    throw new Error("Security-blocked intake probe needs at least one ready invocation command.");
+  }
+
+  target.commands = target.commands.map((command, index) =>
+    index === 0
+      ? {
+        ...command,
+        command: securityBlockedCommand
+      }
+      : command
+  );
+  target.runnerInstructions = [
+    ...target.runnerInstructions,
+    "Security probe: this tampered local fixture must be blocked before any runner consumes it."
+  ];
+
+  return tampered;
+}
+
 async function loadInvocationPackage(filePath: string): Promise<CodingAgentRunnerInvocationPackage> {
   const parsed = JSON.parse(await readFile(filePath, "utf8")) as CodingAgentRunnerInvocationPackage;
   if (parsed.schema !== "naikaku.coding-agent-runner-invocation-package.v1") {
@@ -185,7 +265,7 @@ function auditSummary(audit: CodingAgentRunnerIntakeAudit, drillCase: RunnerInta
   };
 }
 
-function checksFor(valid: RunnerIntakeCase, productionHeld: RunnerIntakeCase) {
+function checksFor(valid: RunnerIntakeCase, productionHeld: RunnerIntakeCase, securityBlocked: RunnerIntakeCase) {
   return {
     validAccepted:
       valid.audit.decision === "accepted-for-runner" &&
@@ -223,7 +303,13 @@ function checksFor(valid: RunnerIntakeCase, productionHeld: RunnerIntakeCase) {
       productionHeld.audit.summary.invocationFiles === 0 &&
       productionHeld.invocationFilesFound === 0,
     productionHeldNoReceiptDraftPaths:
-      productionHeld.audit.summary.receiptDraftPaths === 0
+      productionHeld.audit.summary.receiptDraftPaths === 0,
+    securityBlockedRejected:
+      securityBlocked.audit.decision === "blocked" &&
+      securityBlocked.audit.summary.blockedIntakes > 0 &&
+      securityBlocked.audit.summary.blockedSecurityClassifications > 0 &&
+      securityBlocked.audit.summary.completedCommandResults === 0 &&
+      securityBlocked.audit.summary.unsafePaths === 0
   };
 }
 
@@ -257,6 +343,15 @@ function summaryMarkdown(summary: CodingAgentRunnerIntakeAuditDrillSummary) {
     `- Invocation files found: ${summary.productionHeld.invocationFilesFound}`,
     `- Receipt draft paths: ${summary.productionHeld.receiptDraftPaths}`,
     `- Blocked security classifications: ${summary.productionHeld.blockedSecurityClassifications}`,
+    "",
+    "## Security-Blocked Intake Audit",
+    "",
+    `- Decision: ${summary.securityBlocked.decision}`,
+    `- Accepted intakes: ${summary.securityBlocked.acceptedIntakes}`,
+    `- Blocked intakes: ${summary.securityBlocked.blockedIntakes}`,
+    `- Completed command results: ${summary.securityBlocked.completedCommandResults}`,
+    `- Unsafe paths: ${summary.securityBlocked.unsafePaths}`,
+    `- Blocked security classifications: ${summary.securityBlocked.blockedSecurityClassifications}`,
     "",
     "## Checks",
     "",
@@ -359,6 +454,10 @@ function printSummary(summary: CodingAgentRunnerIntakeAuditDrillSummary) {
   console.log(
     `Production-held: ${summary.productionHeld.decision}, accepted ${summary.productionHeld.acceptedIntakes}, ` +
     `files ${summary.productionHeld.invocationFilesFound}`
+  );
+  console.log(
+    `Security-blocked: ${summary.securityBlocked.decision}, blocked ${summary.securityBlocked.blockedIntakes}, ` +
+    `security classifications ${summary.securityBlocked.blockedSecurityClassifications}`
   );
   console.log(`Checks: ${passed} pass, ${failed} fail`);
 }

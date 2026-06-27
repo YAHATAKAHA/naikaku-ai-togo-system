@@ -12,6 +12,11 @@ import {
   buildCodingAgentSessionReceiptTemplate,
   reviewCodingAgentSessionReceipt
 } from "../src/domain/codingAgentSessionReceipt";
+import {
+  buildCodingAgentSandboxRunnerPreflight,
+  codingAgentSandboxRunnerAllowedCommands,
+  serializeCodingAgentSandboxRunnerPreflightMarkdown
+} from "../src/domain/codingAgentSandboxRunnerPreflight";
 import { buildDevelopmentBoard } from "../src/domain/developmentBoard";
 import { createDefaultWorkspace } from "../src/domain/storage";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
@@ -21,6 +26,7 @@ import type {
   CodingAgentImplementationEvidence,
   CodingAgentRunnerSelfTest,
   CodingAgentRunnerSelfTestItem,
+  CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerDrillSummary,
   CodingAgentSession,
   CodingAgentSessionBundle,
@@ -28,7 +34,8 @@ import type {
   CodingAgentSessionReceiptItem
 } from "../src/domain/types";
 
-const allowedCommands = new Set(["npm run test", "npm run build"]);
+const allowedCommands = new Set<string>(codingAgentSandboxRunnerAllowedCommands);
+const securityBlockedCommand = "git push origin main";
 
 interface SandboxRunnerOptions {
   selfTestDir: string;
@@ -58,6 +65,10 @@ interface RunnerCaseResult {
   transcriptFilesWritten: number;
   changedFileSummaries: number;
   evidenceArtifacts: number;
+}
+
+interface SecurityBlockedPreflightCase {
+  preflight: CodingAgentSandboxRunnerPreflight;
 }
 
 interface SandboxRunnerReport {
@@ -157,6 +168,12 @@ async function main() {
     generatedAt: options.generatedAt,
     timeoutMs: options.timeoutMs
   });
+  const securityBlockedPreflight = await runSecurityBlockedPreflightCase({
+    selfTest: valid.sourceSelfTest,
+    bundle: context.bundle,
+    outputDir,
+    generatedAt: options.generatedAt
+  });
 
   const summary: CodingAgentSandboxRunnerDrillSummary = {
     schema: "naikaku.coding-agent-sandbox-runner-drill.v1",
@@ -182,12 +199,25 @@ async function main() {
       receiptReviewDecision: productionHeld.receiptReview.decision,
       artifactAuditDecision: productionHeld.audit.decision
     },
-    checks: checksFor(valid, productionHeld),
+    securityBlockedPreflight: {
+      decision: securityBlockedPreflight.preflight.decision,
+      readyTasks: securityBlockedPreflight.preflight.summary.readyTasks,
+      blockedTasks: securityBlockedPreflight.preflight.summary.blockedTasks,
+      allowedCommands: securityBlockedPreflight.preflight.summary.allowedCommands,
+      blockedCommands: securityBlockedPreflight.preflight.summary.blockedCommands,
+      blockedSecurityCommands: securityBlockedPreflight.preflight.summary.blockedSecurityCommands,
+      expectedProcessExecutions: securityBlockedPreflight.preflight.summary.expectedProcessExecutions,
+      expectedCommandResults: securityBlockedPreflight.preflight.summary.expectedCommandResults,
+      tamperedCommand: securityBlockedCommand,
+      dangerousCommandAllowlisted: securityBlockedPreflight.preflight.commandAllowlist.includes(securityBlockedCommand)
+    },
+    checks: checksFor(valid, productionHeld, securityBlockedPreflight),
     honestyClaim: {
       level: "local-sandbox-runner-drill",
       claim: "This drill executes only allowlisted local verification commands and writes sandbox transcripts, receipt review, implementation evidence, and artifact-audit files for runner plumbing verification.",
       limitations: [
         "It does not ask a model to implement the work, inspect prompt contents for task completion, browse, control the desktop, call MCP tools, call providers, deploy, commit, push, or touch production systems.",
+        "It mutates one preflight fixture with an allowlisted dangerous Git command to prove the security classifier still blocks runner execution.",
         "The generated receipt is accepted only as local runner plumbing evidence; it must not be reconciled into the Development Board as completed feature work.",
         "A sandbox-runner-verified decision proves the local command/evidence/receipt chain is runnable, not that the product backlog items were implemented."
       ],
@@ -320,6 +350,63 @@ async function runCase({
     changedFileSummaries: report.summary.changedFileSummaries,
     evidenceArtifacts: report.summary.evidenceArtifacts
   };
+}
+
+async function runSecurityBlockedPreflightCase({
+  selfTest,
+  bundle,
+  outputDir,
+  generatedAt
+}: {
+  selfTest: CodingAgentRunnerSelfTest;
+  bundle: CodingAgentSessionBundle;
+  outputDir: string;
+  generatedAt: string;
+}): Promise<SecurityBlockedPreflightCase> {
+  const caseDir = path.join(outputDir, "security-blocked-preflight");
+  const tamperedSelfTest = tamperSelfTestWithBlockedCommand(selfTest);
+  const preflight = buildCodingAgentSandboxRunnerPreflight({
+    selfTest: tamperedSelfTest,
+    bundle,
+    generatedAt,
+    commandAllowlist: [...codingAgentSandboxRunnerAllowedCommands, securityBlockedCommand]
+  });
+
+  await mkdir(caseDir, { recursive: true });
+  await writeJson(path.join(caseDir, "tampered-runner-self-test.json"), tamperedSelfTest);
+  await writeJson(path.join(caseDir, "sandbox-runner-preflight.json"), preflight);
+  await writeFile(
+    path.join(caseDir, "sandbox-runner-preflight.md"),
+    serializeCodingAgentSandboxRunnerPreflightMarkdown(preflight),
+    "utf8"
+  );
+
+  return { preflight };
+}
+
+function tamperSelfTestWithBlockedCommand(selfTest: CodingAgentRunnerSelfTest): CodingAgentRunnerSelfTest {
+  const tampered = JSON.parse(JSON.stringify(selfTest)) as CodingAgentRunnerSelfTest;
+  const target = tampered.items.find((item) =>
+    item.selfTestStatus === "would-run" && item.commands.length > 0
+  );
+  if (!target) {
+    throw new Error("Security-blocked preflight probe needs at least one would-run command.");
+  }
+
+  target.commands = target.commands.map((command, index) =>
+    index === 0
+      ? {
+        ...command,
+        command: securityBlockedCommand
+      }
+      : command
+  );
+  target.simulatedActions = [
+    ...target.simulatedActions,
+    "Security probe: this tampered local fixture must stay blocked even if its command appears in the allowlist."
+  ];
+
+  return tampered;
 }
 
 function buildSubmittedReceipt({
@@ -743,7 +830,11 @@ function caseSummary(result: RunnerCaseResult): CodingAgentSandboxRunnerDrillSum
   };
 }
 
-function checksFor(valid: RunnerCaseResult, productionHeld: RunnerCaseResult) {
+function checksFor(
+  valid: RunnerCaseResult,
+  productionHeld: RunnerCaseResult,
+  securityBlockedPreflight: SecurityBlockedPreflightCase
+) {
   return {
     validSelfTestReady: valid.report.sourceDecision === "self-test-ready",
     allowedCommandsOnly: valid.report.items.every((item) =>
@@ -773,7 +864,13 @@ function checksFor(valid: RunnerCaseResult, productionHeld: RunnerCaseResult) {
       productionHeld.report.summary.commandResults === 0,
     productionHeldReceiptBlocked:
       productionHeld.receiptReview.decision === "blocked" &&
-      productionHeld.audit.decision === "blocked"
+      productionHeld.audit.decision === "blocked",
+    securityClassifierBlocksTamperedCommand:
+      securityBlockedPreflight.preflight.decision === "blocked" &&
+      securityBlockedPreflight.preflight.commandAllowlist.includes(securityBlockedCommand) &&
+      securityBlockedPreflight.preflight.summary.blockedTasks > 0 &&
+      securityBlockedPreflight.preflight.summary.blockedCommands > 0 &&
+      securityBlockedPreflight.preflight.summary.blockedSecurityCommands > 0
   };
 }
 
@@ -855,6 +952,17 @@ function summaryMarkdown(summary: CodingAgentSandboxRunnerDrillSummary) {
     `- Executed tasks: ${summary.productionHeld.executedTasks}`,
     `- Process executions: ${summary.productionHeld.processExecutions}`,
     `- Receipt review: ${summary.productionHeld.receiptReviewDecision}`,
+    "",
+    "## Security-Blocked Preflight",
+    "",
+    `- Decision: ${summary.securityBlockedPreflight.decision}`,
+    `- Ready tasks: ${summary.securityBlockedPreflight.readyTasks}`,
+    `- Blocked tasks: ${summary.securityBlockedPreflight.blockedTasks}`,
+    `- Allowed commands: ${summary.securityBlockedPreflight.allowedCommands}`,
+    `- Blocked commands: ${summary.securityBlockedPreflight.blockedCommands}`,
+    `- Blocked security commands: ${summary.securityBlockedPreflight.blockedSecurityCommands}`,
+    `- Tampered command: ${summary.securityBlockedPreflight.tamperedCommand}`,
+    `- Dangerous command allowlisted: ${summary.securityBlockedPreflight.dangerousCommandAllowlisted}`,
     "",
     "## Checks",
     "",
@@ -1022,6 +1130,11 @@ function printSummary(summary: CodingAgentSandboxRunnerDrillSummary) {
   console.log(
     `Production-held: ${summary.productionHeld.decision}, executed tasks ${summary.productionHeld.executedTasks}, ` +
     `process executions ${summary.productionHeld.processExecutions}, receipt ${summary.productionHeld.receiptReviewDecision}`
+  );
+  console.log(
+    `Security-blocked preflight: ${summary.securityBlockedPreflight.decision}, ` +
+    `blocked commands ${summary.securityBlockedPreflight.blockedCommands}, ` +
+    `security blocks ${summary.securityBlockedPreflight.blockedSecurityCommands}`
   );
   console.log(`Checks: ${passed} pass, ${failed} fail`);
 }
