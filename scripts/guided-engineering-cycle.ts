@@ -755,7 +755,7 @@ function parseArgs(args: string[]): GuidedEngineeringOptions {
     } else if (arg === "--api-cabinet-mock") {
       options.cabinetMode = "api-mock";
     } else if (arg === "--cabinet-provider") {
-      options.cabinetProvider = requireValue(args, index, arg);
+      options.cabinetProvider = parseProviderId(requireValue(args, index, arg));
       index += 1;
     } else if (arg === "--cabinet-endpoint") {
       options.cabinetEndpoint = requireValue(args, index, arg);
@@ -764,7 +764,9 @@ function parseArgs(args: string[]): GuidedEngineeringOptions {
       options.cabinetModel = requireValue(args, index, arg);
       index += 1;
     } else if (arg === "--cabinet-api-key-alias") {
-      options.cabinetApiKeyAlias = requireValue(args, index, arg);
+      const alias = requireValue(args, index, arg);
+      assertEnvAlias(alias, arg);
+      options.cabinetApiKeyAlias = alias;
       index += 1;
     } else if (arg === "--executor") {
       options.executor = parseExecutor(requireValue(args, index, arg));
@@ -808,6 +810,19 @@ function parseExecutor(value: string): GuidedExecutor {
 function parseCabinetMode(value: string): GuidedCabinetMode {
   if (value === "local" || value === "api-mock" || value === "api") return value;
   throw new Error("Unsupported cabinet mode. Use local, api-mock, or api.");
+}
+
+function parseProviderId(value: string) {
+  if (["openai", "anthropic", "openrouter", "aliyun", "google", "local", "custom"].includes(value)) {
+    return value;
+  }
+  throw new Error("--cabinet-provider must be one of openai, anthropic, openrouter, aliyun, google, local, custom.");
+}
+
+function assertEnvAlias(value: string, name: string) {
+  if (!/^[A-Z][A-Z0-9_]*$/.test(value)) {
+    throw new Error(`${name} must be an environment variable name, not a raw secret.`);
+  }
 }
 
 function parseMaxLoops(value: string) {
@@ -867,7 +882,7 @@ function printHelp() {
     "  npm run engineering:guided -- --max-loops 3 --codex-smoke \"Prove governed Codex coding\"",
     "  npm run engineering:guided -- --runner-preset fixture --adapter-ready \"Run the safe fixture adapter\"",
     "  npm run engineering:guided -- --cabinet-mode api-mock --runner-preset fixture --adapter-ready \"Run separated mock roles before execution\"",
-    "  npm run engineering:guided -- --cabinet-mode api --cabinet-model <model> --cabinet-api-key-alias OPENAI_API_KEY --runner-preset fixture --adapter-ready \"Run separated provider roles before execution\"",
+    "  npm run engineering:guided -- --cabinet-mode api --cabinet-provider aliyun --cabinet-model qwen-turbo --cabinet-api-key-alias DASHSCOPE_API_KEY --runner-preset fixture --adapter-ready \"Run separated provider roles before execution\"",
     "  npm run engineering:guided -- --runner-preset openclaw-local --adapter-ready \"Run my approved OpenClaw preset\"",
     "",
     "Options:",
@@ -877,7 +892,7 @@ function printHelp() {
     "  --cabinet-mode <mode>      local, api-mock, or api. Default: local.",
     "  --api-cabinet              Shortcut for --cabinet-mode api.",
     "  --api-cabinet-mock         Shortcut for --cabinet-mode api-mock.",
-    "  --cabinet-provider <kind>  Provider for API cabinet mode. Default: openai.",
+    "  --cabinet-provider <kind>  openai, anthropic, openrouter, aliyun, google, local, or custom. Default: openai.",
     "  --cabinet-endpoint <url>   Provider endpoint override for API cabinet mode.",
     "  --cabinet-model <name>     Provider model for API cabinet mode.",
     "  --cabinet-api-key-alias <ENV> Environment variable name containing the API key.",

@@ -2,6 +2,7 @@ export type ProviderKind =
   | "openai"
   | "anthropic"
   | "openrouter"
+  | "aliyun"
   | "google"
   | "local"
   | "custom";

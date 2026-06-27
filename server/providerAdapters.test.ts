@@ -85,6 +85,51 @@ describe("provider adapters", () => {
     });
   });
 
+  it("calls Aliyun DashScope through the OpenAI-compatible chat endpoint with a small model config", async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const role = {
+      ...defaultRoles[0],
+      provider: {
+        provider: "aliyun" as const,
+        endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        model: "qwen-turbo",
+        apiKeyAlias: "DASHSCOPE_API_KEY",
+        temperature: 0.2,
+        maxTokens: 256
+      }
+    };
+    const fakeFetch = async (url: string | URL | Request, init?: RequestInit) => {
+      requests.push({ url: String(url), init });
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { content: "{\"decision\":\"approve\"}" } }],
+          usage: { total_tokens: 42 }
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    };
+
+    const result = await invokeRoleProvider({
+      role,
+      mission: "省额度地测试阿里云 role call",
+      context: [],
+      env: { DASHSCOPE_API_KEY: "test-secret" },
+      fetchImpl: fakeFetch as typeof fetch
+    });
+
+    expect(result.status).toBe("called");
+    expect(result.provider).toBe("aliyun");
+    expect(result.tokensUsed).toBe(42);
+    expect(requests[0].url).toBe("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+    expect(requests[0].init?.headers).toMatchObject({
+      Authorization: "Bearer test-secret"
+    });
+    expect(JSON.parse(String(requests[0].init?.body))).toMatchObject({
+      model: "qwen-turbo",
+      max_tokens: 256
+    });
+  });
+
   it("keeps separated OpenAI role identities in consecutive provider calls", async () => {
     const openAiRoles = defaultRoles.filter((role) => role.provider.provider === "openai").slice(0, 2);
     const requests: Array<{ url: string; init?: RequestInit }> = [];

@@ -220,7 +220,7 @@ export function EngineeringLaunchpad({
     runStatus === "running";
   const runnerReadinessReport = runnerReadinessState.report;
   const guidedCycleOptions = [1, 2, 3];
-  const guidedCabinetProviderOptions: ProviderKind[] = ["openai", "openrouter", "anthropic", "google", "local", "custom"];
+  const guidedCabinetProviderOptions: ProviderKind[] = ["openai", "openrouter", "anthropic", "aliyun", "google", "local", "custom"];
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
     !["prepared", "fixture", "openhands"].includes(preset.id)

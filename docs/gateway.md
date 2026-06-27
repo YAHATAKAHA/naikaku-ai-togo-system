@@ -40,11 +40,11 @@ NAIKAKU_LEDGER_DIR=.naikaku-data
 
 - `id`: lowercase preset id shown to the Workbench.
 - `label`: operator-facing label.
-- `adapterId`: one of the known adapter ids such as `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
+- `adapterId`: one of the known adapter ids such as `codex-cli-runner`, `claude-code-runner`, `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
 - `command`: a bare command name, for example `openclaw`, `browser-use`, `npx`, `hs`, or `mcp`.
 - `args`: fixed arguments passed to the command. Supported placeholders are the same as `engineering:run-adapter`: `{jobPath}`, `{taskPath}`, `{receiptDraftPath}`, and `{sessionId}`.
 
-The Workbench can also call `/v1/engineering/runner-presets/enable` with a safe built-in template id such as `openclaw-local`. That endpoint writes the fixed gateway-side command template into the preset config file; it does not accept shell commands from the browser.
+The Workbench can also call `/v1/engineering/runner-presets/enable` with a safe built-in template id such as `codex-cli-local`, `claude-code-local`, or `openclaw-local`. That endpoint writes the fixed gateway-side command template into the preset config file; it does not accept shell commands from the browser.
 
 The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by runner authentication, the panel surfaces the gateway authentication error and still shows approval/status data.
 
@@ -190,7 +190,7 @@ Enables a safe built-in runner preset template by writing the fixed command temp
 
 ```json
 {
-  "templateId": "openclaw-local"
+  "templateId": "codex-cli-local"
 }
 ```
 
@@ -201,11 +201,11 @@ Successful responses include the updated registry and the newly selectable prese
   "schema": "naikaku.engineering-runner-preset-enable.v1",
   "ok": true,
   "status": "enabled",
-  "templateId": "openclaw-local",
+  "templateId": "codex-cli-local",
   "preset": {
-    "id": "openclaw-local",
+    "id": "codex-cli-local",
     "source": "file",
-    "command": "openclaw"
+    "command": "codex"
   }
 }
 ```
@@ -230,6 +230,7 @@ Starts the same supervised engineering pipeline as `npm run engineering:auto-wor
 - `prepared`: prepare handoff tasks without starting an external runner.
 - `fixture`: run the deterministic local fixture adapter under `output/engineering-auto-work-ui/fixture-worktree` and verify the returned receipt/evidence/artifact audit.
 - `openhands`: run the user-installed OpenHands CLI preset. This requires `adapterReady: true` so the operator explicitly records local installation and license review for this run.
+- configured templates such as `codex-cli-local`, `claude-code-local`, or `openclaw-local`: run fixed local command templates after the operator enables the template and marks the adapter ready.
 
 The route only accepts relative workspace paths, keeps UI output under `output/`, maps fixture work to the ignored output fixture worktree by default, and invokes npm through an argument array instead of exposing an arbitrary browser shell. It does not grant push, deploy, host-secret access, or unbounded Mac control.
 

@@ -169,6 +169,10 @@ async function callProvider({
     });
   }
 
+  if (provider.provider === "aliyun") {
+    return callOpenAiCompatibleChat(provider, systemPrompt, prompt, secret || "", fetcher, {}, "DashScope OpenAI-compatible chat completion call completed.");
+  }
+
   if (provider.provider === "google") {
     return callGeminiGenerateContent(provider, systemPrompt, prompt, secret || "", fetcher);
   }
@@ -237,7 +241,8 @@ async function callOpenAiCompatibleChat(
   prompt: string,
   secret: string,
   fetcher: typeof fetch,
-  extraHeaders: Record<string, string> = {}
+  extraHeaders: Record<string, string> = {},
+  detail = "OpenAI-compatible chat completion call completed."
 ) {
   const json = await postJson(fetcher, responseEndpoint(provider.endpoint, "/chat/completions"), {
     headers: {
@@ -258,7 +263,7 @@ async function callOpenAiCompatibleChat(
   return {
     text: extractText(json),
     tokensUsed: extractUsage(json),
-    detail: "OpenAI-compatible chat completion call completed."
+    detail
   };
 }
 

@@ -19,10 +19,12 @@ describe("engineering runner presets", () => {
     expect(registry.schema).toBe("naikaku.engineering-runner-presets.v1");
     expect(registry.errors).toHaveLength(0);
     expect(registry.presets.map((preset) => preset.id)).toEqual(["prepared", "fixture", "openhands"]);
-    expect(registry.templates).toContainEqual(expect.objectContaining({
-      id: "openclaw-local",
-      enabled: false
-    }));
+    expect(registry.templates.map((template) => template.id)).toEqual([
+      "codex-cli-local",
+      "claude-code-local",
+      "openclaw-local"
+    ]);
+    expect(registry.templates.every((template) => template.enabled === false)).toBe(true);
     expect(findEngineeringRunnerPreset("openhands", registry)).toMatchObject({
       kind: "external-command",
       adapterId: "openhands-coding-agent",
@@ -76,7 +78,7 @@ describe("engineering runner presets", () => {
     expect(registry.errors[0]).toContain("bare command name");
   });
 
-  it("enables a safe local preset template through the gateway config file", () => {
+  it("enables safe local preset templates through the gateway config file", () => {
     const configPath = tempPresetPath();
     const first = enableEngineeringRunnerPresetTemplate({
       templateId: "openclaw-local",
@@ -108,6 +110,37 @@ describe("engineering runner presets", () => {
     expect(second.ok).toBe(true);
     expect(second.status).toBe("already-enabled");
     expect(second.registry.summary.configured).toBe(1);
+
+    const codex = enableEngineeringRunnerPresetTemplate({
+      templateId: "codex-cli-local",
+      generatedAt: "2026-06-27T00:02:00.000Z",
+      configPath
+    });
+    const claude = enableEngineeringRunnerPresetTemplate({
+      templateId: "claude-code-local",
+      generatedAt: "2026-06-27T00:03:00.000Z",
+      configPath
+    });
+
+    expect(codex.ok).toBe(true);
+    expect(codex.preset).toMatchObject({
+      id: "codex-cli-local",
+      adapterId: "codex-cli-runner",
+      command: "codex",
+      source: "file"
+    });
+    expect(codex.preset?.args.join(" ")).toContain("{taskPath}");
+    expect(codex.preset?.args.join(" ")).toContain("{receiptDraftPath}");
+    expect(claude.ok).toBe(true);
+    expect(claude.preset).toMatchObject({
+      id: "claude-code-local",
+      adapterId: "claude-code-runner",
+      command: "claude",
+      source: "file"
+    });
+    expect(claude.preset?.args).toContain("--allowedTools");
+    expect(claude.preset?.args).toContain("--disallowedTools");
+    expect(claude.registry.summary.configured).toBe(3);
   });
 
   it("blocks unknown safe preset templates", () => {

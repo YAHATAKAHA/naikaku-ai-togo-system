@@ -44,8 +44,12 @@ interface OpenSourceMvpCheckSummary {
     configuredPresetEvidenceVerified: boolean;
     taskEntryPassed: boolean;
     taskEntryEvidenceVerified: boolean;
+    guidedTaskEntryPassed: boolean;
+    guidedTaskEntryEvidenceVerified: boolean;
     apiRoleSmokePassed: boolean;
     apiRoleSmokeEvidenceVerified: boolean;
+    providerReplayPassed: boolean;
+    providerReplayEvidenceVerified: boolean;
     guidedCliPassed: boolean;
     guidedCliEvidenceVerified: boolean;
     guidedApiCliPassed: boolean;
@@ -60,7 +64,9 @@ interface OpenSourceMvpCheckSummary {
     gatewayAutoWorkSummary: string;
     configuredPresetBridgeSummary: string;
     taskEntrySummary: string;
+    guidedTaskEntrySummary: string;
     apiRoleSmokeSummary: string;
+    providerReplaySummary: string;
     guidedCliSummary: string;
     guidedApiCliSummary: string;
     runnerKitSummary: string;
@@ -68,7 +74,9 @@ interface OpenSourceMvpCheckSummary {
     gatewayAutoWork: GatewayAutoWorkEvidence;
     configuredPresetBridge: ConfiguredPresetBridgeEvidence;
     taskEntry: TaskEntryEvidence;
+    guidedTaskEntry: GuidedTaskEntryEvidence;
     apiRoleSmoke: ApiRoleSmokeEvidence;
+    providerReplay: ProviderReplayEvidence;
     guidedCli: GuidedCliEvidence;
     guidedApiCli: GuidedCliEvidence;
     runnerKit: RunnerKitEvidence;
@@ -81,6 +89,8 @@ interface GatewayAutoWorkEvidence {
   summaryReadable: boolean;
   preset: string | null;
   mode: string | null;
+  presetsConfigured: number;
+  presetEnabledPresets: string[];
   importedReceipts: number;
   acceptedEvidence: number;
   verifiedArtifactPaths: number;
@@ -125,6 +135,23 @@ interface TaskEntryEvidence {
   allChecksPassed: boolean;
 }
 
+interface GuidedTaskEntryEvidence {
+  summaryReadable: boolean;
+  mode: string | null;
+  cabinetMode: string | null;
+  runnerPreset: string | null;
+  cycles: number;
+  stopReason: string | null;
+  executionAttempts: number;
+  successfulExecutions: number;
+  importedReceipts: number;
+  acceptedEvidence: number;
+  verifiedArtifactPaths: number;
+  externalRunnerStarted: boolean;
+  completion: boolean;
+  allChecksPassed: boolean;
+}
+
 interface GuidedCliEvidence {
   summaryReadable: boolean;
   cabinetMode: string | null;
@@ -146,6 +173,20 @@ interface ApiRoleSmokeEvidence {
   roleOutputsParsed: boolean;
   noExternalRunnerStarted: boolean;
   noGitOrDeploy: boolean;
+  allChecksPassed: boolean;
+}
+
+interface ProviderReplayEvidence {
+  summaryReadable: boolean;
+  providerRequests: number;
+  requestRoles: string[];
+  cabinetMode: string | null;
+  cabinetDecision: string | null;
+  guidedCabinetMode: string | null;
+  guidedRunnerPreset: string | null;
+  guidedCycles: number;
+  guidedExecutionAttempts: number;
+  guidedSuccessfulExecutions: number;
   allChecksPassed: boolean;
 }
 
@@ -252,6 +293,7 @@ function buildSteps({
         "server/engineeringAutoWorkGateway.test.ts",
         "server/engineeringCodexSmokeGateway.test.ts",
         "server/engineeringGuidedGateway.test.ts",
+        "server/providerAdapters.test.ts",
         "server/engineeringRunnerPresets.test.ts",
         "server/engineeringRunnerReadiness.test.ts",
         "src/domain/engineeringSelfSimulation.test.ts"
@@ -322,6 +364,35 @@ function buildSteps({
       proves: "A user can enter one mission through the short Naikaku task CLI and receive supervised handoff output without overclaiming completion."
     },
     {
+      id: "guided-task-entry",
+      label: "Operator guided task entry",
+      command: npmCommand,
+      args: [
+        "run",
+        "naikaku:task",
+        "--",
+        "--guided",
+        "--cabinet-mode",
+        "api-mock",
+        "--max-loops",
+        "2",
+        "--runner-preset",
+        "fixture",
+        "--adapter-ready",
+        "--mission",
+        "Guided task entry smoke: one command should vote, execute, continue, and stop with receipts",
+        "--locale",
+        "ja",
+        "--out",
+        path.join(outputDir, "guided-task-entry"),
+        "--generated-at",
+        "2026-06-27T00:00:00.000Z",
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      proves: "The short operator CLI can run cabinet vote -> fixed runner execution -> bounded continuation without manual prompt copying."
+    },
+    {
       id: "api-role-smoke",
       label: "Separated API role smoke",
       command: npmCommand,
@@ -338,6 +409,21 @@ function buildSteps({
         "2026-06-27T00:00:00.000Z"
       ],
       proves: "The same Prime Minister/Critic/Supervisor role split can run through the provider-call contract without starting a runner or persisting raw secrets."
+    },
+    {
+      id: "provider-replay-smoke",
+      label: "Local HTTP provider replay smoke",
+      command: npmCommand,
+      args: [
+        "run",
+        "provider:replay-smoke",
+        "--",
+        "--out",
+        path.join(outputDir, "provider-replay-smoke"),
+        "--timeout-ms",
+        String(timeoutMs)
+      ],
+      proves: "A no-key local HTTP provider can receive separate live-provider role calls, approve a cabinet motion, and allow a bounded fixture runner."
     },
     {
       id: "guided-cli",
@@ -475,7 +561,9 @@ function buildSummary({
     "summary.json"
   ));
   const taskEntryEvidence = readTaskEntryEvidence(path.join(outputDir, "task-entry", "summary.json"));
+  const guidedTaskEntryEvidence = readGuidedTaskEntryEvidence(path.join(outputDir, "guided-task-entry", "summary.json"));
   const apiRoleSmokeEvidence = readApiRoleSmokeEvidence(path.join(outputDir, "api-role-smoke", "summary.json"));
+  const providerReplayEvidence = readProviderReplayEvidence(path.join(outputDir, "provider-replay-smoke", "summary.json"));
   const guidedCliEvidence = readGuidedCliEvidence(path.join(outputDir, "guided-cli", "summary.json"));
   const guidedApiCliEvidence = readGuidedCliEvidence(path.join(outputDir, "guided-api-cli", "summary.json"));
   const runnerKitEvidence = readRunnerKitEvidence(path.join(outputDir, "runner-kit", "summary.json"));
@@ -483,6 +571,10 @@ function buildSummary({
   const gatewayEvidenceVerified = gatewayEvidence.summaryReadable &&
     gatewayEvidence.preset === "fixture" &&
     gatewayEvidence.mode === "external-run-attempted" &&
+    gatewayEvidence.presetsConfigured >= 3 &&
+    ["codex-cli-local", "claude-code-local", "openclaw-local"].every((id) =>
+      gatewayEvidence.presetEnabledPresets.includes(id)
+    ) &&
     gatewayEvidence.importedReceipts >= 1 &&
     gatewayEvidence.acceptedEvidence >= 1 &&
     gatewayEvidence.verifiedArtifactPaths >= 1 &&
@@ -504,6 +596,20 @@ function buildSummary({
     !taskEntryEvidence.externalRunnerStarted &&
     !taskEntryEvidence.completion &&
     taskEntryEvidence.allChecksPassed;
+  const guidedTaskEntryEvidenceVerified = guidedTaskEntryEvidence.summaryReadable &&
+    guidedTaskEntryEvidence.mode === "guided" &&
+    guidedTaskEntryEvidence.cabinetMode === "api-mock" &&
+    guidedTaskEntryEvidence.runnerPreset === "fixture" &&
+    guidedTaskEntryEvidence.cycles === 2 &&
+    guidedTaskEntryEvidence.executionAttempts === 2 &&
+    guidedTaskEntryEvidence.successfulExecutions === 2 &&
+    guidedTaskEntryEvidence.stopReason === "limit-reached" &&
+    guidedTaskEntryEvidence.importedReceipts >= 2 &&
+    guidedTaskEntryEvidence.acceptedEvidence >= 2 &&
+    guidedTaskEntryEvidence.verifiedArtifactPaths >= 2 &&
+    guidedTaskEntryEvidence.externalRunnerStarted &&
+    !guidedTaskEntryEvidence.completion &&
+    guidedTaskEntryEvidence.allChecksPassed;
   const apiRoleSmokeEvidenceVerified = apiRoleSmokeEvidence.summaryReadable &&
     apiRoleSmokeEvidence.mode === "mock" &&
     apiRoleSmokeEvidence.roles === 3 &&
@@ -512,6 +618,19 @@ function buildSummary({
     apiRoleSmokeEvidence.noExternalRunnerStarted &&
     apiRoleSmokeEvidence.noGitOrDeploy &&
     apiRoleSmokeEvidence.allChecksPassed;
+  const providerReplayEvidenceVerified = providerReplayEvidence.summaryReadable &&
+    providerReplayEvidence.providerRequests === 9 &&
+    ["prime-minister", "critic-minister", "supervisor-minister"].every((roleId) =>
+      providerReplayEvidence.requestRoles.includes(roleId)
+    ) &&
+    providerReplayEvidence.cabinetMode === "live-provider" &&
+    providerReplayEvidence.cabinetDecision === "approved" &&
+    providerReplayEvidence.guidedCabinetMode === "api" &&
+    providerReplayEvidence.guidedRunnerPreset === "fixture" &&
+    providerReplayEvidence.guidedCycles === 2 &&
+    providerReplayEvidence.guidedExecutionAttempts === 2 &&
+    providerReplayEvidence.guidedSuccessfulExecutions === 2 &&
+    providerReplayEvidence.allChecksPassed;
   const guidedCliEvidenceVerified = guidedCliEvidence.summaryReadable &&
     guidedCliEvidence.executor === "auto-work" &&
     guidedCliEvidence.runnerPreset === "fixture" &&
@@ -560,8 +679,12 @@ function buildSummary({
     configuredPresetEvidenceVerified,
     taskEntryPassed: byId.get("task-entry")?.passed === true,
     taskEntryEvidenceVerified,
+    guidedTaskEntryPassed: byId.get("guided-task-entry")?.passed === true,
+    guidedTaskEntryEvidenceVerified,
     apiRoleSmokePassed: byId.get("api-role-smoke")?.passed === true,
     apiRoleSmokeEvidenceVerified,
+    providerReplayPassed: byId.get("provider-replay-smoke")?.passed === true,
+    providerReplayEvidenceVerified,
     guidedCliPassed: byId.get("guided-cli")?.passed === true,
     guidedCliEvidenceVerified,
     guidedApiCliPassed: byId.get("guided-api-cli")?.passed === true,
@@ -574,7 +697,9 @@ function buildSummary({
       gatewayEvidenceVerified &&
       configuredPresetEvidenceVerified &&
       taskEntryEvidenceVerified &&
+      guidedTaskEntryEvidenceVerified &&
       apiRoleSmokeEvidenceVerified &&
+      providerReplayEvidenceVerified &&
       guidedCliEvidenceVerified &&
       guidedApiCliEvidenceVerified &&
       runnerKitEvidenceVerified &&
@@ -591,7 +716,9 @@ function buildSummary({
       gatewayAutoWorkSummary: relativePath(path.join(outputDir, "gateway-auto-work", "summary.json")),
       configuredPresetBridgeSummary: relativePath(path.join(outputDir, "configured-preset-bridge", "summary.json")),
       taskEntrySummary: relativePath(path.join(outputDir, "task-entry", "summary.json")),
+      guidedTaskEntrySummary: relativePath(path.join(outputDir, "guided-task-entry", "summary.json")),
       apiRoleSmokeSummary: relativePath(path.join(outputDir, "api-role-smoke", "summary.json")),
+      providerReplaySummary: relativePath(path.join(outputDir, "provider-replay-smoke", "summary.json")),
       guidedCliSummary: relativePath(path.join(outputDir, "guided-cli", "summary.json")),
       guidedApiCliSummary: relativePath(path.join(outputDir, "guided-api-cli", "summary.json")),
       runnerKitSummary: relativePath(path.join(outputDir, "runner-kit", "summary.json")),
@@ -599,14 +726,16 @@ function buildSummary({
       gatewayAutoWork: gatewayEvidence,
       configuredPresetBridge: configuredPresetEvidence,
       taskEntry: taskEntryEvidence,
+      guidedTaskEntry: guidedTaskEntryEvidence,
       apiRoleSmoke: apiRoleSmokeEvidence,
+      providerReplay: providerReplayEvidence,
       guidedCli: guidedCliEvidence,
       guidedApiCli: guidedApiCliEvidence,
       runnerKit: runnerKitEvidence,
       fixtureCodingLoop: fixtureEvidence
     },
     claimBoundary: [
-      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, separated provider-role governance, bounded local/API-role guided CLI loops, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
+      "This check proves local build/test health, gateway auto-work plumbing, configured CLI preset bridging, the one-mission Naikaku task entry, guided one-command task execution, separated provider-role governance, local HTTP provider replay, bounded local/API-role guided CLI loops, a runnable external-runner wrapper kit, and a no-provider fixture coding loop.",
       "It does not prove a real OpenClaw/OpenHands/Hermes run, arbitrary desktop control, production deployment, Git push, or completion of real backlog work.",
       "External CLI runners should be invoked as governed adapters that return Naikaku receipts and evidence, not as unbounded host automation."
     ]
@@ -618,6 +747,8 @@ function readGatewayEvidence(filePath: string): GatewayAutoWorkEvidence {
     cases?: {
       autoWorkPreset?: unknown;
       autoWorkMode?: unknown;
+      presetsConfigured?: unknown;
+      presetEnabledPresets?: unknown;
       importedReceipts?: unknown;
       acceptedEvidence?: unknown;
       verifiedArtifactPaths?: unknown;
@@ -631,6 +762,10 @@ function readGatewayEvidence(filePath: string): GatewayAutoWorkEvidence {
     summaryReadable: Boolean(parsed),
     preset: stringOrNull(cases.autoWorkPreset),
     mode: stringOrNull(cases.autoWorkMode),
+    presetsConfigured: numberOrZero(cases.presetsConfigured),
+    presetEnabledPresets: Array.isArray(cases.presetEnabledPresets)
+      ? cases.presetEnabledPresets.filter((item): item is string => typeof item === "string")
+      : [],
     importedReceipts: numberOrZero(cases.importedReceipts),
     acceptedEvidence: numberOrZero(cases.acceptedEvidence),
     verifiedArtifactPaths: numberOrZero(cases.verifiedArtifactPaths),
@@ -700,6 +835,52 @@ function readTaskEntryEvidence(filePath: string): TaskEntryEvidence {
   };
 }
 
+function readGuidedTaskEntryEvidence(filePath: string): GuidedTaskEntryEvidence {
+  const parsed = readJsonIfExists<{
+    mode?: unknown;
+    runnerPreset?: unknown;
+    guided?: {
+      cabinetMode?: unknown;
+      runnerPreset?: unknown;
+      cycles?: unknown;
+      stopReason?: unknown;
+      executionAttempts?: unknown;
+      successfulExecutions?: unknown;
+    } | null;
+    counts?: {
+      importedReceipts?: unknown;
+      acceptedEvidence?: unknown;
+      verifiedArtifactPaths?: unknown;
+    };
+    claims?: {
+      externalRunnerStarted?: unknown;
+      completion?: unknown;
+    };
+    checks?: Record<string, unknown>;
+  }>(filePath);
+  const guided = parsed?.guided || {};
+  const counts = parsed?.counts || {};
+  const claims = parsed?.claims || {};
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    mode: stringOrNull(parsed?.mode),
+    cabinetMode: stringOrNull(guided.cabinetMode),
+    runnerPreset: stringOrNull(guided.runnerPreset) || stringOrNull(parsed?.runnerPreset),
+    cycles: numberOrZero(guided.cycles),
+    stopReason: stringOrNull(guided.stopReason),
+    executionAttempts: numberOrZero(guided.executionAttempts),
+    successfulExecutions: numberOrZero(guided.successfulExecutions),
+    importedReceipts: numberOrZero(counts.importedReceipts),
+    acceptedEvidence: numberOrZero(counts.acceptedEvidence),
+    verifiedArtifactPaths: numberOrZero(counts.verifiedArtifactPaths),
+    externalRunnerStarted: claims.externalRunnerStarted === true,
+    completion: claims.completion === true,
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
 function readApiRoleSmokeEvidence(filePath: string): ApiRoleSmokeEvidence {
   const parsed = readJsonIfExists<{
     mode?: unknown;
@@ -723,6 +904,41 @@ function readApiRoleSmokeEvidence(filePath: string): ApiRoleSmokeEvidence {
     roleOutputsParsed: checks.roleOutputsParsed === true,
     noExternalRunnerStarted: checks.noExternalRunnerStarted === true,
     noGitOrDeploy: checks.noGitOrDeploy === true,
+    allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
+  };
+}
+
+function readProviderReplayEvidence(filePath: string): ProviderReplayEvidence {
+  const parsed = readJsonIfExists<{
+    providerRequests?: Array<{
+      roleId?: unknown;
+    }>;
+    evidence?: {
+      cabinetMode?: unknown;
+      cabinetDecision?: unknown;
+      guidedCabinetMode?: unknown;
+      guidedRunnerPreset?: unknown;
+      guidedCycles?: unknown;
+      guidedExecutionAttempts?: unknown;
+      guidedSuccessfulExecutions?: unknown;
+    };
+    checks?: Record<string, unknown>;
+  }>(filePath);
+  const requests = Array.isArray(parsed?.providerRequests) ? parsed.providerRequests : [];
+  const evidence = parsed?.evidence || {};
+  const checks = parsed?.checks || {};
+
+  return {
+    summaryReadable: Boolean(parsed),
+    providerRequests: requests.length,
+    requestRoles: Array.from(new Set(requests.map((request) => stringOrNull(request.roleId)).filter(Boolean))) as string[],
+    cabinetMode: stringOrNull(evidence.cabinetMode),
+    cabinetDecision: stringOrNull(evidence.cabinetDecision),
+    guidedCabinetMode: stringOrNull(evidence.guidedCabinetMode),
+    guidedRunnerPreset: stringOrNull(evidence.guidedRunnerPreset),
+    guidedCycles: numberOrZero(evidence.guidedCycles),
+    guidedExecutionAttempts: numberOrZero(evidence.guidedExecutionAttempts),
+    guidedSuccessfulExecutions: numberOrZero(evidence.guidedSuccessfulExecutions),
     allChecksPassed: Object.values(checks).length > 0 && Object.values(checks).every((value) => value === true)
   };
 }
@@ -932,8 +1148,12 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     `- configured preset evidence: ${summary.checks.configuredPresetEvidenceVerified ? "pass" : "fail"}`,
     `- task entry: ${summary.checks.taskEntryPassed ? "pass" : "fail"}`,
     `- task entry evidence: ${summary.checks.taskEntryEvidenceVerified ? "pass" : "fail"}`,
+    `- guided task entry: ${summary.checks.guidedTaskEntryPassed ? "pass" : "fail"}`,
+    `- guided task entry evidence: ${summary.checks.guidedTaskEntryEvidenceVerified ? "pass" : "fail"}`,
     `- API role smoke: ${summary.checks.apiRoleSmokePassed ? "pass" : "fail"}`,
     `- API role evidence: ${summary.checks.apiRoleSmokeEvidenceVerified ? "pass" : "fail"}`,
+    `- provider replay: ${summary.checks.providerReplayPassed ? "pass" : "fail"}`,
+    `- provider replay evidence: ${summary.checks.providerReplayEvidenceVerified ? "pass" : "fail"}`,
     `- guided CLI: ${summary.checks.guidedCliPassed ? "pass" : "fail"}`,
     `- guided CLI evidence: ${summary.checks.guidedCliEvidenceVerified ? "pass" : "fail"}`,
     `- guided API-role CLI: ${summary.checks.guidedApiCliPassed ? "pass" : "fail"}`,
@@ -958,13 +1178,19 @@ function summaryMarkdown(summary: OpenSourceMvpCheckSummary) {
     "## Evidence",
     "",
     `- gateway auto-work summary: ${summary.evidence.gatewayAutoWorkSummary}`,
+    `- gateway safe runner templates: ${summary.evidence.gatewayAutoWork.presetEnabledPresets.join(", ") || "none"}`,
     `- gateway receipts/evidence/artifacts: ${summary.evidence.gatewayAutoWork.importedReceipts} / ${summary.evidence.gatewayAutoWork.acceptedEvidence} / ${summary.evidence.gatewayAutoWork.verifiedArtifactPaths}`,
     `- configured preset bridge summary: ${summary.evidence.configuredPresetBridgeSummary}`,
     `- configured preset jobs/receipts/evidence/artifacts: ${summary.evidence.configuredPresetBridge.adapterCompletedJobs} / ${summary.evidence.configuredPresetBridge.importedReceipts} / ${summary.evidence.configuredPresetBridge.acceptedEvidence} / ${summary.evidence.configuredPresetBridge.verifiedArtifactPaths}`,
     `- task entry summary: ${summary.evidence.taskEntrySummary}`,
     `- task entry mode/handoff/completion: ${summary.evidence.taskEntry.mode || "unknown"} / ${summary.evidence.taskEntry.handoffTaskFiles} / ${summary.evidence.taskEntry.completion ? "claimed" : "not-claimed"}`,
+    `- guided task entry summary: ${summary.evidence.guidedTaskEntrySummary}`,
+    `- guided task entry cabinet/preset/cycles/receipts: ${summary.evidence.guidedTaskEntry.cabinetMode || "unknown"} / ${summary.evidence.guidedTaskEntry.runnerPreset || "unknown"} / ${summary.evidence.guidedTaskEntry.cycles} / ${summary.evidence.guidedTaskEntry.importedReceipts}`,
     `- API role smoke summary: ${summary.evidence.apiRoleSmokeSummary}`,
     `- API role mode/roles/decision: ${summary.evidence.apiRoleSmoke.mode || "unknown"} / ${summary.evidence.apiRoleSmoke.roles} / ${summary.evidence.apiRoleSmoke.decision || "unknown"}`,
+    `- provider replay summary: ${summary.evidence.providerReplaySummary}`,
+    `- provider replay requests/roles: ${summary.evidence.providerReplay.providerRequests} / ${summary.evidence.providerReplay.requestRoles.join(", ") || "unknown"}`,
+    `- provider replay cabinet/guided/executions: ${summary.evidence.providerReplay.cabinetMode || "unknown"} ${summary.evidence.providerReplay.cabinetDecision || "unknown"} / ${summary.evidence.providerReplay.guidedCabinetMode || "unknown"} ${summary.evidence.providerReplay.guidedCycles} cycles / ${summary.evidence.providerReplay.guidedSuccessfulExecutions}/${summary.evidence.providerReplay.guidedExecutionAttempts}`,
     `- guided CLI summary: ${summary.evidence.guidedCliSummary}`,
     `- guided CLI cabinet/executor/preset/loops/stop: ${summary.evidence.guidedCli.cabinetMode || "unknown"} / ${summary.evidence.guidedCli.executor || "unknown"} / ${summary.evidence.guidedCli.runnerPreset || "unknown"} / ${summary.evidence.guidedCli.cycles}/${summary.evidence.guidedCli.maxLoops} / ${summary.evidence.guidedCli.stopReason || "unknown"}`,
     `- guided API-role CLI summary: ${summary.evidence.guidedApiCliSummary}`,

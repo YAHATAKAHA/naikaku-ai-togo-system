@@ -139,6 +139,7 @@ export function RoleInspector({
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic</option>
             <option value="openrouter">OpenRouter</option>
+            <option value="aliyun">Aliyun DashScope</option>
             <option value="google">Google</option>
             <option value="local">Local</option>
             <option value="custom">Custom</option>

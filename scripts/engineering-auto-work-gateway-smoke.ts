@@ -96,6 +96,8 @@ interface GatewaySmokeSummary {
     presetEnableStatus: number;
     presetEnableResult: string | null;
     presetEnablePreset: string | null;
+    presetEnableTemplates: string[];
+    presetEnabledPresets: string[];
     presetsTotal: number;
     presetsBuiltIn: number;
     presetsConfigured: number;
@@ -122,6 +124,7 @@ interface GatewaySmokeSummary {
     presetsEndpointOk: boolean;
     presetEnableEndpointOk: boolean;
     safePresetTemplateEnabled: boolean;
+    safeCodingRunnerTemplatesEnabled: boolean;
     builtInPresetsAvailable: boolean;
     readinessCapabilityAdvertised: boolean;
     readinessEndpointOk: boolean;
@@ -160,11 +163,16 @@ async function main() {
   try {
     const health = await getJson<{ capabilities?: string[] }>(`${gatewayUrl}/health`);
     const presets = await getJson<RunnerPresetsBody>(`${gatewayUrl}/v1/engineering/runner-presets`);
-    const presetEnable = await postJson<RunnerPresetEnableBody>(
-      `${gatewayUrl}/v1/engineering/runner-presets/enable`,
-      { templateId: "openclaw-local" }
-    );
-    const enabledPresetRegistry = presetEnable.body.registry || presets.body;
+    const safeTemplateIds = ["codex-cli-local", "claude-code-local", "openclaw-local"];
+    const presetEnables: Array<JsonResponse<RunnerPresetEnableBody>> = [];
+    for (const templateId of safeTemplateIds) {
+      presetEnables.push(await postJson<RunnerPresetEnableBody>(
+        `${gatewayUrl}/v1/engineering/runner-presets/enable`,
+        { templateId }
+      ));
+    }
+    const presetEnable = presetEnables[presetEnables.length - 1];
+    const enabledPresetRegistry = presetEnable?.body.registry || presets.body;
     const readiness = await getJson<RunnerReadinessBody>(`${gatewayUrl}/v1/engineering/runner-readiness`);
     const autoWork = await postJson<AutoWorkGatewayBody>(
       `${gatewayUrl}/v1/engineering/auto-work`,
@@ -195,9 +203,15 @@ async function main() {
       cases: {
         healthStatus: health.status,
         presetsStatus: presets.status,
-        presetEnableStatus: presetEnable.status,
-        presetEnableResult: presetEnable.body.status || null,
-        presetEnablePreset: presetEnable.body.preset?.id || null,
+        presetEnableStatus: presetEnables.every((item) => item.status === 200 && item.body.ok === true)
+          ? 200
+          : presetEnable?.status || 0,
+        presetEnableResult: presetEnables.map((item) => item.body.status || "unknown").join(", ") || null,
+        presetEnablePreset: presetEnable?.body.preset?.id || null,
+        presetEnableTemplates: safeTemplateIds,
+        presetEnabledPresets: presetEnables
+          .map((item) => item.body.preset?.id)
+          .filter((id): id is string => Boolean(id)),
         presetsTotal: presetSummary.total || 0,
         presetsBuiltIn: presetSummary.builtIn || 0,
         presetsConfigured: presetSummary.configured || 0,
@@ -222,11 +236,16 @@ async function main() {
         presetsCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-presets")),
         presetEnableCapabilityAdvertised: Boolean(health.body.capabilities?.includes("engineering-runner-preset-enable")),
         presetsEndpointOk: presets.status === 200,
-        presetEnableEndpointOk: presetEnable.status === 200 && presetEnable.body.ok === true,
-        safePresetTemplateEnabled: presetEnable.body.preset?.id === "openclaw-local" &&
+        presetEnableEndpointOk: presetEnables.length === safeTemplateIds.length &&
+          presetEnables.every((item) => item.status === 200 && item.body.ok === true),
+        safePresetTemplateEnabled: presetEnable?.body.preset?.id === "openclaw-local" &&
           presetEnable.body.preset?.source === "file" &&
           presetTemplates.some((template) => template.id === "openclaw-local" && template.enabled === true) &&
           presetItems.some((preset) => preset.id === "openclaw-local" && preset.source === "file"),
+        safeCodingRunnerTemplatesEnabled: ["codex-cli-local", "claude-code-local"].every((id) =>
+          presetTemplates.some((template) => template.id === id && template.enabled === true) &&
+          presetItems.some((preset) => preset.id === id && preset.source === "file")
+        ),
         builtInPresetsAvailable: ["prepared", "fixture", "openhands"].every((id) =>
           presetItems.some((preset) => preset.id === id && preset.availableInWorkbench === true)
         ),
@@ -411,7 +430,7 @@ function printSummary(summary: GatewaySmokeSummary) {
   console.log(`Output: ${summary.outputDir}`);
   console.log(`Gateway: ${summary.gatewayUrl}`);
   console.log(`Runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured`);
-  console.log(`Preset enable: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnablePreset || "unknown"}`);
+  console.log(`Preset enable: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnabledPresets.join(", ") || "unknown"}`);
   console.log(`Runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessLaunchable} launchable`);
   console.log(`Auto-work: ${summary.cases.autoWorkPreset || "unknown"} / ${summary.cases.autoWorkMode || "unknown"}`);
   console.log(`Receipts: ${summary.cases.importedReceipts}, evidence: ${summary.cases.acceptedEvidence}, artifacts: ${summary.cases.verifiedArtifactPaths}`);
@@ -431,7 +450,8 @@ function summaryMarkdown(summary: GatewaySmokeSummary) {
     `- health: HTTP ${summary.cases.healthStatus}`,
     `- runner-presets: HTTP ${summary.cases.presetsStatus}`,
     `- runner-preset-enable: HTTP ${summary.cases.presetEnableStatus}`,
-    `- runner-preset-enable result: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnablePreset || "unknown"}`,
+    `- runner-preset-enable result: ${summary.cases.presetEnableResult || "unknown"} / ${summary.cases.presetEnabledPresets.join(", ") || "unknown"}`,
+    `- runner-preset-enable templates: ${summary.cases.presetEnableTemplates.join(", ")}`,
     `- runner presets: ${summary.cases.presetsBuiltIn} built-in, ${summary.cases.presetsConfigured} configured, ${summary.cases.presetsTotal} total`,
     `- runner-readiness: HTTP ${summary.cases.readinessStatus}`,
     `- runner readiness: ${summary.cases.readinessReady}/${summary.cases.readinessTotal} ready, ${summary.cases.readinessDetected} detected, ${summary.cases.readinessLaunchable} launchable`,

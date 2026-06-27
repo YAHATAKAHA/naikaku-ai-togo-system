@@ -29,6 +29,7 @@ interface CabinetApiRoleSmokeOptions {
   endpoint: string | null;
   model: string | null;
   apiKeyAlias: string | null;
+  maxTokens: number | null;
   mock: boolean;
   generatedAt: string;
   help: boolean;
@@ -193,10 +194,10 @@ function providerConfigFrom(options: CabinetApiRoleSmokeOptions): ProviderConfig
     endpoint: options.endpoint || defaultEndpoint(provider),
     model: options.mock
       ? "mock-role-model"
-      : options.model || process.env.NAIKAKU_ROLE_MODEL || process.env.OPENAI_MODEL || "",
+      : options.model || defaultModel(provider),
     apiKeyAlias: options.mock ? "" : options.apiKeyAlias || defaultApiKeyAlias(provider),
-    temperature: provider === "custom" ? 0.2 : 0.25,
-    maxTokens: 1400
+    temperature: provider === "custom" || provider === "aliyun" ? 0.2 : 0.25,
+    maxTokens: options.maxTokens || (provider === "aliyun" ? 512 : 1400)
   };
 }
 
@@ -204,15 +205,22 @@ function defaultEndpoint(provider: ProviderKind) {
   if (provider === "openai") return "https://api.openai.com/v1/responses";
   if (provider === "anthropic") return "https://api.anthropic.com/v1/messages";
   if (provider === "openrouter") return "https://openrouter.ai/api/v1/chat/completions";
+  if (provider === "aliyun") return process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
   if (provider === "google") return "https://generativelanguage.googleapis.com/v1beta/models";
   if (provider === "local") return "http://localhost:8787/v1/evaluate";
   return "http://localhost:8790/chat";
+}
+
+function defaultModel(provider: ProviderKind) {
+  if (provider === "aliyun") return process.env.NAIKAKU_ROLE_MODEL || process.env.DASHSCOPE_MODEL || "qwen-turbo";
+  return process.env.NAIKAKU_ROLE_MODEL || process.env.OPENAI_MODEL || "";
 }
 
 function defaultApiKeyAlias(provider: ProviderKind) {
   if (provider === "openai") return "OPENAI_API_KEY";
   if (provider === "anthropic") return "ANTHROPIC_API_KEY";
   if (provider === "openrouter") return "OPENROUTER_API_KEY";
+  if (provider === "aliyun") return "DASHSCOPE_API_KEY";
   if (provider === "google") return "GOOGLE_API_KEY";
   if (provider === "local") return "NAIKAKU_LOCAL_GATEWAY_TOKEN";
   return "";
@@ -580,6 +588,7 @@ function parseArgs(args: string[]): CabinetApiRoleSmokeOptions {
     endpoint: null,
     model: null,
     apiKeyAlias: null,
+    maxTokens: null,
     mock: false,
     generatedAt: new Date().toISOString(),
     help: false
@@ -605,7 +614,12 @@ function parseArgs(args: string[]): CabinetApiRoleSmokeOptions {
       options.model = requireValue(args, index, arg);
       index += 1;
     } else if (arg === "--api-key-alias") {
-      options.apiKeyAlias = requireValue(args, index, arg);
+      const alias = requireValue(args, index, arg);
+      assertEnvAlias(alias, arg);
+      options.apiKeyAlias = alias;
+      index += 1;
+    } else if (arg === "--max-tokens") {
+      options.maxTokens = parsePositiveInt(requireValue(args, index, arg), arg);
       index += 1;
     } else if (arg === "--mock") {
       options.mock = true;
@@ -621,10 +635,24 @@ function parseArgs(args: string[]): CabinetApiRoleSmokeOptions {
 }
 
 function parseProvider(value: string): ProviderKind {
-  if (["openai", "anthropic", "openrouter", "google", "local", "custom"].includes(value)) {
+  if (["openai", "anthropic", "openrouter", "aliyun", "google", "local", "custom"].includes(value)) {
     return value as ProviderKind;
   }
-  throw new Error("--provider must be one of openai, anthropic, openrouter, google, local, custom.");
+  throw new Error("--provider must be one of openai, anthropic, openrouter, aliyun, google, local, custom.");
+}
+
+function assertEnvAlias(value: string, name: string) {
+  if (!/^[A-Z][A-Z0-9_]*$/.test(value)) {
+    throw new Error(`${name} must be an environment variable name, not a raw secret.`);
+  }
+}
+
+function parsePositiveInt(value: string, name: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+  return parsed;
 }
 
 function requireValue(args: string[], index: number, name: string) {
@@ -684,14 +712,16 @@ function printHelp() {
     "  npm run cabinet:api-role-smoke -- --mock",
     "  npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias OPENAI_API_KEY",
     "  npm run cabinet:api-role-smoke -- --provider openrouter --model openai/<model> --api-key-alias OPENROUTER_API_KEY",
+    "  npm run cabinet:api-role-smoke -- --provider aliyun --model qwen-turbo --api-key-alias DASHSCOPE_API_KEY",
     "",
     "Options:",
     "  --mission, -m <text>       Mission text. Positional text also appends to the default mission.",
     "  --out <dir>                Output directory under output/. Default: output/cabinet-api-role-smoke.",
-    "  --provider <kind>          openai, anthropic, openrouter, google, local, custom. Default: openai.",
+    "  --provider <kind>          openai, anthropic, openrouter, aliyun, google, local, custom. Default: openai.",
     "  --endpoint <url>           Override provider endpoint.",
-    "  --model <name>             Required for live provider mode unless NAIKAKU_ROLE_MODEL or OPENAI_MODEL is set.",
+    "  --model <name>             Required for live provider mode unless a provider-specific default/env model is set.",
     "  --api-key-alias <ENV>      Environment variable name that contains the key. Raw keys are rejected by readiness.",
+    "  --max-tokens <n>           Response token cap. Use a small value for paid live smoke tests.",
     "  --mock                     Run deterministic local role outputs without network.",
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",

@@ -23,6 +23,7 @@ const providerOptions: ProviderKind[] = [
   "openai",
   "anthropic",
   "openrouter",
+  "aliyun",
   "google",
   "local",
   "custom"

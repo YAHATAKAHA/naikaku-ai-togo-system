@@ -86,7 +86,7 @@ To answer "does this actually automate anything?" from a fresh checkout, run the
 npm run open-source:mvp-check
 ```
 
-It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, proves separated API-role governance in mock mode, proves both local and API-style guided runner loops, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
+It builds the app, runs targeted MVP tests, starts the local gateway on a temporary port, exercises `/v1/engineering/auto-work` through the fixture adapter, runs a configured CLI preset bridge, proves separated API-role governance in mock mode, starts a local HTTP replay provider to prove real provider-call plumbing without an API key, proves both local and API-style guided runner loops, generates and smoke-tests a local runner wrapper kit, and runs the fixture coding loop that observes a failing generated repository test, patches the fixture source, reruns the test, and verifies receipt/evidence/artifact audit output. It writes `output/open-source-mvp-check/summary.md` and `summary.json`. This is the quickest no-provider proof that Naikaku is more than prompt copying; it still does not claim real OpenClaw/OpenHands/Hermes execution, arbitrary Mac desktop control, production deployment, Git push, or real backlog completion.
 
 To enter one task from the command line without learning the whole pipeline:
 
@@ -94,7 +94,11 @@ To enter one task from the command line without learning the whole pipeline:
 npm run naikaku:task -- "Implement the settings panel and run npm test"
 ```
 
-By default this prepares supervised handoff files and evidence boundaries without starting external tools. Use `--self-test` to run the deterministic fixture automation path, or `--runner-preset <id> --adapter-ready` after installing and approving a fixed local CLI such as OpenHands, OpenClaw, Hammerspoon, browser-use, Playwright, MCP, or a Hermes-style wrapper.
+By default this prepares supervised handoff files and evidence boundaries without starting external tools. Use `--self-test` to run the deterministic fixture automation path, `--guided --cabinet-mode api-mock --max-loops 2 --runner-preset fixture` to let the cabinet vote, execute, and continue from the same short entry, or `--runner-preset <id> --adapter-ready` after installing and approving a fixed local CLI such as OpenHands, OpenClaw, Hammerspoon, browser-use, Playwright, MCP, or a Hermes-style wrapper.
+
+```bash
+npm run naikaku:task -- --guided --cabinet-mode api-mock --max-loops 2 --runner-preset fixture "Vote, execute, and continue this task"
+```
 
 To prove the same one-task entry can call a real AI coding runner without handing it the whole repository:
 
@@ -135,12 +139,14 @@ To prove the same role split through a model-provider API instead of Codex CLI:
 
 ```bash
 npm run cabinet:api-role-smoke -- --mock
+npm run provider:replay-smoke
 OPENAI_MODEL=<model> OPENAI_API_KEY=... npm run cabinet:api-role-smoke:openai "Review this engineering mission"
 OPENAI_API_KEY=... npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias OPENAI_API_KEY "Review this engineering mission"
 OPENROUTER_API_KEY=... npm run cabinet:api-role-smoke -- --provider openrouter --model openai/<model> --api-key-alias OPENROUTER_API_KEY
+DASHSCOPE_API_KEY=... npm run provider:aliyun-smoke
 ```
 
-The mock command is deterministic and no-network for CI. Live mode calls Prime Minister, Critic, and Supervisor as separate provider calls, parses their JSON, writes `output/cabinet-api-role-smoke/summary.json`, and then runs Naikaku's local cabinet decision. It stores only the environment-variable alias, not the raw secret. This is the direct API proof for "several supervised roles first"; execution still moves through `engineering:guided`, `engineering:auto-work`, Codex/OpenHands/OpenClaw/Hammerspoon presets, and receipt/artifact audit before implementation can be claimed.
+The mock command is deterministic and no-network for CI. `provider:replay-smoke` starts a local HTTP replay provider, then runs the live-provider path and a guided fixture execution against it, so contributors can see real HTTP role separation without bringing an OpenAI/OpenRouter/DashScope key. `provider:aliyun-smoke` is an optional low-token live smoke for Aliyun DashScope/Qwen through the OpenAI-compatible endpoint; keep it out of CI and use only a disposable quota key such as `DASHSCOPE_API_KEY`. Live external-provider mode calls Prime Minister, Critic, and Supervisor as separate provider calls, parses their JSON, writes `output/cabinet-api-role-smoke/summary.json`, and then runs Naikaku's local cabinet decision. It stores only the environment-variable alias, not the raw secret. This is the direct API proof for "several supervised roles first"; execution still moves through `engineering:guided`, `engineering:auto-work`, Codex/Claude/OpenHands/OpenClaw/Hammerspoon presets, and receipt/artifact audit before implementation can be claimed.
 
 To prove Codex can act as a governed implementation runner on a generated toy project:
 
@@ -211,11 +217,11 @@ npm run gateway
 npm run dev
 ```
 
-Enter the task in the engineering mission box, set `Auto loops` to 1, 2, or 3, choose the cabinet mode, then click `Vote and execute` to run the cabinet first and automatically continue into the governed runner. `Local cabinet` is the no-provider path, `Separated API-role mock` proves the role split without network, and `Separated API-role live` lets the page send provider/model/endpoint/API-key-alias settings to `/v1/engineering/guided` so the gateway can call OpenAI/OpenRouter/Anthropic/Gemini/custom roles before execution. The browser sends aliases such as `OPENAI_API_KEY`, not raw secrets. Each loop re-runs the cabinet vote before execution; `ship`, `block`, a failed execution proof, or the configured loop limit stops the unattended run. Use `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen without the cabinet step, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. These paths write under `output/` and do not modify the main repository.
+Enter the task in the engineering mission box, set `Auto loops` to 1, 2, or 3, choose the cabinet mode, then click `Vote and execute` to run the cabinet first and automatically continue into the governed runner. `Local cabinet` is the no-provider path, `Separated API-role mock` proves the role split without network, and `Separated API-role live` lets the page send provider/model/endpoint/API-key-alias settings to `/v1/engineering/guided` so the gateway can call OpenAI/OpenRouter/Anthropic/Aliyun DashScope/Gemini/custom roles before execution. The browser sends aliases such as `OPENAI_API_KEY` or `DASHSCOPE_API_KEY`, not raw secrets. Each loop re-runs the cabinet vote before execution; `ship`, `block`, a failed execution proof, or the configured loop limit stops the unattended run. Use `Fixture self-test` to prove the local no-provider auto-work loop before installing any external runner. To prove a real AI coder can be governed from the same screen without the cabinet step, click `Let Codex handle a tiny job`; the browser calls `/v1/engineering/codex-smoke`, the gateway runs the fixed `codex:engineer-smoke` command, and the result shows Codex transcript, diff, receipt, changed-file count, and baseline/final test status. These paths write under `output/` and do not modify the main repository.
 
 The browser calls the local gateway endpoint `/v1/engineering/auto-work` for fixture and preset runners, starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository.
 
-For external tools, click `Check runners` to inspect local CLI/app candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtimes, choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, or enable the safe `OpenClaw local agent` template from the runner check panel. Then click `Start auto work`. Runner readiness detection and template enablement do not install tools, accept licenses, expose arbitrary shell, grant push/deploy, grant host-secret access, or allow unbounded Mac control. The operator still confirms adapter readiness before launching any external command.
+For external tools, click `Check runners` to inspect local CLI/app candidates such as Codex CLI, Claude Code, OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtimes, choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, or enable safe templates such as `Codex CLI local runner`, `Claude Code local runner`, and `OpenClaw local agent` from the runner check panel. Then click `Start auto work`. Runner readiness detection and template enablement do not install tools, accept licenses, expose arbitrary shell, grant push/deploy, grant host-secret access, or allow unbounded Mac control. The operator still confirms adapter readiness before launching any external command.
 
 To make Naikaku act as a safe Workbench wrapper around another local open-source CLI, use the UI template buttons or configure named presets on the gateway host. UI-enabled templates are written to `.naikaku-data/engineering-runner-presets.json` by default. Set `NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE` to move that file. The browser can select the preset id after `Check runners`, but cannot submit arbitrary shell:
 
@@ -345,17 +351,20 @@ npm run engineering:guided-api-smoke # prove separated API-style roles can autho
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
-npm run naikaku:task # one-mission task entry for prepare, self-test, codex-smoke, or fixed runner-preset modes
+npm run naikaku:task # one-mission task entry for prepare, guided, self-test, codex-smoke, or fixed runner-preset modes
+npm run naikaku:task-guided-smoke # prove the short task entry can vote, execute, continue, and return evidence
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
+npm run provider:replay-smoke # start a local HTTP replay provider, run separated live-provider roles, then guided fixture execution
 npm run engineering:guided-openai # call OpenAI-backed cabinet roles, then run a bounded fixture runner after approval
-npm run open-source:mvp-check # build, targeted tests, gateway auto-work, API role smoke, guided loops, runner kit, and fixture coding loop
+npm run open-source:mvp-check # build, targeted tests, gateway auto-work, API role smoke/replay, guided loops, runner kit, and fixture coding loop
 npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
 npm run local-tools:smoke # generate a tiny cabinet-vote project and probe local OpenClaw/Hammerspoon adapters
 npm run cabinet:codex-smoke # call Codex CLI as separate cabinet roles, then vote locally
 npm run cabinet:api-role-smoke # call provider API or mock as separate cabinet roles, then vote locally
 npm run cabinet:api-role-smoke:mock # no-network provider-role proof for CI and contributor smoke tests
 npm run cabinet:api-role-smoke:openai # call OpenAI as Prime Minister, Critic, and Supervisor when OPENAI_API_KEY and model are set
+npm run provider:aliyun-smoke # call Aliyun DashScope/Qwen as Prime Minister, Critic, and Supervisor when DASHSCOPE_API_KEY is set
 npm run codex:engineer-smoke # let Codex patch a generated tiny project and return local evidence
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts

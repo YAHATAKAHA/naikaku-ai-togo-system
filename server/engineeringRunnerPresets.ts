@@ -132,6 +132,67 @@ const BUILT_IN_PRESETS: EngineeringRunnerPreset[] = [
 
 const PRESET_TEMPLATES: Array<Omit<EngineeringRunnerPresetTemplate, "enabled"> & { preset: RawConfiguredPreset }> = [
   {
+    id: "codex-cli-local",
+    label: "Codex CLI local runner",
+    adapterId: "codex-cli-runner",
+    command: "codex",
+    commandCandidates: ["codex"],
+    summary: "Run Codex CLI non-interactively against one scoped Naikaku task file.",
+    nextAction: "Authenticate Codex CLI, review the scoped worktree, then approve one workspace-write run.",
+    preset: {
+      id: "codex-cli-local",
+      label: "Codex CLI local runner",
+      adapterId: "codex-cli-runner",
+      command: "codex",
+      args: [
+        "-a",
+        "never",
+        "exec",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--sandbox",
+        "workspace-write",
+        "Read and execute this scoped Naikaku task file: {taskPath}. Write the required receipt to {receiptDraftPath}. Do not commit, push, deploy, send external messages, read host secrets, or expand beyond the task file."
+      ],
+      commandCandidates: ["codex"],
+      nextAction: "Run Codex CLI against one scoped Naikaku task file and import the returned receipt."
+    }
+  },
+  {
+    id: "claude-code-local",
+    label: "Claude Code local runner",
+    adapterId: "claude-code-runner",
+    command: "claude",
+    commandCandidates: ["claude"],
+    summary: "Run Claude Code in non-interactive print mode against one scoped Naikaku task file.",
+    nextAction: "Authenticate Claude Code, review allowed tools, then approve one scoped local run.",
+    preset: {
+      id: "claude-code-local",
+      label: "Claude Code local runner",
+      adapterId: "claude-code-runner",
+      command: "claude",
+      args: [
+        "--print",
+        "--output-format",
+        "json",
+        "--permission-mode",
+        "auto",
+        "--allowedTools",
+        "Read,Edit,MultiEdit,Write,Bash(npm *),Bash(node *),Bash(git diff *),Bash(git status *)",
+        "--disallowedTools",
+        "Bash(git push *),Bash(git commit *),Bash(curl *),Bash(ssh *),Bash(open *)",
+        "--no-chrome",
+        "--no-session-persistence",
+        "--append-system-prompt",
+        "You are a Naikaku implementation runner. Use only the scoped task file and approved worktree. Do not commit, push, deploy, send external messages, read host secrets, or expand permissions.",
+        "Read and execute this scoped Naikaku task file: {taskPath}. Write the required receipt to {receiptDraftPath} and return a concise JSON result."
+      ],
+      commandCandidates: ["claude"],
+      nextAction: "Run Claude Code against one scoped Naikaku task file and import the returned receipt."
+    }
+  },
+  {
     id: "openclaw-local",
     label: "OpenClaw local agent",
     adapterId: "openclaw-desktop-runner",

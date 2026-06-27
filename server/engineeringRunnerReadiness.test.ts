@@ -87,9 +87,27 @@ describe("engineering runner readiness", () => {
     expect(openClaw?.detectedCommands).toEqual(["openclaw"]);
   });
 
-  it("detects Codex and Claude CLI candidates without making them launchable until wrapped", () => {
+  it("detects Codex and Claude CLI candidates through safe local templates", () => {
     const report = buildEngineeringRunnerReadiness({
-      runnerPresetRegistry: builtInPresetRegistry(),
+      runnerPresetRegistry: buildEngineeringRunnerPresetRegistry({
+        envValue: JSON.stringify([
+          {
+            id: "codex-cli-local",
+            label: "Codex CLI local runner",
+            adapterId: "codex-cli-runner",
+            command: "codex",
+            args: ["-a", "never", "exec", "--sandbox", "workspace-write", "Read {taskPath}"]
+          },
+          {
+            id: "claude-code-local",
+            label: "Claude Code local runner",
+            adapterId: "claude-code-runner",
+            command: "claude",
+            args: ["--print", "--permission-mode", "auto", "Read {taskPath}"]
+          }
+        ]),
+        configPath: ""
+      }),
       commandExists: (command) => ["npm", "npm.cmd", "codex", "claude"].includes(command),
       pathExists: () => false
     });
@@ -99,11 +117,12 @@ describe("engineering runner readiness", () => {
 
     expect(codex?.detectedCommands).toEqual(["codex"]);
     expect(claude?.detectedCommands).toEqual(["claude"]);
-    expect(codex?.status).toBe("detected-needs-adapter");
-    expect(claude?.status).toBe("detected-needs-adapter");
-    expect(codex?.canLaunchFromWorkbench).toBe(false);
-    expect(claude?.canLaunchFromWorkbench).toBe(false);
-    expect(codex?.nextAction).toContain("scoped command preset");
+    expect(codex?.status).toBe("detected-needs-approval");
+    expect(claude?.status).toBe("detected-needs-approval");
+    expect(codex?.canLaunchFromWorkbench).toBe(true);
+    expect(claude?.canLaunchFromWorkbench).toBe(true);
+    expect(codex?.workbenchPreset).toBe("codex-cli-local");
+    expect(claude?.workbenchPreset).toBe("claude-code-local");
   });
 });
 
