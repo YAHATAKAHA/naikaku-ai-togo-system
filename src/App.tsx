@@ -73,6 +73,8 @@ import {
   serializeCodingAgentDispatchManifestMarkdownExport,
   serializeCodingAgentDispatchSimulationExport,
   serializeCodingAgentDispatchSimulationMarkdownExport,
+  serializeCodingAgentRunnerInvocationExport,
+  serializeCodingAgentRunnerInvocationMarkdownExport,
   serializeCodingAgentRunnerManifestExport,
   serializeCodingAgentRunnerManifestMarkdownExport,
   serializeCodingAgentRunnerSelfTestExport,
@@ -113,6 +115,7 @@ import { buildCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArc
 import { auditCodingAgentDispatchArchive } from "./domain/codingAgentDispatchArchiveAudit";
 import { buildCodingAgentDispatchManifest } from "./domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "./domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerInvocationPackage } from "./domain/codingAgentRunnerInvocation";
 import { buildCodingAgentRunnerManifest } from "./domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "./domain/codingAgentRunnerSelfTest";
 import { buildCodingAgentSandboxRunnerPreflight } from "./domain/codingAgentSandboxRunnerPreflight";
@@ -146,6 +149,7 @@ import {
   createCodingAgentBriefsViaGateway,
   createCodingAgentDispatchManifestViaGateway,
   createCodingAgentDispatchSimulationViaGateway,
+  createCodingAgentRunnerInvocationViaGateway,
   createCodingAgentRunnerManifestViaGateway,
   createCodingAgentRunnerSelfTestViaGateway,
   createCodingAgentSandboxRunnerPreflightViaGateway,
@@ -185,6 +189,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -288,6 +293,9 @@ export function App() {
   const [codingAgentRunnerManifest, setCodingAgentRunnerManifest] = useState<CodingAgentRunnerManifest | null>(null);
   const [codingAgentRunnerManifestLink, setCodingAgentRunnerManifestLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentRunnerManifestMarkdownLink, setCodingAgentRunnerManifestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerInvocation, setCodingAgentRunnerInvocation] = useState<CodingAgentRunnerInvocationPackage | null>(null);
+  const [codingAgentRunnerInvocationLink, setCodingAgentRunnerInvocationLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerInvocationMarkdownLink, setCodingAgentRunnerInvocationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentRunnerSelfTest, setCodingAgentRunnerSelfTest] = useState<CodingAgentRunnerSelfTest | null>(null);
   const [codingAgentRunnerSelfTestLink, setCodingAgentRunnerSelfTestLink] = useState<{ href: string; fileName: string } | null>(null);
   const [codingAgentRunnerSelfTestMarkdownLink, setCodingAgentRunnerSelfTestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -735,6 +743,22 @@ export function App() {
 
   useEffect(() => {
     return () => {
+      if (codingAgentRunnerInvocationLink) {
+        URL.revokeObjectURL(codingAgentRunnerInvocationLink.href);
+      }
+    };
+  }, [codingAgentRunnerInvocationLink]);
+
+  useEffect(() => {
+    return () => {
+      if (codingAgentRunnerInvocationMarkdownLink) {
+        URL.revokeObjectURL(codingAgentRunnerInvocationMarkdownLink.href);
+      }
+    };
+  }, [codingAgentRunnerInvocationMarkdownLink]);
+
+  useEffect(() => {
+    return () => {
       if (codingAgentRunnerSelfTestLink) {
         URL.revokeObjectURL(codingAgentRunnerSelfTestLink.href);
       }
@@ -1091,6 +1115,7 @@ export function App() {
     setCodingAgentDispatchArchiveAudit(null);
     setCodingAgentDispatchSimulation(null);
     setCodingAgentRunnerManifest(null);
+    setCodingAgentRunnerInvocation(null);
     setCodingAgentRunnerSelfTest(null);
     setCodingAgentSandboxRunnerPreflight(null);
     setCodingAgentSandboxRunnerReport(null);
@@ -1133,6 +1158,14 @@ export function App() {
     if (codingAgentRunnerManifestMarkdownLink) {
       URL.revokeObjectURL(codingAgentRunnerManifestMarkdownLink.href);
       setCodingAgentRunnerManifestMarkdownLink(null);
+    }
+    if (codingAgentRunnerInvocationLink) {
+      URL.revokeObjectURL(codingAgentRunnerInvocationLink.href);
+      setCodingAgentRunnerInvocationLink(null);
+    }
+    if (codingAgentRunnerInvocationMarkdownLink) {
+      URL.revokeObjectURL(codingAgentRunnerInvocationMarkdownLink.href);
+      setCodingAgentRunnerInvocationMarkdownLink(null);
     }
     if (codingAgentRunnerSelfTestLink) {
       URL.revokeObjectURL(codingAgentRunnerSelfTestLink.href);
@@ -2620,6 +2653,26 @@ export function App() {
     setCodingAgentRunnerManifestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
   }
 
+  function createCodingAgentRunnerInvocationDownload(report: CodingAgentRunnerInvocationPackage) {
+    const blob = new Blob([serializeCodingAgentRunnerInvocationExport(report)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const markdownBlob = new Blob([serializeCodingAgentRunnerInvocationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownUrl = URL.createObjectURL(markdownBlob);
+    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const fileName = `naikaku-coding-agent-runner-invocation-${runSlug}-${report.operatorLocale}.json`;
+    const markdownFileName = `naikaku-coding-agent-runner-invocation-${runSlug}-${report.operatorLocale}.md`;
+
+    if (codingAgentRunnerInvocationLink) {
+      URL.revokeObjectURL(codingAgentRunnerInvocationLink.href);
+    }
+    if (codingAgentRunnerInvocationMarkdownLink) {
+      URL.revokeObjectURL(codingAgentRunnerInvocationMarkdownLink.href);
+    }
+
+    setCodingAgentRunnerInvocationLink({ href: url, fileName });
+    setCodingAgentRunnerInvocationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+  }
+
   function createCodingAgentRunnerSelfTestDownload(report: CodingAgentRunnerSelfTest) {
     const blob = new Blob([serializeCodingAgentRunnerSelfTestExport(report)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2899,6 +2952,11 @@ export function App() {
       ]));
   }
 
+  function invocationBasePathForRunnerManifest(report: CodingAgentRunnerManifest) {
+    const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
+    return `output/coding-agent-runner-invocation/${runSlug}-${report.operatorLocale}/invocations`;
+  }
+
   async function exportCodingAgentDispatchManifest() {
     const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
@@ -2954,6 +3012,21 @@ export function App() {
     } catch (error) {
       runnerManifestGatewayError = error instanceof Error ? error.message : "unknown";
     }
+    const invocationBasePath = invocationBasePathForRunnerManifest(runnerManifest);
+    let runnerInvocation = buildCodingAgentRunnerInvocationPackage({
+      manifest: runnerManifest,
+      invocationBasePath,
+      generatedAt: runnerManifest.generatedAt
+    });
+    let runnerInvocationSource: "gateway" | "local" = "local";
+    let runnerInvocationGatewayError: string | null = null;
+
+    try {
+      runnerInvocation = await createCodingAgentRunnerInvocationViaGateway(runnerManifest, invocationBasePath);
+      runnerInvocationSource = "gateway";
+    } catch (error) {
+      runnerInvocationGatewayError = error instanceof Error ? error.message : "unknown";
+    }
     let runnerSelfTest = buildCodingAgentRunnerSelfTest({
       manifest: runnerManifest,
       generatedAt: runnerManifest.generatedAt
@@ -2977,6 +3050,7 @@ export function App() {
     setCodingAgentDispatchArchiveAudit(archiveAudit);
     setCodingAgentDispatchSimulation(simulation);
     setCodingAgentRunnerManifest(runnerManifest);
+    setCodingAgentRunnerInvocation(runnerInvocation);
     setCodingAgentRunnerSelfTest(runnerSelfTest);
     if (!codingAgentSessionBundle) {
       createCodingAgentSessionBundleDownload(bundle, false);
@@ -2989,6 +3063,7 @@ export function App() {
     createCodingAgentDispatchArchiveAuditDownload(archiveAudit);
     createCodingAgentDispatchSimulationDownload(simulation);
     createCodingAgentRunnerManifestDownload(runnerManifest);
+    createCodingAgentRunnerInvocationDownload(runnerInvocation);
     createCodingAgentRunnerSelfTestDownload(runnerSelfTest);
     const sandboxRunnerPreflightResult = await prepareCodingAgentSandboxRunnerPreflight({
       bundle,
@@ -3032,6 +3107,11 @@ export function App() {
         dispatchSimulationBlocked: simulation.summary.blocked,
         runnerManifest: runnerManifest.decision,
         runnerTasks: runnerManifest.summary.runnerTasks,
+        runnerInvocation: runnerInvocation.decision,
+        runnerInvocationReady: runnerInvocation.summary.readyInvocations,
+        runnerInvocationFiles: runnerInvocation.summary.invocationFiles,
+        runnerInvocationSource,
+        runnerInvocationGatewayError,
         runnerSelfTest: runnerSelfTest.decision,
         runnerSelfTestWouldRun: runnerSelfTest.summary.wouldRun,
         sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight.decision,
@@ -3100,6 +3180,24 @@ export function App() {
         unsafePaths: runnerManifest.summary.unsafePaths,
         source: runnerManifestSource,
         gatewayError: runnerManifestGatewayError
+      }
+    });
+    recordAudit({
+      type: "development.coding_sessions.runner_invocation_prepared",
+      severity: runnerInvocation.decision === "package-ready" ? "success" : runnerInvocation.decision === "needs-review" ? "warning" : "error",
+      summary: `Coding agent runner invocation package prepared: ${runnerInvocation.decision}.`,
+      runId: runnerInvocation.runId,
+      metadata: {
+        readyInvocations: runnerInvocation.summary.readyInvocations,
+        heldInvocations: runnerInvocation.summary.heldInvocations,
+        blockedInvocations: runnerInvocation.summary.blockedInvocations,
+        invocationFiles: runnerInvocation.summary.invocationFiles,
+        commandContracts: runnerInvocation.summary.commandContracts,
+        expectedEvidenceArtifacts: runnerInvocation.summary.expectedEvidenceArtifacts,
+        receiptDraftPaths: runnerInvocation.summary.receiptDraftPaths,
+        unsafePaths: runnerInvocation.summary.unsafePaths,
+        source: runnerInvocationSource,
+        gatewayError: runnerInvocationGatewayError
       }
     });
     recordAudit({
@@ -3936,6 +4034,7 @@ export function App() {
             dispatchArchiveAudit={codingAgentDispatchArchiveAudit}
             dispatchSimulation={codingAgentDispatchSimulation}
             runnerManifest={codingAgentRunnerManifest}
+            runnerInvocation={codingAgentRunnerInvocation}
             runnerSelfTest={codingAgentRunnerSelfTest}
             sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
             sandboxRunnerReport={codingAgentSandboxRunnerReport}
@@ -3956,6 +4055,8 @@ export function App() {
             dispatchSimulationMarkdownLink={codingAgentDispatchSimulationMarkdownLink}
             runnerManifestLink={codingAgentRunnerManifestLink}
             runnerManifestMarkdownLink={codingAgentRunnerManifestMarkdownLink}
+            runnerInvocationLink={codingAgentRunnerInvocationLink}
+            runnerInvocationMarkdownLink={codingAgentRunnerInvocationMarkdownLink}
             runnerSelfTestLink={codingAgentRunnerSelfTestLink}
             runnerSelfTestMarkdownLink={codingAgentRunnerSelfTestMarkdownLink}
             sandboxRunnerPreflightLink={codingAgentSandboxRunnerPreflightLink}

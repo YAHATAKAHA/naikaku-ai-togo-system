@@ -957,6 +957,44 @@ Response:
 
 Ready tasks require safe prompt paths, safe receipt draft paths, pending command results, expected evidence paths, and stop conditions. Held or production-evidence-held sessions must remain out of the runner task queue.
 
+### `POST /v1/development/coding-briefs/runner-invocation`
+
+Consumes a runner manifest and prepares one runner invocation package plus one invocation file contract per ready task. This endpoint does not execute commands, read prompt contents, open browsers, control desktops, call MCP tools, call providers, edit files, commit, push, deploy, or claim implementation evidence. It only turns a runner-ready manifest into governed handoff files that future Codex/OpenClaw-style coding runners can consume inside a sandbox.
+
+```json
+{
+  "manifest": {
+    "schema": "naikaku.coding-agent-runner-manifest.v1",
+    "decision": "runner-ready",
+    "items": []
+  },
+  "invocationBasePath": "output/coding-agent-runner-invocation/run-ja/invocations"
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-runner-invocation-package.v1",
+  "mode": "runner-invocation-packaging",
+  "decision": "package-ready",
+  "summary": {
+    "readyInvocations": 8,
+    "invocationFiles": 8,
+    "commandContracts": 16,
+    "receiptDraftPaths": 8,
+    "unsafePaths": 0
+  },
+  "honestyClaim": {
+    "level": "runner-invocation-packaging",
+    "claim": "This package prepares runner-consumable coding-agent invocation files without executing implementation work."
+  }
+}
+```
+
+Ready tasks receive safe JSON/Markdown invocation file paths, prompt paths, receipt draft paths, pending command contracts, expected transcript paths, evidence targets, runner instructions, and stop conditions. Held or production-evidence-held tasks remain visible in the package summary but must receive zero executable invocation files.
+
 ### `POST /v1/development/coding-briefs/runner-self-test`
 
 Consumes a runner manifest and simulates the local runner preflight contract. This endpoint does not read prompt file contents, execute commands, open browsers, control desktops, call MCP tools, call providers, edit files, commit, push, deploy, or claim implementation evidence. It only reports whether a governed runner could consume the manifest and which tasks would stay held or blocked.

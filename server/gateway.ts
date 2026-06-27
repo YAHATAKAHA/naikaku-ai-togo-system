@@ -9,6 +9,7 @@ import { buildCodingAgentBriefReview } from "../src/domain/codingAgentBriefRevie
 import { buildCodingAgentBriefs } from "../src/domain/codingAgentBriefs";
 import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispatchManifest";
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
+import { buildCodingAgentRunnerInvocationPackage } from "../src/domain/codingAgentRunnerInvocation";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
 import { buildCodingAgentSandboxRunnerPreflight } from "../src/domain/codingAgentSandboxRunnerPreflight";
@@ -41,6 +42,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -113,6 +115,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-dispatch-manifest",
           "coding-agent-dispatch-simulation",
           "coding-agent-runner-manifest",
+          "coding-agent-runner-invocation",
           "coding-agent-runner-self-test",
           "coding-agent-sandbox-runner-preflight",
           "coding-agent-sandbox-runner",
@@ -762,6 +765,26 @@ const server = createServer(async (request, response) => {
         receiptDraftPaths: body.receiptDraftPaths || {}
       });
       sendJson(response, 200, manifest);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/runner-invocation") {
+      const body = await readJson<{
+        manifest?: CodingAgentRunnerManifest;
+        invocationBasePath?: string;
+      }>(request);
+      if (body.manifest?.schema !== "naikaku.coding-agent-runner-manifest.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "manifest with schema naikaku.coding-agent-runner-manifest.v1 is required."
+        });
+        return;
+      }
+      const invocationPackage: CodingAgentRunnerInvocationPackage = buildCodingAgentRunnerInvocationPackage({
+        manifest: body.manifest,
+        invocationBasePath: body.invocationBasePath
+      });
+      sendJson(response, 200, invocationPackage);
       return;
     }
 

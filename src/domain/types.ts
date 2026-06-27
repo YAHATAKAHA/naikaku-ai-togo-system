@@ -2332,6 +2332,7 @@ export type AuditEventType =
   | "development.coding_sessions.dispatch_audited"
   | "development.coding_sessions.dispatch_simulated"
   | "development.coding_sessions.runner_manifest_prepared"
+  | "development.coding_sessions.runner_invocation_prepared"
   | "development.coding_sessions.runner_self_test_completed"
   | "development.coding_sessions.sandbox_runner_preflight_completed"
   | "development.coding_sessions.sandbox_runner_completed"

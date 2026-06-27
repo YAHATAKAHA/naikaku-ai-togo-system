@@ -10,6 +10,7 @@ import type {
   CodingAgentDispatchArchiveAudit,
   CodingAgentDispatchManifest,
   CodingAgentDispatchSimulation,
+  CodingAgentRunnerInvocationPackage,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
   CodingAgentSandboxRunnerPreflight,
@@ -698,6 +699,27 @@ export async function createCodingAgentRunnerManifestViaGateway(
   }
 
   return (await response.json()) as CodingAgentRunnerManifest;
+}
+
+export async function createCodingAgentRunnerInvocationViaGateway(
+  manifest: CodingAgentRunnerManifest,
+  invocationBasePath?: string,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/development/coding-briefs/runner-invocation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ manifest, invocationBasePath }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gateway coding agent runner invocation failed with HTTP ${response.status}`);
+  }
+
+  return (await response.json()) as CodingAgentRunnerInvocationPackage;
 }
 
 export async function createCodingAgentRunnerSelfTestViaGateway(
