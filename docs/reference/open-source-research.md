@@ -5,6 +5,7 @@ These projects inform Naikaku's direction. Naikaku should use mature open-source
 Default integration policy:
 
 - Prefer invoking upstream tools as user-installed CLI/API adapter processes.
+- Keep the integration surface small: Naikaku writes adapter job JSON, then a thin bridge launches the configured CLI command and captures transcripts.
 - Do not vendor third-party code until its license, notices, dependency obligations, and security posture are reviewed.
 - Keep GPL/AGPL or unclear-license software outside the core package unless the project intentionally accepts those obligations.
 - Every adapter must consume a scoped contract and return a receipt with logs, exit codes, artifacts, and stop reasons.
@@ -27,9 +28,9 @@ Naikaku's position is narrower and stricter than a general autonomous computer-u
 
 | Project | Current intended use | License posture to verify before integration | Safety note |
 | --- | --- | --- | --- |
-| OpenClaw | Optional desktop/control adapter | MIT license in upstream repository | Treat skills/plugins as untrusted; require allowlists and no host-secret access. |
-| Hermes Agent | Reference for self-improving memory and terminal backends | MIT license in upstream repository | Use ideas or external process integration; do not mix memory persistence without review. |
-| OpenHands | Preferred external coding-agent adapter candidate | MIT/open-source posture from upstream project | Run in scoped workspace/container and require receipts before accepting changes. |
+| OpenClaw | Optional desktop/control adapter | Verify upstream license and plugin/dependency notices before integration | Treat skills/plugins as untrusted; require allowlists and no host-secret access. |
+| Hermes Agent | Reference for self-improving memory and terminal backends | Verify upstream license and dependency notices before integration | Use ideas or external process integration; do not mix memory persistence without review. |
+| OpenHands | Preferred external coding-agent adapter candidate | MIT for open-source core; verify enterprise/dependency notices before vendoring | Run in scoped workspace/container and require receipts before accepting changes. |
 | browser-use | Optional browser adapter | MIT license in upstream repository | Use isolated browser profiles and URL scopes; block payments/messages without approval. |
 | Playwright | Deterministic browser execution engine | Apache-2.0 license in upstream repository | Safe as a test/evidence engine, but still constrain URLs and downloads. |
 | Hammerspoon | Optional macOS automation adapter | MIT-style upstream license | Requires powerful macOS permissions; never enable globally by default. |
@@ -76,7 +77,7 @@ Naikaku adaptation:
 
 ## OpenHands / OpenDevin-style Coding Agents
 
-Repository: https://github.com/All-Hands-AI/OpenHands
+Repository: https://github.com/OpenHands/openhands
 
 Useful ideas:
 
@@ -89,6 +90,7 @@ Naikaku adaptation:
 
 - Treat OpenHands-style agents as the default "real implementation" adapter candidate for coding work.
 - Send reviewed coding briefs and runner invocation JSON instead of broad natural-language desktop instructions.
+- Use CLI invocation as the first integration path, with command overrides when upstream packaging differs.
 - Require the returned receipt to include changed files, command transcripts, evidence artifacts, and risk notes before Development Board updates.
 
 ## E2B Open Computer Use

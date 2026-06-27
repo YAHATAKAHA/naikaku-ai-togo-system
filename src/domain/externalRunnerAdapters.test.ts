@@ -57,6 +57,21 @@ describe("external runner adapter registry", () => {
       .toBe("contract-ready");
   });
 
+  it("lets approved OpenHands become contract-ready without vendoring upstream code", () => {
+    const registry = buildExternalRunnerAdapterRegistry({
+      licenseReviewedAdapterIds: ["openhands-coding-agent"],
+      installedAdapterIds: ["openhands-coding-agent"],
+      approvedAdapterIds: ["openhands-coding-agent"],
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    });
+
+    const openHands = registry.adapters.find((item) => item.id === "openhands-coding-agent");
+
+    expect(openHands?.status).toBe("contract-ready");
+    expect(openHands?.projectUrl).toBe("https://github.com/OpenHands/openhands");
+    expect(registry.integrationPolicy.defaultMode).toBe("adapter-process");
+  });
+
   it("serializes JSON and Markdown for open-source adapter review", () => {
     const registry = buildExternalRunnerAdapterRegistry();
     const parsed = JSON.parse(serializeExternalRunnerAdapterRegistry(registry));

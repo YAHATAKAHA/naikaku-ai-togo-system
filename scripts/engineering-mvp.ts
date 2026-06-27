@@ -33,12 +33,14 @@ interface EngineeringMvpSummary {
   decisions: {
     adapterRegistry: string;
     simulation: string;
+    externalHandoff: string;
     localRunner: string;
     fixtureCoding: string;
     executionReceipt: string;
   };
   claims: {
     localRun: boolean;
+    externalRunnerStarted: boolean;
     fixtureCodingLoop: boolean;
     codeChanged: boolean;
     completion: boolean;
@@ -51,6 +53,10 @@ interface EngineeringMvpSummary {
     readyTasks: number;
     commandsExecuted: number;
     failedCommands: number;
+    handoffTaskFiles: number;
+    handoffJobFiles: number;
+    handoffReadyTaskFiles: number;
+    handoffBlockers: number;
     fixtureBaselineExitCode: number;
     fixtureFinalExitCode: number;
     fixtureChangedFiles: number;
@@ -58,6 +64,7 @@ interface EngineeringMvpSummary {
   };
   files: {
     adapterRegistry: string;
+    externalHandoffSummary: string;
     simulationSummary: string;
     localRunnerSummary: string;
     fixtureCodingSummary: string;
@@ -80,6 +87,7 @@ async function main() {
   const outputDir = path.resolve(options.outputDir);
   const adapterDir = path.join(outputDir, "adapters");
   const simulationDir = path.join(outputDir, "simulate");
+  const handoffDir = path.join(outputDir, "handoff");
   const localRunDir = path.join(outputDir, "run-local");
   const fixtureCodingDir = path.join(outputDir, "fixture-coding");
   const mission = await missionFrom(options);
@@ -113,6 +121,23 @@ async function main() {
       options.locale,
       "--out",
       relativePath(simulationDir),
+      "--generated-at",
+      options.generatedAt
+    ]
+  }));
+  commandRuns.push(await runCommand({
+    label: "engineering-handoff",
+    args: [
+      "exec",
+      "--",
+      "tsx",
+      "scripts/engineering-handoff.ts",
+      "--input",
+      relativePath(simulationDir),
+      "--out",
+      relativePath(handoffDir),
+      "--adapter",
+      "openhands-coding-agent",
       "--generated-at",
       options.generatedAt
     ]
@@ -160,6 +185,12 @@ async function main() {
     decisions: { selfSimulation: string; launchQueue: string };
     capabilities: { canControlMacDesktop: boolean };
   }>(path.join(simulationDir, "summary.json"));
+  const externalHandoff = await readJson<{
+    schema: string;
+    decision: string;
+    canStartExternalRunner: boolean;
+    summary: { handoffTaskFiles: number; adapterJobFiles: number; readyTaskFiles: number; blockers: number };
+  }>(path.join(handoffDir, "summary.json"));
   const localRunner = await readJson<{
     schema: string;
     decisions: { runnerReport: string; executionReceipt: string };
@@ -193,12 +224,14 @@ async function main() {
     decisions: {
       adapterRegistry: adapterRegistry.schema,
       simulation: `${simulation.decisions.selfSimulation}/${simulation.decisions.launchQueue}`,
+      externalHandoff: externalHandoff.decision,
       localRunner: localRunner.decisions.runnerReport,
       fixtureCoding: `${fixtureCoding.receipt.decision}/${fixtureCoding.evidence.decision}/${fixtureCoding.artifactAudit.decision}`,
       executionReceipt: localRunner.decisions.executionReceipt
     },
     claims: {
       localRun: localRunner.claims.localRun,
+      externalRunnerStarted: false,
       fixtureCodingLoop,
       codeChanged: localRunner.claims.codeChanged,
       completion: localRunner.claims.completion,
@@ -211,6 +244,10 @@ async function main() {
       readyTasks: localRunner.counts.readyTasks,
       commandsExecuted: localRunner.counts.commandsExecuted,
       failedCommands: localRunner.counts.failedCommands,
+      handoffTaskFiles: externalHandoff.summary.handoffTaskFiles,
+      handoffJobFiles: externalHandoff.summary.adapterJobFiles,
+      handoffReadyTaskFiles: externalHandoff.summary.readyTaskFiles,
+      handoffBlockers: externalHandoff.summary.blockers,
       fixtureBaselineExitCode: fixtureCoding.fixture.baselineTestExitCode,
       fixtureFinalExitCode: fixtureCoding.fixture.finalTestExitCode,
       fixtureChangedFiles: fixtureCoding.evidence.changedFiles,
@@ -218,6 +255,7 @@ async function main() {
     },
     files: {
       adapterRegistry: relativePath(path.join(adapterDir, "adapter-registry.json")),
+      externalHandoffSummary: relativePath(path.join(handoffDir, "summary.json")),
       simulationSummary: relativePath(path.join(simulationDir, "summary.json")),
       localRunnerSummary: relativePath(path.join(localRunDir, "summary.json")),
       fixtureCodingSummary: relativePath(path.join(fixtureCodingDir, "summary.json")),
@@ -227,6 +265,7 @@ async function main() {
       claim: "This one-command MVP run prepares adapter contracts, prepares supervised engineering work, runs preflight-allowed local verification commands, runs a fixture-only coding loop, and summarizes what can be honestly claimed.",
       limitations: [
         "It does not install or launch OpenClaw, OpenHands, browser-use, Playwright, Hammerspoon, E2B, MCP servers, or Hermes runtimes.",
+        "It writes an external runner handoff package for review, but externalRunnerStarted remains false until a user-installed adapter is actually launched and returns a receipt.",
         "It does not call model providers, control macOS, browse, commit, push, deploy, or send external messages.",
         "The fixture coding loop edits only generated files under the MVP output directory and is not real product backlog completion.",
         "Without --patch-file it can claim local command execution, not code changes or implementation completion."
@@ -337,6 +376,10 @@ function printSummary(summary: EngineeringMvpSummary) {
   console.log("Engineering MVP run complete.");
   console.log(`- output: ${summary.outputDir}`);
   console.log(`- adapters: ${summary.counts.adapters} (${summary.counts.availableAdapters} available now)`);
+  console.log(`- external handoff: ${summary.decisions.externalHandoff}`);
+  console.log(`- external runner started: ${summary.claims.externalRunnerStarted ? "yes" : "no"}`);
+  console.log(`- handoff task files: ${summary.counts.handoffTaskFiles}`);
+  console.log(`- handoff job files: ${summary.counts.handoffJobFiles}`);
   console.log(`- commands executed: ${summary.counts.commandsExecuted}`);
   console.log(`- failed commands: ${summary.counts.failedCommands}`);
   console.log(`- local run claim: ${summary.claims.localRun ? "yes" : "no"}`);
@@ -423,7 +466,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This command chains engineering:adapters, engineering:simulate, engineering:run-local, and a fixture-only coding self-simulation. It does not install external runners, control macOS, commit, push, deploy, or call model providers."
+    "This command chains engineering:adapters, engineering:simulate, engineering:handoff, engineering:run-local, and a fixture-only coding self-simulation. It writes reviewable external-runner handoff tasks but does not install external runners, control macOS, commit, push, deploy, or call model providers."
   ].join("\n"));
 }
 

@@ -9,6 +9,18 @@ export type ExternalRunnerAdapterId =
   | "mcp-tool-runner"
   | "hermes-agent-runtime";
 
+export const externalRunnerAdapterIds: ExternalRunnerAdapterId[] = [
+  "naikaku-local-engineering-runner",
+  "openhands-coding-agent",
+  "openclaw-desktop-runner",
+  "browser-use-runner",
+  "playwright-browser-runner",
+  "hammerspoon-mac-adapter",
+  "e2b-open-computer-use",
+  "mcp-tool-runner",
+  "hermes-agent-runtime"
+];
+
 export type ExternalRunnerCapability =
   | "repo-coding"
   | "allowlisted-shell"
@@ -194,9 +206,9 @@ const baseAdapters: Array<Omit<ExternalRunnerAdapter, "status">> = [
   {
     id: "openhands-coding-agent",
     label: "OpenHands coding agent",
-    projectUrl: "https://github.com/All-Hands-AI/OpenHands",
-    license: "MIT or upstream open-source license; verify before vendoring",
-    licenseUrl: "https://github.com/All-Hands-AI/OpenHands/blob/main/LICENSE",
+    projectUrl: "https://github.com/OpenHands/openhands",
+    license: "MIT for open-source core; verify enterprise and dependency notices before vendoring",
+    licenseUrl: "https://github.com/OpenHands/openhands/blob/main/LICENSE",
     installMode: "user-installed-cli",
     risk: "high",
     capabilities: ["repo-coding", "allowlisted-shell", "browser-automation"],
@@ -541,8 +553,8 @@ function statusFor(
     return "needs-license-review";
   }
   if (!installed.has(adapter.id)) return "needs-install";
-  if (adapter.risk === "critical" && !approved.has(adapter.id)) return "approval-required";
-  if (adapter.prohibitedByDefault.includes("external writes")) return "approval-required";
+  const needsApproval = adapter.risk === "critical" || adapter.prohibitedByDefault.includes("external writes");
+  if (needsApproval && !approved.has(adapter.id)) return "approval-required";
   return "contract-ready";
 }
 
