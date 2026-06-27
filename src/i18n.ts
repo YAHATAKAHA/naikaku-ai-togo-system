@@ -86,6 +86,9 @@ export interface CodingAgentBriefsCopy {
   downloadRunnerManifestMarkdown: string;
   downloadRunnerSelfTestJson: string;
   downloadRunnerSelfTestMarkdown: string;
+  sandboxRunnerPreflight: string;
+  downloadSandboxRunnerPreflightJson: string;
+  downloadSandboxRunnerPreflightMarkdown: string;
   runSandboxRunner: string;
   downloadSandboxRunnerJson: string;
   downloadSandboxRunnerMarkdown: string;
@@ -130,6 +133,8 @@ export interface CodingAgentBriefsCopy {
   runnerSelfTest: string;
   runnerSelfTestDecisionLabel: (decision: string) => string;
   runnerSelfTestSummary: (wouldRun: number, notExecutedCommands: number, blockedTasks: number) => string;
+  sandboxRunnerPreflightDecisionLabel: (decision: string) => string;
+  sandboxRunnerPreflightSummary: (readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number) => string;
   sandboxRunner: string;
   sandboxRunnerDecisionLabel: (decision: string) => string;
   sandboxRunnerSummary: (executedTasks: number, processExecutions: number, commandResults: number) => string;
@@ -165,6 +170,9 @@ export interface CodingAgentBriefsCopy {
   statusSessionLocal: (decision: string, ready: number, held: number, errorMessage?: string) => string;
   statusDispatchGateway: (decision: string, ready: number, held: number, promptFiles: number) => string;
   statusDispatchLocal: (decision: string, ready: number, held: number, promptFiles: number, errorMessage?: string) => string;
+  statusSandboxRunnerPreflightGateway: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number) => string;
+  statusSandboxRunnerPreflightLocal: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number, errorMessage?: string) => string;
+  statusSandboxRunnerPreflightBlocked: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number) => string;
   statusSandboxRunnerGateway: (decision: string, executedTasks: number, processExecutions: number, commandResults: number) => string;
   statusSandboxRunnerUnavailable: (errorMessage?: string) => string;
   statusDrillGateway: (decision: string, wouldAssign: number, notAssigned: number) => string;
@@ -308,6 +316,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
+      sandboxRunnerPreflight: "Sandbox確認",
+      downloadSandboxRunnerPreflightJson: "Sandbox確認 JSON",
+      downloadSandboxRunnerPreflightMarkdown: "Sandbox確認 MD",
       runSandboxRunner: "Sandbox実行",
       downloadSandboxRunnerJson: "Sandbox Runner JSON",
       downloadSandboxRunnerMarkdown: "Sandbox Runner MD",
@@ -352,6 +363,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner自己検証",
       runnerSelfTestDecisionLabel: jaRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
+      sandboxRunnerPreflightDecisionLabel: jaSandboxRunnerPreflightDecision,
+      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks}件ready / 保留 ${heldTasks}件 / ブロック ${blockedTasks}件 / 予定プロセス ${processExecutions}件`,
       sandboxRunner: "Sandbox Runner",
       sandboxRunnerDecisionLabel: jaSandboxRunnerDecision,
       sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}件実行 / プロセス ${processExecutions}件 / 結果 ${commandResults}件`,
@@ -387,6 +400,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `ローカルで Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。`,
+      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `ローカルで Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox実行は停止しました。Preflight ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件。`,
       statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${jaSandboxRunnerDecision(decision)}: 実行 ${executedTasks}件、プロセス ${processExecutions}件、結果 ${commandResults}件。`,
       statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner はローカル gateway が必要です。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `Session演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。`,
@@ -500,6 +516,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "Self-test JSON",
       downloadRunnerSelfTestMarkdown: "Self-test MD",
+      sandboxRunnerPreflight: "Sandbox check",
+      downloadSandboxRunnerPreflightJson: "Sandbox check JSON",
+      downloadSandboxRunnerPreflightMarkdown: "Sandbox check MD",
       runSandboxRunner: "Run sandbox",
       downloadSandboxRunnerJson: "Sandbox runner JSON",
       downloadSandboxRunnerMarkdown: "Sandbox runner MD",
@@ -544,6 +563,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner self-test",
       runnerSelfTestDecisionLabel: enRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
+      sandboxRunnerPreflightDecisionLabel: enSandboxRunnerPreflightDecision,
+      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} held / ${blockedTasks} blocked / ${processExecutions} expected processes`,
       sandboxRunner: "Sandbox runner",
       sandboxRunnerDecisionLabel: enSandboxRunnerDecision,
       sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} executed / ${processExecutions} processes / ${commandResults} command results`,
@@ -579,6 +600,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `Coding dispatch package ${enCodingDispatchDecision(decision)}: ${ready} ready, ${held} held, ${promptFiles} prompts.`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `Coding dispatch package completed locally: ${enCodingDispatchDecision(decision)}, ${ready} ready, ${held} held, ${promptFiles} prompts.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox check ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.`,
+      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `Sandbox check completed locally: ${enSandboxRunnerPreflightDecision(decision)}, ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox execution stopped. Preflight ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked.`,
       statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox runner ${enSandboxRunnerDecision(decision)}: ${executedTasks} executed, ${processExecutions} processes, ${commandResults} command results.`,
       statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox runner requires the local gateway.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `Coding session drill ${enCodingDrillDecision(decision)}: ${wouldAssign} assign, ${notAssigned} stopped.`,
@@ -692,6 +716,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "自测 JSON",
       downloadRunnerSelfTestMarkdown: "自测 MD",
+      sandboxRunnerPreflight: "沙箱检查",
+      downloadSandboxRunnerPreflightJson: "沙箱检查 JSON",
+      downloadSandboxRunnerPreflightMarkdown: "沙箱检查 MD",
       runSandboxRunner: "运行沙箱",
       downloadSandboxRunnerJson: "沙箱 Runner JSON",
       downloadSandboxRunnerMarkdown: "沙箱 Runner MD",
@@ -736,6 +763,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 自测",
       runnerSelfTestDecisionLabel: zhHansRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
+      sandboxRunnerPreflightDecisionLabel: zhHansSandboxRunnerPreflightDecision,
+      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 个预计进程`,
       sandboxRunner: "沙箱 Runner",
       sandboxRunnerDecisionLabel: zhHansSandboxRunnerDecision,
       sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已执行 / ${processExecutions} 个进程 / ${commandResults} 条命令结果`,
@@ -771,6 +800,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `编程代理 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。`,
+      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `已在本地完成沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `沙箱执行已停止。预检 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
       statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHansSandboxRunnerDecision(decision)}：执行 ${executedTasks} 项，进程 ${processExecutions} 个，命令结果 ${commandResults} 条。`,
       statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `编程代理 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
@@ -884,6 +916,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "自測 JSON",
       downloadRunnerSelfTestMarkdown: "自測 MD",
+      sandboxRunnerPreflight: "沙箱檢查",
+      downloadSandboxRunnerPreflightJson: "沙箱檢查 JSON",
+      downloadSandboxRunnerPreflightMarkdown: "沙箱檢查 MD",
       runSandboxRunner: "執行沙箱",
       downloadSandboxRunnerJson: "沙箱 Runner JSON",
       downloadSandboxRunnerMarkdown: "沙箱 Runner MD",
@@ -928,6 +963,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 自測",
       runnerSelfTestDecisionLabel: zhHantRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
+      sandboxRunnerPreflightDecisionLabel: zhHantSandboxRunnerPreflightDecision,
+      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 個預計程序`,
       sandboxRunner: "沙箱 Runner",
       sandboxRunnerDecisionLabel: zhHantSandboxRunnerDecision,
       sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已執行 / ${processExecutions} 個程序 / ${commandResults} 條命令結果`,
@@ -963,6 +1000,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `編程代理 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。`,
+      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `已在本地完成沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `沙箱執行已停止。預檢 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
       statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHantSandboxRunnerDecision(decision)}：執行 ${executedTasks} 項，程序 ${processExecutions} 個，命令結果 ${commandResults} 條。`,
       statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `編程代理 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
@@ -1076,6 +1116,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       downloadRunnerManifestMarkdown: "Runner MD",
       downloadRunnerSelfTestJson: "자체 검증 JSON",
       downloadRunnerSelfTestMarkdown: "자체 검증 MD",
+      sandboxRunnerPreflight: "Sandbox 확인",
+      downloadSandboxRunnerPreflightJson: "Sandbox 확인 JSON",
+      downloadSandboxRunnerPreflightMarkdown: "Sandbox 확인 MD",
       runSandboxRunner: "Sandbox 실행",
       downloadSandboxRunnerJson: "Sandbox Runner JSON",
       downloadSandboxRunnerMarkdown: "Sandbox Runner MD",
@@ -1120,6 +1163,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerSelfTest: "Runner 자체 검증",
       runnerSelfTestDecisionLabel: koRunnerSelfTestDecision,
       runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
+      sandboxRunnerPreflightDecisionLabel: koSandboxRunnerPreflightDecision,
+      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks}개 ready / 보류 ${heldTasks}개 / 차단 ${blockedTasks}개 / 예상 프로세스 ${processExecutions}개`,
       sandboxRunner: "Sandbox Runner",
       sandboxRunnerDecisionLabel: koSandboxRunnerDecision,
       sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}개 실행 / 프로세스 ${processExecutions}개 / 명령 결과 ${commandResults}개`,
@@ -1155,6 +1200,9 @@ const copies: Record<SupportedLocale, AppCopy> = {
       statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDispatchGateway: (decision, ready, held, promptFiles) => `코딩 에이전트 dispatch package ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.`,
       statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `로컬에서 dispatch package 완료 ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox 확인 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.`,
+      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `로컬에서 Sandbox 확인 완료 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox 실행을 중지했습니다. Preflight ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개.`,
       statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${koSandboxRunnerDecision(decision)}: 실행 ${executedTasks}개, 프로세스 ${processExecutions}개, 명령 결과 ${commandResults}개.`,
       statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner에는 로컬 gateway가 필요합니다.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
       statusDrillGateway: (decision, wouldAssign, notAssigned) => `코딩 에이전트 session 모의실행 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.`,
@@ -1286,6 +1334,13 @@ function jaSandboxRunnerDecision(decision: string) {
   return decision;
 }
 
+function jaSandboxRunnerPreflightDecision(decision: string) {
+  if (decision === "ready") return "実行準備済み";
+  if (decision === "needs-review") return "要確認";
+  if (decision === "blocked") return "ブロック";
+  return decision;
+}
+
 function jaCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "割当可";
   if (decision === "held") return "保留";
@@ -1359,6 +1414,13 @@ function enRunnerSelfTestDecision(decision: string) {
 
 function enSandboxRunnerDecision(decision: string) {
   if (decision === "sandbox-runner-verified") return "sandbox verified";
+  if (decision === "needs-review") return "needs review";
+  if (decision === "blocked") return "blocked";
+  return decision;
+}
+
+function enSandboxRunnerPreflightDecision(decision: string) {
+  if (decision === "ready") return "ready";
   if (decision === "needs-review") return "needs review";
   if (decision === "blocked") return "blocked";
   return decision;
@@ -1451,6 +1513,13 @@ function zhHansRunnerSelfTestDecision(decision: string) {
 
 function zhHansSandboxRunnerDecision(decision: string) {
   if (decision === "sandbox-runner-verified") return "沙箱已验证";
+  if (decision === "needs-review") return "需审查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
+function zhHansSandboxRunnerPreflightDecision(decision: string) {
+  if (decision === "ready") return "已就绪";
   if (decision === "needs-review") return "需审查";
   if (decision === "blocked") return "已阻塞";
   return decision;
@@ -1555,6 +1624,13 @@ function zhHantSandboxRunnerDecision(decision: string) {
   return decision;
 }
 
+function zhHantSandboxRunnerPreflightDecision(decision: string) {
+  if (decision === "ready") return "已就緒";
+  if (decision === "needs-review") return "需審查";
+  if (decision === "blocked") return "已阻塞";
+  return decision;
+}
+
 function zhHantCodingDrillDecision(decision: string) {
   if (decision === "assignable") return "可分配";
   if (decision === "held") return "保留";
@@ -1649,6 +1725,13 @@ function koRunnerSelfTestDecision(decision: string) {
 
 function koSandboxRunnerDecision(decision: string) {
   if (decision === "sandbox-runner-verified") return "Sandbox 검증 완료";
+  if (decision === "needs-review") return "검토 필요";
+  if (decision === "blocked") return "차단됨";
+  return decision;
+}
+
+function koSandboxRunnerPreflightDecision(decision: string) {
+  if (decision === "ready") return "준비됨";
   if (decision === "needs-review") return "검토 필요";
   if (decision === "blocked") return "차단됨";
   return decision;

@@ -993,6 +993,48 @@ Response:
 
 The response must keep command exit codes null and command status `not-executed`. A self-test-ready decision means the runner contract is consumable, not that a coding agent has completed the task.
 
+### `POST /v1/development/coding-briefs/sandbox-runner/preflight`
+
+Consumes a runner self-test plus the matching session bundle and checks whether the sandbox runner may execute. This endpoint does not execute commands. It verifies the self-test status, bundle/session match, local command allowlist, expected transcript/evidence paths, and the honesty boundary before the executable sandbox runner route is called.
+
+```json
+{
+  "selfTest": {
+    "schema": "naikaku.coding-agent-runner-self-test.v1",
+    "decision": "self-test-ready",
+    "items": []
+  },
+  "bundle": {
+    "schema": "naikaku.coding-agent-session-bundle.v1",
+    "decision": "ready",
+    "sessions": []
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "schema": "naikaku.coding-agent-sandbox-runner-preflight.v1",
+  "mode": "local-sandbox-runner-preflight",
+  "decision": "ready",
+  "summary": {
+    "readyTasks": 8,
+    "heldTasks": 0,
+    "blockedTasks": 0,
+    "allowedCommands": 16,
+    "blockedCommands": 0,
+    "expectedProcessExecutions": 2
+  },
+  "honestyClaim": {
+    "level": "local-sandbox-runner-preflight"
+  }
+}
+```
+
+A `ready` preflight means the inputs are eligible for the local sandbox runner. It still does not prove feature implementation and does not replace the executable runner report, receipt review, artifact audit, or production evidence.
+
 ### `POST /v1/development/coding-briefs/sandbox-runner`
 
 Consumes a ready runner self-test and the matching session bundle, then executes only the gateway's local sandbox-runner allowlist. Today that allowlist is `npm run test` and `npm run build`. The endpoint writes session-scoped transcripts, changed-file summary placeholders, evidence artifacts, a submitted receipt, receipt review, implementation evidence, and artifact audit. It does not call a model, implement backlog work, browse, control desktops, call MCP tools, call providers, deploy, commit, push, or claim production evidence.

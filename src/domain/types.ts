@@ -1767,6 +1767,89 @@ export interface CodingAgentRunnerSelfTest {
   };
 }
 
+export type CodingAgentSandboxRunnerPreflightDecision =
+  | "ready"
+  | "needs-review"
+  | "blocked";
+
+export type CodingAgentSandboxRunnerPreflightItemStatus =
+  | "ready"
+  | "held"
+  | "blocked";
+
+export type CodingAgentSandboxRunnerPreflightCommandStatus =
+  | "allowed"
+  | "blocked"
+  | "not-runnable";
+
+export interface CodingAgentSandboxRunnerPreflightCommand {
+  command: string;
+  transcriptRef: string | null;
+  status: CodingAgentSandboxRunnerPreflightCommandStatus;
+  reason: string;
+}
+
+export interface CodingAgentSandboxRunnerPreflightItem {
+  sessionId: string;
+  sourceItemId: string;
+  title: string;
+  executorProfileId: ExecutorProfileId;
+  selfTestStatus: CodingAgentRunnerSelfTestItemStatus;
+  preflightStatus: CodingAgentSandboxRunnerPreflightItemStatus;
+  promptPath: string | null;
+  receiptDraftPath: string | null;
+  evidenceArtifactPrefix: string;
+  commands: CodingAgentSandboxRunnerPreflightCommand[];
+  expectedEvidenceArtifacts: Array<{
+    label: string;
+    path: string;
+  }>;
+  checks: Array<{
+    id: string;
+    status: "pass" | "warn" | "block";
+    summary: string;
+  }>;
+  nextAction: string;
+}
+
+export interface CodingAgentSandboxRunnerPreflight {
+  schema: "naikaku.coding-agent-sandbox-runner-preflight.v1";
+  generatedAt: string;
+  mode: "local-sandbox-runner-preflight";
+  sourceSchema: CodingAgentRunnerSelfTest["schema"];
+  sourceDecision: CodingAgentRunnerSelfTestDecision;
+  sourceBundleSchema?: CodingAgentSessionBundle["schema"];
+  sourceBundleDecision?: CodingAgentSessionBundleDecision;
+  decision: CodingAgentSandboxRunnerPreflightDecision;
+  runId?: string;
+  operatorLocale: string;
+  commandAllowlist: string[];
+  items: CodingAgentSandboxRunnerPreflightItem[];
+  summary: {
+    total: number;
+    readyTasks: number;
+    heldTasks: number;
+    blockedTasks: number;
+    runnableCommands: number;
+    allowedCommands: number;
+    blockedCommands: number;
+    notRunnableCommands: number;
+    expectedProcessExecutions: number;
+    expectedCommandResults: number;
+    receiptDraftPaths: number;
+    expectedEvidenceArtifacts: number;
+    unsafePaths: number;
+    missingBundleSessions: number;
+    extraBundleSessions: number;
+  };
+  honestyClaim: {
+    level: "local-sandbox-runner-preflight";
+    claim: string;
+    limitations: string[];
+    productionRequirements: string[];
+  };
+}
+
 export type CodingAgentSandboxRunnerDecision =
   | "sandbox-runner-verified"
   | "needs-review"
@@ -2113,6 +2196,7 @@ export type AuditEventType =
   | "development.coding_sessions.dispatch_simulated"
   | "development.coding_sessions.runner_manifest_prepared"
   | "development.coding_sessions.runner_self_test_completed"
+  | "development.coding_sessions.sandbox_runner_preflight_completed"
   | "development.coding_sessions.sandbox_runner_completed"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"

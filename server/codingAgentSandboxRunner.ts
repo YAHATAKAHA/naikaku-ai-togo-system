@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { isSafeRelativeArtifactPath } from "../src/domain/codingAgentArtifactReferences";
+import { codingAgentSandboxRunnerAllowedCommands } from "../src/domain/codingAgentSandboxRunnerPreflight";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import {
@@ -24,7 +25,7 @@ import type {
   CodingAgentSessionReceiptItem
 } from "../src/domain/types";
 
-export const sandboxRunnerAllowedCommands = ["npm run test", "npm run build"] as const;
+export const sandboxRunnerAllowedCommands = codingAgentSandboxRunnerAllowedCommands;
 
 export interface RunCodingAgentSandboxRunnerInput {
   selfTest: CodingAgentRunnerSelfTest;

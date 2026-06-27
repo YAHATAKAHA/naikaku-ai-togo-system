@@ -12,6 +12,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerReport,
   CodingAgentSession,
   CodingAgentSessionBundle,
@@ -32,6 +33,7 @@ interface CodingAgentBriefsPanelProps {
   dispatchSimulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
+  sandboxRunnerPreflight: CodingAgentSandboxRunnerPreflight | null;
   sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
   sessionDrill: CodingAgentSessionDrillReport | null;
   sessionReceipt: CodingAgentSessionReceipt | null;
@@ -52,6 +54,8 @@ interface CodingAgentBriefsPanelProps {
   runnerManifestMarkdownLink: { href: string; fileName: string } | null;
   runnerSelfTestLink: { href: string; fileName: string } | null;
   runnerSelfTestMarkdownLink: { href: string; fileName: string } | null;
+  sandboxRunnerPreflightLink: { href: string; fileName: string } | null;
+  sandboxRunnerPreflightMarkdownLink: { href: string; fileName: string } | null;
   sandboxRunnerLink: { href: string; fileName: string } | null;
   sandboxRunnerMarkdownLink: { href: string; fileName: string } | null;
   drillLink: { href: string; fileName: string } | null;
@@ -69,6 +73,7 @@ interface CodingAgentBriefsPanelProps {
   onExportProductionSession: () => void;
   onExportDispatchManifest: () => void;
   onRunSessionDrill: () => void;
+  onRunSandboxRunnerPreflight: () => void;
   onRunSandboxRunner: () => void;
   onCreateSessionReceipt: () => void;
   onImportSessionReceipt: (file: File) => void;
@@ -84,6 +89,7 @@ export function CodingAgentBriefsPanel({
   dispatchSimulation,
   runnerManifest,
   runnerSelfTest,
+  sandboxRunnerPreflight,
   sandboxRunnerReport,
   sessionDrill,
   sessionReceipt,
@@ -104,6 +110,8 @@ export function CodingAgentBriefsPanel({
   runnerManifestMarkdownLink,
   runnerSelfTestLink,
   runnerSelfTestMarkdownLink,
+  sandboxRunnerPreflightLink,
+  sandboxRunnerPreflightMarkdownLink,
   sandboxRunnerLink,
   sandboxRunnerMarkdownLink,
   drillLink,
@@ -121,6 +129,7 @@ export function CodingAgentBriefsPanel({
   onExportProductionSession,
   onExportDispatchManifest,
   onRunSessionDrill,
+  onRunSandboxRunnerPreflight,
   onRunSandboxRunner,
   onCreateSessionReceipt,
   onImportSessionReceipt
@@ -177,10 +186,17 @@ export function CodingAgentBriefsPanel({
         <button type="button" onClick={onExportDispatchManifest} disabled={!briefs.briefs.length}>
           <PackageCheck size={15} /> {copy.dispatchManifest}
         </button>
+        <button type="button" onClick={onRunSandboxRunnerPreflight} disabled={!runnerSelfTest}>
+          <ShieldCheck size={15} /> {copy.sandboxRunnerPreflight}
+        </button>
         <button
           type="button"
           onClick={onRunSandboxRunner}
-          disabled={!runnerSelfTest || runnerSelfTest.decision !== "self-test-ready"}
+          disabled={
+            !runnerSelfTest ||
+            runnerSelfTest.decision !== "self-test-ready" ||
+            (sandboxRunnerPreflight ? sandboxRunnerPreflight.decision !== "ready" : false)
+          }
         >
           <PlayCircle size={15} /> {copy.runSandboxRunner}
         </button>
@@ -292,6 +308,16 @@ export function CodingAgentBriefsPanel({
             <Download size={15} /> {copy.downloadRunnerSelfTestMarkdown}
           </a>
         ) : null}
+        {sandboxRunnerPreflightLink ? (
+          <a href={sandboxRunnerPreflightLink.href} download={sandboxRunnerPreflightLink.fileName}>
+            <Download size={15} /> {copy.downloadSandboxRunnerPreflightJson}
+          </a>
+        ) : null}
+        {sandboxRunnerPreflightMarkdownLink ? (
+          <a href={sandboxRunnerPreflightMarkdownLink.href} download={sandboxRunnerPreflightMarkdownLink.fileName}>
+            <Download size={15} /> {copy.downloadSandboxRunnerPreflightMarkdown}
+          </a>
+        ) : null}
         {sandboxRunnerLink ? (
           <a href={sandboxRunnerLink.href} download={sandboxRunnerLink.fileName}>
             <Download size={15} /> {copy.downloadSandboxRunnerJson}
@@ -344,6 +370,7 @@ export function CodingAgentBriefsPanel({
           simulation={dispatchSimulation}
           runnerManifest={runnerManifest}
           runnerSelfTest={runnerSelfTest}
+          sandboxRunnerPreflight={sandboxRunnerPreflight}
           sandboxRunnerReport={sandboxRunnerReport}
           copy={copy}
         />
@@ -446,6 +473,7 @@ function CodingAgentDispatchManifestReport({
   simulation,
   runnerManifest,
   runnerSelfTest,
+  sandboxRunnerPreflight,
   sandboxRunnerReport,
   copy
 }: {
@@ -455,6 +483,7 @@ function CodingAgentDispatchManifestReport({
   simulation: CodingAgentDispatchSimulation | null;
   runnerManifest: CodingAgentRunnerManifest | null;
   runnerSelfTest: CodingAgentRunnerSelfTest | null;
+  sandboxRunnerPreflight: CodingAgentSandboxRunnerPreflight | null;
   sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
   copy: CodingAgentBriefsCopy;
 }) {
@@ -520,6 +549,19 @@ function CodingAgentDispatchManifestReport({
             runnerSelfTest.summary.wouldRun,
             runnerSelfTest.summary.notExecutedCommands,
             runnerSelfTest.summary.blocked
+          )}</span>
+        </div>
+      ) : null}
+      {sandboxRunnerPreflight ? (
+        <div>
+          <strong>
+            {copy.sandboxRunnerPreflight}: {copy.sandboxRunnerPreflightDecisionLabel(sandboxRunnerPreflight.decision)}
+          </strong>
+          <span>{copy.sandboxRunnerPreflightSummary(
+            sandboxRunnerPreflight.summary.readyTasks,
+            sandboxRunnerPreflight.summary.heldTasks,
+            sandboxRunnerPreflight.summary.blockedTasks,
+            sandboxRunnerPreflight.summary.expectedProcessExecutions
           )}</span>
         </div>
       ) : null}

@@ -45,6 +45,9 @@ describe("i18n", () => {
       expect(copy.codingBriefs.downloadDispatchSimulationJson).toBeTruthy();
       expect(copy.codingBriefs.downloadRunnerManifestJson).toBeTruthy();
       expect(copy.codingBriefs.downloadRunnerSelfTestJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadSandboxRunnerPreflightJson).toBeTruthy();
+      expect(copy.codingBriefs.downloadSandboxRunnerPreflightMarkdown).toBeTruthy();
+      expect(copy.codingBriefs.sandboxRunnerPreflight).toBeTruthy();
       expect(copy.codingBriefs.downloadSandboxRunnerJson).toBeTruthy();
       expect(copy.codingBriefs.downloadSandboxRunnerMarkdown).toBeTruthy();
       expect(copy.codingBriefs.runSandboxRunner).toBeTruthy();
@@ -53,6 +56,7 @@ describe("i18n", () => {
       expect(copy.codingBriefs.dispatchSimulationDecisionLabel("ready-for-real-agent")).toBeTruthy();
       expect(copy.codingBriefs.runnerManifestDecisionLabel("runner-ready")).toBeTruthy();
       expect(copy.codingBriefs.runnerSelfTestDecisionLabel("self-test-ready")).toBeTruthy();
+      expect(copy.codingBriefs.sandboxRunnerPreflightDecisionLabel("ready")).toBeTruthy();
       expect(copy.codingBriefs.sandboxRunnerDecisionLabel("sandbox-runner-verified")).toBeTruthy();
       if (locale !== "en") {
         expect(copy.codingBriefs.dispatchDecisionLabel("dispatchable")).not.toBe("dispatchable");
@@ -64,6 +68,10 @@ describe("i18n", () => {
       expect(copy.codingBriefs.dispatchSimulationSummary(8, 0, 0)).toBeTruthy();
       expect(copy.codingBriefs.runnerManifestSummary(8, 8, 0)).toBeTruthy();
       expect(copy.codingBriefs.runnerSelfTestSummary(8, 16, 0)).toBeTruthy();
+      expect(copy.codingBriefs.sandboxRunnerPreflightSummary(8, 0, 0, 2)).toBeTruthy();
+      expect(copy.codingBriefs.statusSandboxRunnerPreflightGateway("ready", 8, 0, 0, 2)).toBeTruthy();
+      expect(copy.codingBriefs.statusSandboxRunnerPreflightLocal("ready", 8, 0, 0, 2, "offline")).toBeTruthy();
+      expect(copy.codingBriefs.statusSandboxRunnerPreflightBlocked("blocked", 0, 8, 1)).toBeTruthy();
       expect(copy.codingBriefs.sandboxRunnerSummary(8, 2, 16)).toBeTruthy();
       expect(copy.codingBriefs.statusSandboxRunnerGateway("sandbox-runner-verified", 8, 2, 16)).toBeTruthy();
       expect(copy.codingBriefs.statusSandboxRunnerUnavailable("offline")).toBeTruthy();

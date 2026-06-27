@@ -11,6 +11,7 @@ import { buildCodingAgentDispatchManifest } from "../src/domain/codingAgentDispa
 import { buildCodingAgentDispatchSimulation } from "../src/domain/codingAgentDispatchSimulation";
 import { buildCodingAgentRunnerManifest } from "../src/domain/codingAgentRunnerManifest";
 import { buildCodingAgentRunnerSelfTest } from "../src/domain/codingAgentRunnerSelfTest";
+import { buildCodingAgentSandboxRunnerPreflight } from "../src/domain/codingAgentSandboxRunnerPreflight";
 import { auditCodingAgentImplementationArtifacts } from "../src/domain/codingAgentImplementationArtifactAudit";
 import { buildCodingAgentImplementationEvidence } from "../src/domain/codingAgentImplementationEvidence";
 import { buildCodingAgentSessionBundle } from "../src/domain/codingAgentSessionBundle";
@@ -42,6 +43,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerResult,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -112,6 +114,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-dispatch-simulation",
           "coding-agent-runner-manifest",
           "coding-agent-runner-self-test",
+          "coding-agent-sandbox-runner-preflight",
           "coding-agent-sandbox-runner",
           "coding-agent-session-drill",
           "coding-agent-session-receipt",
@@ -777,6 +780,33 @@ const server = createServer(async (request, response) => {
         manifest: body.manifest
       });
       sendJson(response, 200, report);
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/development/coding-briefs/sandbox-runner/preflight") {
+      const body = await readJson<{
+        selfTest?: CodingAgentRunnerSelfTest;
+        bundle?: CodingAgentSessionBundle;
+      }>(request);
+      if (body.selfTest?.schema !== "naikaku.coding-agent-runner-self-test.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "selfTest with schema naikaku.coding-agent-runner-self-test.v1 is required."
+        });
+        return;
+      }
+      if (body.bundle?.schema !== "naikaku.coding-agent-session-bundle.v1") {
+        sendJson(response, 422, {
+          ok: false,
+          message: "bundle with schema naikaku.coding-agent-session-bundle.v1 is required."
+        });
+        return;
+      }
+      const preflight: CodingAgentSandboxRunnerPreflight = buildCodingAgentSandboxRunnerPreflight({
+        selfTest: body.selfTest,
+        bundle: body.bundle
+      });
+      sendJson(response, 200, preflight);
       return;
     }
 

@@ -14,6 +14,10 @@ import {
   serializeCodingAgentSandboxRunnerReport,
   serializeCodingAgentSandboxRunnerReportMarkdown
 } from "./codingAgentSandboxRunner";
+import {
+  serializeCodingAgentSandboxRunnerPreflight,
+  serializeCodingAgentSandboxRunnerPreflightMarkdown
+} from "./codingAgentSandboxRunnerPreflight";
 import { serializeCodingAgentImplementationEvidence, serializeCodingAgentImplementationEvidenceMarkdown } from "./codingAgentImplementationEvidence";
 import { serializeCodingAgentSessionBundle, serializeCodingAgentSessionBundleMarkdown } from "./codingAgentSessionBundle";
 import { serializeCodingAgentSessionDrill, serializeCodingAgentSessionDrillMarkdown } from "./codingAgentSessionDrill";
@@ -44,6 +48,7 @@ import type {
   CodingAgentDispatchSimulation,
   CodingAgentRunnerManifest,
   CodingAgentRunnerSelfTest,
+  CodingAgentSandboxRunnerPreflight,
   CodingAgentSandboxRunnerReport,
   CodingAgentImplementationEvidence,
   CodingAgentSessionBundle,
@@ -503,6 +508,14 @@ export function serializeCodingAgentSandboxRunnerReportExport(report: CodingAgen
 
 export function serializeCodingAgentSandboxRunnerReportMarkdownExport(report: CodingAgentSandboxRunnerReport) {
   return serializeCodingAgentSandboxRunnerReportMarkdown(report);
+}
+
+export function serializeCodingAgentSandboxRunnerPreflightExport(report: CodingAgentSandboxRunnerPreflight) {
+  return serializeCodingAgentSandboxRunnerPreflight(report);
+}
+
+export function serializeCodingAgentSandboxRunnerPreflightMarkdownExport(report: CodingAgentSandboxRunnerPreflight) {
+  return serializeCodingAgentSandboxRunnerPreflightMarkdown(report);
 }
 
 export function serializeCodingAgentSessionDrillExport(report: CodingAgentSessionDrillReport) {
