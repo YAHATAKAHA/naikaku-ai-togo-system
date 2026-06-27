@@ -34,10 +34,12 @@ interface EngineeringMvpSummary {
     adapterRegistry: string;
     simulation: string;
     localRunner: string;
+    fixtureCoding: string;
     executionReceipt: string;
   };
   claims: {
     localRun: boolean;
+    fixtureCodingLoop: boolean;
     codeChanged: boolean;
     completion: boolean;
     macDesktopControl: boolean;
@@ -49,12 +51,16 @@ interface EngineeringMvpSummary {
     readyTasks: number;
     commandsExecuted: number;
     failedCommands: number;
+    fixtureBaselineExitCode: number;
+    fixtureFinalExitCode: number;
+    fixtureChangedFiles: number;
     changedFiles: number;
   };
   files: {
     adapterRegistry: string;
     simulationSummary: string;
     localRunnerSummary: string;
+    fixtureCodingSummary: string;
     executionReceipt: string;
   };
   honestyClaim: {
@@ -75,6 +81,7 @@ async function main() {
   const adapterDir = path.join(outputDir, "adapters");
   const simulationDir = path.join(outputDir, "simulate");
   const localRunDir = path.join(outputDir, "run-local");
+  const fixtureCodingDir = path.join(outputDir, "fixture-coding");
   const mission = await missionFrom(options);
   const commandRuns: CommandRun[] = [];
 
@@ -128,6 +135,21 @@ async function main() {
       ...(options.patchFile ? ["--patch-file", options.patchFile] : [])
     ]
   }));
+  commandRuns.push(await runCommand({
+    label: "fixture-coding-loop",
+    args: [
+      "exec",
+      "--",
+      "tsx",
+      "scripts/coding-agent-engineering-self-simulation.ts",
+      "--out",
+      relativePath(fixtureCodingDir),
+      "--locale",
+      options.locale,
+      "--generated-at",
+      options.generatedAt
+    ]
+  }));
 
   const adapterRegistry = await readJson<{
     schema: string;
@@ -150,6 +172,15 @@ async function main() {
     };
     counts: { readyTasks: number; commandsExecuted: number; failedCommands: number; changedFiles: number };
   }>(path.join(localRunDir, "summary.json"));
+  const fixtureCoding = await readJson<{
+    schema: string;
+    fixture: { baselineTestExitCode: number; finalTestExitCode: number; changedFile: string };
+    receipt: { decision: string };
+    evidence: { decision: string; changedFiles: number };
+    artifactAudit: { decision: string };
+    checks: Record<string, boolean>;
+  }>(path.join(fixtureCodingDir, "summary.json"));
+  const fixtureCodingLoop = Object.values(fixtureCoding.checks).every(Boolean);
 
   const summary: EngineeringMvpSummary = {
     schema: "naikaku.engineering-mvp-run.v1",
@@ -163,10 +194,12 @@ async function main() {
       adapterRegistry: adapterRegistry.schema,
       simulation: `${simulation.decisions.selfSimulation}/${simulation.decisions.launchQueue}`,
       localRunner: localRunner.decisions.runnerReport,
+      fixtureCoding: `${fixtureCoding.receipt.decision}/${fixtureCoding.evidence.decision}/${fixtureCoding.artifactAudit.decision}`,
       executionReceipt: localRunner.decisions.executionReceipt
     },
     claims: {
       localRun: localRunner.claims.localRun,
+      fixtureCodingLoop,
       codeChanged: localRunner.claims.codeChanged,
       completion: localRunner.claims.completion,
       macDesktopControl: localRunner.claims.macDesktopControl || simulation.capabilities.canControlMacDesktop,
@@ -178,19 +211,24 @@ async function main() {
       readyTasks: localRunner.counts.readyTasks,
       commandsExecuted: localRunner.counts.commandsExecuted,
       failedCommands: localRunner.counts.failedCommands,
+      fixtureBaselineExitCode: fixtureCoding.fixture.baselineTestExitCode,
+      fixtureFinalExitCode: fixtureCoding.fixture.finalTestExitCode,
+      fixtureChangedFiles: fixtureCoding.evidence.changedFiles,
       changedFiles: localRunner.counts.changedFiles
     },
     files: {
       adapterRegistry: relativePath(path.join(adapterDir, "adapter-registry.json")),
       simulationSummary: relativePath(path.join(simulationDir, "summary.json")),
       localRunnerSummary: relativePath(path.join(localRunDir, "summary.json")),
+      fixtureCodingSummary: relativePath(path.join(fixtureCodingDir, "summary.json")),
       executionReceipt: relativePath(path.join(localRunDir, "execution-receipt.json"))
     },
     honestyClaim: {
-      claim: "This one-command MVP run prepares adapter contracts, prepares supervised engineering work, runs only preflight-allowed local verification commands, and summarizes what can be honestly claimed.",
+      claim: "This one-command MVP run prepares adapter contracts, prepares supervised engineering work, runs preflight-allowed local verification commands, runs a fixture-only coding loop, and summarizes what can be honestly claimed.",
       limitations: [
         "It does not install or launch OpenClaw, OpenHands, browser-use, Playwright, Hammerspoon, E2B, MCP servers, or Hermes runtimes.",
         "It does not call model providers, control macOS, browse, commit, push, deploy, or send external messages.",
+        "The fixture coding loop edits only generated files under the MVP output directory and is not real product backlog completion.",
         "Without --patch-file it can claim local command execution, not code changes or implementation completion."
       ]
     }
@@ -302,6 +340,8 @@ function printSummary(summary: EngineeringMvpSummary) {
   console.log(`- commands executed: ${summary.counts.commandsExecuted}`);
   console.log(`- failed commands: ${summary.counts.failedCommands}`);
   console.log(`- local run claim: ${summary.claims.localRun ? "yes" : "no"}`);
+  console.log(`- fixture coding loop: ${summary.claims.fixtureCodingLoop ? "yes" : "no"}`);
+  console.log(`- fixture test: ${summary.counts.fixtureBaselineExitCode} -> ${summary.counts.fixtureFinalExitCode}`);
   console.log(`- code changed claim: ${summary.claims.codeChanged ? "yes" : "no"}`);
   console.log(`- completion claim: ${summary.claims.completion ? "yes" : "no"}`);
   console.log(`- Mac desktop control claim: ${summary.claims.macDesktopControl ? "yes" : "no"}`);
@@ -383,7 +423,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This command chains engineering:adapters, engineering:simulate, and engineering:run-local. It does not install external runners, control macOS, commit, push, deploy, or call model providers."
+    "This command chains engineering:adapters, engineering:simulate, engineering:run-local, and a fixture-only coding self-simulation. It does not install external runners, control macOS, commit, push, deploy, or call model providers."
   ].join("\n"));
 }
 
