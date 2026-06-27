@@ -1,5 +1,7 @@
 export type ExternalRunnerAdapterId =
   | "naikaku-local-engineering-runner"
+  | "codex-cli-runner"
+  | "claude-code-runner"
   | "openhands-coding-agent"
   | "openclaw-desktop-runner"
   | "browser-use-runner"
@@ -11,6 +13,8 @@ export type ExternalRunnerAdapterId =
 
 export const externalRunnerAdapterIds: ExternalRunnerAdapterId[] = [
   "naikaku-local-engineering-runner",
+  "codex-cli-runner",
+  "claude-code-runner",
   "openhands-coding-agent",
   "openclaw-desktop-runner",
   "browser-use-runner",
@@ -245,6 +249,94 @@ const baseAdapters: Array<Omit<ExternalRunnerAdapter, "status">> = [
       "Run in a container or scoped workspace before accepting implementation evidence."
     ],
     nextAction: "Build a thin adapter that writes an OpenHands task from Naikaku invocation JSON and imports its receipt."
+  },
+  {
+    id: "codex-cli-runner",
+    label: "Codex CLI runner",
+    projectUrl: "https://github.com/openai/codex",
+    license: "Apache-2.0 for open-source CLI; verify installed plugin and runtime notices before distribution",
+    licenseUrl: "https://github.com/openai/codex/blob/main/LICENSE",
+    installMode: "user-installed-cli",
+    risk: "high",
+    capabilities: ["repo-coding", "allowlisted-shell", "terminal-automation"],
+    contractInput: "naikaku.coding-agent-runner-invocation.v1 or a scoped role prompt",
+    receiptOutput: "Naikaku session receipt plus Codex transcript and final message",
+    installHint: "Install Codex CLI separately and run it through a wrapper that writes Naikaku receipts.",
+    permissionsRequired: [
+      "scoped repository worktree",
+      "sandbox mode",
+      "approval policy",
+      "transcript/evidence output path"
+    ],
+    prohibitedByDefault: [
+      "danger-full-access without outer sandbox",
+      "unreviewed Git push",
+      "deploy",
+      "external messages",
+      "host secrets"
+    ],
+    evidenceRequired: [
+      "Codex transcript",
+      "final message",
+      "sandbox mode",
+      "command results",
+      "Naikaku receipt JSON"
+    ],
+    stopConditions: [
+      "missing Codex auth",
+      "unsafe sandbox request",
+      "unapproved command",
+      "missing receipt path"
+    ],
+    safetyNotes: [
+      "Codex CLI is a strong coding runner candidate once wrapped with Naikaku receipt output.",
+      "Use read-only role calls for cabinet proposal/audit before allowing workspace-write implementation."
+    ],
+    nextAction: "Use npm run cabinet:codex-smoke to prove separated role calls, then build a receipt-writing wrapper before implementation runs."
+  },
+  {
+    id: "claude-code-runner",
+    label: "Claude Code runner",
+    projectUrl: "https://docs.anthropic.com/en/docs/claude-code",
+    license: "proprietary CLI terms; verify Anthropic terms and local install before integration",
+    licenseUrl: "https://docs.anthropic.com/en/docs/claude-code",
+    installMode: "user-installed-cli",
+    risk: "high",
+    capabilities: ["repo-coding", "allowlisted-shell", "terminal-automation"],
+    contractInput: "naikaku.coding-agent-runner-invocation.v1 or a scoped role prompt",
+    receiptOutput: "Naikaku session receipt plus Claude transcript and structured output",
+    installHint: "Install Claude Code separately, authenticate it, and run it through a Naikaku receipt wrapper.",
+    permissionsRequired: [
+      "scoped repository worktree",
+      "permission mode",
+      "allowed tools list",
+      "transcript/evidence output path"
+    ],
+    prohibitedByDefault: [
+      "bypass permissions outside an outer sandbox",
+      "unreviewed Git push",
+      "deploy",
+      "external messages",
+      "host secrets"
+    ],
+    evidenceRequired: [
+      "Claude transcript",
+      "structured final output",
+      "permission mode",
+      "command results",
+      "Naikaku receipt JSON"
+    ],
+    stopConditions: [
+      "missing Claude auth",
+      "unsafe permission mode",
+      "unapproved tool request",
+      "missing receipt path"
+    ],
+    safetyNotes: [
+      "Claude Code can be a separate cabinet role or implementation runner, but Naikaku should still own audit and vote decisions.",
+      "Authentication or subscription failures should be reported as readiness, not hidden behind fallback claims."
+    ],
+    nextAction: "Authenticate Claude Code and wrap --print structured output into Naikaku receipts before implementation runs."
   },
   {
     id: "openclaw-desktop-runner",

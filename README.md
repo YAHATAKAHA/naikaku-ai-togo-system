@@ -4,13 +4,15 @@ Japan-born multi-model AI cabinet system for planning, execution, critique, supe
 
 Naikaku is an operator workbench for teams that want multiple AI roles to cooperate like a cabinet: one mission enters, specialized ministers reason over it, controlled tools execute it, auditors challenge it, and a scoring office decides whether the result is ready or needs another cycle.
 
+The product is not meant to make operators babysit every automation prompt. Its job is to turn annoying confirmations and single-agent drift into a cabinet protocol: one role proposes, another implements, critics and supervisors can object with evidence, and the cabinet vote decides whether a governed runner may continue. Human approval is reserved for genuinely high-impact actions such as desktop permissions, external sends, Git push, deploy, secrets, purchases, or broad host control. Routine low-risk progress should keep moving while transcripts, receipts, and artifact audits stay attached.
+
 ## Core Direction
 
-Naikaku's north star is a Japan-first governed coding cabinet. It should feel closer to a careful Codex-style operator bench than a generic chatbot: cabinet roles plan software work, generate implementation briefs, run only approved sandbox actions, import completion receipts, verify local artifacts, and then update the Development Board. Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported as first-class locales. OpenClaw-style computer control, desktop sandboxes, browser automation, shell runners, and MCP tools should plug in as governed executor profiles, not as unbounded host power.
+Naikaku's north star is a Japan-first governed coding cabinet. It should feel closer to a careful Codex-style operator bench than a generic chatbot: cabinet roles plan software work, generate implementation briefs, run only approved sandbox actions, import completion receipts, verify local artifacts, and then update the Development Board. Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported as first-class locales. Codex CLI, Claude Code, OpenHands, OpenClaw-style computer control, Hammerspoon Mac automation, desktop sandboxes, browser automation, shell runners, and MCP tools should plug in as governed executor profiles, not as unbounded host power.
 
 ## Current Reality
 
-This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement. Today it can show one clear mission input, split that mission into supervised cabinet/coding-agent work, prepare runner contracts, run local dry-run drills, and keep receipt/evidence gates honest. It does not currently control the Mac desktop, operate arbitrary apps, run live multi-agent implementation by itself, or push/deploy without an external runner and explicit approval. If a capability is not wired, the UI should say so.
+This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement. Today it can show one clear mission input, split that mission into supervised cabinet/coding-agent work, call local Codex CLI as separated cabinet roles when Codex auth is available, prepare runner contracts, run local dry-run drills, probe installed OpenClaw/Hammerspoon tools, and keep receipt/evidence gates honest. It does not currently grant arbitrary Mac desktop control, operate arbitrary apps, run live implementation without a configured runner wrapper, or push/deploy without an external runner and explicit approval. If a capability is not wired, the UI should say so.
 
 ## What Exists Now
 
@@ -93,6 +95,22 @@ npm run naikaku:task -- "Implement the settings panel and run npm test"
 ```
 
 By default this prepares supervised handoff files and evidence boundaries without starting external tools. Use `--self-test` to run the deterministic fixture automation path, or `--runner-preset <id> --adapter-ready` after installing and approving a fixed local CLI such as OpenHands, OpenClaw, Hammerspoon, browser-use, Playwright, MCP, or a Hermes-style wrapper.
+
+To prove the local adapter idea with installed tools, run:
+
+```bash
+npm run local-tools:smoke
+```
+
+It writes a tiny cabinet-vote project, runs its tests, reads OpenClaw CLI/model readiness, and asks Hammerspoon to write one scoped proof file under `output/`. This is a local Mac/tool smoke, not a CI requirement; OpenClaw still needs provider auth before real agent turns, and Hammerspoon still needs its IPC module enabled before `hs` can receive command-line tasks.
+
+To prove separated AI roles with the local Codex CLI:
+
+```bash
+npm run cabinet:codex-smoke
+```
+
+It calls Codex three times in read-only mode as Prime Minister, Critic, and Supervisor, then lets Naikaku make the deterministic cabinet motion decision from their proposal, audit, dissent, and vote. This is the minimum proof of the product idea: AI roles can disagree, an audit can block unsafe work, and execution is authorized only after the cabinet decision.
 
 For the local gate intended for GitHub Actions and pull request review:
 
@@ -287,6 +305,8 @@ npm run engineering:auto-work-gateway-smoke # start the local gateway and prove 
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
 npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fixture coding loop in one contributor-facing check
 npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
+npm run local-tools:smoke # generate a tiny cabinet-vote project and probe local OpenClaw/Hammerspoon adapters
+npm run cabinet:codex-smoke # call Codex CLI as separate cabinet roles, then vote locally
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit

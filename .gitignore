@@ -29,6 +29,8 @@ output/engineering-handoff
 output/engineering-mvp
 output/open-source-mvp-check
 output/engineering-runner-kit
+output/local-tool-smoke
+output/cabinet-codex-role-smoke
 output/engineering-simulate
 output/engineering-simulate-smoke
 output/engineering-run-local

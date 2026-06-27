@@ -28,6 +28,14 @@ describe("external runner adapter registry", () => {
         status: "needs-license-review"
       }),
       expect.objectContaining({
+        id: "codex-cli-runner",
+        status: "needs-license-review"
+      }),
+      expect.objectContaining({
+        id: "claude-code-runner",
+        status: "needs-license-review"
+      }),
+      expect.objectContaining({
         id: "browser-use-runner",
         status: "needs-license-review"
       })
@@ -80,6 +88,8 @@ describe("external runner adapter registry", () => {
     expect(parsed.schema).toBe("naikaku.external-runner-adapter-registry.v1");
     expect(markdown).toContain("External Runner Adapter Registry");
     expect(markdown).toContain("OpenHands coding agent");
+    expect(markdown).toContain("Codex CLI runner");
+    expect(markdown).toContain("Claude Code runner");
     expect(markdown).toContain("OpenClaw desktop runner");
     expect(markdown).toContain("Prefer user-installed upstream runners");
   });

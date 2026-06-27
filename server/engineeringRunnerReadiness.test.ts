@@ -86,6 +86,25 @@ describe("engineering runner readiness", () => {
     expect(openClaw?.workbenchPreset).toBe("openclaw-local");
     expect(openClaw?.detectedCommands).toEqual(["openclaw"]);
   });
+
+  it("detects Codex and Claude CLI candidates without making them launchable until wrapped", () => {
+    const report = buildEngineeringRunnerReadiness({
+      runnerPresetRegistry: builtInPresetRegistry(),
+      commandExists: (command) => ["npm", "npm.cmd", "codex", "claude"].includes(command),
+      pathExists: () => false
+    });
+
+    const codex = report.items.find((item) => item.adapterId === "codex-cli-runner");
+    const claude = report.items.find((item) => item.adapterId === "claude-code-runner");
+
+    expect(codex?.detectedCommands).toEqual(["codex"]);
+    expect(claude?.detectedCommands).toEqual(["claude"]);
+    expect(codex?.status).toBe("detected-needs-adapter");
+    expect(claude?.status).toBe("detected-needs-adapter");
+    expect(codex?.canLaunchFromWorkbench).toBe(false);
+    expect(claude?.canLaunchFromWorkbench).toBe(false);
+    expect(codex?.nextAction).toContain("scoped command preset");
+  });
 });
 
 function builtInPresetRegistry() {

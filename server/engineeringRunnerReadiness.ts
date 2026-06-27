@@ -69,6 +69,8 @@ interface ReadinessDependencies {
 
 const commandCandidates: Record<ExternalRunnerAdapterId, string[]> = {
   "naikaku-local-engineering-runner": [npmBinary()],
+  "codex-cli-runner": ["codex"],
+  "claude-code-runner": ["claude"],
   "openhands-coding-agent": ["openhands"],
   "openclaw-desktop-runner": ["openclaw"],
   "browser-use-runner": ["browser-use"],
