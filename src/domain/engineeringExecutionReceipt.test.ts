@@ -22,7 +22,7 @@ import {
   serializeEngineeringExecutionReceipt,
   serializeEngineeringExecutionReceiptMarkdown
 } from "./engineeringExecutionReceipt";
-import { buildEngineeringLaunchQueue } from "./engineeringLaunchQueue";
+import { buildEngineeringLaunchQueue, type EngineeringLaunchQueue } from "./engineeringLaunchQueue";
 import { buildTeamHandoff } from "./teamPackages";
 import type {
   CodingAgentSandboxRunnerReport,
@@ -96,6 +96,24 @@ describe("engineering execution receipt", () => {
     expect(executionReceipt.canUpdateBoard).toBe(true);
     expect(executionReceipt.summary.verifiedReceipts).toBe(chain.sessionBundle.summary.ready);
     expect(executionReceipt.items.every((item) => item.status === "accepted")).toBe(true);
+  });
+
+  it("claims a local runner run without pretending code changed or completion happened", () => {
+    const chain = preparedRunnerChain();
+    const sandboxRunnerReport = sandboxRunnerReportForQueue(chain.launchQueue);
+    const executionReceipt = buildEngineeringExecutionReceipt({
+      launchQueue: chain.launchQueue,
+      sandboxRunnerReport,
+      generatedAt: sandboxRunnerReport.generatedAt
+    });
+
+    expect(executionReceipt.decision).toBe("runner-reported");
+    expect(executionReceipt.canClaimLocalRun).toBe(true);
+    expect(executionReceipt.canClaimCodeChanged).toBe(false);
+    expect(executionReceipt.canClaimCompletion).toBe(false);
+    expect(executionReceipt.allowedClaims).toContain("A governed runner returned verified local command results.");
+    expect(executionReceipt.blockedClaims).toContain("Do not claim code files changed.");
+    expect(executionReceipt.blockedClaims).toContain("Do not claim implementation is complete.");
   });
 
   it("serializes JSON and Markdown with blocked claims", () => {
@@ -297,6 +315,79 @@ function sandboxRunnerReportFor(receipt: CodingAgentSessionReceipt): CodingAgent
     honestyClaim: {
       level: "local-sandbox-runner-drill",
       claim: "Fixture runner report.",
+      limitations: [],
+      productionRequirements: []
+    }
+  };
+}
+
+function sandboxRunnerReportForQueue(queue: EngineeringLaunchQueue): CodingAgentSandboxRunnerReport {
+  const items = queue.items.map((item) => {
+    const isReady = item.status === "ready-to-run";
+    const commandResults = item.commands
+      .filter((command) => command.status === "allowed")
+      .map((command, index) => ({
+        command: command.command,
+        exitCode: 0,
+        outputSummary: `${command.command} passed in local engineering runner.`,
+        transcriptRef: command.transcriptRef || `${item.evidenceArtifactPrefix}transcript-${index + 1}.log`,
+        status: "executed" as const,
+        durationMs: 10
+      }));
+
+    return {
+      sessionId: item.sessionId,
+      sourceItemId: item.sourceItemId,
+      title: item.title,
+      executorProfileId: item.executorProfileId,
+      selfTestStatus: isReady ? "would-run" as const : item.status === "blocked" ? "blocked" as const : "held" as const,
+      runStatus: isReady ? "executed" as const : item.status === "blocked" ? "blocked" as const : "held" as const,
+      promptPath: item.promptPath,
+      receiptDraftPath: item.receiptDraftPath,
+      evidenceArtifactPrefix: item.evidenceArtifactPrefix,
+      changedFileSummaryPath: null,
+      commandResults,
+      evidence: [],
+      risks: ["Local command runner executed verification commands only."],
+      checks: [
+        {
+          id: "local-run",
+          status: "pass" as const,
+          summary: "Fixture local runner report for command-run claim."
+        }
+      ],
+      nextAction: "Attach changed files and evidence before claiming implementation completion."
+    };
+  });
+  const commandResults = items.flatMap((item) => item.commandResults);
+
+  return {
+    schema: "naikaku.coding-agent-sandbox-runner.v1",
+    generatedAt: queue.generatedAt,
+    mode: "local-sandbox-runner-drill",
+    sourceSchema: "naikaku.coding-agent-runner-self-test.v1",
+    sourceDecision: "self-test-ready",
+    decision: "sandbox-runner-verified",
+    runId: queue.runId,
+    operatorLocale: queue.operatorLocale,
+    items,
+    summary: {
+      total: items.length,
+      executedTasks: items.filter((item) => item.runStatus === "executed").length,
+      heldTasks: items.filter((item) => item.runStatus === "held").length,
+      blockedTasks: 0,
+      commandResults: commandResults.length,
+      processExecutions: commandResults.length,
+      failedCommands: 0,
+      blockedCommands: 0,
+      transcriptFilesWritten: commandResults.length,
+      changedFileSummaries: 0,
+      evidenceArtifacts: 0,
+      unsafePaths: 0
+    },
+    honestyClaim: {
+      level: "local-sandbox-runner-drill",
+      claim: "Fixture local runner report.",
       limitations: [],
       productionRequirements: []
     }

@@ -217,8 +217,11 @@ async function main() {
     executionReceipt: "execution-receipt.json",
     macReadiness: "mac-runner-readiness.json",
     macContract: "mac-runner-contract.json",
+    sessionBundle: "session-bundle.json",
     runnerManifest: "runner-manifest.json",
-    runnerInvocation: "runner-invocation.json"
+    runnerInvocation: "runner-invocation.json",
+    runnerSelfTest: "runner-self-test.json",
+    sandboxPreflight: "sandbox-preflight.json"
   };
   const summary: EngineeringSimulateSummary = {
     schema: "naikaku.engineering-cli-simulation.v1",
@@ -275,8 +278,11 @@ async function main() {
   await writeJson(path.join(outputDir, files.executionReceipt), executionReceipt);
   await writeJson(path.join(outputDir, files.macReadiness), macReadiness);
   await writeJson(path.join(outputDir, files.macContract), macContract);
+  await writeJson(path.join(outputDir, files.sessionBundle), bundle);
   await writeJson(path.join(outputDir, files.runnerManifest), runnerManifest);
   await writeJson(path.join(outputDir, files.runnerInvocation), runnerInvocation);
+  await writeJson(path.join(outputDir, files.runnerSelfTest), runnerSelfTest);
+  await writeJson(path.join(outputDir, files.sandboxPreflight), sandboxPreflight);
 
   printSummary(summary);
 

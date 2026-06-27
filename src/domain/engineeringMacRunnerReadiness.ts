@@ -467,25 +467,25 @@ function adapterRows({
     {
       id: "codex-style-coding-agent",
       status: queueReady ? "available-now" : profileReady ? "paperwork-ready" : "not-requested",
-      purpose: "Consume reviewed coding briefs, edit repository files, run allowlisted tests, and return receipts.",
+      purpose: "Use Codex/OpenHands-style coding agents to consume reviewed briefs, edit repository files, run allowlisted tests, and return receipts.",
       stopCondition: "Stop on failed preflight, missing receipt path, unsafe command, or unreviewed external write."
     },
     {
       id: "browser-profile-runner",
       status: browserRequested ? "approval-required" : "not-requested",
-      purpose: "Operate an isolated browser session for approved web verification tasks.",
+      purpose: "Use browser-use or Playwright as the browser adapter for approved web verification tasks.",
       stopCondition: "Stop on unapproved URL, login wall, payment, message send, or credential prompt."
     },
     {
       id: "hammerspoon-adapter",
       status: macRequested ? "needs-runtime" : "not-requested",
-      purpose: "Provide Mac hotkey, window, keyboard, mouse, and app-control primitives behind policy.",
+      purpose: "Use Hammerspoon as an optional Mac adapter for hotkey, window, keyboard, mouse, and app-control primitives behind policy.",
       stopCondition: "Stop on missing Accessibility, missing action log, unknown app target, or kill switch."
     },
     {
       id: "openclaw-style-desktop",
       status: macRequested ? "needs-runtime" : "not-requested",
-      purpose: "Provide visual desktop loop primitives such as observe, click, type, and screenshot.",
+      purpose: "Use an OpenClaw-style desktop runtime for visual loop primitives such as observe, click, type, and screenshot.",
       stopCondition: "Stop on missing Screen Recording, uncontrolled desktop scope, or unredacted evidence."
     },
     {

@@ -4795,40 +4795,40 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
 function macRunnerAdapterLabels(locale: SupportedLocale) {
   const labels = {
     ja: {
-      "codex-style-coding-agent": "Codex型 coding agent",
-      "browser-profile-runner": "Browser runner",
+      "codex-style-coding-agent": "Codex/OpenHands型 coding agent",
+      "browser-profile-runner": "browser-use/Playwright runner",
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw型 desktop",
       "mcp-tool-runner": "MCP runner",
       "external-write-gateway": "外部書き込み gateway"
     },
     en: {
-      "codex-style-coding-agent": "Codex-style coding agent",
-      "browser-profile-runner": "browser runner",
+      "codex-style-coding-agent": "Codex/OpenHands-style coding agent",
+      "browser-profile-runner": "browser-use/Playwright runner",
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw-style desktop",
       "mcp-tool-runner": "MCP runner",
       "external-write-gateway": "external write gateway"
     },
     "zh-Hans": {
-      "codex-style-coding-agent": "Codex 式编程代理",
-      "browser-profile-runner": "浏览器 runner",
+      "codex-style-coding-agent": "Codex/OpenHands 式编程代理",
+      "browser-profile-runner": "browser-use/Playwright runner",
       "hammerspoon-adapter": "Hammerspoon 适配器",
       "openclaw-style-desktop": "OpenClaw 式桌面",
       "mcp-tool-runner": "MCP runner",
       "external-write-gateway": "外部写入网关"
     },
     "zh-Hant": {
-      "codex-style-coding-agent": "Codex 式編程代理",
-      "browser-profile-runner": "瀏覽器 runner",
+      "codex-style-coding-agent": "Codex/OpenHands 式編程代理",
+      "browser-profile-runner": "browser-use/Playwright runner",
       "hammerspoon-adapter": "Hammerspoon 適配器",
       "openclaw-style-desktop": "OpenClaw 式桌面",
       "mcp-tool-runner": "MCP runner",
       "external-write-gateway": "外部寫入閘道"
     },
     ko: {
-      "codex-style-coding-agent": "Codex식 코딩 agent",
-      "browser-profile-runner": "브라우저 runner",
+      "codex-style-coding-agent": "Codex/OpenHands식 코딩 agent",
+      "browser-profile-runner": "browser-use/Playwright runner",
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw식 desktop",
       "mcp-tool-runner": "MCP runner",

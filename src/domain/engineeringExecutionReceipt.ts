@@ -115,10 +115,7 @@ export function buildEngineeringExecutionReceipt({
       reconciliation
     })
   );
-  const canClaimLocalRun = Boolean(
-    sandboxRunnerReport?.decision === "sandbox-runner-verified" &&
-    sessionReceipt?.decision === "verified"
-  );
+  const canClaimLocalRun = Boolean(sandboxRunnerReport?.decision === "sandbox-runner-verified");
   const canClaimCodeChanged = Boolean(
     sessionReceipt?.decision === "verified" &&
     implementationEvidence?.summary.changedFiles &&

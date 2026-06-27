@@ -21,6 +21,7 @@ output/coding-agent-gateway-runner-smoke
 output/coding-agent-engineering-self-simulation
 output/engineering-simulate
 output/engineering-simulate-smoke
+output/engineering-run-local
 output/rehearsal
 output/rehearsal-drill
 output/release-drill
