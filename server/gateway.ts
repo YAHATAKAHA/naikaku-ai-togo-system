@@ -32,7 +32,6 @@ import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilitie
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import { runCodingAgentSandboxRunner } from "./codingAgentSandboxRunner";
 import type {
-  AutomationAction,
   AutomationApprovalRecord,
   AuditEvent,
   CabinetRun,
@@ -78,9 +77,14 @@ import { validateProviderConfig } from "./providerAdapters";
 import {
   evaluateRunnerAuth,
   runnerAuthPosture,
-  runnerCanUseExecutorProfile,
   type RunnerAuthDecision
 } from "./runnerAuth";
+import {
+  deniedExecutorProfilesForRunner,
+  runnerScopePayload,
+  scopeEvidenceBundleForRunner,
+  scopeExecutorHandoffForRunner
+} from "./runnerScope";
 import { evaluateSandboxAction, type SandboxActionRequest } from "./sandboxPolicy";
 
 const port = Number(process.env.NAIKAKU_GATEWAY_PORT || 8787);
@@ -1137,55 +1141,6 @@ async function readJson<T>(request: IncomingMessage): Promise<T> {
   return raw ? (JSON.parse(raw) as T) : ({} as T);
 }
 
-function scopeExecutorHandoffForRunner(
-  handoff: ExecutorHandoff,
-  auth: RunnerAuthDecision
-): ExecutorHandoff {
-  if (auth.allExecutorProfiles) return handoff;
-
-  const readyActions = handoff.readyActions.filter((action) =>
-    runnerCanUseExecutorProfile(auth, action.executorProfileId)
-  );
-  const scopedOutActions = handoff.readyActions
-    .filter((action) => !runnerCanUseExecutorProfile(auth, action.executorProfileId))
-    .map((action): AutomationAction => {
-      const { handoffStatus: _handoffStatus, approvalRecordId: _approvalRecordId, ...automationAction } = action;
-      return {
-        ...automationAction,
-        status: "blocked",
-        approvalRequired: true,
-        reason: `Runner ${auth.runnerId} is not scoped for ${action.executorProfileId}.`,
-        auditTags: [...action.auditTags, "runner-scope-held", auth.runnerId]
-      };
-    });
-
-  return {
-    ...handoff,
-    readyActions,
-    heldActions: [...handoff.heldActions, ...scopedOutActions]
-  };
-}
-
-function scopeEvidenceBundleForRunner(
-  bundle: ExecutorEvidenceBundle,
-  auth: RunnerAuthDecision
-): ExecutorEvidenceBundle {
-  if (auth.allExecutorProfiles) return bundle;
-  const steps = bundle.steps.filter((step) =>
-    runnerCanUseExecutorProfile(auth, step.executorProfileId)
-  );
-
-  return {
-    ...bundle,
-    steps,
-    summary: {
-      steps: steps.length,
-      evidenceItems: steps.reduce((total, step) => total + step.evidence.length, 0),
-      replayableSteps: steps.filter((step) => step.replayable).length
-    }
-  };
-}
-
 function ensureRunnerCanAccessProfiles({
   auth,
   response,
@@ -1197,10 +1152,7 @@ function ensureRunnerCanAccessProfiles({
   profiles: ExecutorProfileId[];
   operation: string;
 }) {
-  const uniqueProfiles = [...new Set(profiles)];
-  const deniedProfiles = uniqueProfiles.filter((profile) =>
-    !runnerCanUseExecutorProfile(auth, profile)
-  );
+  const deniedProfiles = deniedExecutorProfilesForRunner(auth, profiles);
 
   if (deniedProfiles.length === 0) return true;
 
@@ -1217,14 +1169,6 @@ function ensureRunnerCanAccessProfiles({
     auditTags: ["runner-auth", "scope-denied", auth.runnerId, ...deniedProfiles]
   });
   return false;
-}
-
-function runnerScopePayload(auth: RunnerAuthDecision) {
-  return {
-    allExecutorProfiles: auth.allExecutorProfiles,
-    allowedExecutorProfiles: auth.allowedExecutorProfiles,
-    tokenFingerprint: auth.tokenFingerprint
-  };
 }
 
 function authorizeExecutorRequest(

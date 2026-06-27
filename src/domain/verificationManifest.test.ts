@@ -733,7 +733,17 @@ describe("verification manifest", () => {
     if (!scopedShell) throw new Error("Missing scoped shell runner auth fixture.");
     scopedShell.allExecutorProfiles = true;
     scopedShell.canUseDeniedProfile = true;
+    runnerAuthDrill.scopeProbe.scopedReadyActions = 3;
+    runnerAuthDrill.scopeProbe.filteredReadyActions = 0;
+    runnerAuthDrill.scopeProbe.scopedEvidenceSteps = 3;
+    runnerAuthDrill.scopeProbe.filteredEvidenceSteps = 0;
+    runnerAuthDrill.scopeProbe.deniedExecutorProfiles = [];
+    runnerAuthDrill.scopeProbe.shellRunnerCanAccessBrowser = true;
     runnerAuthDrill.checks.scopedShellRunnerLimited = false;
+    runnerAuthDrill.checks.handoffScopeFiltersDeniedProfiles = false;
+    runnerAuthDrill.checks.evidenceScopeFiltersDeniedProfiles = false;
+    runnerAuthDrill.checks.deniedProfilesReported = false;
+    runnerAuthDrill.checks.scopePayloadStable = false;
 
     const manifest = buildVerificationManifest({
       codingAgentDispatchDrill: codingAgentDispatchFixture(),
@@ -758,7 +768,8 @@ describe("verification manifest", () => {
 
     expect(manifest.decision).toBe("invalid");
     expect(runnerAuthCheck?.status).toBe("fail");
-    expect(runnerAuthCheck?.evidence).toContain("Scoped shell denied other profile: no");
+    expect(runnerAuthCheck?.evidence).toContain("Scoped ready actions: 3/3");
+    expect(runnerAuthCheck?.evidence).toContain("Denied scope profiles: none");
   });
 
   it("invalidates the manifest when production boundary exit code is not observed", () => {
@@ -1674,6 +1685,19 @@ function runnerAuthDrillFixture(): RunnerAuthDrillSummary {
       activeScopedCredentials: 2,
       expiredScopedCredentials: 1
     },
+    scopeProbe: {
+      sourceReadyActions: 3,
+      scopedReadyActions: 1,
+      scopedHeldActions: 2,
+      filteredReadyActions: 2,
+      sourceEvidenceSteps: 3,
+      scopedEvidenceSteps: 1,
+      filteredEvidenceSteps: 2,
+      deniedExecutorProfiles: ["browser-sandbox", "desktop-vm"],
+      scopePayloadProfiles: ["shell-container"],
+      shellRunnerCanAccessShell: true,
+      shellRunnerCanAccessBrowser: false
+    },
     checks: {
       developmentOpenVisible: true,
       sharedTokenLegacyCompatible: true,
@@ -1682,6 +1706,10 @@ function runnerAuthDrillFixture(): RunnerAuthDrillSummary {
       scopedHashTokenAccepted: true,
       expiredCredentialRejected: true,
       malformedConfigFailsClosed: true,
+      handoffScopeFiltersDeniedProfiles: true,
+      evidenceScopeFiltersDeniedProfiles: true,
+      deniedProfilesReported: true,
+      scopePayloadStable: true,
       tokensRedacted: true
     },
     honestyClaim: {

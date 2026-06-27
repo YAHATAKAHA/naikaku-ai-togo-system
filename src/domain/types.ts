@@ -1145,6 +1145,19 @@ export interface RunnerAuthDrillSummary {
     activeScopedCredentials: number;
     expiredScopedCredentials: number;
   };
+  scopeProbe: {
+    sourceReadyActions: number;
+    scopedReadyActions: number;
+    scopedHeldActions: number;
+    filteredReadyActions: number;
+    sourceEvidenceSteps: number;
+    scopedEvidenceSteps: number;
+    filteredEvidenceSteps: number;
+    deniedExecutorProfiles: ExecutorProfileId[];
+    scopePayloadProfiles: ExecutorProfileId[];
+    shellRunnerCanAccessShell: boolean;
+    shellRunnerCanAccessBrowser: boolean;
+  };
   checks: Record<string, boolean>;
   honestyClaim: {
     level: string;

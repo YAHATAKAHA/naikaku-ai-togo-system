@@ -917,6 +917,19 @@ function runnerAuthDrillCheck(report: RunnerAuthDrillSummary): VerificationManif
     && expiredRunner.auditTags.includes("credential-expired")
     && malformed?.mode === "misconfigured"
     && malformed.decisionOk === false
+    && report.scopeProbe.sourceReadyActions === 3
+    && report.scopeProbe.scopedReadyActions === 1
+    && report.scopeProbe.scopedHeldActions === 2
+    && report.scopeProbe.filteredReadyActions === 2
+    && report.scopeProbe.sourceEvidenceSteps === 3
+    && report.scopeProbe.scopedEvidenceSteps === 1
+    && report.scopeProbe.filteredEvidenceSteps === 2
+    && report.scopeProbe.deniedExecutorProfiles.includes("browser-sandbox")
+    && report.scopeProbe.deniedExecutorProfiles.includes("desktop-vm")
+    && report.scopeProbe.scopePayloadProfiles.length === 1
+    && report.scopeProbe.scopePayloadProfiles[0] === "shell-container"
+    && report.scopeProbe.shellRunnerCanAccessShell
+    && !report.scopeProbe.shellRunnerCanAccessBrowser
     && checksPassed;
 
   return {
@@ -935,7 +948,12 @@ function runnerAuthDrillCheck(report: RunnerAuthDrillSummary): VerificationManif
       `Scoped shell denied other profile: ${scopedShell?.canUseDeniedProfile === false ? "yes" : "no"}`,
       `Hash credential fingerprint present: ${hashRunner?.tokenFingerprint ? "yes" : "no"}`,
       `Expired credential rejected: ${expiredRunner?.auditTags.includes("credential-expired") ? "yes" : "no"}`,
-      `Malformed config mode: ${malformed?.mode || "missing"}`
+      `Malformed config mode: ${malformed?.mode || "missing"}`,
+      `Scoped ready actions: ${report.scopeProbe.scopedReadyActions}/${report.scopeProbe.sourceReadyActions}`,
+      `Scoped held actions: ${report.scopeProbe.scopedHeldActions}`,
+      `Scoped evidence steps: ${report.scopeProbe.scopedEvidenceSteps}/${report.scopeProbe.sourceEvidenceSteps}`,
+      `Denied scope profiles: ${report.scopeProbe.deniedExecutorProfiles.join(", ") || "none"}`,
+      `Shell runner browser access: ${report.scopeProbe.shellRunnerCanAccessBrowser ? "yes" : "no"}`
     ],
     nextAction: ok
       ? "Keep the runner auth drill attached before connecting real runner services."

@@ -7,7 +7,19 @@ import {
   runnerCanUseExecutorProfile,
   type RunnerAuthEnv
 } from "../server/runnerAuth";
-import type { ExecutorProfileId, RunnerAuthDrillSummary } from "../src/domain/types";
+import {
+  deniedExecutorProfilesForRunner,
+  runnerCanAccessExecutorProfiles,
+  runnerScopePayload,
+  scopeEvidenceBundleForRunner,
+  scopeExecutorHandoffForRunner
+} from "../server/runnerScope";
+import type {
+  ExecutorEvidenceBundle,
+  ExecutorHandoff,
+  ExecutorProfileId,
+  RunnerAuthDrillSummary
+} from "../src/domain/types";
 
 interface RunnerAuthDrillOptions {
   outputDir: string;
@@ -68,6 +80,15 @@ async function main() {
   await mkdir(outputDir, { recursive: true });
 
   const posture = runnerAuthPosture(scopedEnv, now);
+  const shellRunnerDecision = evaluateRunnerAuth({
+    headers: {
+      "x-naikaku-runner-id": "shell-runner-01",
+      "x-naikaku-runner-token": "shell-token"
+    },
+    env: scopedEnv,
+    now
+  });
+  const scopeProbe = buildScopeProbe(shellRunnerDecision);
   const cases = [
     caseSummary({
       id: "development-open-visible",
@@ -104,14 +125,7 @@ async function main() {
     }),
     caseSummary({
       id: "scoped-shell-runner-limited",
-      decision: evaluateRunnerAuth({
-        headers: {
-          "x-naikaku-runner-id": "shell-runner-01",
-          "x-naikaku-runner-token": "shell-token"
-        },
-        env: scopedEnv,
-        now
-      }),
+      decision: shellRunnerDecision,
       requestedProfile: "shell-container",
       deniedProfile: "browser-sandbox",
       passed: (decision) =>
@@ -198,6 +212,7 @@ async function main() {
         credential.status === "expired"
       ).length
     },
+    scopeProbe,
     checks: {
       developmentOpenVisible: cases.find((item) => item.id === "development-open-visible")?.passed === true,
       sharedTokenLegacyCompatible: cases.find((item) => item.id === "shared-token-legacy-compatible")?.passed === true,
@@ -206,6 +221,23 @@ async function main() {
       scopedHashTokenAccepted: cases.find((item) => item.id === "scoped-hash-token-accepted")?.passed === true,
       expiredCredentialRejected: cases.find((item) => item.id === "expired-scoped-runner-rejected")?.passed === true,
       malformedConfigFailsClosed: cases.find((item) => item.id === "malformed-scoped-config-fails-closed")?.passed === true,
+      handoffScopeFiltersDeniedProfiles:
+        scopeProbe.sourceReadyActions === 3 &&
+        scopeProbe.scopedReadyActions === 1 &&
+        scopeProbe.filteredReadyActions === 2 &&
+        scopeProbe.scopedHeldActions === 2,
+      evidenceScopeFiltersDeniedProfiles:
+        scopeProbe.sourceEvidenceSteps === 3 &&
+        scopeProbe.scopedEvidenceSteps === 1 &&
+        scopeProbe.filteredEvidenceSteps === 2,
+      deniedProfilesReported:
+        scopeProbe.deniedExecutorProfiles.includes("browser-sandbox") &&
+        scopeProbe.deniedExecutorProfiles.includes("desktop-vm"),
+      scopePayloadStable:
+        scopeProbe.scopePayloadProfiles.length === 1 &&
+        scopeProbe.scopePayloadProfiles[0] === "shell-container" &&
+        scopeProbe.shellRunnerCanAccessShell &&
+        !scopeProbe.shellRunnerCanAccessBrowser,
       tokensRedacted: tokensRedacted(cases)
     },
     honestyClaim: {
@@ -262,6 +294,104 @@ function caseSummary({
   };
 }
 
+function buildScopeProbe(decision: ReturnType<typeof evaluateRunnerAuth>): RunnerAuthDrillSummary["scopeProbe"] {
+  const handoff = mixedHandoff();
+  const scopedHandoff = scopeExecutorHandoffForRunner(handoff, decision);
+  const evidenceBundle = mixedEvidenceBundle();
+  const scopedEvidenceBundle = scopeEvidenceBundleForRunner(evidenceBundle, decision);
+  const deniedExecutorProfiles = deniedExecutorProfilesForRunner(decision, [
+    "shell-container",
+    "browser-sandbox",
+    "desktop-vm"
+  ]);
+  const scopePayload = runnerScopePayload(decision);
+
+  return {
+    sourceReadyActions: handoff.readyActions.length,
+    scopedReadyActions: scopedHandoff.readyActions.length,
+    scopedHeldActions: scopedHandoff.heldActions.length,
+    filteredReadyActions: handoff.readyActions.length - scopedHandoff.readyActions.length,
+    sourceEvidenceSteps: evidenceBundle.steps.length,
+    scopedEvidenceSteps: scopedEvidenceBundle.steps.length,
+    filteredEvidenceSteps: evidenceBundle.steps.length - scopedEvidenceBundle.steps.length,
+    deniedExecutorProfiles,
+    scopePayloadProfiles: scopePayload.allowedExecutorProfiles,
+    shellRunnerCanAccessShell: runnerCanAccessExecutorProfiles(decision, ["shell-container"]),
+    shellRunnerCanAccessBrowser: runnerCanAccessExecutorProfiles(decision, ["browser-sandbox"])
+  };
+}
+
+function mixedHandoff(): ExecutorHandoff {
+  return {
+    id: "runner-auth-drill-handoff",
+    runId: "runner-auth-drill",
+    createdAt: "2026-06-27T00:00:00.000Z",
+    approvalRecords: [],
+    readyActions: [
+      action("shell-container"),
+      action("browser-sandbox"),
+      action("desktop-vm")
+    ],
+    heldActions: []
+  };
+}
+
+function action(executorProfileId: ExecutorProfileId) {
+  return {
+    id: `runner-auth-drill-${executorProfileId}`,
+    runId: "runner-auth-drill",
+    stageId: "execution" as const,
+    roleId: "execution-minister",
+    executorProfileId,
+    title: `Scope probe for ${executorProfileId}`,
+    action: executorProfileId === "shell-container" ? "run_shell" : "dry_run",
+    target: executorProfileId === "shell-container" ? "/workspace:npm run test" : "sandbox://scope-probe",
+    riskLevel: "medium" as const,
+    status: "allowed" as const,
+    approvalRequired: false,
+    reason: "Allowed for runner auth scope probe.",
+    auditTags: [executorProfileId, "runner-auth-drill"],
+    handoffStatus: "ready" as const
+  };
+}
+
+function mixedEvidenceBundle(): ExecutorEvidenceBundle {
+  const profiles: ExecutorProfileId[] = ["shell-container", "browser-sandbox", "desktop-vm"];
+
+  return {
+    schema: "naikaku.executor-evidence.v1",
+    exportedAt: "2026-06-27T00:00:00.000Z",
+    executorRunId: "runner-auth-drill-executor-run",
+    handoffId: "runner-auth-drill-handoff",
+    runId: "runner-auth-drill",
+    mode: "dry-run",
+    steps: profiles.map((executorProfileId) => ({
+      stepId: `runner-auth-drill-${executorProfileId}-step`,
+      actionId: `runner-auth-drill-${executorProfileId}`,
+      executorProfileId,
+      runnerId: `naikaku.${executorProfileId}.dry-run`,
+      status: "simulated",
+      evidenceHash: `scope-hash-${executorProfileId}`,
+      replayable: true,
+      evidence: [{
+        id: `runner-auth-drill-${executorProfileId}-policy`,
+        kind: "policy",
+        label: "Policy decision",
+        summary: "Scope probe evidence.",
+        checksum: `scope-checksum-${executorProfileId}`,
+        createdAt: "2026-06-27T00:00:00.000Z",
+        redacted: false,
+        replayable: true
+      }]
+    })),
+    summary: {
+      steps: profiles.length,
+      evidenceItems: profiles.length,
+      replayableSteps: profiles.length
+    }
+  };
+}
+
 function tokensRedacted(value: unknown) {
   const serialized = JSON.stringify(value);
   return rawTokens.every((token) => !serialized.includes(token));
@@ -280,6 +410,8 @@ function summaryMarkdown(summary: RunnerAuthDrillSummary) {
     `- Scoped credentials: ${summary.summary.scopedCredentials}`,
     `- Active scoped credentials: ${summary.summary.activeScopedCredentials}`,
     `- Expired scoped credentials: ${summary.summary.expiredScopedCredentials}`,
+    `- Scoped ready actions: ${summary.scopeProbe.scopedReadyActions}/${summary.scopeProbe.sourceReadyActions}`,
+    `- Scoped evidence steps: ${summary.scopeProbe.scopedEvidenceSteps}/${summary.scopeProbe.sourceEvidenceSteps}`,
     "",
     "## Cases",
     "",
