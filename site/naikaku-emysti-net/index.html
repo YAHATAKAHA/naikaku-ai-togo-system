@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Naikaku AI Togo System | EMYSTI</title>
+    <meta
+      name="description"
+      content="Naikaku AI Togo System is a Japan-born multi-model AI cabinet workbench by EMYSTI. Download the public-source developer preview and run governed AI coding workflows locally."
+    />
+    <link rel="canonical" href="https://naikaku.emysti.net/" />
+    <meta property="og:title" content="Naikaku AI Togo System | EMYSTI" />
+    <meta
+      property="og:description"
+      content="A governed multi-model AI cabinet workbench for planning, coding runners, sandboxed execution, critique, supervision, and evidence-based iteration."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://naikaku.emysti.net/" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #131516;
+        --muted: #5d6368;
+        --line: #d8dde1;
+        --paper: #fbfbf8;
+        --white: #ffffff;
+        --accent: #b42c25;
+        --accent-dark: #7f1d19;
+        --blue: #24558a;
+        --green: #31785f;
+        --gold: #a27318;
+        --shadow: 0 18px 55px rgba(19, 21, 22, 0.12);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 22px clamp(20px, 5vw, 72px);
+        border-bottom: 1px solid rgba(19, 21, 22, 0.08);
+        background: rgba(251, 251, 248, 0.92);
+        backdrop-filter: blur(16px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 760;
+        letter-spacing: 0;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        color: var(--white);
+        background: var(--ink);
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
+        gap: clamp(32px, 6vw, 86px);
+        align-items: center;
+        padding: clamp(54px, 8vw, 104px) clamp(20px, 5vw, 72px) 54px;
+      }
+
+      .hero h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(44px, 7vw, 92px);
+        line-height: 0.95;
+        font-weight: 780;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 650px;
+        margin: 26px 0 0;
+        font-size: clamp(18px, 2vw, 23px);
+        line-height: 1.55;
+        color: var(--muted);
+      }
+
+      .jp {
+        max-width: 650px;
+        margin: 22px 0 0;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #303437;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 34px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid var(--ink);
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 720;
+        font-size: 14px;
+      }
+
+      .button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--white);
+      }
+
+      .button.primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .button:hover {
+        background: var(--ink);
+        color: var(--white);
+      }
+
+      .hero-media {
+        background: var(--white);
+        border: 1px solid rgba(19, 21, 22, 0.1);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hero-media img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .band {
+        border-top: 1px solid rgba(19, 21, 22, 0.08);
+        padding: 54px clamp(20px, 5vw, 72px);
+      }
+
+      .band.white {
+        background: var(--white);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .tile {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .tile h2,
+      .tile h3 {
+        margin: 0 0 12px;
+        font-size: 21px;
+        line-height: 1.2;
+      }
+
+      .tile p,
+      .tile li {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .tile p {
+        margin: 0;
+      }
+
+      .tile ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .section-title {
+        max-width: 760px;
+        margin: 0 0 24px;
+        font-size: clamp(32px, 4vw, 54px);
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .download {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.6fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .release-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--ink);
+        color: var(--white);
+        padding: 26px;
+      }
+
+      .release-card p {
+        color: rgba(255, 255, 255, 0.76);
+        line-height: 1.6;
+      }
+
+      .release-links {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .release-links a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        color: var(--white);
+        text-decoration: none;
+        font-weight: 680;
+      }
+
+      .release-links a:hover {
+        border-color: rgba(255, 255, 255, 0.8);
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: rgba(19, 21, 22, 0.08);
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+
+      pre {
+        margin: 18px 0 0;
+        padding: 18px;
+        overflow-x: auto;
+        background: #0f1112;
+        color: #f5f7f8;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .api-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .accent-blue {
+        border-top: 4px solid var(--blue);
+      }
+
+      .accent-green {
+        border-top: 4px solid var(--green);
+      }
+
+      .accent-gold {
+        border-top: 4px solid var(--gold);
+      }
+
+      footer {
+        padding: 30px clamp(20px, 5vw, 72px);
+        color: var(--muted);
+        font-size: 14px;
+        border-top: 1px solid rgba(19, 21, 22, 0.08);
+      }
+
+      @media (max-width: 900px) {
+        .nav {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .nav-links {
+          flex-wrap: wrap;
+        }
+
+        .hero,
+        .download,
+        .api-row {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-media {
+          order: -1;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="https://naikaku.emysti.net/">
+          <span class="mark">内</span>
+          <span>Naikaku AI Togo System</span>
+        </a>
+        <div class="nav-links">
+          <a href="#download">Download</a>
+          <a href="#api">API</a>
+          <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system">GitHub</a>
+          <a href="https://www.emysti.net">EMYSTI</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div>
+          <h1>AI work should pass through a cabinet.</h1>
+          <p class="lead">
+            Naikaku is a Japan-born multi-model AI workbench for governed planning,
+            coding runners, sandboxed execution, critique, supervision, and evidence-based iteration.
+          </p>
+          <p class="jp">
+            日本語を主言語に、英語・簡体字中国語・繁体字中国語・韓国語を扱う
+            AI 内閣制統合システムです。ユーザー自身の API キーでも、将来の
+            EMYSTI API Gateway でも動く設計を目指しています。
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#download">Download v0.1.0</a>
+            <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system">View source</a>
+          </div>
+        </div>
+        <figure class="hero-media">
+          <img
+            src="https://raw.githubusercontent.com/YAHATAKAHA/naikaku-ai-togo-system/main/docs/design/naikaku-workbench-concept.png"
+            alt="Naikaku AI cabinet workbench concept screen"
+          />
+        </figure>
+      </section>
+
+      <section class="band white">
+        <h2 class="section-title">One mission, several supervised roles, auditable work.</h2>
+        <div class="grid">
+          <article class="tile accent-blue">
+            <h3>Cabinet governance</h3>
+            <p>
+              Prime minister, critic, supervisor, execution, safety, memory, and scoring roles can
+              vote before runner work continues.
+            </p>
+          </article>
+          <article class="tile accent-green">
+            <h3>Bring your own API</h3>
+            <p>
+              Use OpenAI-compatible providers, OpenRouter, Anthropic, Aliyun DashScope/Qwen,
+              Gemini, local models, or a custom endpoint.
+            </p>
+          </article>
+          <article class="tile accent-gold">
+            <h3>Runner boundaries</h3>
+            <p>
+              Local coding agents and computer-control tools sit behind presets, readiness checks,
+              receipts, evidence review, and artifact audit.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band" id="download">
+        <div class="download">
+          <div>
+            <h2 class="section-title">Download the macOS developer preview.</h2>
+            <p class="lead">
+              The first release is intentionally honest: not a signed Mac app yet, but a downloadable
+              package that lets technical users run the public-source workbench locally.
+            </p>
+            <pre><code>tar -xzf naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz
+cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
+npm ci
+npm run dev</code></pre>
+          </div>
+          <aside class="release-card">
+            <h2>v0.1.0</h2>
+            <p>Mac Developer Preview. Node.js 22 or newer recommended.</p>
+            <div class="release-links">
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz">tar.gz <span>Download</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/naikaku-ai-togo-system-0.1.0-mac-dev-preview.zip">zip <span>Download</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/download/v0.1.0/CHECKSUMS-SHA256.txt">checksums <span>SHA-256</span></a>
+              <a href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/latest">release notes <span>GitHub</span></a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="band white" id="api">
+        <h2 class="section-title">API freedom now, EMYSTI gateway later.</h2>
+        <div class="api-row">
+          <article class="tile">
+            <h3>Use my own API keys</h3>
+            <ul>
+              <li>Provider, endpoint, model, and API-key alias per role.</li>
+              <li>Session-only secret handling through the local gateway.</li>
+              <li>Local replay provider for no-cost plumbing tests.</li>
+            </ul>
+          </article>
+          <article class="tile">
+            <h3>Use EMYSTI API Gateway</h3>
+            <ul>
+              <li>Planned official endpoint for routing, billing, audit, and model fallback.</li>
+              <li>Designed to sit beside BYO keys rather than replace them.</li>
+              <li>Future fit for teams that want fewer provider accounts and cleaner cost control.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="band">
+        <h2 class="section-title">Public source, noncommercial license.</h2>
+        <p class="lead">
+          Naikaku AI Togo System is published by 合同会社EMYSTI for noncommercial use under
+          the PolyForm Noncommercial License 1.0.0. Commercial use, SaaS, resale, paid
+          integrations, client delivery, or commercial modification requires separate written permission.
+        </p>
+        <div class="actions">
+          <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/blob/main/LICENSE">License</a>
+          <a class="button" href="https://github.com/YAHATAKAHA/naikaku-ai-togo-system/blob/main/COMMERCIAL-LICENSE.md">Commercial terms</a>
+        </div>
+      </section>
+    </main>
+    <footer>
+      Copyright 2026 合同会社EMYSTI. Naikaku AI Togo System is maintained by EMYSTI.
+    </footer>
+  </body>
+</html>

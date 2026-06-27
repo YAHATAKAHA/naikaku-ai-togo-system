@@ -12,6 +12,27 @@ Naikaku is an operator workbench for teams that want multiple AI roles to cooper
 
 The product is not meant to make operators babysit every automation prompt. Its job is to turn annoying confirmations and single-agent drift into a cabinet protocol: one role proposes, another implements, critics and supervisors can object with evidence, and the cabinet vote decides whether a governed runner may continue. Human approval is reserved for genuinely high-impact actions such as desktop permissions, external sends, Git push, deploy, secrets, purchases, or broad host control. Routine low-risk progress should keep moving while transcripts, receipts, and artifact audits stay attached.
 
+## Download
+
+Public product page:
+
+- <https://naikaku.emysti.net>
+
+Latest GitHub release:
+
+- <https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases/latest>
+
+The first public package is a macOS developer preview archive, not a signed `.dmg` yet. It is intended for technical users who can run a local Node/Vite workbench:
+
+```bash
+tar -xzf naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz
+cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
+npm ci
+npm run dev
+```
+
+See [docs/install/macos-dev-preview.md](./docs/install/macos-dev-preview.md) for the current install path and the native Mac app roadmap.
+
 ## Core Direction
 
 Naikaku's north star is a Japan-first governed coding cabinet. It should feel closer to a careful Codex-style operator bench than a generic chatbot: cabinet roles plan software work, generate implementation briefs, run only approved sandbox actions, import completion receipts, verify local artifacts, and then update the Development Board. Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported as first-class locales. Codex CLI, Claude Code, OpenHands, OpenClaw-style computer control, Hammerspoon Mac automation, desktop sandboxes, browser automation, shell runners, and MCP tools should plug in as governed executor profiles, not as unbounded host power.
@@ -71,7 +92,7 @@ This repository is an MVP foundation, not a finished OpenClaw/Hermes replacement
 
 1. Cabinet before chat. Roles have mandates, permissions, and scoring responsibilities.
 2. Sandbox before power. Computer control belongs in bounded executors with allowlists, approvals, logs, and kill switches.
-3. Bring your own model. Every role can use a different provider, model, endpoint, and secret alias.
+3. Bring your own model. Every role can use a different provider, model, endpoint, and secret alias. Future EMYSTI API Gateway support should sit beside user-owned keys, not replace them.
 4. Split work cleanly. UI, orchestration, providers, sandbox runners, memory, and audit can be developed in parallel.
 5. Japanese first, multilingual by design. Japanese is the default operator language, with English, Simplified Chinese, Traditional Chinese, and Korean as first-class UI locales; human-facing summaries localize, while schemas, paths, commands, and evidence contracts stay stable.
 6. Programmable under governance. Cabinet members can produce Codex-like coding briefs and consume completion receipts, but coding-agent work must move through sandbox boundaries, receipts, local artifact fingerprints, and release gates before the board marks anything complete.
