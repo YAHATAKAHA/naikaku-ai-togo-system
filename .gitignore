@@ -1,5 +1,7 @@
 node_modules
 dist
+.vite
+output/
 .env
 .env.local
 .DS_Store
