@@ -26,6 +26,10 @@ import type { EngineeringLaunchQueue } from "../domain/engineeringLaunchQueue";
 import type { EngineeringMacRunnerContract } from "../domain/engineeringMacRunnerContract";
 import type { EngineeringMacRunnerReadiness } from "../domain/engineeringMacRunnerReadiness";
 import type { EngineeringSelfSimulationReport } from "../domain/engineeringSelfSimulation";
+import type {
+  EngineeringAutoWorkGatewayPreset,
+  EngineeringAutoWorkGatewayResponse
+} from "../domain/gatewayClient";
 import type { EngineeringLaunchpadCopy } from "../i18n";
 
 interface DownloadLink {
@@ -58,10 +62,22 @@ interface EngineeringLaunchpadProps {
   sandboxRunnerReport: CodingAgentSandboxRunnerReport | null;
   issueDrafts: DevelopmentIssueDrafts;
   runStatus: string;
+  autoWorkPreset: EngineeringAutoWorkGatewayPreset;
+  autoWorkAdapterReady: boolean;
+  autoWorkWorktree: string;
+  autoWorkState: {
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+    result: EngineeringAutoWorkGatewayResponse | null;
+  };
   onMissionChange: (mission: string) => void;
+  onAutoWorkPresetChange: (preset: EngineeringAutoWorkGatewayPreset) => void;
+  onAutoWorkAdapterReadyChange: (ready: boolean) => void;
+  onAutoWorkWorktreeChange: (worktree: string) => void;
   onFocusMission: () => void;
   onApplyMissionTemplate: () => void;
   onRunSelfSimulation: () => void;
+  onRunAutoWork: () => void;
   onRunCabinet: () => void;
   onPrepareEngineeringPack: () => void;
   onRunPreflight: () => void;
@@ -94,10 +110,18 @@ export function EngineeringLaunchpad({
   sandboxRunnerReport,
   issueDrafts,
   runStatus,
+  autoWorkPreset,
+  autoWorkAdapterReady,
+  autoWorkWorktree,
+  autoWorkState,
   onMissionChange,
+  onAutoWorkPresetChange,
+  onAutoWorkAdapterReadyChange,
+  onAutoWorkWorktreeChange,
   onFocusMission,
   onApplyMissionTemplate,
   onRunSelfSimulation,
+  onRunAutoWork,
   onRunCabinet,
   onPrepareEngineeringPack,
   onRunPreflight,
@@ -115,6 +139,8 @@ export function EngineeringLaunchpad({
   const hasVerifiedCodeExecution = Boolean(
     executionReceipt?.canClaimLocalRun || executionReceipt?.canClaimCodeChanged
   );
+  const autoWorkSummary = autoWorkState.result?.summary;
+  const autoWorkCounts = autoWorkSummary?.counts;
   const state = launchState({
     run,
     runnerSelfTest,
@@ -219,6 +245,72 @@ export function EngineeringLaunchpad({
               <PlayCircle size={15} /> {copy.runCabinet}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="engineering-auto-work-panel" data-status={autoWorkState.status}>
+        <article className="engineering-auto-work-heading">
+          <small>{copy.autoWorkLabel}</small>
+          <strong>{copy.autoWorkTitle}</strong>
+          <p>{copy.autoWorkBody}</p>
+        </article>
+        <div className="engineering-auto-work-controls">
+          <label>
+            <span>{copy.autoWorkPresetLabel}</span>
+            <select
+              value={autoWorkPreset}
+              onChange={(event) =>
+                onAutoWorkPresetChange(event.target.value as EngineeringAutoWorkGatewayPreset)
+              }
+            >
+              <option value="fixture">{copy.autoWorkFixture}</option>
+              <option value="prepared">{copy.autoWorkPrepared}</option>
+              <option value="openhands">{copy.autoWorkOpenHands}</option>
+            </select>
+          </label>
+          <label>
+            <span>{copy.autoWorkWorktreeLabel}</span>
+            <input
+              value={autoWorkWorktree}
+              onChange={(event) => onAutoWorkWorktreeChange(event.target.value)}
+              placeholder="."
+            />
+          </label>
+          <label className="engineering-auto-work-check">
+            <input
+              type="checkbox"
+              checked={autoWorkAdapterReady}
+              onChange={(event) => onAutoWorkAdapterReadyChange(event.target.checked)}
+            />
+            <span>{copy.autoWorkAdapterReadyLabel}</span>
+          </label>
+          <button
+            type="button"
+            onClick={onRunAutoWork}
+            disabled={autoWorkState.status === "running" || runStatus === "running"}
+          >
+            <Terminal size={15} /> {autoWorkState.status === "running" ? copy.autoWorkRunning : copy.autoWorkRun}
+          </button>
+        </div>
+        <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>
+        <div className="engineering-auto-work-result">
+          <strong>{autoWorkState.message || copy.autoWorkIdle}</strong>
+          {autoWorkState.result ? (
+            <>
+              <span>{copy.autoWorkChecks(autoWorkState.result.checks.pass, autoWorkState.result.checks.fail)}</span>
+              <span>
+                {copy.autoWorkResult(
+                  autoWorkState.result.preset,
+                  autoWorkSummary?.mode || "unknown",
+                  autoWorkCounts?.adapterCompletedJobs || 0,
+                  autoWorkCounts?.importedReceipts || 0,
+                  autoWorkCounts?.acceptedEvidence || 0,
+                  autoWorkCounts?.verifiedArtifactPaths || 0
+                )}
+              </span>
+              <span>{copy.autoWorkOutputLabel}: {autoWorkState.result.outputDir}</span>
+            </>
+          ) : null}
         </div>
       </div>
 

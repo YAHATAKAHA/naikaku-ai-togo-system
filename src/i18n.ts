@@ -73,6 +73,28 @@ export interface EngineeringLaunchpadCopy {
   realityMacStatus: (canControlMacDesktop: boolean) => string;
   realityExternalStatus: (externalWriteRequested: boolean) => string;
   missionInputHelp: string;
+  autoWorkLabel: string;
+  autoWorkTitle: string;
+  autoWorkBody: string;
+  autoWorkPresetLabel: string;
+  autoWorkPrepared: string;
+  autoWorkFixture: string;
+  autoWorkOpenHands: string;
+  autoWorkWorktreeLabel: string;
+  autoWorkAdapterReadyLabel: string;
+  autoWorkAdapterReadyHelp: string;
+  autoWorkRun: string;
+  autoWorkRunning: string;
+  autoWorkIdle: string;
+  autoWorkMissionRequired: string;
+  autoWorkOpenHandsNeedsReady: string;
+  autoWorkOutputLabel: string;
+  autoWorkChecks: (passed: number, failed: number) => string;
+  autoWorkResult: (preset: string, mode: string, completedJobs: number, receipts: number, evidence: number, artifacts: number) => string;
+  autoWorkStarting: (preset: string) => string;
+  autoWorkCompleted: (preset: string, passed: number, completedJobs: number, outputDir: string) => string;
+  autoWorkFailed: (exitCode: number | null, outputDir: string) => string;
+  autoWorkGatewayUnavailable: (errorMessage: string) => string;
   macScopeLabel: string;
   macScopeItems: string[];
   macRunnerLabel: string;
@@ -483,6 +505,31 @@ const copies: Record<SupportedLocale, AppCopy> = {
       missionInputLabel: "ここに工程タスクを入力",
       missionInputPlaceholder: "例: Mac 版を中心に、ユーザーがこの欄へタスクを入れると監督役が復盤し、coding agent がリポジトリ内で実装、npm run test / npm run build、証拠回収を行う。Git push と Mac 操作は人間承認。",
       missionDraftLabel: "ミッション体検",
+      autoWorkLabel: "自動工程",
+      autoWorkTitle: "入力したタスクを gateway から実行",
+      autoWorkBody: "fixture は外部ツールなしで全経路を検証します。OpenHands はローカル CLI が導入済みで、利用条件を確認した時だけ起動します。",
+      autoWorkPresetLabel: "Runner",
+      autoWorkPrepared: "準備のみ",
+      autoWorkFixture: "Fixture 自動テスト",
+      autoWorkOpenHands: "OpenHands CLI",
+      autoWorkWorktreeLabel: "作業ツリー",
+      autoWorkAdapterReadyLabel: "ローカル adapter 導入・ライセンス確認済み",
+      autoWorkAdapterReadyHelp: "このボタンはローカル gateway だけを呼びます。push、deploy、無制限の Mac 操作、秘密情報アクセスは許可しません。",
+      autoWorkRun: "自動工程を開始",
+      autoWorkRunning: "実行中",
+      autoWorkIdle: "まだ自動工程は起動していません。",
+      autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
+      autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
+      autoWorkOutputLabel: "出力",
+      autoWorkChecks: (passed, failed) => `チェック ${passed} pass / ${failed} fail`,
+      autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
+        `${preset}・${mode}・完了 job ${jobs}・receipt ${receipts}・証拠 ${evidence}・artifact ${artifacts}`,
+      autoWorkStarting: (preset) => `${preset} runner で自動工程を開始しています。`,
+      autoWorkCompleted: (preset, passed, jobs, outputDir) =>
+        `${preset} 自動工程が完了しました。${passed} checks pass、完了 job ${jobs}、出力 ${outputDir}。`,
+      autoWorkFailed: (exitCode, outputDir) =>
+        `自動工程が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
+      autoWorkGatewayUnavailable: (errorMessage) => `ローカル gateway の自動工程を利用できません。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
       capabilitiesLabel: "必要な Mac 工程能力",
       signalsLabel: "検出したミッション信号",
@@ -895,6 +942,31 @@ const copies: Record<SupportedLocale, AppCopy> = {
       missionInputLabel: "Type the engineering task here",
       missionInputPlaceholder: "Example: Focus on the Mac app path. When the user enters a task here, supervisors review it and the coding agent edits the repo, runs npm run test / npm run build, and collects evidence. Git push and Mac control require human approval.",
       missionDraftLabel: "Mission check",
+      autoWorkLabel: "Auto work",
+      autoWorkTitle: "Run the entered task through the local gateway",
+      autoWorkBody: "Fixture verifies the full path without external tools. OpenHands starts only after the local CLI is installed and license-reviewed.",
+      autoWorkPresetLabel: "Runner",
+      autoWorkPrepared: "Prepare only",
+      autoWorkFixture: "Fixture auto-test",
+      autoWorkOpenHands: "OpenHands CLI",
+      autoWorkWorktreeLabel: "Worktree",
+      autoWorkAdapterReadyLabel: "Local adapter installed and license-reviewed",
+      autoWorkAdapterReadyHelp: "This button calls only the local gateway. It does not grant push, deploy, unbounded Mac control, or secret access.",
+      autoWorkRun: "Start auto work",
+      autoWorkRunning: "Running",
+      autoWorkIdle: "Auto work has not started yet.",
+      autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
+      autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
+      autoWorkOutputLabel: "Output",
+      autoWorkChecks: (passed, failed) => `${passed} checks passed / ${failed} failed`,
+      autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
+        `${preset}, ${mode}, ${jobs} completed jobs, ${receipts} receipts, ${evidence} evidence, ${artifacts} artifacts`,
+      autoWorkStarting: (preset) => `Starting auto work with the ${preset} runner.`,
+      autoWorkCompleted: (preset, passed, jobs, outputDir) =>
+        `${preset} auto work completed: ${passed} checks passed, ${jobs} jobs completed, output ${outputDir}.`,
+      autoWorkFailed: (exitCode, outputDir) =>
+        `Auto work failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
+      autoWorkGatewayUnavailable: (errorMessage) => `Local gateway auto work is unavailable. ${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
       capabilitiesLabel: "Required Mac engineering capabilities",
       signalsLabel: "Detected mission signals",
@@ -1307,6 +1379,31 @@ const copies: Record<SupportedLocale, AppCopy> = {
       missionInputLabel: "在这里输入工程任务",
       missionInputPlaceholder: "例：以 Mac 版为主，用户在这个输入框填写任务后，监督角色先复盘，coding agent 再在仓库内实现、运行 npm run test / npm run build、收集证据；Git push 和 Mac 控制必须人工审核。",
       missionDraftLabel: "任务体检",
+      autoWorkLabel: "自动工程",
+      autoWorkTitle: "把输入的任务交给本地 gateway 执行",
+      autoWorkBody: "Fixture 不需要外部工具，可以验证完整链路；OpenHands 只会在本机 CLI 已安装并确认许可后启动。",
+      autoWorkPresetLabel: "Runner",
+      autoWorkPrepared: "只准备任务",
+      autoWorkFixture: "Fixture 自动测试",
+      autoWorkOpenHands: "OpenHands CLI",
+      autoWorkWorktreeLabel: "工作区",
+      autoWorkAdapterReadyLabel: "本地 adapter 已安装并审过许可",
+      autoWorkAdapterReadyHelp: "这个按钮只调用本地 gateway，不授予 push、deploy、无限制 Mac 控制或秘密信息访问。",
+      autoWorkRun: "启动自动工程",
+      autoWorkRunning: "正在运行",
+      autoWorkIdle: "自动工程还没有启动。",
+      autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
+      autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
+      autoWorkOutputLabel: "输出",
+      autoWorkChecks: (passed, failed) => `检查 ${passed} 通过 / ${failed} 失败`,
+      autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
+        `${preset}，${mode}，完成 job ${jobs}，receipt ${receipts}，证据 ${evidence}，artifact ${artifacts}`,
+      autoWorkStarting: (preset) => `正在用 ${preset} runner 启动自动工程。`,
+      autoWorkCompleted: (preset, passed, jobs, outputDir) =>
+        `${preset} 自动工程完成：${passed} 项检查通过，${jobs} 个 job 完成，输出 ${outputDir}。`,
+      autoWorkFailed: (exitCode, outputDir) =>
+        `自动工程失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
+      autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自动工程不可用。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "识别到的任务信号",
@@ -1719,6 +1816,31 @@ const copies: Record<SupportedLocale, AppCopy> = {
       missionInputLabel: "在這裡輸入工程任務",
       missionInputPlaceholder: "例：以 Mac 版為主，使用者在這個輸入框填寫任務後，監督角色先復盤，coding agent 再在倉庫內實作、執行 npm run test / npm run build、收集證據；Git push 和 Mac 控制必須人工審核。",
       missionDraftLabel: "任務體檢",
+      autoWorkLabel: "自動工程",
+      autoWorkTitle: "把輸入的任務交給本地 gateway 執行",
+      autoWorkBody: "Fixture 不需要外部工具，可以驗證完整鏈路；OpenHands 只會在本機 CLI 已安裝並確認授權後啟動。",
+      autoWorkPresetLabel: "Runner",
+      autoWorkPrepared: "只準備任務",
+      autoWorkFixture: "Fixture 自動測試",
+      autoWorkOpenHands: "OpenHands CLI",
+      autoWorkWorktreeLabel: "工作區",
+      autoWorkAdapterReadyLabel: "本地 adapter 已安裝並審過授權",
+      autoWorkAdapterReadyHelp: "這個按鈕只呼叫本地 gateway，不授予 push、deploy、無限制 Mac 控制或秘密資訊存取。",
+      autoWorkRun: "啟動自動工程",
+      autoWorkRunning: "正在執行",
+      autoWorkIdle: "自動工程還沒有啟動。",
+      autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
+      autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
+      autoWorkOutputLabel: "輸出",
+      autoWorkChecks: (passed, failed) => `檢查 ${passed} 通過 / ${failed} 失敗`,
+      autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
+        `${preset}，${mode}，完成 job ${jobs}，receipt ${receipts}，證據 ${evidence}，artifact ${artifacts}`,
+      autoWorkStarting: (preset) => `正在用 ${preset} runner 啟動自動工程。`,
+      autoWorkCompleted: (preset, passed, jobs, outputDir) =>
+        `${preset} 自動工程完成：${passed} 項檢查通過，${jobs} 個 job 完成，輸出 ${outputDir}。`,
+      autoWorkFailed: (exitCode, outputDir) =>
+        `自動工程失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
+      autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自動工程不可用。${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "識別到的任務信號",
@@ -2131,6 +2253,31 @@ const copies: Record<SupportedLocale, AppCopy> = {
       missionInputLabel: "여기에 엔지니어링 작업 입력",
       missionInputPlaceholder: "예: Mac 앱을 중심으로, 사용자가 이 입력 칸에 작업을 넣으면 감독 역할이 먼저 리뷰하고 coding agent가 저장소를 수정, npm run test / npm run build 실행, 증거 수집을 합니다. Git push와 Mac 제어는 사람 승인.",
       missionDraftLabel: "미션 점검",
+      autoWorkLabel: "자동 엔지니어링",
+      autoWorkTitle: "입력한 작업을 로컬 gateway로 실행",
+      autoWorkBody: "Fixture는 외부 도구 없이 전체 경로를 검증합니다. OpenHands는 로컬 CLI가 설치되고 라이선스 검토가 끝났을 때만 시작합니다.",
+      autoWorkPresetLabel: "Runner",
+      autoWorkPrepared: "준비만",
+      autoWorkFixture: "Fixture 자동 테스트",
+      autoWorkOpenHands: "OpenHands CLI",
+      autoWorkWorktreeLabel: "Worktree",
+      autoWorkAdapterReadyLabel: "로컬 adapter 설치 및 라이선스 확인 완료",
+      autoWorkAdapterReadyHelp: "이 버튼은 로컬 gateway만 호출합니다. push, deploy, 무제한 Mac 제어, 비밀값 접근 권한을 주지 않습니다.",
+      autoWorkRun: "자동 엔지니어링 시작",
+      autoWorkRunning: "실행 중",
+      autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
+      autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
+      autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
+      autoWorkOutputLabel: "출력",
+      autoWorkChecks: (passed, failed) => `검사 ${passed} pass / ${failed} fail`,
+      autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
+        `${preset}・${mode}・완료 job ${jobs}・receipt ${receipts}・증거 ${evidence}・artifact ${artifacts}`,
+      autoWorkStarting: (preset) => `${preset} runner로 자동 엔지니어링을 시작합니다.`,
+      autoWorkCompleted: (preset, passed, jobs, outputDir) =>
+        `${preset} 자동 엔지니어링 완료: ${passed}개 검사 통과, ${jobs}개 job 완료, 출력 ${outputDir}.`,
+      autoWorkFailed: (exitCode, outputDir) =>
+        `자동 엔지니어링 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
+      autoWorkGatewayUnavailable: (errorMessage) => `로컬 gateway 자동 엔지니어링을 사용할 수 없습니다. ${errorMessage}`,
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
       capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
       signalsLabel: "감지된 미션 신호",

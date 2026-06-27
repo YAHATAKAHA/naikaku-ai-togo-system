@@ -82,6 +82,53 @@ export interface GatewayHealth {
   timestamp: string;
 }
 
+export type EngineeringAutoWorkGatewayPreset = "prepared" | "fixture" | "openhands";
+
+export interface EngineeringAutoWorkGatewayRequest {
+  mission: string;
+  locale?: string;
+  runnerPreset?: EngineeringAutoWorkGatewayPreset;
+  adapterReady?: boolean;
+  worktree?: string;
+  outputDir?: string;
+  timeoutMs?: number;
+}
+
+export interface EngineeringAutoWorkGatewayResponse {
+  schema: "naikaku.engineering-auto-work-gateway.v1";
+  ok: boolean;
+  decision: "completed" | "failed" | "blocked";
+  message: string;
+  preset: EngineeringAutoWorkGatewayPreset;
+  adapterReady: boolean;
+  exitCode: number | null;
+  signal: string | null;
+  outputDir: string;
+  summaryPath: string;
+  summary: {
+    mode?: string;
+    checks?: Record<string, boolean>;
+    counts?: {
+      adapterCompletedJobs?: number;
+      importedReceipts?: number;
+      acceptedEvidence?: number;
+      verifiedArtifactPaths?: number;
+    };
+  } | null;
+  checks: {
+    pass: number;
+    fail: number;
+  };
+  command: {
+    command: string;
+    args: string[];
+    cwd: string;
+    timeoutMs: number;
+  } | null;
+  stdoutTail: string;
+  stderrTail: string;
+}
+
 export interface LedgerSummary {
   schema: "naikaku.ledger-summary.v1";
   ledgerDir: string;
@@ -927,6 +974,26 @@ export async function auditCodingAgentImplementationArtifactsViaGateway(
   }
 
   return (await response.json()) as CodingAgentImplementationArtifactAudit;
+}
+
+export async function runEngineeringAutoWorkViaGateway(
+  request: EngineeringAutoWorkGatewayRequest,
+  signal?: AbortSignal
+) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/auto-work`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(request),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway engineering auto-work failed"));
+  }
+
+  return (await response.json()) as EngineeringAutoWorkGatewayResponse;
 }
 
 export async function checkGatewayHealth() {

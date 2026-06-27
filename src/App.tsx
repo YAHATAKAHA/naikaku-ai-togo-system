@@ -189,12 +189,17 @@ import {
   listEvidenceLedgerViaGateway,
   reviewCodingAgentBriefsViaGateway,
   reviewCodingAgentSessionReceiptViaGateway,
+  runEngineeringAutoWorkViaGateway,
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
   saveApprovalRecordViaGateway,
   testProviderViaGateway
 } from "./domain/gatewayClient";
-import type { LedgerSummary } from "./domain/gatewayClient";
+import type {
+  EngineeringAutoWorkGatewayPreset,
+  EngineeringAutoWorkGatewayResponse,
+  LedgerSummary
+} from "./domain/gatewayClient";
 import type { EngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
 import type { EngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
 import type { EngineeringSelfSimulationReport } from "./domain/engineeringSelfSimulation";
@@ -347,6 +352,18 @@ export function App() {
   const [engineeringExecutionReceipt, setEngineeringExecutionReceipt] = useState<EngineeringExecutionReceipt | null>(null);
   const [engineeringExecutionReceiptLink, setEngineeringExecutionReceiptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [engineeringExecutionReceiptMarkdownLink, setEngineeringExecutionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringAutoWorkPreset, setEngineeringAutoWorkPreset] = useState<EngineeringAutoWorkGatewayPreset>("fixture");
+  const [engineeringAutoWorkAdapterReady, setEngineeringAutoWorkAdapterReady] = useState(false);
+  const [engineeringAutoWorkWorktree, setEngineeringAutoWorkWorktree] = useState("output/engineering-auto-work-ui/fixture-worktree");
+  const [engineeringAutoWorkState, setEngineeringAutoWorkState] = useState<{
+    status: "idle" | "running" | "completed" | "error";
+    message: string;
+    result: EngineeringAutoWorkGatewayResponse | null;
+  }>({
+    status: "idle",
+    message: "",
+    result: null
+  });
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
   const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -4359,6 +4376,16 @@ export function App() {
     window.requestAnimationFrame(focusMissionBrief);
   }
 
+  function updateEngineeringAutoWorkPreset(preset: EngineeringAutoWorkGatewayPreset) {
+    setEngineeringAutoWorkPreset(preset);
+    setEngineeringAutoWorkWorktree((current) => {
+      const fixtureWorktree = "output/engineering-auto-work-ui/fixture-worktree";
+      if (preset === "fixture") return fixtureWorktree;
+      if (preset === "openhands" && current === fixtureWorktree) return ".";
+      return current || ".";
+    });
+  }
+
   async function prepareEngineeringPackFromLaunchpad() {
     await exportCodingAgentDispatchManifest();
   }
@@ -4374,6 +4401,97 @@ export function App() {
         result.engineeringSelfSimulation.summary.expectedEvidenceArtifacts
       )
     });
+  }
+
+  async function runEngineeringAutoWorkFromLaunchpad() {
+    const mission = workspace.mission.trim();
+    const adapterReady = engineeringAutoWorkPreset === "fixture" || engineeringAutoWorkAdapterReady;
+
+    if (!mission) {
+      setEngineeringAutoWorkState({
+        status: "error",
+        message: copy.engineeringLaunchpad.autoWorkMissionRequired,
+        result: null
+      });
+      return;
+    }
+    if (engineeringAutoWorkPreset === "openhands" && !adapterReady) {
+      setEngineeringAutoWorkState({
+        status: "error",
+        message: copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady,
+        result: null
+      });
+      return;
+    }
+
+    setEngineeringAutoWorkState({
+      status: "running",
+      message: copy.engineeringLaunchpad.autoWorkStarting(engineeringAutoWorkPreset),
+      result: null
+    });
+
+    try {
+      const result = await runEngineeringAutoWorkViaGateway({
+        mission,
+        locale,
+        runnerPreset: engineeringAutoWorkPreset,
+        adapterReady,
+        worktree: engineeringAutoWorkPreset === "fixture"
+          ? "output/engineering-auto-work-ui/fixture-worktree"
+          : engineeringAutoWorkWorktree.trim() || ".",
+        timeoutMs: engineeringAutoWorkPreset === "openhands" ? 180_000 : 60_000
+      });
+      const nextStatus = result.ok ? "completed" : "error";
+      const message = result.ok
+        ? copy.engineeringLaunchpad.autoWorkCompleted(
+          result.preset,
+          result.checks.pass,
+          result.summary?.counts?.adapterCompletedJobs || 0,
+          result.outputDir
+        )
+        : copy.engineeringLaunchpad.autoWorkFailed(result.exitCode, result.outputDir);
+
+      setEngineeringAutoWorkState({
+        status: nextStatus,
+        message,
+        result
+      });
+      recordAudit({
+        type: "development.engineering_auto_work.completed",
+        severity: result.ok ? "success" : "error",
+        summary: `Engineering auto-work completed via gateway: ${result.decision}.`,
+        metadata: {
+          preset: result.preset,
+          adapterReady: result.adapterReady,
+          outputDir: result.outputDir,
+          exitCode: result.exitCode,
+          checksPass: result.checks.pass,
+          checksFail: result.checks.fail,
+          mode: result.summary?.mode || null,
+          adapterCompletedJobs: result.summary?.counts?.adapterCompletedJobs || 0,
+          importedReceipts: result.summary?.counts?.importedReceipts || 0,
+          acceptedEvidence: result.summary?.counts?.acceptedEvidence || 0,
+          verifiedArtifactPaths: result.summary?.counts?.verifiedArtifactPaths || 0
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "unknown";
+      setEngineeringAutoWorkState({
+        status: "error",
+        message: copy.engineeringLaunchpad.autoWorkGatewayUnavailable(errorMessage),
+        result: null
+      });
+      recordAudit({
+        type: "development.engineering_auto_work.completed",
+        severity: "error",
+        summary: `Engineering auto-work gateway failed: ${errorMessage}.`,
+        metadata: {
+          preset: engineeringAutoWorkPreset,
+          adapterReady,
+          gatewayError: errorMessage
+        }
+      });
+    }
   }
 
   return (
@@ -4493,10 +4611,18 @@ export function App() {
             sandboxRunnerReport={codingAgentSandboxRunnerReport}
             issueDrafts={developmentIssueDrafts}
             runStatus={runState.status}
+            autoWorkPreset={engineeringAutoWorkPreset}
+            autoWorkAdapterReady={engineeringAutoWorkAdapterReady}
+            autoWorkWorktree={engineeringAutoWorkWorktree}
+            autoWorkState={engineeringAutoWorkState}
             onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
+            onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
+            onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
+            onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
             onFocusMission={focusMissionBrief}
             onApplyMissionTemplate={applyEngineeringMissionTemplate}
             onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}
+            onRunAutoWork={() => void runEngineeringAutoWorkFromLaunchpad()}
             onRunCabinet={() => void runCabinet()}
             onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
             onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}

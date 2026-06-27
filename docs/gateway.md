@@ -102,6 +102,45 @@ Live cabinet runs still resolve role secrets from gateway environment variables.
 }
 ```
 
+### `POST /v1/engineering/auto-work`
+
+Starts the same supervised engineering pipeline as `npm run engineering:auto-work` from the local gateway. This is the web workbench path for entering a task, selecting a runner preset, and letting Naikaku prepare or execute the local adapter loop.
+
+```json
+{
+  "mission": "Implement the settings panel and run npm test",
+  "locale": "ja",
+  "runnerPreset": "fixture",
+  "adapterReady": true,
+  "worktree": "output/engineering-auto-work-ui/fixture-worktree",
+  "timeoutMs": 60000
+}
+```
+
+`runnerPreset` can be:
+
+- `prepared`: prepare handoff tasks without starting an external runner.
+- `fixture`: run the deterministic local fixture adapter under `output/engineering-auto-work-ui/fixture-worktree` and verify the returned receipt/evidence/artifact audit.
+- `openhands`: run the user-installed OpenHands CLI preset. This requires `adapterReady: true` so the operator explicitly records local installation and license review for this run.
+
+The route only accepts relative workspace paths, keeps UI output under `output/`, maps fixture work to the ignored output fixture worktree by default, and invokes npm through an argument array instead of exposing an arbitrary browser shell. It does not grant push, deploy, host-secret access, or unbounded Mac control.
+
+Successful responses include the command contract, stdout/stderr tail, checks, and parsed `output/engineering-auto-work-ui/summary.json`:
+
+```json
+{
+  "schema": "naikaku.engineering-auto-work-gateway.v1",
+  "ok": true,
+  "decision": "completed",
+  "preset": "fixture",
+  "outputDir": "output/engineering-auto-work-ui",
+  "checks": {
+    "pass": 7,
+    "fail": 0
+  }
+}
+```
+
 ### `POST /v1/cabinet/run`
 
 Runs the cabinet orchestrator and returns artifacts, automation actions, logs, scores, and next-iteration tasks.

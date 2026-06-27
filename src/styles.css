@@ -750,6 +750,149 @@ a.secondary-button {
   border-color: var(--accent);
 }
 
+.engineering-auto-work-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f7fbfa);
+  padding: 12px;
+}
+
+.engineering-auto-work-panel[data-status="completed"] {
+  border-color: rgba(22, 131, 95, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(22, 131, 95, 0.08);
+}
+
+.engineering-auto-work-panel[data-status="error"] {
+  border-color: rgba(180, 35, 24, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(180, 35, 24, 0.06);
+}
+
+.engineering-auto-work-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.engineering-auto-work-heading small,
+.engineering-auto-work-controls label > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engineering-auto-work-heading strong {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.engineering-auto-work-heading p,
+.engineering-auto-work-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.engineering-auto-work-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.engineering-auto-work-controls label {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.engineering-auto-work-controls select,
+.engineering-auto-work-controls input:not([type="checkbox"]) {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.engineering-auto-work-check {
+  min-height: 34px;
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 0 10px;
+}
+
+.engineering-auto-work-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-2);
+}
+
+.engineering-auto-work-controls button {
+  width: 100%;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 8px;
+  background: var(--accent-2);
+  color: white;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.engineering-auto-work-controls button:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.engineering-auto-work-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
+.engineering-auto-work-result strong,
+.engineering-auto-work-result span {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  flex: 1 1 180px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  padding: 6px 9px;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.engineering-auto-work-result strong {
+  color: var(--ink);
+}
+
 .engineering-profile-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -6451,6 +6594,7 @@ meter {
   .engineering-profile-grid,
   .engineering-mission-draft-grid,
   .engineering-mission-composer-footer,
+  .engineering-auto-work-controls,
   .engineering-completion-gate-review,
   .engineering-self-simulation-review,
   .engineering-mac-runner-review,
@@ -6507,6 +6651,7 @@ meter {
   .coding-briefs-export-row,
   .engineering-action-row,
   .engineering-entry-actions,
+  .engineering-auto-work-result,
   .issues-export-row,
   .memory-export-row,
   .executor-result-heading,

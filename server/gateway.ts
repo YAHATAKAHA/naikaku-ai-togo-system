@@ -41,6 +41,10 @@ import { buildRoleWorkspaceScaffolds } from "../src/domain/roleWorkspaceScaffold
 import { buildSandboxCapabilityRegistry } from "../src/domain/sandboxCapabilities";
 import { buildTeamHandoff } from "../src/domain/teamPackages";
 import { runCodingAgentSandboxRunner } from "./codingAgentSandboxRunner";
+import {
+  runEngineeringAutoWorkGateway,
+  type EngineeringAutoWorkGatewayRequest
+} from "./engineeringAutoWorkGateway";
 import type {
   AutomationApprovalRecord,
   AuditEvent,
@@ -115,7 +119,7 @@ const issuedCodingAgentRunnerLeases = new Map<string, {
 }>();
 
 const server = createServer(async (request, response) => {
-  setCors(response);
+  setCors(response, request);
   const requestUrl = new URL(request.url || "/", `http://${request.headers.host || host}`);
 
   if (request.method === "OPTIONS") {
@@ -161,6 +165,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-session-receipt",
           "coding-agent-implementation-evidence",
           "coding-agent-implementation-artifact-audit",
+          "engineering-auto-work",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -1168,6 +1173,13 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && requestUrl.pathname === "/v1/engineering/auto-work") {
+      const body = await readJson<EngineeringAutoWorkGatewayRequest>(request);
+      const result = runEngineeringAutoWorkGateway(body);
+      sendJson(response, result.statusCode, result.body);
+      return;
+    }
+
     if (request.method === "POST" && requestUrl.pathname === "/v1/sandbox/check") {
       const body = await readJson<{
         request: SandboxActionRequest;
@@ -1211,13 +1223,37 @@ server.listen(port, host, () => {
   console.log(`Naikaku local gateway listening on http://${host}:${port}`);
 });
 
-function setCors(response: ServerResponse) {
-  response.setHeader("Access-Control-Allow-Origin", corsOrigin);
+function setCors(response: ServerResponse, request: IncomingMessage) {
+  response.setHeader("Access-Control-Allow-Origin", allowedCorsOrigin(request.headers.origin));
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   response.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type,Authorization,x-naikaku-runner-id,x-naikaku-runner-token"
   );
+}
+
+function allowedCorsOrigin(origin: string | undefined) {
+  if (!origin) return corsOrigin;
+
+  const configured = corsOrigin
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (configured.includes(origin)) return origin;
+
+  try {
+    const parsed = new URL(origin);
+    if (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      ["127.0.0.1", "localhost", "::1"].includes(parsed.hostname)
+    ) {
+      return origin;
+    }
+  } catch {
+    return configured[0] || "http://127.0.0.1:5173";
+  }
+
+  return configured[0] || "http://127.0.0.1:5173";
 }
 
 function sendJson(response: ServerResponse, status: number, payload: unknown) {
