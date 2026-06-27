@@ -112,6 +112,14 @@ npm run cabinet:codex-smoke
 
 It calls Codex three times in read-only mode as Prime Minister, Critic, and Supervisor, then lets Naikaku make the deterministic cabinet motion decision from their proposal, audit, dissent, and vote. This is the minimum proof of the product idea: AI roles can disagree, an audit can block unsafe work, and execution is authorized only after the cabinet decision.
 
+To prove Codex can act as a governed implementation runner on a generated toy project:
+
+```bash
+npm run codex:engineer-smoke
+```
+
+This creates a broken tiny project under `output/codex-engineer-smoke/worktree`, records a cabinet motion approval, asks Codex CLI to patch only that generated worktree in `workspace-write` mode, reruns `npm test`, and writes transcript, diff, changed-file, summary, and receipt artifacts. It does not edit the Naikaku source tree or claim real backlog completion.
+
 For the local gate intended for GitHub Actions and pull request review:
 
 ```bash
@@ -307,6 +315,7 @@ npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fi
 npm run engineering:runner-kit # generate and smoke-test a runnable local wrapper kit for external CLI adapters
 npm run local-tools:smoke # generate a tiny cabinet-vote project and probe local OpenClaw/Hammerspoon adapters
 npm run cabinet:codex-smoke # call Codex CLI as separate cabinet roles, then vote locally
+npm run codex:engineer-smoke # let Codex patch a generated tiny project and return local evidence
 npm run engineering:handoff # write external-runner task Markdown and adapter job JSON from engineering:simulate output
 npm run engineering:run-adapter # launch user-installed runner CLI commands from adapter job JSON and capture transcripts
 npm run engineering:review-adapter-run # import fresh adapter receipts and run receipt/evidence/artifact audit
