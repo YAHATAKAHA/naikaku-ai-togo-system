@@ -26,6 +26,11 @@ const steps: CommandStep[] = [
     args: ["run", "coding-agent:gateway-smoke"]
   },
   {
+    label: "Coding-agent engineering self-simulation with fixture patch, test, receipt, and artifact audit",
+    command: npmCommand,
+    args: ["run", "coding-agent:engineering-sim"]
+  },
+  {
     label: "Dry-run release verification with localization, executor, sandbox capability, security red-team, runner auth, coding-agent dispatch/simulation/runner/invocation/intake/self-test/lease/sandbox-runner/receipt drills and manifest",
     command: npmCommand,
     args: ["run", "release:verify"]
