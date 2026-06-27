@@ -96,6 +96,14 @@ npm run naikaku:task -- "Implement the settings panel and run npm test"
 
 By default this prepares supervised handoff files and evidence boundaries without starting external tools. Use `--self-test` to run the deterministic fixture automation path, or `--runner-preset <id> --adapter-ready` after installing and approving a fixed local CLI such as OpenHands, OpenClaw, Hammerspoon, browser-use, Playwright, MCP, or a Hermes-style wrapper.
 
+To prove the same one-task entry can call a real AI coding runner without handing it the whole repository:
+
+```bash
+npm run naikaku:task -- --codex-smoke "Prove the cabinet can supervise an AI coder"
+```
+
+This records the operator mission, asks the cabinet motion gate to authorize local Codex CLI, lets Codex patch only a generated toy worktree, reruns the generated test, and returns the Codex transcript, diff, receipt, and task summary under `output/naikaku-task/codex-engineer-smoke`. It is the quick proof that Naikaku can be an automation wrapper, not just a prompt exporter; it still does not edit product source, control the desktop, push Git, deploy, or claim real backlog completion.
+
 To prove the local adapter idea with installed tools, run:
 
 ```bash
@@ -308,7 +316,7 @@ npm run engineering:mvp # one-command adapter registry, engineering simulation, 
 npm run engineering:adapter-self-test # launch a deterministic fake external CLI through adapter jobs and verify receipt/evidence/audit
 npm run engineering:adapters # write the external runner adapter registry for OpenHands/OpenClaw/browser-use/Hammerspoon-style integrations
 npm run engineering:auto-work # prepare a mission, optionally launch an adapter CLI, import receipts, and audit evidence
-npm run naikaku:task # one-mission task entry for prepare, self-test, or fixed runner-preset modes
+npm run naikaku:task # one-mission task entry for prepare, self-test, codex-smoke, or fixed runner-preset modes
 npm run engineering:auto-work-gateway-smoke # start the local gateway and prove the web auto-work endpoint can run the fixture adapter
 npm run engineering:auto-work-smoke # run auto-work through the local fixture external CLI and verify receipt/evidence/audit
 npm run open-source:mvp-check # build, targeted tests, gateway auto-work, and fixture coding loop in one contributor-facing check

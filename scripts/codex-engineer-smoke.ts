@@ -4,6 +4,7 @@ import path from "node:path";
 import { decideCabinetMotion } from "../src/domain/cabinetDecision";
 
 interface CodexEngineerSmokeOptions {
+  mission: string;
   outputDir: string;
   generatedAt: string;
   help: boolean;
@@ -21,6 +22,7 @@ interface CommandResult {
 interface CodexEngineerSmokeSummary {
   schema: "naikaku.codex-engineer-smoke.v1";
   generatedAt: string;
+  mission: string;
   outputDir: string;
   worktreeDir: string;
   cabinetDecision: ReturnType<typeof decideCabinetMotion>;
@@ -105,7 +107,7 @@ function main() {
     audit: {
       decision: "warn",
       findings: [
-        "Workspace-write is allowed only inside output/codex-engineer-smoke/worktree.",
+        "Workspace-write is allowed only inside the generated smoke worktree.",
         "A passing final test is required before accepting the smoke."
       ],
       evidence: [
@@ -126,7 +128,7 @@ function main() {
   const codexFinalPath = path.join(outputDir, "codex-final-message.txt");
   const codexTranscriptPath = path.join(outputDir, "codex-transcript.log");
   const codex = codexPath && cabinetDecision.executionAuthorized
-    ? runCodex({ worktreeDir, codexFinalPath })
+    ? runCodex({ worktreeDir, codexFinalPath, mission: options.mission })
     : {
         commandLine: "codex not run",
         exitCode: 1,
@@ -152,6 +154,7 @@ function main() {
     schema: "naikaku.codex-engineer-smoke.v1",
     generatedAt: options.generatedAt,
     outputDir: relativePath(outputDir),
+    mission: options.mission,
     worktreeDir: relativePath(worktreeDir),
     cabinetDecision,
     codex: {
@@ -183,7 +186,7 @@ function main() {
       receiptWritten: false
     },
     claimBoundary: [
-      "This smoke lets Codex CLI patch only a generated tiny project under output/codex-engineer-smoke/worktree.",
+      "This smoke lets Codex CLI patch only a generated tiny project under the selected output worktree.",
       "It proves a governed Codex coding loop can observe a failing test, patch code, and pass the generated test in a scoped worktree.",
       "It does not modify the Naikaku product source, push Git, deploy, send messages, control the desktop, or claim real backlog completion.",
       "Real product implementation still needs a Naikaku runner invocation, receipt review, implementation evidence, artifact audit, and release verification."
@@ -258,13 +261,16 @@ function initializeGit(worktreeDir: string) {
 
 function runCodex({
   worktreeDir,
-  codexFinalPath
+  codexFinalPath,
+  mission
 }: {
   worktreeDir: string;
   codexFinalPath: string;
+  mission: string;
 }) {
   const prompt = [
     "You are the Codex implementation runner inside a Naikaku smoke test.",
+    `Operator mission context: ${mission}`,
     "Fix the generated tiny project so `npm test` passes.",
     "Only edit src/cabinetScore.mjs.",
     "Do not edit test.mjs or package.json.",
@@ -308,6 +314,7 @@ function writeReceipt({
   const receipt = {
     schema: "naikaku.codex-engineer-smoke-receipt.v1",
     generatedAt: summary.generatedAt,
+    mission: summary.mission,
     decision: Object.values(summary.checks).every(Boolean) ? "verified" : "needs-review",
     executor: "codex-cli",
     sessionId: "codex-engineer-smoke",
@@ -396,6 +403,7 @@ function summaryMarkdown(summary: CodexEngineerSmokeSummary) {
     "# Codex Engineer Smoke",
     "",
     `Generated: ${summary.generatedAt}`,
+    `Mission: ${summary.mission}`,
     `Output: ${summary.outputDir}`,
     `Worktree: ${summary.worktreeDir}`,
     "",
@@ -446,6 +454,7 @@ function printSummary(summary: CodexEngineerSmokeSummary) {
 
 function parseArgs(args: string[]): CodexEngineerSmokeOptions {
   const options: CodexEngineerSmokeOptions = {
+    mission: "Prove Naikaku can govern a Codex coding runner with local evidence.",
     outputDir: "output/codex-engineer-smoke",
     generatedAt: new Date().toISOString(),
     help: false
@@ -455,6 +464,9 @@ function parseArgs(args: string[]): CodexEngineerSmokeOptions {
     const arg = args[index];
     if (arg === "--help" || arg === "-h") {
       options.help = true;
+    } else if (arg === "--mission" || arg === "-m") {
+      options.mission = requireValue(args, index, arg);
+      index += 1;
     } else if (arg === "--out") {
       options.outputDir = requireValue(args, index, arg);
       index += 1;
@@ -496,7 +508,7 @@ function quoteArg(value: string) {
 function printHelp() {
   console.log([
     "Usage:",
-    "  npm run codex:engineer-smoke",
+    "  npm run codex:engineer-smoke -- --mission \"Prove governed Codex coding\"",
     "",
     "Generates a tiny broken project under output/, asks Codex CLI to patch it in a",
     "workspace-write sandbox, reruns npm test, and writes Naikaku evidence/receipt files.",

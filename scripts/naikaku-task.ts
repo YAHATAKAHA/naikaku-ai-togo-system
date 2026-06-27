@@ -4,7 +4,7 @@ import path from "node:path";
 import type { SupportedLocale } from "../src/i18n";
 import { supportedLocales } from "../src/i18n";
 
-type TaskMode = "prepare" | "self-test" | "runner";
+type TaskMode = "prepare" | "self-test" | "runner" | "codex-smoke";
 
 interface NaikakuTaskOptions {
   mission: string | null;
@@ -13,6 +13,7 @@ interface NaikakuTaskOptions {
   locale: SupportedLocale;
   mode: TaskMode | null;
   selfTest: boolean;
+  codexSmoke: boolean;
   runnerPreset: string | null;
   adapterReady: boolean;
   worktreeDir: string | null;
@@ -65,6 +66,33 @@ interface AutoWorkSummary {
   checks?: Record<string, boolean>;
 }
 
+interface CodexEngineerSmokeSummary {
+  schema: "naikaku.codex-engineer-smoke.v1";
+  mission: string;
+  outputDir: string;
+  worktreeDir: string;
+  codex: {
+    commandPath: string | null;
+    exitCode: number;
+    finalMessagePath: string;
+  };
+  tests: {
+    baselineExitCode: number;
+    finalExitCode: number;
+  };
+  files: {
+    changedFiles: string[];
+    changedFilesPath: string;
+    diffPath: string;
+    baselineTranscript: string;
+    finalTranscript: string;
+    codexTranscript: string;
+    receiptPath: string;
+  };
+  checks: Record<string, boolean>;
+  claimBoundary: string[];
+}
+
 interface NaikakuTaskSummary {
   schema: "naikaku.task-entry.v1";
   generatedAt: string;
@@ -74,7 +102,8 @@ interface NaikakuTaskSummary {
   mode: TaskMode;
   runnerPreset: string | null;
   command: CommandRun;
-  autoWorkSummaryPath: string;
+  autoWorkSummaryPath: string | null;
+  codexSmokeSummaryPath: string | null;
   decisions: {
     handoff: string;
     adapterRun: string;
@@ -100,10 +129,14 @@ interface NaikakuTaskSummary {
     gitPushOrDeploy: boolean;
   };
   files: {
-    autoWorkSummary: string;
+    autoWorkSummary: string | null;
     handoffSummary: string | null;
     adapterRunSummary: string | null;
     adapterReviewSummary: string | null;
+    codexSmokeSummary: string | null;
+    codexSmokeReceipt: string | null;
+    codexSmokeDiff: string | null;
+    codexSmokeTranscript: string | null;
   };
   checks: {
     autoWorkExitedZero: boolean;
@@ -115,6 +148,7 @@ interface NaikakuTaskSummary {
     noMacDesktopControl: boolean;
     noGitPushOrDeploy: boolean;
     autoWorkChecksPassed: boolean;
+    codexSmokeChecksPassed: boolean;
   };
   nextActions: string[];
   claimBoundary: string[];
@@ -133,22 +167,35 @@ async function main() {
   const outputDir = path.resolve(options.outputDir);
   assertSafeOutputDir(outputDir);
   const autoWorkDir = path.join(outputDir, "auto-work");
-  const autoWorkArgs = buildAutoWorkArgs({ options, mission, mode, autoWorkDir });
+  const codexSmokeDir = path.join(outputDir, "codex-engineer-smoke");
   await mkdir(outputDir, { recursive: true });
 
-  const command = await runCommand({
-    label: "engineering-auto-work",
-    args: autoWorkArgs
-  });
+  const command = mode === "codex-smoke"
+    ? await runCommand({
+        label: "codex-engineer-smoke",
+        args: buildCodexSmokeArgs({ options, mission, codexSmokeDir })
+      })
+    : await runCommand({
+        label: "engineering-auto-work",
+        args: buildAutoWorkArgs({ options, mission, mode, autoWorkDir })
+      });
   const autoWorkSummaryPath = path.join(autoWorkDir, "summary.json");
-  const autoWork = await readJsonIfExists<AutoWorkSummary>(autoWorkSummaryPath);
+  const codexSmokeSummaryPath = path.join(codexSmokeDir, "summary.json");
+  const autoWork = mode === "codex-smoke"
+    ? null
+    : await readJsonIfExists<AutoWorkSummary>(autoWorkSummaryPath);
+  const codexSmoke = mode === "codex-smoke"
+    ? await readJsonIfExists<CodexEngineerSmokeSummary>(codexSmokeSummaryPath)
+    : null;
   const summary = buildSummary({
     options,
     mission,
     mode,
     outputDir,
     autoWorkDir,
+    codexSmokeDir,
     autoWork,
+    codexSmoke,
     command
   });
 
@@ -202,13 +249,37 @@ function buildAutoWorkArgs({
   return args;
 }
 
+function buildCodexSmokeArgs({
+  options,
+  mission,
+  codexSmokeDir
+}: {
+  options: NaikakuTaskOptions;
+  mission: string;
+  codexSmokeDir: string;
+}) {
+  return [
+    "run",
+    "codex:engineer-smoke",
+    "--",
+    "--mission",
+    mission,
+    "--out",
+    relativePath(codexSmokeDir),
+    "--generated-at",
+    options.generatedAt
+  ];
+}
+
 function buildSummary({
   options,
   mission,
   mode,
   outputDir,
   autoWorkDir,
+  codexSmokeDir,
   autoWork,
+  codexSmoke,
   command
 }: {
   options: NaikakuTaskOptions;
@@ -216,14 +287,27 @@ function buildSummary({
   mode: TaskMode;
   outputDir: string;
   autoWorkDir: string;
+  codexSmokeDir: string;
   autoWork: AutoWorkSummary | null;
+  codexSmoke: CodexEngineerSmokeSummary | null;
   command: CommandRun;
 }) {
   const counts = autoWork?.counts || {};
   const claims = autoWork?.claims || {};
   const decisions = autoWork?.decisions || {};
   const autoWorkChecksPassed = Boolean(autoWork?.checks && Object.values(autoWork.checks).every(Boolean));
+  const codexChecksPassed = Boolean(codexSmoke?.checks && Object.values(codexSmoke.checks).every(Boolean));
+  const isCodexSmoke = mode === "codex-smoke";
   const requestedRunner = mode !== "prepare";
+  const codexReceiptWritten = codexSmoke?.checks.receiptWritten === true;
+  const codexArtifacts = [
+    codexSmoke?.files.diffPath,
+    codexSmoke?.files.changedFilesPath,
+    codexSmoke?.files.baselineTranscript,
+    codexSmoke?.files.finalTranscript,
+    codexSmoke?.files.codexTranscript,
+    codexSmoke?.codex.finalMessagePath
+  ].filter(Boolean);
   const summary: NaikakuTaskSummary = {
     schema: "naikaku.task-entry.v1",
     generatedAt: options.generatedAt,
@@ -231,55 +315,70 @@ function buildSummary({
     mission,
     locale: options.locale,
     mode,
-    runnerPreset: mode === "self-test" ? "fixture" : options.runnerPreset,
+    runnerPreset: mode === "self-test" ? "fixture" : isCodexSmoke ? "codex-cli" : options.runnerPreset,
     command,
-    autoWorkSummaryPath: relativePath(path.join(autoWorkDir, "summary.json")),
+    autoWorkSummaryPath: isCodexSmoke ? null : relativePath(path.join(autoWorkDir, "summary.json")),
+    codexSmokeSummaryPath: isCodexSmoke ? relativePath(path.join(codexSmokeDir, "summary.json")) : null,
     decisions: {
-      handoff: decisions.handoff || "missing",
-      adapterRun: decisions.adapterRun || "missing",
-      adapterReview: decisions.adapterReview || "missing"
+      handoff: isCodexSmoke ? "not-required-codex-smoke" : decisions.handoff || "missing",
+      adapterRun: isCodexSmoke
+        ? codexSmoke?.codex.exitCode === 0 ? "codex-cli-completed" : "codex-cli-needs-review"
+        : decisions.adapterRun || "missing",
+      adapterReview: isCodexSmoke
+        ? codexChecksPassed ? "codex-receipt-verified" : "codex-receipt-needs-review"
+        : decisions.adapterReview || "missing"
     },
     counts: {
-      handoffTaskFiles: counts.handoffTaskFiles || 0,
-      handoffJobFiles: counts.handoffJobFiles || 0,
-      handoffReadyTaskFiles: counts.handoffReadyTaskFiles || 0,
-      adapterCompletedJobs: counts.adapterCompletedJobs || 0,
-      importedReceipts: counts.importedReceipts || 0,
-      acceptedEvidence: counts.acceptedEvidence || 0,
-      verifiedArtifactPaths: counts.verifiedArtifactPaths || 0
+      handoffTaskFiles: isCodexSmoke ? 0 : counts.handoffTaskFiles || 0,
+      handoffJobFiles: isCodexSmoke ? 0 : counts.handoffJobFiles || 0,
+      handoffReadyTaskFiles: isCodexSmoke ? 0 : counts.handoffReadyTaskFiles || 0,
+      adapterCompletedJobs: isCodexSmoke ? codexSmoke?.codex.exitCode === 0 ? 1 : 0 : counts.adapterCompletedJobs || 0,
+      importedReceipts: isCodexSmoke ? codexReceiptWritten ? 1 : 0 : counts.importedReceipts || 0,
+      acceptedEvidence: isCodexSmoke ? codexChecksPassed ? 1 : 0 : counts.acceptedEvidence || 0,
+      verifiedArtifactPaths: isCodexSmoke ? codexArtifacts.length : counts.verifiedArtifactPaths || 0
     },
     claims: {
-      handoffPrepared: claims.handoffPrepared === true,
-      externalRunnerStarted: claims.externalRunnerStarted === true,
-      externalReceiptImported: claims.externalReceiptImported === true,
-      implementationEvidenceAccepted: claims.implementationEvidenceAccepted === true,
-      artifactAuditVerified: claims.artifactAuditVerified === true,
-      completion: claims.completion === true,
-      macDesktopControl: claims.macDesktopControl === true,
-      gitPushOrDeploy: claims.gitPushOrDeploy === true
+      handoffPrepared: isCodexSmoke ? false : claims.handoffPrepared === true,
+      externalRunnerStarted: isCodexSmoke ? codexSmoke?.codex.exitCode === 0 : claims.externalRunnerStarted === true,
+      externalReceiptImported: isCodexSmoke ? codexReceiptWritten : claims.externalReceiptImported === true,
+      implementationEvidenceAccepted: isCodexSmoke ? codexChecksPassed : claims.implementationEvidenceAccepted === true,
+      artifactAuditVerified: isCodexSmoke ? codexChecksPassed : claims.artifactAuditVerified === true,
+      completion: false,
+      macDesktopControl: false,
+      gitPushOrDeploy: false
     },
     files: {
-      autoWorkSummary: relativePath(path.join(autoWorkDir, "summary.json")),
+      autoWorkSummary: isCodexSmoke ? null : relativePath(path.join(autoWorkDir, "summary.json")),
       handoffSummary: autoWork?.files?.handoffSummary || null,
       adapterRunSummary: autoWork?.files?.adapterRunSummary || null,
-      adapterReviewSummary: autoWork?.files?.adapterReviewSummary || null
+      adapterReviewSummary: autoWork?.files?.adapterReviewSummary || null,
+      codexSmokeSummary: isCodexSmoke ? relativePath(path.join(codexSmokeDir, "summary.json")) : null,
+      codexSmokeReceipt: codexSmoke?.files.receiptPath || null,
+      codexSmokeDiff: codexSmoke?.files.diffPath || null,
+      codexSmokeTranscript: codexSmoke?.files.codexTranscript || null
     },
     checks: {
       autoWorkExitedZero: command.exitCode === 0,
-      handoffPrepared: claims.handoffPrepared === true && (counts.handoffTaskFiles || 0) > 0,
+      handoffPrepared: isCodexSmoke ? true : claims.handoffPrepared === true && (counts.handoffTaskFiles || 0) > 0,
       prepareModeDidNotStartRunner: mode === "prepare" ? claims.externalRunnerStarted !== true : true,
-      requestedRunnerStarted: requestedRunner ? claims.externalRunnerStarted === true : true,
-      requestedReceiptImported: requestedRunner ? claims.externalReceiptImported === true : true,
-      noCompletionClaim: claims.completion === false,
-      noMacDesktopControl: claims.macDesktopControl === false,
-      noGitPushOrDeploy: claims.gitPushOrDeploy === false,
-      autoWorkChecksPassed
+      requestedRunnerStarted: requestedRunner
+        ? isCodexSmoke ? codexSmoke?.codex.exitCode === 0 : claims.externalRunnerStarted === true
+        : true,
+      requestedReceiptImported: requestedRunner
+        ? isCodexSmoke ? codexReceiptWritten : claims.externalReceiptImported === true
+        : true,
+      noCompletionClaim: isCodexSmoke ? true : claims.completion === false,
+      noMacDesktopControl: isCodexSmoke ? true : claims.macDesktopControl === false,
+      noGitPushOrDeploy: isCodexSmoke ? codexSmoke?.checks.noGitCommitOrPush === true : claims.gitPushOrDeploy === false,
+      autoWorkChecksPassed: isCodexSmoke ? true : autoWorkChecksPassed,
+      codexSmokeChecksPassed: isCodexSmoke ? codexChecksPassed : true
     },
     nextActions: nextActionsFor({ mode, runnerPreset: options.runnerPreset, outputDir: relativePath(outputDir) }),
     claimBoundary: [
       "This command is the simplest operator CLI entry for turning one mission into a governed Naikaku engineering run.",
       "Prepare mode writes supervised handoff artifacts but does not start external tools or claim implementation.",
       "Self-test mode uses the deterministic fixture runner to prove automation plumbing, not real backlog completion.",
+      "Codex smoke mode calls local Codex CLI after cabinet approval to patch only a generated tiny project and return transcripts, diff, and receipt.",
       "Runner mode starts only a configured preset and still requires returned receipts, evidence, artifact audit, and release verification before work can be accepted.",
       "No mode grants Mac desktop permission, Git push, deploy, external send, provider access, or host-secret access by itself."
     ]
@@ -391,6 +490,13 @@ function nextActionsFor({
       "Do not mark real backlog work complete from fixture evidence."
     ];
   }
+  if (mode === "codex-smoke") {
+    return [
+      `Inspect ${outputDir}/codex-engineer-smoke/summary.md for the Codex transcript, diff, receipt, and final test result.`,
+      "Use this as the contributor-facing proof that Naikaku can govern a real AI coding runner without asking for every routine confirmation.",
+      "Do not mark product backlog work complete from this generated-project smoke."
+    ];
+  }
   return [
     `Inspect ${outputDir}/auto-work/adapter-review/summary.json before accepting any evidence.`,
     `Confirm preset ${runnerPreset || "unknown"} ran in the intended worktree with approved permissions.`,
@@ -416,6 +522,7 @@ async function readJsonIfExists<T>(filePath: string): Promise<T | null> {
 
 function modeFor(options: NaikakuTaskOptions): TaskMode {
   if (options.mode) return options.mode;
+  if (options.codexSmoke) return "codex-smoke";
   if (options.selfTest) return "self-test";
   if (options.runnerPreset) return "runner";
   return "prepare";
@@ -429,6 +536,7 @@ function parseArgs(args: string[]): NaikakuTaskOptions {
     locale: "ja",
     mode: null,
     selfTest: false,
+    codexSmoke: false,
     runnerPreset: null,
     adapterReady: false,
     worktreeDir: null,
@@ -459,6 +567,8 @@ function parseArgs(args: string[]): NaikakuTaskOptions {
       index += 1;
     } else if (arg === "--self-test") {
       options.selfTest = true;
+    } else if (arg === "--codex-smoke") {
+      options.codexSmoke = true;
     } else if (arg === "--runner-preset") {
       options.runnerPreset = parsePresetId(requireValue(args, index, arg));
       index += 1;
@@ -491,8 +601,8 @@ function parseArgs(args: string[]): NaikakuTaskOptions {
 }
 
 function parseMode(value: string): TaskMode {
-  if (value === "prepare" || value === "self-test" || value === "runner") return value;
-  throw new Error("Unsupported mode. Use prepare, self-test, or runner.");
+  if (value === "prepare" || value === "self-test" || value === "runner" || value === "codex-smoke") return value;
+  throw new Error("Unsupported mode. Use prepare, self-test, runner, or codex-smoke.");
 }
 
 function parsePresetId(value: string) {
@@ -552,13 +662,15 @@ function printHelp() {
     "Usage:",
     "  npm run naikaku:task -- \"Implement a settings panel and run npm test\"",
     "  npm run naikaku:task -- --self-test \"Prove the local fixture automation path\"",
+    "  npm run naikaku:task -- --codex-smoke \"Prove Codex can patch code under cabinet governance\"",
     "  npm run naikaku:task -- --runner-preset local-wrapper-example --adapter-ready \"Run my configured local wrapper\"",
     "",
     "Options:",
     "  --mission, -m <text>       Mission text. Positional text also works.",
     "  --mission-file <path>      Read mission text from a file.",
-    "  --mode <name>              prepare, self-test, or runner. Default: prepare unless a runner flag is present.",
+    "  --mode <name>              prepare, self-test, codex-smoke, or runner. Default: prepare unless a runner flag is present.",
     "  --self-test                Shortcut for fixture self-test mode.",
+    "  --codex-smoke              Shortcut for governed Codex CLI coding smoke mode.",
     "  --runner-preset <id>       Fixed local runner preset id for runner mode.",
     "  --adapter-ready            Record selected adapter as installed, license-reviewed, and approved for this run.",
     "  --locale <code>            ja, en, zh-Hans, zh-Hant, ko. Default: ja.",
@@ -568,7 +680,7 @@ function printHelp() {
     "  --generated-at <iso>       Stable timestamp for tests.",
     "  --help, -h                 Show this help.",
     "",
-    "This is the operator-facing CLI entry. It delegates to engineering:auto-work and keeps the claim boundary explicit."
+    "This is the operator-facing CLI entry. It delegates to engineering:auto-work or the governed Codex smoke and keeps the claim boundary explicit."
   ].join("\n"));
 }
 
