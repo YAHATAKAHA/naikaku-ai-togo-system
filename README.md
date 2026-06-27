@@ -76,7 +76,7 @@ npm install
 npm run dev
 ```
 
-Then open the local Vite URL and try the default mission. The center column now starts with the Engineering Launchpad: use "Go to input" to edit the mission, "Split by cabinet" to create supervised work, "Prepare agents" to build the coding-agent runner package, "Check permission" to preflight Mac-local execution, and "Run local sandbox" after the gateway is running. Use the right inspector to change role provider settings.
+Then open the local Vite URL and try the default mission. The center column now starts with the Engineering Launchpad: use "Go to input" to edit the mission, "Check runners" to detect local command-line adapters, "Split by cabinet" to create supervised work, "Prepare agents" to build the coding-agent runner package, "Check permission" to preflight Mac-local execution, and "Run local sandbox" after the gateway is running. Use the right inspector to change role provider settings.
 
 For the local JSON gateway:
 
@@ -84,7 +84,7 @@ For the local JSON gateway:
 npm run gateway
 ```
 
-It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner intake audit, coding agent runner self-test, coding agent runner lease, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
+It starts on `http://127.0.0.1:8787` by default and exposes health, provider test, cabinet run, engineering auto-work, engineering runner readiness, automation plan, automation runbook, executor handoff, executor dry-run, executor evidence, team package, role workspace scaffold, product readiness, product release bundle, release rehearsal, release verification, development issue draft, coding agent brief, coding agent brief review, coding agent session bundle, coding agent dispatch manifest, coding agent dispatch simulation, coding agent runner manifest, coding agent runner invocation package, coding agent runner intake audit, coding agent runner self-test, coding agent runner lease, coding agent sandbox runner preflight, coding agent sandbox runner, coding agent session drill, coding agent session receipt, coding agent implementation evidence, coding agent artifact audit, sandbox capability, and sandbox policy-check endpoints. The GitHub CLI issue script is generated locally from issue drafts and must be run only inside a repository where `gh` is already authenticated.
 
 For local runner auth checks, the legacy shared-token mode is still supported:
 
@@ -121,7 +121,7 @@ npm run gateway
 npm run dev
 ```
 
-Enter the task in the engineering mission box, choose `Fixture auto-test` for the built-in no-provider proof, or choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, then click `Start auto work`. The browser calls the local gateway endpoint `/v1/engineering/auto-work`, which starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository. The web button does not expose arbitrary shell, push, deploy, host secrets, or unbounded Mac control; custom runner command lines remain available through the CLI path below.
+Enter the task in the engineering mission box, click `Check runners` to inspect local CLI/app candidates such as OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtimes, choose `Fixture auto-test` for the built-in no-provider proof, or choose `OpenHands CLI` after installing and license-reviewing the local OpenHands command, then click `Start auto work`. The browser calls the local gateway endpoint `/v1/engineering/auto-work`, which starts the same `engineering:auto-work` pipeline, imports receipts, audits evidence, and writes `output/engineering-auto-work-ui/summary.json`. Fixture runs use `output/engineering-auto-work-ui/fixture-worktree` so the web smoke does not modify the main repository. Runner readiness detection only checks local command/app presence; it does not install tools, accept licenses, expose arbitrary shell, grant push/deploy, grant host-secret access, or allow unbounded Mac control. Custom runner command lines remain available through the CLI path below.
 
 For the simplest command-line MVP flow, run one mission through the adapter registry, supervised engineering simulator, external-runner handoff package, deterministic adapter self-test, local verification runner, and fixture-only coding loop:
 

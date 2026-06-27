@@ -129,6 +129,52 @@ export interface EngineeringAutoWorkGatewayResponse {
   stderrTail: string;
 }
 
+export type EngineeringRunnerReadinessStatus =
+  | "ready"
+  | "detected-needs-approval"
+  | "detected-needs-adapter"
+  | "missing"
+  | "blocked-by-default";
+
+export interface EngineeringRunnerReadinessItem {
+  adapterId: string;
+  label: string;
+  risk: string;
+  installMode: string;
+  status: EngineeringRunnerReadinessStatus;
+  workbenchPreset: EngineeringAutoWorkGatewayPreset | null;
+  canLaunchFromWorkbench: boolean;
+  commandCandidates: string[];
+  detectedCommands: string[];
+  applicationCandidates: string[];
+  detectedApplications: string[];
+  capabilities: string[];
+  installHint: string;
+  nextAction: string;
+  permissionsRequired: string[];
+  evidenceRequired: string[];
+}
+
+export interface EngineeringRunnerReadinessReport {
+  schema: "naikaku.engineering-runner-readiness.v1";
+  generatedAt: string;
+  cwd: string;
+  items: EngineeringRunnerReadinessItem[];
+  summary: {
+    total: number;
+    ready: number;
+    detected: number;
+    launchableFromWorkbench: number;
+    missing: number;
+    blockedByDefault: number;
+    highOrCriticalRisk: number;
+  };
+  policy: {
+    claim: string;
+    limitations: string[];
+  };
+}
+
 export interface LedgerSummary {
   schema: "naikaku.ledger-summary.v1";
   ledgerDir: string;
@@ -994,6 +1040,18 @@ export async function runEngineeringAutoWorkViaGateway(
   }
 
   return (await response.json()) as EngineeringAutoWorkGatewayResponse;
+}
+
+export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSignal) {
+  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-readiness`, {
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(await gatewayErrorMessage(response, "Gateway engineering runner readiness failed"));
+  }
+
+  return (await response.json()) as EngineeringRunnerReadinessReport;
 }
 
 export async function checkGatewayHealth() {

@@ -893,6 +893,120 @@ a.secondary-button {
   color: var(--ink);
 }
 
+.engineering-runner-readiness-panel {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.engineering-runner-readiness-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engineering-runner-readiness-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.engineering-runner-readiness-heading small,
+.engineering-runner-readiness-list small,
+.engineering-runner-readiness-list em,
+.engineering-runner-readiness-list b {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engineering-runner-readiness-heading strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.engineering-runner-readiness-heading button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.engineering-runner-readiness-heading button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.engineering-runner-readiness-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 7px;
+}
+
+.engineering-runner-readiness-list span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 8px;
+}
+
+.engineering-runner-readiness-list strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.engineering-runner-readiness-list em {
+  font-style: normal;
+  text-transform: none;
+}
+
+.engineering-runner-readiness-list b {
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--accent-2);
+  padding: 3px 7px;
+}
+
+.engineering-runner-readiness-list span[data-status="ready"],
+.engineering-runner-readiness-list span[data-status="detected-needs-approval"] {
+  border-color: rgba(22, 131, 95, 0.26);
+  background: #f6fbf8;
+}
+
+.engineering-runner-readiness-list span[data-status="detected-needs-adapter"],
+.engineering-runner-readiness-list span[data-status="missing"] {
+  border-color: rgba(184, 128, 31, 0.26);
+  background: #fffaf0;
+}
+
+.engineering-runner-readiness-list span[data-status="blocked-by-default"] {
+  border-color: rgba(180, 35, 24, 0.28);
+  background: #fff7f6;
+}
+
 .engineering-profile-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

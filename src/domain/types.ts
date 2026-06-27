@@ -2965,6 +2965,7 @@ export type AuditEventType =
   | "development.coding_sessions.sandbox_runner_completed"
   | "development.engineering_self_simulation.completed"
   | "development.engineering_auto_work.completed"
+  | "development.engineering_runner_readiness.checked"
   | "development.coding_sessions.receipt_prepared"
   | "development.coding_sessions.receipt_reviewed"
   | "development.coding_sessions.implementation_evidence_prepared"

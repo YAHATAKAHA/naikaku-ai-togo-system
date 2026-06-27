@@ -184,6 +184,7 @@ import {
   createRoleWorkspaceScaffoldsViaGateway,
   createTeamHandoffViaGateway,
   gatewayBaseUrl,
+  getEngineeringRunnerReadinessViaGateway,
   getLedgerSummaryViaGateway,
   listApprovalLedgerViaGateway,
   listEvidenceLedgerViaGateway,
@@ -198,6 +199,7 @@ import {
 import type {
   EngineeringAutoWorkGatewayPreset,
   EngineeringAutoWorkGatewayResponse,
+  EngineeringRunnerReadinessReport,
   LedgerSummary
 } from "./domain/gatewayClient";
 import type { EngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
@@ -363,6 +365,15 @@ export function App() {
     status: "idle",
     message: "",
     result: null
+  });
+  const [engineeringRunnerReadinessState, setEngineeringRunnerReadinessState] = useState<{
+    status: "idle" | "loading" | "ready" | "error";
+    message: string;
+    report: EngineeringRunnerReadinessReport | null;
+  }>({
+    status: "idle",
+    message: "",
+    report: null
   });
   const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
   const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
@@ -4494,6 +4505,55 @@ export function App() {
     }
   }
 
+  async function refreshEngineeringRunnerReadinessFromLaunchpad() {
+    setEngineeringRunnerReadinessState((current) => ({
+      status: "loading",
+      message: copy.engineeringLaunchpad.runnerReadinessChecking,
+      report: current.report
+    }));
+
+    try {
+      const report = await getEngineeringRunnerReadinessViaGateway();
+      setEngineeringRunnerReadinessState({
+        status: "ready",
+        message: copy.engineeringLaunchpad.runnerReadinessStatus(
+          report.summary.ready,
+          report.summary.detected,
+          report.summary.launchableFromWorkbench,
+          report.summary.total
+        ),
+        report
+      });
+      recordAudit({
+        type: "development.engineering_runner_readiness.checked",
+        severity: "info",
+        summary: "Engineering runner readiness checked via gateway.",
+        metadata: {
+          total: report.summary.total,
+          ready: report.summary.ready,
+          detected: report.summary.detected,
+          launchableFromWorkbench: report.summary.launchableFromWorkbench,
+          blockedByDefault: report.summary.blockedByDefault
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "unknown";
+      setEngineeringRunnerReadinessState({
+        status: "error",
+        message: copy.engineeringLaunchpad.runnerReadinessUnavailable(errorMessage),
+        report: null
+      });
+      recordAudit({
+        type: "development.engineering_runner_readiness.checked",
+        severity: "error",
+        summary: `Engineering runner readiness gateway failed: ${errorMessage}.`,
+        metadata: {
+          gatewayError: errorMessage
+        }
+      });
+    }
+  }
+
   return (
     <main className="app-shell" lang={htmlLang(locale)}>
       <header className="topbar">
@@ -4615,10 +4675,12 @@ export function App() {
             autoWorkAdapterReady={engineeringAutoWorkAdapterReady}
             autoWorkWorktree={engineeringAutoWorkWorktree}
             autoWorkState={engineeringAutoWorkState}
+            runnerReadinessState={engineeringRunnerReadinessState}
             onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
             onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
             onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
             onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
+            onRefreshRunnerReadiness={() => void refreshEngineeringRunnerReadinessFromLaunchpad()}
             onFocusMission={focusMissionBrief}
             onApplyMissionTemplate={applyEngineeringMissionTemplate}
             onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}

@@ -102,6 +102,35 @@ Live cabinet runs still resolve role secrets from gateway environment variables.
 }
 ```
 
+### `GET /v1/engineering/runner-readiness`
+
+Detects known local command-line or app candidates for the engineering Workbench. It reports the built-in local runner plus OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtime candidates. The endpoint is read-only: it does not install upstream tools, accept licenses, grant Mac permissions, expose a browser shell, or mark an adapter approved for real work.
+
+Successful responses include per-adapter status, detected commands/apps, whether the Workbench can launch the preset today, required permissions, evidence requirements, and the next safe action:
+
+```json
+{
+  "schema": "naikaku.engineering-runner-readiness.v1",
+  "summary": {
+    "total": 9,
+    "ready": 1,
+    "detected": 2,
+    "launchableFromWorkbench": 1,
+    "missing": 5,
+    "blockedByDefault": 2
+  },
+  "items": [
+    {
+      "adapterId": "naikaku-local-engineering-runner",
+      "status": "ready",
+      "workbenchPreset": "fixture",
+      "canLaunchFromWorkbench": true,
+      "detectedCommands": ["npm"]
+    }
+  ]
+}
+```
+
 ### `POST /v1/engineering/auto-work`
 
 Starts the same supervised engineering pipeline as `npm run engineering:auto-work` from the local gateway. This is the web workbench path for entering a task, selecting a runner preset, and letting Naikaku prepare or execute the local adapter loop.

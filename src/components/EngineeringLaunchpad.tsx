@@ -6,6 +6,7 @@ import {
   FlaskConical,
   PackageCheck,
   PlayCircle,
+  RefreshCcw,
   ShieldCheck,
   Terminal,
   WandSparkles
@@ -28,7 +29,8 @@ import type { EngineeringMacRunnerReadiness } from "../domain/engineeringMacRunn
 import type { EngineeringSelfSimulationReport } from "../domain/engineeringSelfSimulation";
 import type {
   EngineeringAutoWorkGatewayPreset,
-  EngineeringAutoWorkGatewayResponse
+  EngineeringAutoWorkGatewayResponse,
+  EngineeringRunnerReadinessReport
 } from "../domain/gatewayClient";
 import type { EngineeringLaunchpadCopy } from "../i18n";
 
@@ -70,10 +72,16 @@ interface EngineeringLaunchpadProps {
     message: string;
     result: EngineeringAutoWorkGatewayResponse | null;
   };
+  runnerReadinessState: {
+    status: "idle" | "loading" | "ready" | "error";
+    message: string;
+    report: EngineeringRunnerReadinessReport | null;
+  };
   onMissionChange: (mission: string) => void;
   onAutoWorkPresetChange: (preset: EngineeringAutoWorkGatewayPreset) => void;
   onAutoWorkAdapterReadyChange: (ready: boolean) => void;
   onAutoWorkWorktreeChange: (worktree: string) => void;
+  onRefreshRunnerReadiness: () => void;
   onFocusMission: () => void;
   onApplyMissionTemplate: () => void;
   onRunSelfSimulation: () => void;
@@ -114,10 +122,12 @@ export function EngineeringLaunchpad({
   autoWorkAdapterReady,
   autoWorkWorktree,
   autoWorkState,
+  runnerReadinessState,
   onMissionChange,
   onAutoWorkPresetChange,
   onAutoWorkAdapterReadyChange,
   onAutoWorkWorktreeChange,
+  onRefreshRunnerReadiness,
   onFocusMission,
   onApplyMissionTemplate,
   onRunSelfSimulation,
@@ -141,6 +151,7 @@ export function EngineeringLaunchpad({
   );
   const autoWorkSummary = autoWorkState.result?.summary;
   const autoWorkCounts = autoWorkSummary?.counts;
+  const runnerReadinessReport = runnerReadinessState.report;
   const state = launchState({
     run,
     runnerSelfTest,
@@ -310,6 +321,44 @@ export function EngineeringLaunchpad({
               </span>
               <span>{copy.autoWorkOutputLabel}: {autoWorkState.result.outputDir}</span>
             </>
+          ) : null}
+        </div>
+        <div className="engineering-runner-readiness-panel" data-status={runnerReadinessState.status}>
+          <div className="engineering-runner-readiness-heading">
+            <div>
+              <small>{copy.runnerReadinessLabel}</small>
+              <strong>{runnerReadinessState.message || copy.runnerReadinessIdle}</strong>
+            </div>
+            <button
+              type="button"
+              onClick={onRefreshRunnerReadiness}
+              disabled={runnerReadinessState.status === "loading"}
+            >
+              <RefreshCcw size={14} /> {copy.runnerReadinessRefresh}
+            </button>
+          </div>
+          {runnerReadinessReport ? (
+            <div className="engineering-runner-readiness-list">
+              {runnerReadinessReport.items.map((item) => (
+                <span
+                  data-status={item.status}
+                  key={item.adapterId}
+                  title={`${copy.runnerReadinessNextActionLabel}: ${item.nextAction}`}
+                >
+                  <strong>{item.label}</strong>
+                  <small>{copy.runnerReadinessAdapterStatus(item.status)}</small>
+                  <em>
+                    {copy.runnerReadinessDetected(
+                      item.detectedCommands.length,
+                      item.detectedApplications.length
+                    )}
+                  </em>
+                  {item.canLaunchFromWorkbench ? (
+                    <b>{item.workbenchPreset || "workbench"}</b>
+                  ) : null}
+                </span>
+              ))}
+            </div>
           ) : null}
         </div>
       </div>

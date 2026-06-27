@@ -138,6 +138,15 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.completionGateDecision("evidence-ready")).toBeTruthy();
       expect(copy.engineeringLaunchpad.completionGateCheck("changed-files")).toBeTruthy();
       expect(copy.engineeringLaunchpad.completionGateCheckStatus("block")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessRefresh).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessChecking).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessIdle).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessStatus(1, 2, 1, 9)).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessUnavailable("offline")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessAdapterStatus("detected-needs-adapter")).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessDetected(2, 1)).toBeTruthy();
+      expect(copy.engineeringLaunchpad.runnerReadinessNextActionLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.downloadSelfSimulationJson).toBeTruthy();
       expect(copy.engineeringLaunchpad.downloadSelfSimulationMarkdown).toBeTruthy();
       expect(copy.engineeringLaunchpad.downloadLaunchQueueJson).toBeTruthy();

@@ -95,6 +95,15 @@ export interface EngineeringLaunchpadCopy {
   autoWorkCompleted: (preset: string, passed: number, completedJobs: number, outputDir: string) => string;
   autoWorkFailed: (exitCode: number | null, outputDir: string) => string;
   autoWorkGatewayUnavailable: (errorMessage: string) => string;
+  runnerReadinessLabel: string;
+  runnerReadinessRefresh: string;
+  runnerReadinessChecking: string;
+  runnerReadinessIdle: string;
+  runnerReadinessStatus: (ready: number, detected: number, launchable: number, total: number) => string;
+  runnerReadinessUnavailable: (errorMessage: string) => string;
+  runnerReadinessAdapterStatus: (status: string) => string;
+  runnerReadinessDetected: (commands: number, apps: number) => string;
+  runnerReadinessNextActionLabel: string;
   macScopeLabel: string;
   macScopeItems: string[];
   macRunnerLabel: string;
@@ -530,6 +539,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `ローカル gateway の自動工程を利用できません。${errorMessage}`,
+      runnerReadinessLabel: "Runner 体検",
+      runnerReadinessRefresh: "Runner を確認",
+      runnerReadinessChecking: "本機の runner コマンドを確認しています。",
+      runnerReadinessIdle: "本機 runner はまだ確認していません。",
+      runnerReadinessStatus: (ready, detected, launchable, total) =>
+        `${total} runner 中 ${ready} ready、${detected} 件検出、Workbench 起動 ${launchable} 件。`,
+      runnerReadinessUnavailable: (errorMessage) => `Runner 体検を利用できません。${errorMessage}`,
+      runnerReadinessAdapterStatus: (status) => status,
+      runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
+      runnerReadinessNextActionLabel: "次の操作",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
       capabilitiesLabel: "必要な Mac 工程能力",
       signalsLabel: "検出したミッション信号",
@@ -967,6 +986,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `Auto work failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
       autoWorkGatewayUnavailable: (errorMessage) => `Local gateway auto work is unavailable. ${errorMessage}`,
+      runnerReadinessLabel: "Runner check",
+      runnerReadinessRefresh: "Check runners",
+      runnerReadinessChecking: "Checking local runner commands.",
+      runnerReadinessIdle: "Local runners have not been checked yet.",
+      runnerReadinessStatus: (ready, detected, launchable, total) =>
+        `${ready}/${total} ready, ${detected} detected, ${launchable} launchable from Workbench.`,
+      runnerReadinessUnavailable: (errorMessage) => `Runner readiness is unavailable. ${errorMessage}`,
+      runnerReadinessAdapterStatus: (status) => status,
+      runnerReadinessDetected: (commands, apps) => `${commands} cmd / ${apps} app`,
+      runnerReadinessNextActionLabel: "Next action",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
       capabilitiesLabel: "Required Mac engineering capabilities",
       signalsLabel: "Detected mission signals",
@@ -1404,6 +1433,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自动工程失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自动工程不可用。${errorMessage}`,
+      runnerReadinessLabel: "Runner 体检",
+      runnerReadinessRefresh: "检查 runner",
+      runnerReadinessChecking: "正在检查本机 runner 命令。",
+      runnerReadinessIdle: "还没有检查本机 runner。",
+      runnerReadinessStatus: (ready, detected, launchable, total) =>
+        `${total} 个 runner 中 ${ready} 个 ready，检测到 ${detected} 个，Workbench 可启动 ${launchable} 个。`,
+      runnerReadinessUnavailable: (errorMessage) => `Runner 体检不可用。${errorMessage}`,
+      runnerReadinessAdapterStatus: (status) => status,
+      runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
+      runnerReadinessNextActionLabel: "下一步",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "识别到的任务信号",
@@ -1841,6 +1880,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
       autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自動工程不可用。${errorMessage}`,
+      runnerReadinessLabel: "Runner 體檢",
+      runnerReadinessRefresh: "檢查 runner",
+      runnerReadinessChecking: "正在檢查本機 runner 命令。",
+      runnerReadinessIdle: "還沒有檢查本機 runner。",
+      runnerReadinessStatus: (ready, detected, launchable, total) =>
+        `${total} 個 runner 中 ${ready} 個 ready，偵測到 ${detected} 個，Workbench 可啟動 ${launchable} 個。`,
+      runnerReadinessUnavailable: (errorMessage) => `Runner 體檢不可用。${errorMessage}`,
+      runnerReadinessAdapterStatus: (status) => status,
+      runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
+      runnerReadinessNextActionLabel: "下一步",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "識別到的任務信號",
@@ -2278,6 +2327,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkFailed: (exitCode, outputDir) =>
         `자동 엔지니어링 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
       autoWorkGatewayUnavailable: (errorMessage) => `로컬 gateway 자동 엔지니어링을 사용할 수 없습니다. ${errorMessage}`,
+      runnerReadinessLabel: "Runner 점검",
+      runnerReadinessRefresh: "Runner 확인",
+      runnerReadinessChecking: "로컬 runner 명령을 확인하는 중입니다.",
+      runnerReadinessIdle: "로컬 runner를 아직 확인하지 않았습니다.",
+      runnerReadinessStatus: (ready, detected, launchable, total) =>
+        `${total}개 runner 중 ${ready}개 ready, ${detected}개 감지, Workbench 실행 가능 ${launchable}개.`,
+      runnerReadinessUnavailable: (errorMessage) => `Runner readiness를 사용할 수 없습니다. ${errorMessage}`,
+      runnerReadinessAdapterStatus: (status) => status,
+      runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
+      runnerReadinessNextActionLabel: "다음 작업",
       missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
       capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
       signalsLabel: "감지된 미션 신호",

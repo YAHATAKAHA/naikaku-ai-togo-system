@@ -45,6 +45,7 @@ import {
   runEngineeringAutoWorkGateway,
   type EngineeringAutoWorkGatewayRequest
 } from "./engineeringAutoWorkGateway";
+import { buildEngineeringRunnerReadiness } from "./engineeringRunnerReadiness";
 import type {
   AutomationApprovalRecord,
   AuditEvent,
@@ -166,6 +167,7 @@ const server = createServer(async (request, response) => {
           "coding-agent-implementation-evidence",
           "coding-agent-implementation-artifact-audit",
           "engineering-auto-work",
+          "engineering-runner-readiness",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
@@ -1177,6 +1179,11 @@ const server = createServer(async (request, response) => {
       const body = await readJson<EngineeringAutoWorkGatewayRequest>(request);
       const result = runEngineeringAutoWorkGateway(body);
       sendJson(response, result.statusCode, result.body);
+      return;
+    }
+
+    if (request.method === "GET" && requestUrl.pathname === "/v1/engineering/runner-readiness") {
+      sendJson(response, 200, buildEngineeringRunnerReadiness());
       return;
     }
 
