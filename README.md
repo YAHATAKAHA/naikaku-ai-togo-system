@@ -1,6 +1,6 @@
 # Naikaku AI Togo System
 
-Naikaku AI Togo System is a multi-model AI cabinet workbench for governed software work, with Japanese as the primary operator language.
+Naikaku AI Togo System is a Japan-built, multi-model AI cabinet workbench for governed software work, with Japanese as the primary operator language.
 
 Instead of treating one model as an unchecked operator, Naikaku separates a mission into roles: planning, execution, critique, supervision, scoring, memory, and safety. Runners such as local CLIs or automation tools are attached behind approval gates, scoped permissions, receipts, and artifact review.
 
@@ -17,6 +17,14 @@ Naikaku is designed for developers who want AI-assisted engineering to be audita
 - Japanese is the primary operator language, with English, Simplified Chinese, Traditional Chinese, and Korean supported in the product UI.
 
 This repository contains the product source, tests, fixture drills, and public technical documentation.
+
+## Why Japan-Built
+
+Many Japanese companies are interested in AI, but they also tend to be careful about where AI is allowed to act, who is responsible for the result, and what evidence remains after execution.
+
+Naikaku was shaped for that environment. It is meant for automation customers, research workflows, and engineering teams that want AI to help with real work while keeping role separation, permission boundaries, receipts, and reviewable evidence visible.
+
+This public release opens that approach from Japan: not as an unrestricted agent, but as a governed workbench that can connect models, local runners, and human approval in one auditable loop.
 
 ## Development
 
