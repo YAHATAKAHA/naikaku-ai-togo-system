@@ -70,6 +70,8 @@ For local API and runner gateway features, start the gateway in another terminal
 npm run gateway
 ```
 
+The repository does not ship API keys, runner tokens, or hosted credentials. Leave `.env.example` values blank until you need live providers or authenticated runners, then set your own environment variables in your local shell, `.env`, local vault, or deployment environment.
+
 To run the public verification checks:
 
 ```bash
@@ -113,6 +115,8 @@ The runner layer is intentionally contract-first. A runner must return structure
 
 Naikaku supports bring-your-own provider configuration through environment-variable aliases. Browser state should store aliases such as `OPENAI_API_KEY`, not raw keys.
 
+This open-source repository provides only configuration fields and examples. Project maintainers do not provide shared provider keys, gateway tokens, or bundled credits. For live model calls, each operator supplies their own key in the gateway process environment, for example `NAIKAKU_OPENAI_API_KEY` or `DASHSCOPE_API_KEY`. The no-provider fixture and replay checks work without paid credentials.
+
 Supported adapter families include:
 
 - OpenAI-compatible endpoints
@@ -127,6 +131,7 @@ Supported adapter families include:
 The default posture is deny by default for high-impact actions.
 
 - Raw provider secrets are not saved by the frontend.
+- Example token and API key fields are placeholders; real values belong only to the operator's local environment or private deployment.
 - External content and tool output are treated as untrusted.
 - Shell and runner actions require scoped contracts.
 - Production deploy, Git push, external send, purchases, and broad host control require explicit approval.

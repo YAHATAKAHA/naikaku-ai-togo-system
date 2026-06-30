@@ -28,9 +28,11 @@ NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE=.naikaku-data/engineering-runner-presets
 NAIKAKU_LEDGER_DIR=.naikaku-data
 ```
 
+These values are operator-owned. The open-source project must keep token and API-key examples blank or synthetic; maintainers do not distribute shared gateway tokens, provider keys, or credits. Real values should be set only in the operator's local shell, ignored `.env`, private vault, CI secret store, or deployment environment.
+
 `VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
 
-`NAIKAKU_RUNNER_TOKEN` protects executor-facing routes in legacy shared-token mode when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
+`NAIKAKU_RUNNER_TOKEN` is a user-created local gateway token. It protects executor-facing routes in legacy shared-token mode when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
 
 `NAIKAKU_RUNNER_CREDENTIALS` is preferred for real runner development. It takes precedence over `NAIKAKU_RUNNER_TOKEN` and accepts a JSON array, or an object with a `runners` array. Each entry requires `runnerId`, either `token` or `tokenSha256`, and `executorProfiles`. Optional `rotatedAt`, `notBefore`, `expiresAt`, and `label` fields support rotation evidence. Malformed scoped config fails closed with `runnerAuth.mode` set to `misconfigured`; it does not fall back to an open gateway.
 
@@ -99,6 +101,8 @@ The response also includes runner auth posture:
 Validates a provider configuration structurally. It does not persist secrets.
 If `sessionSecret` is provided, the gateway only uses it to mark this one-off test as secret-ready.
 Live cabinet runs still resolve role secrets from gateway environment variables.
+
+For live providers, `apiKeyAlias` points to an environment variable owned by the operator running the gateway. The repository never includes the raw key.
 
 ```json
 {
