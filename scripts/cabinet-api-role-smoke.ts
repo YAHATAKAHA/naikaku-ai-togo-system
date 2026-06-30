@@ -217,7 +217,7 @@ function defaultModel(provider: ProviderKind) {
 }
 
 function defaultApiKeyAlias(provider: ProviderKind) {
-  if (provider === "openai") return "OPENAI_API_KEY";
+  if (provider === "openai") return "NAIKAKU_OPENAI_API_KEY";
   if (provider === "anthropic") return "ANTHROPIC_API_KEY";
   if (provider === "openrouter") return "OPENROUTER_API_KEY";
   if (provider === "aliyun") return "DASHSCOPE_API_KEY";
@@ -710,7 +710,7 @@ function printHelp() {
   console.log([
     "Usage:",
     "  npm run cabinet:api-role-smoke -- --mock",
-    "  npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias OPENAI_API_KEY",
+    "  npm run cabinet:api-role-smoke -- --provider openai --model <model> --api-key-alias NAIKAKU_OPENAI_API_KEY",
     "  npm run cabinet:api-role-smoke -- --provider openrouter --model openai/<model> --api-key-alias OPENROUTER_API_KEY",
     "  npm run cabinet:api-role-smoke -- --provider aliyun --model qwen-turbo --api-key-alias DASHSCOPE_API_KEY",
     "",

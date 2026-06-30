@@ -372,11 +372,11 @@ export function App() {
   const [engineeringAutoWorkPreset, setEngineeringAutoWorkPreset] = useState<EngineeringAutoWorkGatewayPreset>("fixture");
   const [engineeringAutoWorkAdapterReady, setEngineeringAutoWorkAdapterReady] = useState(false);
   const [engineeringAutoWorkWorktree, setEngineeringAutoWorkWorktree] = useState("output/engineering-auto-work-ui/fixture-worktree");
-  const [engineeringGuidedCabinetMode, setEngineeringGuidedCabinetMode] = useState<EngineeringGuidedCabinetMode>("local");
+  const [engineeringGuidedCabinetMode, setEngineeringGuidedCabinetMode] = useState<EngineeringGuidedCabinetMode>("api-mock");
   const [engineeringGuidedCabinetProvider, setEngineeringGuidedCabinetProvider] = useState<ProviderKind>("openai");
   const [engineeringGuidedCabinetEndpoint, setEngineeringGuidedCabinetEndpoint] = useState("");
   const [engineeringGuidedCabinetModel, setEngineeringGuidedCabinetModel] = useState("");
-  const [engineeringGuidedCabinetApiKeyAlias, setEngineeringGuidedCabinetApiKeyAlias] = useState("OPENAI_API_KEY");
+  const [engineeringGuidedCabinetApiKeyAlias, setEngineeringGuidedCabinetApiKeyAlias] = useState("NAIKAKU_OPENAI_API_KEY");
   const [engineeringAutoWorkState, setEngineeringAutoWorkState] = useState<{
     status: "idle" | "running" | "completed" | "error";
     message: string;

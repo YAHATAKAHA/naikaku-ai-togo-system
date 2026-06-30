@@ -93,6 +93,10 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.autoWorkSelfTesting).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkCodexSmoke).toBeTruthy();
       expect(copy.engineeringLaunchpad.autoWorkCodexSmoking).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkAdapterFixtureLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.autoWorkLiveTokenHelp).toBeTruthy();
+      expect(copy.engineeringLaunchpad.safeStartLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.safeStartSteps).toHaveLength(3);
       expect(copy.engineeringLaunchpad.guidedCabinetModeLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetModeLocal).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetModeApiMock).toBeTruthy();
@@ -101,6 +105,7 @@ describe("i18n", () => {
       expect(copy.engineeringLaunchpad.guidedCabinetModelLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetModelPlaceholder).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetApiKeyAliasLabel).toBeTruthy();
+      expect(copy.engineeringLaunchpad.guidedCabinetApiKeyAliasHelp).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetEndpointLabel).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCabinetEndpointPlaceholder).toBeTruthy();
       expect(copy.engineeringLaunchpad.guidedCycleLimitLabel).toBeTruthy();

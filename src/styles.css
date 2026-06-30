@@ -797,6 +797,53 @@ a.secondary-button {
   line-height: 1.45;
 }
 
+.engineering-safe-start-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.engineering-safe-start-strip span {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: start;
+  border: 1px solid #cfe2d8;
+  border-radius: 8px;
+  background: #f5fbf8;
+  padding: 9px 10px;
+}
+
+.engineering-safe-start-strip small {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #176246;
+  color: white;
+  font-size: 11px;
+  font-weight: 950;
+  grid-row: span 2;
+}
+
+.engineering-safe-start-strip strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.engineering-safe-start-strip em,
+.engineering-field-help {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .engineering-auto-work-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -841,8 +888,18 @@ a.secondary-button {
   accent-color: var(--accent-2);
 }
 
-.engineering-auto-work-controls button {
-  width: 100%;
+.engineering-auto-work-check input:disabled + span {
+  color: #176246;
+}
+
+.engineering-auto-work-actions {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(220px, 1.6fr) repeat(2, minmax(150px, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+
+.engineering-auto-work-actions button {
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -858,13 +915,25 @@ a.secondary-button {
   white-space: nowrap;
 }
 
-.engineering-auto-work-controls button:hover:not(:disabled) {
+.engineering-auto-work-actions button:hover:not(:disabled) {
   filter: brightness(0.96);
 }
 
-.engineering-auto-work-controls button[data-variant="secondary"] {
+.engineering-auto-work-actions button[data-variant="primary"] {
+  min-height: 40px;
+  border-color: #176246;
+  background: #176246;
+}
+
+.engineering-auto-work-actions button[data-variant="secondary"] {
   background: white;
   color: var(--accent-2);
+}
+
+.engineering-auto-work-actions button:disabled {
+  border-color: var(--line);
+  background: var(--surface-strong);
+  color: var(--muted);
 }
 
 .engineering-auto-work-result {
@@ -6788,10 +6857,12 @@ meter {
   .coding-briefs-list,
   .engineering-flow-grid,
   .engineering-entry-console,
+  .engineering-safe-start-strip,
   .engineering-profile-grid,
   .engineering-mission-draft-grid,
   .engineering-mission-composer-footer,
   .engineering-auto-work-controls,
+  .engineering-auto-work-actions,
   .engineering-completion-gate-review,
   .engineering-self-simulation-review,
   .engineering-mac-runner-review,

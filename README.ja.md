@@ -115,7 +115,7 @@ Naikaku は主に 4 つの層で構成されています。
 
 ## プロバイダー
 
-Naikaku は bring-your-own provider 構成に対応します。ブラウザ状態には生のキーではなく、`OPENAI_API_KEY` のような環境変数エイリアスを保存します。
+Naikaku は bring-your-own provider 構成に対応します。ブラウザ状態には生のキーではなく、`NAIKAKU_OPENAI_API_KEY` のような環境変数エイリアスを保存します。
 
 この公開リポジトリが提供するのは、設定項目と例だけです。プロジェクト保守者は共用 provider key、gateway token、同梱クレジットを提供しません。live model call を使う場合、利用者が gateway process の環境変数に `NAIKAKU_OPENAI_API_KEY` や `DASHSCOPE_API_KEY` などを設定します。有料認証情報なしでも、fixture / replay による検証は実行できます。
 

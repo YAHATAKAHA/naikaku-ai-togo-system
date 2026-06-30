@@ -113,7 +113,7 @@ The runner layer is intentionally contract-first. A runner must return structure
 
 ## Providers
 
-Naikaku supports bring-your-own provider configuration through environment-variable aliases. Browser state should store aliases such as `OPENAI_API_KEY`, not raw keys.
+Naikaku supports bring-your-own provider configuration through environment-variable aliases. Browser state should store aliases such as `NAIKAKU_OPENAI_API_KEY`, not raw keys.
 
 This open-source repository provides only configuration fields and examples. Project maintainers do not provide shared provider keys, gateway tokens, or bundled credits. For live model calls, each operator supplies their own key in the gateway process environment, for example `NAIKAKU_OPENAI_API_KEY` or `DASHSCOPE_API_KEY`. The no-provider fixture and replay checks work without paid credentials.
 

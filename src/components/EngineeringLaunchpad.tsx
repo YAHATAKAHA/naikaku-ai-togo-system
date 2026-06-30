@@ -221,6 +221,9 @@ export function EngineeringLaunchpad({
   const runnerReadinessReport = runnerReadinessState.report;
   const guidedCycleOptions = [1, 2, 3];
   const guidedCabinetProviderOptions: ProviderKind[] = ["openai", "openrouter", "anthropic", "aliyun", "google", "local", "custom"];
+  const isFixturePreset = autoWorkPreset === "fixture";
+  const isLiveCabinetMode = guidedCabinetMode === "api";
+  const adapterReadyChecked = isFixturePreset || autoWorkAdapterReady;
   const configuredRunnerPresets = runnerPresets.filter((preset) =>
     preset.availableInWorkbench &&
     !["prepared", "fixture", "openhands"].includes(preset.id)
@@ -338,6 +341,15 @@ export function EngineeringLaunchpad({
           <strong>{copy.autoWorkTitle}</strong>
           <p>{copy.autoWorkBody}</p>
         </article>
+        <div className="engineering-safe-start-strip" aria-label={copy.safeStartLabel}>
+          {copy.safeStartSteps.map((step, index) => (
+            <span key={step.title}>
+              <small>{index + 1}</small>
+              <strong>{step.title}</strong>
+              <em>{step.body}</em>
+            </span>
+          ))}
+        </div>
         <div className="engineering-auto-work-controls">
           <label>
             <span>{copy.autoWorkPresetLabel}</span>
@@ -415,8 +427,9 @@ export function EngineeringLaunchpad({
                 <input
                   value={guidedCabinetApiKeyAlias}
                   onChange={(event) => onGuidedCabinetApiKeyAliasChange(event.target.value)}
-                  placeholder="OPENAI_API_KEY"
+                  placeholder="NAIKAKU_OPENAI_API_KEY"
                 />
+                <small className="engineering-field-help">{copy.guidedCabinetApiKeyAliasHelp}</small>
               </label>
               <label>
                 <span>{copy.guidedCabinetEndpointLabel}</span>
@@ -431,13 +444,17 @@ export function EngineeringLaunchpad({
           <label className="engineering-auto-work-check">
             <input
               type="checkbox"
-              checked={autoWorkAdapterReady}
+              checked={adapterReadyChecked}
+              disabled={isFixturePreset}
               onChange={(event) => onAutoWorkAdapterReadyChange(event.target.checked)}
             />
-            <span>{copy.autoWorkAdapterReadyLabel}</span>
+            <span>{isFixturePreset ? copy.autoWorkAdapterFixtureLabel : copy.autoWorkAdapterReadyLabel}</span>
           </label>
+        </div>
+        <div className="engineering-auto-work-actions">
           <button
             type="button"
+            data-variant="secondary"
             onClick={onRunAutoWork}
             disabled={executionBusy}
           >
@@ -445,6 +462,7 @@ export function EngineeringLaunchpad({
           </button>
           <button
             type="button"
+            data-variant="primary"
             onClick={onRunGuidedCycle}
             disabled={executionBusy}
           >
@@ -467,7 +485,9 @@ export function EngineeringLaunchpad({
             <Bot size={15} /> {codexSmokeState.status === "running" ? copy.autoWorkCodexSmoking : copy.autoWorkCodexSmoke}
           </button>
         </div>
-        <small className="engineering-auto-work-help">{copy.autoWorkAdapterReadyHelp}</small>
+        <small className="engineering-auto-work-help">
+          {isLiveCabinetMode ? copy.autoWorkLiveTokenHelp : copy.autoWorkAdapterReadyHelp}
+        </small>
         <div className="engineering-auto-work-result">
           <strong>{guidedCycleState.message || copy.guidedCycleIdle}</strong>
           {guidedCycleState.status !== "idle" ? (
