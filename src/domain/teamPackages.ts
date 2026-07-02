@@ -1,4 +1,5 @@
 import { cabinetStages, executorProfiles } from "../data/defaultCabinet";
+import { dataClassificationLabels, dataResidencyLabels } from "./dataAccessPolicy";
 import type {
   AutomationAction,
   CabinetRole,
@@ -135,6 +136,7 @@ function buildTeamWorkPackage({
     },
     executorProfileId: role.executorProfileId,
     permissions: role.permissions,
+    dataAccess: role.dataAccess,
     objectives: [
       role.mandate,
       stage?.objective || "Own the assigned cabinet responsibility.",
@@ -151,6 +153,7 @@ function buildTeamWorkPackage({
     securityNotes: [
       "Use provider aliases only; never place raw API keys in workspace exports.",
       `Executor boundary: ${executor?.label || role.executorProfileId}.`,
+      `Data access: allowed ${classificationList(role.dataAccess.allowedClassifications)}; denied ${classificationList(role.dataAccess.deniedClassifications)}; residency ${dataResidencyLabels[role.dataAccess.defaultResidency]}.`,
       role.permissions.requiresApprovalForHighImpact
         ? "High-impact actions must keep explicit human approval."
         : "Review whether high-impact approval should be enabled before production."
@@ -196,6 +199,12 @@ function packageDependencies(role: CabinetRole, roles: CabinetRole[]) {
   return roles
     .filter((candidate) => candidate.enabled && upstreamStages.has(candidate.stage))
     .map((candidate) => `${candidate.name} (${candidate.ministry})`);
+}
+
+function classificationList(classifications: CabinetRole["dataAccess"]["allowedClassifications"]) {
+  return classifications.length
+    ? classifications.map((classification) => dataClassificationLabels[classification]).join(", ")
+    : "none";
 }
 
 function packageStatus(

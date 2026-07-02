@@ -1,9 +1,23 @@
 import { useState } from "react";
-import { CheckCircle2, PlugZap, Shield, TestTube2, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Database, PlugZap, Shield, TestTube2, Trash2, XCircle } from "lucide-react";
 import { cabinetStages, executorProfiles } from "../data/defaultCabinet";
 import { findAdapter } from "../domain/adapters";
+import {
+  completeRoleDataAccessPolicy,
+  dataClassificationLabels,
+  dataClassifications,
+  dataResidencyLabels
+} from "../domain/dataAccessPolicy";
 import { testProviderViaGateway } from "../domain/gatewayClient";
-import type { CabinetRole, CabinetStageId, ProviderKind, RiskLevel } from "../domain/types";
+import type {
+  CabinetRole,
+  CabinetStageId,
+  DataClassification,
+  DataResidency,
+  ProviderKind,
+  RiskLevel,
+  RoleDataAccessPolicy
+} from "../domain/types";
 
 interface RoleInspectorProps {
   role: CabinetRole | undefined;
@@ -32,6 +46,54 @@ export function RoleInspector({
   }
 
   const currentRole = role;
+  const dataAccess = completeRoleDataAccessPolicy(role.dataAccess);
+
+  function updateDataAccess(patch: Partial<RoleDataAccessPolicy>) {
+    onChange({
+      dataAccess: completeRoleDataAccessPolicy({
+        ...dataAccess,
+        ...patch
+      })
+    });
+  }
+
+  function setClassificationMode(
+    classification: DataClassification,
+    mode: "allow" | "local" | "deny"
+  ) {
+    const allowed = new Set(dataAccess.allowedClassifications);
+    const denied = new Set(dataAccess.deniedClassifications);
+    const localOnly = new Set(dataAccess.localOnlyClassifications);
+
+    if (mode === "allow") {
+      allowed.add(classification);
+      denied.delete(classification);
+      localOnly.delete(classification);
+    }
+    if (mode === "local") {
+      allowed.add(classification);
+      denied.delete(classification);
+      localOnly.add(classification);
+    }
+    if (mode === "deny") {
+      allowed.delete(classification);
+      denied.add(classification);
+      localOnly.delete(classification);
+    }
+
+    updateDataAccess({
+      allowedClassifications: orderedClassifications(allowed),
+      deniedClassifications: orderedClassifications(denied),
+      localOnlyClassifications: orderedClassifications(localOnly)
+    });
+  }
+
+  function classificationMode(classification: DataClassification) {
+    if (dataAccess.deniedClassifications.includes(classification)) return "deny";
+    if (dataAccess.localOnlyClassifications.includes(classification)) return "local";
+    if (dataAccess.allowedClassifications.includes(classification)) return "allow";
+    return "deny";
+  }
 
   async function testConnection() {
     setTestState({ status: "testing", message: "Testing through local gateway..." });
@@ -225,6 +287,70 @@ export function RoleInspector({
 
       <section className="inspector-section">
         <div className="subheading">
+          <Database size={15} /> Data access
+        </div>
+        <label>
+          Default residency
+          <select
+            value={dataAccess.defaultResidency}
+            onChange={(event) =>
+              updateDataAccess({ defaultResidency: event.target.value as DataResidency })
+            }
+          >
+            <option value="external-allowed">{dataResidencyLabels["external-allowed"]}</option>
+            <option value="gateway-mediated">{dataResidencyLabels["gateway-mediated"]}</option>
+            <option value="local-only">{dataResidencyLabels["local-only"]}</option>
+          </select>
+        </label>
+        <div className="data-access-list">
+          {dataClassifications.map((classification) => {
+            const mode = classificationMode(classification);
+            return (
+              <div className="data-access-row" key={classification}>
+                <span>{dataClassificationLabels[classification]}</span>
+                <div className="data-access-modes" role="group" aria-label={`${dataClassificationLabels[classification]} access`}>
+                  <button
+                    type="button"
+                    data-active={mode === "allow"}
+                    onClick={() => setClassificationMode(classification, "allow")}
+                  >
+                    Allow
+                  </button>
+                  <button
+                    type="button"
+                    data-active={mode === "local"}
+                    onClick={() => setClassificationMode(classification, "local")}
+                  >
+                    Local
+                  </button>
+                  <button
+                    type="button"
+                    data-active={mode === "deny"}
+                    onClick={() => setClassificationMode(classification, "deny")}
+                  >
+                    Deny
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <label>
+          Policy notes
+          <textarea
+            value={dataAccess.notes.join("\n")}
+            rows={3}
+            onChange={(event) =>
+              updateDataAccess({
+                notes: event.target.value.split("\n")
+              })
+            }
+          />
+        </label>
+      </section>
+
+      <section className="inspector-section">
+        <div className="subheading">
           <Shield size={15} /> Executor and permissions
         </div>
         <label>
@@ -278,6 +404,10 @@ export function RoleInspector({
       </section>
     </aside>
   );
+}
+
+function orderedClassifications(values: Set<DataClassification>) {
+  return dataClassifications.filter((classification) => values.has(classification));
 }
 
 function PermissionToggle({

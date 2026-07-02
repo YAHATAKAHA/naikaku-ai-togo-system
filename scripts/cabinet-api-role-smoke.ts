@@ -7,6 +7,7 @@ import {
   type CabinetMotionDecisionReport,
   type CabinetVoteDecision
 } from "../src/domain/cabinetDecision";
+import { completeRole } from "../src/domain/roles";
 import type {
   CabinetArtifact,
   CabinetRole,
@@ -227,7 +228,7 @@ function defaultApiKeyAlias(provider: ProviderKind) {
 }
 
 function roleForSpec(spec: typeof roleSpecs[number], provider: ProviderConfig): CabinetRole {
-  return {
+  return completeRole({
     id: spec.id,
     name: spec.name,
     ministry: spec.ministry,
@@ -245,7 +246,7 @@ function roleForSpec(spec: typeof roleSpecs[number], provider: ProviderConfig): 
     enabled: true,
     riskLevel: spec.riskLevel,
     executorProfileId: spec.executorProfileId
-  };
+  });
 }
 
 function roleSystemPrompt(roleId: string) {

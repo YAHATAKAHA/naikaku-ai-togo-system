@@ -21,6 +21,9 @@ describe("team work packages", () => {
     expect(handoff.packages).toHaveLength(defaultRoles.filter((role) => role.enabled).length);
     expect(handoff.summary.templates).toBe(handoff.packages.length);
     expect(handoff.packages.every((workPackage) => workPackage.provider.apiKeyAlias)).toBe(true);
+    expect(handoff.packages.every((workPackage) => workPackage.dataAccess.allowedClassifications.length > 0))
+      .toBe(true);
+    expect(handoff.packages[0].securityNotes.some((note) => note.startsWith("Data access:"))).toBe(true);
     expect(exported).not.toContain("sessionSecret");
   });
 

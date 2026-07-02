@@ -27,6 +27,7 @@ The current app is a React/Vite TypeScript workbench. It provides:
 - Role configuration.
 - Custom role creation, duplication, deletion, and workspace persistence.
 - Per-role provider settings.
+- Per-role data access policy for public, internal, confidential, secret, personal, and customer data.
 - Editable Provider Readiness matrix with one row per role, provider/endpoint/model/API alias inputs, session-only secret checks, gateway/local fallback test results, audit events, and export.
 - Per-role executor and permission settings.
 - Editable ministry, cabinet stage, and risk posture per role.
@@ -51,6 +52,8 @@ The current app is a React/Vite TypeScript workbench. It provides:
 
 - `CabinetRole`
 - `ProviderConfig`
+- `RoleDataAccessPolicy`
+- `RoleDataAccessMatrix`
 - `ProviderReadinessMatrix`
 - `ProviderReadinessRow`
 - `SandboxPolicy`
@@ -103,6 +106,12 @@ The current gateway already supports this in two modes:
 
 Provider Readiness is the operator-facing preflight for those adapters. The frontend derives static readiness from each role's endpoint, model, alias, and session-only secret state. Operators can test one role or all roles through `/v1/provider/test`; if the gateway is offline, the local fallback validates endpoint/model shape without persisting secrets. Results are stored locally as status metadata only and can be exported as `naikaku.provider-readiness.v1`.
 
+## Role Data Access
+
+Each `CabinetRole` now carries a `RoleDataAccessPolicy`. The policy separates `public`, `internal`, `confidential`, `secret`, `personal-data`, and `customer-data` context before model or runner handoff. A role can allow a classification, deny it, or mark it local-only. `defaultResidency` records whether the role is intended for external provider use, gateway-mediated use, or local-only processing.
+
+`RoleDataAccessMatrix` evaluates a set of requested classifications for every role and returns `allowed`, `redact`, or `blocked`. This is the first concrete layer for enterprise data separation: planning and critique roles can stay limited to public/internal context, execution roles can work with confidential implementation context through the gateway, and supervision can inspect restricted data only through local or redacted paths.
+
 ## Sandbox Executors
 
 Executor profiles model the runtime that can perform actions:
@@ -127,17 +136,17 @@ Each executor step now carries `ExecutorEvidenceItem` records for policy decisio
 
 ## Team Handoffs
 
-Parallel development starts from `TeamHandoff`. A handoff turns the current workspace, and optionally the latest run, into one `TeamWorkPackage` per enabled role. Each package includes the role mandate, provider alias, executor boundary, permissions, stage tasks, dependencies, deliverables, acceptance criteria, security notes, automation action ids, and run linkage.
+Parallel development starts from `TeamHandoff`. A handoff turns the current workspace, and optionally the latest run, into one `TeamWorkPackage` per enabled role. Each package includes the role mandate, provider alias, executor boundary, permissions, data access policy, stage tasks, dependencies, deliverables, acceptance criteria, security notes, automation action ids, and run linkage.
 
 The workbench can export these packages as JSON. The local gateway also exposes `/v1/team/packages` so backend services, separate teams, or future CI workflows can request the same structure without scraping frontend state.
 
-`RoleWorkspaceScaffolds` turns the same handoff into `naikaku.role-workspace-scaffolds.v1`. Each scaffold creates a per-role workspace folder with a README, `.env.example`, task checklist, runner notes, and security notes. The workbench exports this as a reviewable shell script that only creates local files; it does not install dependencies, call providers, or embed raw secrets.
+`RoleWorkspaceScaffolds` turns the same handoff into `naikaku.role-workspace-scaffolds.v1`. Each scaffold creates a per-role workspace folder with a README, `.env.example`, task checklist, runner notes, and security notes. The security file includes the role's allowed, denied, local-only, and residency data policy. The workbench exports this as a reviewable shell script that only creates local files; it does not install dependencies, call providers, or embed raw secrets.
 
 ## Product Readiness
 
 `ProductReadinessReport` is the workbench's delivery gate. It combines Provider Readiness, Sandbox Capability, Automation Runbook, Team Handoff, Role Workspace Scaffolds, Development Board, GitHub Issue Drafts, audit events, approvals, and reviewed memory into `naikaku.product-readiness.v1`.
 
-The report gives a score, decision, and gate list. Gates are grouped into role API, automation, sandbox, parallel development, evidence, and memory. Each gate includes status, evidence, and next action so an operator can see whether the current state is ship-ready, needs review, or blocked. The local gateway exposes the same report through `/v1/product/readiness`.
+The report gives a score, decision, and gate list. Gates are grouped into role API, automation, sandbox, data governance, parallel development, evidence, and memory. The data-governance gate checks that restricted data is not directly allowed for external roles and that at least one supervised review path exists. Each gate includes status, evidence, and next action so an operator can see whether the current state is ship-ready, needs review, or blocked. The local gateway exposes the same report through `/v1/product/readiness`.
 
 `ProductReleaseBundle` packages the same state into `naikaku.product-release-bundle.v1`. It includes the workspace, optional run, provider readiness, product readiness report, automation runbook, team handoff, role workspace scaffolds, development board, issue drafts, approvals, audit events, reviewed memory, and a release manifest. The manifest marks included, missing, and review-required artifacts, then adds operator commands, handoff checklist items, and security notes for delivery. The workbench also derives Markdown release notes from the bundle so operators can review blockers, warnings, handoff steps, and commands without opening the JSON artifact.
 

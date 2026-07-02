@@ -75,6 +75,21 @@ The current workbench starts with:
 - Destructive and external-send actions blocked.
 - Raw secrets session-only.
 
+## Role Data Access Policy
+
+Computer-use safety is not only about actions. Before a role receives context, Naikaku classifies the data boundary for that role:
+
+- `public`
+- `internal`
+- `confidential`
+- `secret`
+- `personal-data`
+- `customer-data`
+
+Each role policy can allow, deny, or mark a classification as local-only. Planning and critique roles default to public/internal context. Execution roles can receive confidential implementation context through the gateway or sandbox, but not raw secret, personal, or customer data. The Safety Auditor can review restricted data, but restricted classes require local-only handling or redacted gateway summaries before non-local provider calls.
+
+`naikaku.role-data-access-matrix.v1` makes this reviewable as `allowed`, `redact`, or `blocked`. The Product Readiness report includes a data-governance gate so restricted data cannot silently become available to an external-allowed role.
+
 ## Automation Queue
 
 Cabinet runs now produce sandbox action proposals before any executor work. Each proposal records:

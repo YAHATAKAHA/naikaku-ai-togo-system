@@ -58,6 +58,7 @@ describe("workspace import/export", () => {
     expect(imported.roles).toHaveLength(defaultRoles.length);
     expect(imported.sandboxPolicy.maxRunMinutes).toBe(30);
     expect(imported.mission).toBe("Imported mission");
+    expect(imported.roles[0].dataAccess.allowedClassifications.length).toBeGreaterThan(0);
   });
 
   it("preserves custom roles through workspace export and import", () => {

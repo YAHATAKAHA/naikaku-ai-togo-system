@@ -7,6 +7,7 @@ import type {
   DevelopmentBoard,
   DevelopmentIssueDrafts,
   MemoryEntry,
+  DataClassification,
   ProductReadinessCategory,
   ProductReadinessGate,
   ProductReadinessReport,
@@ -16,6 +17,7 @@ import type {
   SandboxCapabilityRegistry,
   TeamHandoff
 } from "./types";
+import { buildRoleDataAccessMatrix, dataClassificationLabels } from "./dataAccessPolicy";
 
 export interface BuildProductReadinessReportInput {
   workspace: CabinetWorkspace;
@@ -56,6 +58,7 @@ export function buildProductReadinessReport({
     automationRunbookGate(run || null, automationRunbook),
     sandboxPolicyGate(workspace, sandboxCapabilities),
     sandboxCoverageGate(activeRoles.length, sandboxCapabilities),
+    dataAccessGate(activeRoles),
     teamHandoffGate(activeRoles.length, teamHandoff),
     roleWorkspaceGate(activeRoles.length, roleWorkspaces),
     developmentBoardGate(activeRoles.length, developmentBoard),
@@ -79,6 +82,94 @@ export function buildProductReadinessReport({
     gates,
     summary
   };
+}
+
+const restrictedClassifications: DataClassification[] = ["secret", "personal-data", "customer-data"];
+
+function dataAccessGate(activeRoles: BuildProductReadinessReportInput["workspace"]["roles"]): ProductReadinessGate {
+  if (activeRoles.length === 0) {
+    return gate(
+      "role-data-access",
+      "data-governance",
+      "Role data access policy",
+      "block",
+      "No enabled roles are available for data-governance review.",
+      ["0 enabled roles"],
+      "Enable at least one supervised role before treating the workspace as governable."
+    );
+  }
+
+  const matrix = buildRoleDataAccessMatrix({
+    roles: activeRoles,
+    requestedClassifications: restrictedClassifications
+  });
+  const externalSensitiveRoles = activeRoles.filter(
+    (role) =>
+      role.dataAccess.defaultResidency === "external-allowed" &&
+      role.dataAccess.allowedClassifications.some((classification) =>
+        restrictedClassifications.includes(classification)
+      )
+  );
+  const reviewerRows = matrix.rows.filter((row) => row.decision !== "blocked");
+
+  if (externalSensitiveRoles.length > 0) {
+    return gate(
+      "role-data-access",
+      "data-governance",
+      "Role data access policy",
+      "block",
+      `${externalSensitiveRoles.length} external role policies allow restricted data directly.`,
+      externalSensitiveRoles.map((role) => `${role.name}: ${role.dataAccess.defaultResidency}`),
+      "Move restricted classifications behind local-only or gateway-mediated review before live provider use."
+    );
+  }
+
+  if (reviewerRows.length === 0) {
+    return gate(
+      "role-data-access",
+      "data-governance",
+      "Role data access policy",
+      "block",
+      "No enabled role can review restricted data under an explicit policy.",
+      matrix.rows.map((row) => `${row.roleName}: ${row.decision}`),
+      "Enable a supervision role that can inspect restricted data through local-only or redacted gateway paths."
+    );
+  }
+
+  const localOnlyCovered = activeRoles.filter((role) =>
+    restrictedClassifications.every((classification) =>
+      role.dataAccess.localOnlyClassifications.includes(classification)
+    )
+  ).length;
+
+  if (localOnlyCovered < activeRoles.length) {
+    return gate(
+      "role-data-access",
+      "data-governance",
+      "Role data access policy",
+      "warn",
+      `${localOnlyCovered}/${activeRoles.length} enabled roles mark all restricted classifications as local-only.`,
+      [
+        `${reviewerRows.length} restricted-data reviewer rows`,
+        `${matrix.summary.blocked} restricted-data blocked rows`
+      ],
+      "Review custom role policies so secret, personal, and customer data stay local-only by default."
+    );
+  }
+
+  return gate(
+    "role-data-access",
+    "data-governance",
+    "Role data access policy",
+    "pass",
+    "Enabled roles have explicit restricted-data boundaries and at least one supervised review path.",
+    [
+      `${activeRoles.length} enabled roles`,
+      `${reviewerRows.length} restricted-data reviewer rows`,
+      `Restricted: ${restrictedClassifications.map((classification) => dataClassificationLabels[classification]).join(", ")}`
+    ],
+    "Keep role data policies attached to provider, runner, and team-package changes."
+  );
 }
 
 export function serializeProductReadinessReport(report: ProductReadinessReport) {

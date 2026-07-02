@@ -6487,6 +6487,53 @@ meter {
   padding: 9px 10px;
 }
 
+.data-access-list {
+  display: grid;
+  gap: 8px;
+}
+
+.data-access-row {
+  display: grid;
+  grid-template-columns: minmax(104px, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--surface-soft);
+}
+
+.data-access-row > span {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.data-access-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.data-access-modes button {
+  min-height: 30px;
+  padding: 0 6px;
+  border-radius: 7px;
+  border-color: var(--line);
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.data-access-modes button[data-active="true"] {
+  border-color: #3b8f78;
+  background: #e8f7f2;
+  color: #17624f;
+}
+
 .operator-footer {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr) minmax(320px, 0.8fr);

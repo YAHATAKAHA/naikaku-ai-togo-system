@@ -11,6 +11,7 @@ Instead of treating one model as an unchecked operator, Naikaku separates a miss
 Naikaku is designed for developers who want AI-assisted engineering to be auditable:
 
 - Multiple AI roles can review the same mission before execution.
+- Role data access policies separate public, internal, confidential, secret, personal, and customer data before model or runner handoff.
 - Provider settings use aliases, not raw browser-stored secrets.
 - Runner work is bounded by contracts, command allowlists, and evidence requirements.
 - Results are accepted only after receipts, command output, changed-file references, and audit checks line up.
@@ -131,6 +132,7 @@ Supported adapter families include:
 The default posture is deny by default for high-impact actions.
 
 - Raw provider secrets are not saved by the frontend.
+- Role-level data policies mark restricted data as blocked, local-only, or gateway-mediated before handoff.
 - Example token and API key fields are placeholders; real values belong only to the operator's local environment or private deployment.
 - External content and tool output are treated as untrusted.
 - Shell and runner actions require scoped contracts.

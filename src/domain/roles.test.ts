@@ -10,6 +10,7 @@ describe("role helpers", () => {
     expect(customRole.id).toBe("custom-minister");
     expect(customRole.provider.apiKeyAlias).toBe("NAIKAKU_CUSTOM_ROLE_API_KEY");
     expect(customRole.enabled).toBe(true);
+    expect(customRole.dataAccess.allowedClassifications).toEqual(["public", "internal"]);
   });
 
   it("duplicates a role without reusing id or api alias", () => {
@@ -22,6 +23,7 @@ describe("role helpers", () => {
     expect(duplicate.name).toBe("Execution Minister Copy");
     expect(duplicate.provider.apiKeyAlias).toBe("NAIKAKU_OPENROUTER_API_KEY_COPY");
     expect(duplicate.permissions.canUseShell).toBe(true);
+    expect(duplicate.dataAccess.allowedClassifications).toContain("confidential");
   });
 
   it("completes legacy custom roles with safe defaults", () => {
@@ -34,5 +36,6 @@ describe("role helpers", () => {
     expect(role.stage).toBe("execution");
     expect(role.provider.provider).toBe("custom");
     expect(role.permissions.requiresApprovalForHighImpact).toBe(true);
+    expect(role.dataAccess.deniedClassifications).toContain("secret");
   });
 });

@@ -1,4 +1,5 @@
 import { defaultRoles } from "../data/defaultCabinet";
+import { completeRoleDataAccessPolicy, defaultRoleDataAccessPolicy } from "./dataAccessPolicy";
 import type { CabinetRole } from "./types";
 
 const defaultRoleIds = new Set(defaultRoles.map((role) => role.id));
@@ -26,6 +27,7 @@ const customRoleDefaults: CabinetRole = {
     canSendNetworkRequests: false,
     requiresApprovalForHighImpact: true
   },
+  dataAccess: defaultRoleDataAccessPolicy,
   enabled: true,
   riskLevel: "medium",
   executorProfileId: "browser-sandbox"
@@ -75,7 +77,11 @@ export function completeRole(role: Partial<CabinetRole> & { id?: string }): Cabi
     permissions: {
       ...fallback.permissions,
       ...(role.permissions || {})
-    }
+    },
+    dataAccess: completeRoleDataAccessPolicy({
+      ...fallback.dataAccess,
+      ...(role.dataAccess || {})
+    })
   };
 }
 

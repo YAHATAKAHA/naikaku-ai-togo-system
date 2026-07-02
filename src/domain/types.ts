@@ -18,6 +18,18 @@ export type CabinetStageId =
 
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
+export type DataClassification =
+  | "public"
+  | "internal"
+  | "confidential"
+  | "secret"
+  | "personal-data"
+  | "customer-data";
+
+export type DataResidency = "external-allowed" | "gateway-mediated" | "local-only";
+
+export type RoleDataAccessDecisionStatus = "allowed" | "redact" | "blocked";
+
 export type ExecutorProfileId =
   | "browser-sandbox"
   | "desktop-vm"
@@ -40,6 +52,45 @@ export interface ProviderConfig {
   apiKeyAlias: string;
   temperature: number;
   maxTokens: number;
+}
+
+export interface RoleDataAccessPolicy {
+  allowedClassifications: DataClassification[];
+  deniedClassifications: DataClassification[];
+  localOnlyClassifications: DataClassification[];
+  defaultResidency: DataResidency;
+  notes: string[];
+}
+
+export interface RoleDataAccessDecision {
+  schema: "naikaku.role-data-access-decision.v1";
+  generatedAt: string;
+  roleId: string;
+  roleName: string;
+  ministry: string;
+  requestedClassifications: DataClassification[];
+  allowedClassifications: DataClassification[];
+  deniedClassifications: DataClassification[];
+  localOnlyClassifications: DataClassification[];
+  requiredRedactions: DataClassification[];
+  defaultResidency: DataResidency;
+  decision: RoleDataAccessDecisionStatus;
+  summary: string;
+}
+
+export interface RoleDataAccessMatrix {
+  schema: "naikaku.role-data-access-matrix.v1";
+  generatedAt: string;
+  requestedClassifications: DataClassification[];
+  rows: RoleDataAccessDecision[];
+  summary: {
+    roles: number;
+    allowed: number;
+    redact: number;
+    blocked: number;
+    localOnlyRoles: number;
+    restrictedRoles: number;
+  };
 }
 
 export type ProviderReadinessStatus =
@@ -91,6 +142,7 @@ export interface CabinetRole {
   provider: ProviderConfig;
   systemPrompt: string;
   permissions: RolePermissions;
+  dataAccess: RoleDataAccessPolicy;
   enabled: boolean;
   riskLevel: RiskLevel;
   executorProfileId: ExecutorProfileId;
@@ -436,6 +488,7 @@ export interface TeamWorkPackage {
   provider: ProviderConfig;
   executorProfileId: ExecutorProfileId;
   permissions: RolePermissions;
+  dataAccess: RoleDataAccessPolicy;
   objectives: string[];
   tasks: string[];
   acceptanceCriteria: string[];
@@ -509,6 +562,7 @@ export type ProductReadinessCategory =
   | "role-api"
   | "automation"
   | "sandbox"
+  | "data-governance"
   | "parallel-development"
   | "evidence"
   | "memory";

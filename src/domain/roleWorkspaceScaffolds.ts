@@ -1,4 +1,6 @@
+import { dataClassificationLabels, dataResidencyLabels } from "./dataAccessPolicy";
 import type {
+  DataClassification,
   RolePermissions,
   RoleWorkspaceFile,
   RoleWorkspaceScaffold,
@@ -218,6 +220,15 @@ function securityContent(workPackage: TeamWorkPackage) {
     "## Required Guardrails",
     ...list(workPackage.securityNotes),
     "",
+    "## Data Access Policy",
+    `- Default residency: ${dataResidencyLabels[workPackage.dataAccess.defaultResidency]}`,
+    `- Allowed classifications: ${classificationList(workPackage.dataAccess.allowedClassifications)}`,
+    `- Denied classifications: ${classificationList(workPackage.dataAccess.deniedClassifications)}`,
+    `- Local-only classifications: ${classificationList(workPackage.dataAccess.localOnlyClassifications)}`,
+    "",
+    "## Policy Notes",
+    ...list(workPackage.dataAccess.notes),
+    "",
     "## Local Rules",
     "- Do not commit .env.local or raw provider keys.",
     "- Use provider aliases in exported artifacts.",
@@ -242,6 +253,12 @@ function permissionLines(permissions: RolePermissions) {
     `- Network: ${yesNo(permissions.canSendNetworkRequests)}`,
     `- Human approval for high impact: ${yesNo(permissions.requiresApprovalForHighImpact)}`
   ];
+}
+
+function classificationList(classifications: DataClassification[]) {
+  return classifications.length
+    ? classifications.map((classification) => dataClassificationLabels[classification]).join(", ")
+    : "none";
 }
 
 function envAliasLine(apiAlias: string) {

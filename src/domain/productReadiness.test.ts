@@ -51,6 +51,7 @@ describe("product readiness report", () => {
     expect(report.decision).toBe("blocked");
     expect(report.summary.blockers).toBeGreaterThan(0);
     expect(report.gates.find((gate) => gate.id === "cabinet-run")?.status).toBe("block");
+    expect(report.gates.find((gate) => gate.id === "role-data-access")?.status).toBe("pass");
     expect(serializeProductReadinessReport(report)).not.toContain("sessionSecret");
   });
 
@@ -124,8 +125,10 @@ describe("product readiness report", () => {
     expect(report.decision).toBe("needs-review");
     expect(report.score).toBeGreaterThan(0);
     expect(report.gates.find((gate) => gate.id === "role-api-configured")?.status).toBe("pass");
+    expect(report.gates.find((gate) => gate.id === "role-data-access")?.status).toBe("pass");
     expect(report.gates.find((gate) => gate.id === "role-workspaces")?.status).toBe("pass");
     expect(report.gates.find((gate) => gate.id === "memory-review")?.status).toBe("warn");
     expect(report.summary.categories).toContain("automation");
+    expect(report.summary.categories).toContain("data-governance");
   });
 });

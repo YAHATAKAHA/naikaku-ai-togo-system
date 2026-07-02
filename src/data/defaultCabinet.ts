@@ -1,7 +1,9 @@
 import type {
   CabinetRole,
   CabinetStageDefinition,
+  DataClassification,
   ExecutorProfile,
+  RoleDataAccessPolicy,
   SandboxPolicy
 } from "../domain/types";
 
@@ -11,6 +13,63 @@ const defaultPermissions = {
   canUseFiles: false,
   canSendNetworkRequests: false,
   requiresApprovalForHighImpact: true
+};
+
+const restrictedData: DataClassification[] = ["secret", "personal-data", "customer-data"];
+
+const externalPlanningDataAccess: RoleDataAccessPolicy = {
+  allowedClassifications: ["public", "internal"],
+  deniedClassifications: ["confidential", ...restrictedData],
+  localOnlyClassifications: restrictedData,
+  defaultResidency: "external-allowed",
+  notes: [
+    "Use for planning and critique with non-sensitive project context.",
+    "Confidential, personal, customer, and secret data must be summarized or redacted before this role receives it."
+  ]
+};
+
+const governedExecutionDataAccess: RoleDataAccessPolicy = {
+  allowedClassifications: ["public", "internal", "confidential"],
+  deniedClassifications: restrictedData,
+  localOnlyClassifications: restrictedData,
+  defaultResidency: "gateway-mediated",
+  notes: [
+    "Can work with confidential implementation context through the gateway or sandbox.",
+    "Secret, personal, and customer data remain outside the execution model unless a separate approved local policy is added."
+  ]
+};
+
+const localOperationsDataAccess: RoleDataAccessPolicy = {
+  allowedClassifications: ["public", "internal", "confidential"],
+  deniedClassifications: restrictedData,
+  localOnlyClassifications: ["confidential", ...restrictedData],
+  defaultResidency: "local-only",
+  notes: [
+    "Use for local runner and computer-use coordination inside approved sandboxes.",
+    "Do not send raw restricted data to external computer-use providers."
+  ]
+};
+
+const supervisorDataAccess: RoleDataAccessPolicy = {
+  allowedClassifications: ["public", "internal", "confidential", ...restrictedData],
+  deniedClassifications: [],
+  localOnlyClassifications: restrictedData,
+  defaultResidency: "gateway-mediated",
+  notes: [
+    "Can inspect restricted data for policy decisions.",
+    "Restricted data must be handled by local review or redacted gateway summaries before non-local model calls."
+  ]
+};
+
+const localEvaluationDataAccess: RoleDataAccessPolicy = {
+  allowedClassifications: ["public", "internal", "confidential"],
+  deniedClassifications: restrictedData,
+  localOnlyClassifications: ["confidential", ...restrictedData],
+  defaultResidency: "local-only",
+  notes: [
+    "Use local scoring for evidence and readiness data.",
+    "Restricted inputs should be represented as redacted findings unless an operator approves a local-only evaluation path."
+  ]
 };
 
 export const executorProfiles: ExecutorProfile[] = [
@@ -79,6 +138,7 @@ export const defaultRoles: CabinetRole[] = [
     systemPrompt:
       "You are the Prime Minister of a disciplined AI cabinet. Convert fuzzy goals into a concrete cabinet agenda.",
     permissions: defaultPermissions,
+    dataAccess: externalPlanningDataAccess,
     enabled: true,
     riskLevel: "medium",
     executorProfileId: "human-approval"
@@ -100,6 +160,7 @@ export const defaultRoles: CabinetRole[] = [
     systemPrompt:
       "You are the Strategy Minister. Build practical plans that separate product, engineering, safety, and operations.",
     permissions: defaultPermissions,
+    dataAccess: externalPlanningDataAccess,
     enabled: true,
     riskLevel: "medium",
     executorProfileId: "browser-sandbox"
@@ -127,6 +188,7 @@ export const defaultRoles: CabinetRole[] = [
       canUseShell: true,
       canSendNetworkRequests: true
     },
+    dataAccess: governedExecutionDataAccess,
     enabled: true,
     riskLevel: "high",
     executorProfileId: "shell-container"
@@ -154,6 +216,7 @@ export const defaultRoles: CabinetRole[] = [
       canUseFiles: true,
       canSendNetworkRequests: true
     },
+    dataAccess: localOperationsDataAccess,
     enabled: true,
     riskLevel: "critical",
     executorProfileId: "desktop-vm"
@@ -175,6 +238,7 @@ export const defaultRoles: CabinetRole[] = [
     systemPrompt:
       "You are the Opposition Critic. Challenge the plan like a constructive adversary.",
     permissions: defaultPermissions,
+    dataAccess: externalPlanningDataAccess,
     enabled: true,
     riskLevel: "low",
     executorProfileId: "browser-sandbox"
@@ -196,6 +260,7 @@ export const defaultRoles: CabinetRole[] = [
     systemPrompt:
       "You are the Safety Auditor. Block unsafe autonomy and require evidence for risky claims.",
     permissions: defaultPermissions,
+    dataAccess: supervisorDataAccess,
     enabled: true,
     riskLevel: "critical",
     executorProfileId: "human-approval"
@@ -217,6 +282,7 @@ export const defaultRoles: CabinetRole[] = [
     systemPrompt:
       "You are the Scoring Office. Convert evidence into actionable go, revise, or block decisions.",
     permissions: defaultPermissions,
+    dataAccess: localEvaluationDataAccess,
     enabled: true,
     riskLevel: "medium",
     executorProfileId: "mcp-proxy"
@@ -241,6 +307,7 @@ export const defaultRoles: CabinetRole[] = [
       ...defaultPermissions,
       canUseFiles: true
     },
+    dataAccess: localEvaluationDataAccess,
     enabled: true,
     riskLevel: "medium",
     executorProfileId: "mcp-proxy"

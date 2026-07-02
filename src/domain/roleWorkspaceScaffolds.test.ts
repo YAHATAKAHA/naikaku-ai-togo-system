@@ -43,6 +43,8 @@ describe("role workspace scaffolds", () => {
       .toContain("NAIKAKU_API_KEY_ALIAS=");
     expect(firstScaffold.files.find((file) => file.path.endsWith("runner-notes.md"))?.content)
       .toContain("Executor profile:");
+    expect(firstScaffold.files.find((file) => file.path.endsWith("security.md"))?.content)
+      .toContain("## Data Access Policy");
   });
 
   it("serializes JSON and creation scripts without session secrets", () => {
