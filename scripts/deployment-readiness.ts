@@ -52,6 +52,9 @@ function requiredFileCheck(): ReadinessCheck {
     "README.ja.md",
     "COMMERCIAL-LICENSE.md",
     "docs/commercial-deployment-checklist.md",
+    "docs/strategy-iterations.md",
+    "docs/adr/README.md",
+    "docs/adr/0001-strategy-iteration-gate.md",
     "PUBLIC-SOURCE-SCOPE.md",
     "SECURITY.md"
   ];
@@ -78,6 +81,7 @@ function packageScriptCheck(): ReadinessCheck {
     "preview:self-host",
     "release:mac-dev-package",
     "public-scope:check",
+    "strategy:iterate",
     "open-source:mvp-check",
     "ci:open-source"
   ];
@@ -213,7 +217,14 @@ function commercialLicenseCheck(): ReadinessCheck {
 }
 
 function documentationCheck(): ReadinessCheck {
-  const docs = ["docs/deployment.md", "docs/deployment.ja.md", "docs/commercial-deployment-checklist.md"];
+  const docs = [
+    "docs/deployment.md",
+    "docs/deployment.ja.md",
+    "docs/commercial-deployment-checklist.md",
+    "docs/strategy-iterations.md",
+    "docs/adr/README.md",
+    "docs/adr/0001-strategy-iteration-gate.md"
+  ];
   const missing = docs.filter((file) => !existsSync(file));
   if (missing.length) {
     return {
@@ -232,16 +243,19 @@ function documentationCheck(): ReadinessCheck {
     english.includes("commercial license") &&
     japanese.includes("Docker Compose") &&
     japanese.includes("商用") &&
-    read("docs/commercial-deployment-checklist.md").includes("Commercial Deployment Checklist");
+    read("docs/commercial-deployment-checklist.md").includes("Commercial Deployment Checklist") &&
+    read("docs/strategy-iterations.md").includes("Strategy Iterations") &&
+    read("docs/adr/README.md").includes("Architecture Decision Records") &&
+    read("docs/adr/0001-strategy-iteration-gate.md").includes("Accepted");
 
   return {
     id: "deployment-docs",
     status: ok ? "pass" : "fail",
     summary: ok
-      ? "English and Japanese deployment guides cover self-hosting and commercial boundaries."
-      : "Deployment guides exist but do not cover required commercial/deployment topics.",
+      ? "English and Japanese deployment guides, strategy gate, and ADR cover self-hosting and commercial boundaries."
+      : "Deployment guides exist but do not cover required commercial, deployment, and strategy-gate topics.",
     evidence: docs,
-    nextAction: "Document self-host startup, secrets, runtime config, and commercial use boundary."
+    nextAction: "Document self-host startup, secrets, runtime config, commercial use boundary, and strategy-gate evidence."
   };
 }
 

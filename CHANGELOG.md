@@ -12,11 +12,13 @@ All notable public-source changes are tracked here. This project uses a source-a
 - English and Japanese deployment guides.
 - Commercial deployment checklist for customer or hosted evaluations.
 - Role-level data access policies for public/internal/confidential/secret/personal/customer data boundaries.
+- Five-iteration strategy alignment report and ADR for Japan-led positioning, governance, deployment, contribution, and release-evidence checks.
 
 ### Changed
 
 - `ci:open-source` now includes deployment readiness checks.
 - README and Japanese README now expose deployment and commercial-readiness entry points.
+- `ci:open-source` now runs the strategy iteration report before MVP and test checks.
 
 ### Security
 

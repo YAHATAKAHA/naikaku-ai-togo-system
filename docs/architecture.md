@@ -6,6 +6,8 @@ Naikaku AI Togo System is designed as a cabinet-style automation platform. It se
 
 The product should stay centered on the user's core idea: a Japanese-led AI cabinet that can program, operate sandboxed computers, and verify its own work without pretending that dry-run evidence is production evidence. Multilingual support is part of the operating surface, not a separate translation layer: Japanese is designed first, then English, Simplified Chinese, Traditional Chinese, and Korean mirror the same cabinet concepts while preserving stable schemas, commands, paths, provider aliases, and evidence artifacts. Codex-like implementation agents fit into the system as governed workers that receive reviewed briefs and return receipts; OpenClaw-style computer-use runners fit as executor profiles that must pass policy, approval, logging, and release gates.
 
+Naikaku's architecture does not assume that every company should train a large local model. The intended pattern is smaller role-specific local controls where they are useful, plus bring-your-own external models or future EMYSTI gateway routing where larger compute is appropriate. The five-iteration strategy gate in `docs/strategy-iterations.md` keeps that direction machine-checkable across Japan-led positioning, role data governance, deployment/commercial readiness, contribution surface, and release evidence.
+
 ## Core Modules
 
 ```text

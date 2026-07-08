@@ -5,6 +5,7 @@
 ## Verification
 
 - [ ] `npm run deployment:check`
+- [ ] `npm run strategy:iterate`
 - [ ] `npm run ci:open-source`
 - [ ] UI screenshots or browser notes, if UI changed
 - [ ] Runner receipt/evidence/audit paths, if automation or external runner behavior changed

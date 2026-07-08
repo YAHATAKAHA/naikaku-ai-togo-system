@@ -78,12 +78,13 @@ To run the public verification checks:
 ```bash
 npm run public-scope:check
 npm run deployment:check
+npm run strategy:iterate
 npm run build
 npm run test
 npm run open-source:mvp-check
 ```
 
-The last command runs the no-provider verification path. It uses local fixtures and replay providers, not paid model credentials.
+`strategy:iterate` checks the five product-direction gates: Japan-led positioning, role data governance, deployment/commercial readiness, contribution surface, and release evidence. `open-source:mvp-check` runs the no-provider verification path with local fixtures and replay providers, not paid model credentials.
 
 ## Release Package
 
@@ -167,6 +168,8 @@ The frontend reads `/naikaku-config.js` at runtime, so a deployment can point th
 - [Deployment](./docs/deployment.md)
 - [Deployment 日本語](./docs/deployment.ja.md)
 - [Commercial deployment checklist](./docs/commercial-deployment-checklist.md)
+- [Strategy iterations](./docs/strategy-iterations.md)
+- [Architecture decision records](./docs/adr/README.md)
 - [Sandbox security](./docs/security-sandbox.md)
 - [Localization](./docs/localization.md)
 - [macOS developer preview](./docs/install/macos-dev-preview.md)
@@ -181,6 +184,8 @@ Before opening a pull request:
 ```bash
 npm run ci:open-source
 ```
+
+This command includes public-source scope checks, deployment readiness, strategy iteration evidence, the no-provider MVP smoke path, unit tests, and whitespace checks.
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [PUBLIC-SOURCE-SCOPE.md](./PUBLIC-SOURCE-SCOPE.md). Do not submit private deployment files, website source, credentials, customer data, private logs, or internal business material.
 

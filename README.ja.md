@@ -80,12 +80,13 @@ npm run gateway
 ```bash
 npm run public-scope:check
 npm run deployment:check
+npm run strategy:iterate
 npm run build
 npm run test
 npm run open-source:mvp-check
 ```
 
-`open-source:mvp-check` は、有料モデル認証情報を使わない検証パスです。ローカル fixture と replay provider を使います。
+`strategy:iterate` は、日本発の位置づけ、ロール単位のデータガバナンス、デプロイ / 商用準備、貢献導線、リリース証跡という 5 つの方向性ゲートを確認します。`open-source:mvp-check` は、有料モデル認証情報を使わない検証パスです。ローカル fixture と replay provider を使います。
 
 ## リリースパッケージ
 
@@ -169,6 +170,8 @@ docker compose up --build
 - [Deployment 日本語](./docs/deployment.ja.md)
 - [Deployment](./docs/deployment.md)
 - [Commercial deployment checklist](./docs/commercial-deployment-checklist.md)
+- [Strategy iterations](./docs/strategy-iterations.md)
+- [Architecture decision records](./docs/adr/README.md)
 - [Sandbox security](./docs/security-sandbox.md)
 - [Localization](./docs/localization.md)
 - [macOS developer preview](./docs/install/macos-dev-preview.md)
@@ -183,6 +186,8 @@ Pull Request の前に実行してください。
 ```bash
 npm run ci:open-source
 ```
+
+このコマンドには、公開範囲チェック、デプロイ readiness、strategy iteration evidence、有料 provider なしの MVP smoke、unit test、whitespace check が含まれます。
 
 [CONTRIBUTING.md](./CONTRIBUTING.md) と [PUBLIC-SOURCE-SCOPE.md](./PUBLIC-SOURCE-SCOPE.md) を読んでください。非公開のデプロイファイル、Web サイトのソース、認証情報、顧客データ、非公開ログ、内部事業資料は提出しないでください。
 
