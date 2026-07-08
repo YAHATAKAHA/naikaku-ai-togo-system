@@ -1,0 +1,46 @@
+services:
+  gateway:
+    build:
+      context: .
+      target: runtime
+      args:
+        VITE_NAIKAKU_GATEWAY_URL: ${VITE_NAIKAKU_GATEWAY_URL:-http://127.0.0.1:8787}
+    image: naikaku-ai-togo-system:gateway
+    ports:
+      - "${NAIKAKU_GATEWAY_PORT:-8787}:8787"
+    environment:
+      NAIKAKU_GATEWAY_HOST: 0.0.0.0
+      NAIKAKU_GATEWAY_PORT: 8787
+      NAIKAKU_CORS_ORIGIN: ${NAIKAKU_CORS_ORIGIN:-http://127.0.0.1:5173,http://127.0.0.1:4173}
+      NAIKAKU_LEDGER_DIR: /data
+      NAIKAKU_RUNNER_TOKEN: ${NAIKAKU_RUNNER_TOKEN:-}
+      NAIKAKU_RUNNER_CREDENTIALS: ${NAIKAKU_RUNNER_CREDENTIALS:-}
+      NAIKAKU_ENGINEERING_RUNNER_PRESETS: ${NAIKAKU_ENGINEERING_RUNNER_PRESETS:-}
+      NAIKAKU_ENGINEERING_RUNNER_PRESETS_FILE: /data/engineering-runner-presets.json
+      NAIKAKU_OPENAI_API_KEY: ${NAIKAKU_OPENAI_API_KEY:-}
+      NAIKAKU_ANTHROPIC_API_KEY: ${NAIKAKU_ANTHROPIC_API_KEY:-}
+      NAIKAKU_OPENROUTER_API_KEY: ${NAIKAKU_OPENROUTER_API_KEY:-}
+      NAIKAKU_GOOGLE_API_KEY: ${NAIKAKU_GOOGLE_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      DASHSCOPE_MODEL: ${DASHSCOPE_MODEL:-qwen-turbo}
+    volumes:
+      - naikaku-data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web-preview
+      args:
+        VITE_NAIKAKU_GATEWAY_URL: ${VITE_NAIKAKU_GATEWAY_URL:-http://127.0.0.1:8787}
+    image: naikaku-ai-togo-system:web
+    ports:
+      - "${NAIKAKU_WEB_PORT:-4173}:4173"
+    environment:
+      NAIKAKU_PUBLIC_GATEWAY_URL: ${NAIKAKU_PUBLIC_GATEWAY_URL:-http://127.0.0.1:8787}
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  naikaku-data:

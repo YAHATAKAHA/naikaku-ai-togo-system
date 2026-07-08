@@ -4,9 +4,16 @@
 
 ## Verification
 
+- [ ] `npm run deployment:check`
 - [ ] `npm run ci:open-source`
 - [ ] UI screenshots or browser notes, if UI changed
 - [ ] Runner receipt/evidence/audit paths, if automation or external runner behavior changed
+
+## Deployment / Commercial Impact
+
+- [ ] No deployment impact
+- [ ] Self-host preview docs or runtime config updated
+- [ ] Commercial boundary, license notice, or customer-facing docs updated
 
 ## Safety Boundary
 

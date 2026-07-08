@@ -77,6 +77,7 @@ To run the public verification checks:
 
 ```bash
 npm run public-scope:check
+npm run deployment:check
 npm run build
 npm run test
 npm run open-source:mvp-check
@@ -100,6 +101,8 @@ cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
 npm ci
 npm run dev
 ```
+
+See [CHANGELOG.md](./CHANGELOG.md) for public-source release notes and [docs/commercial-deployment-checklist.md](./docs/commercial-deployment-checklist.md) for commercial deployment preparation.
 
 ## Architecture
 
@@ -145,11 +148,25 @@ Security details:
 - [docs/security-sandbox.md](./docs/security-sandbox.md)
 - [SECURITY.md](./SECURITY.md)
 
+## Deployment
+
+Self-hosted preview deployment is available through Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The frontend reads `/naikaku-config.js` at runtime, so a deployment can point the browser to a different gateway without changing source code. See [docs/deployment.md](./docs/deployment.md) and [docs/deployment.ja.md](./docs/deployment.ja.md).
+
 ## Documentation
 
 - [Architecture](./docs/architecture.md)
 - [Gateway API](./docs/gateway.md)
 - [Provider adapters](./docs/api-adapters.md)
+- [Deployment](./docs/deployment.md)
+- [Deployment 日本語](./docs/deployment.ja.md)
+- [Commercial deployment checklist](./docs/commercial-deployment-checklist.md)
 - [Sandbox security](./docs/security-sandbox.md)
 - [Localization](./docs/localization.md)
 - [macOS developer preview](./docs/install/macos-dev-preview.md)

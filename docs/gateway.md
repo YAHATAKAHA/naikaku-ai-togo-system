@@ -18,9 +18,10 @@ Environment:
 
 ```bash
 VITE_NAIKAKU_GATEWAY_URL=http://127.0.0.1:8787
+NAIKAKU_PUBLIC_GATEWAY_URL=http://127.0.0.1:8787
 NAIKAKU_GATEWAY_HOST=127.0.0.1
 NAIKAKU_GATEWAY_PORT=8787
-NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173
+NAIKAKU_CORS_ORIGIN=http://127.0.0.1:5173,http://127.0.0.1:4173
 NAIKAKU_RUNNER_TOKEN=optional-local-runner-token
 NAIKAKU_RUNNER_CREDENTIALS='[{"runnerId":"shell-runner-01","token":"shell-token","executorProfiles":["shell-container"],"expiresAt":"2026-12-31T00:00:00.000Z"}]'
 NAIKAKU_ENGINEERING_RUNNER_PRESETS='[{"id":"openclaw-local","label":"OpenClaw local agent","adapterId":"openclaw-desktop-runner","command":"openclaw","args":["agent","--agent","naikaku","--message-file","{taskPath}","--local","--json"],"commandCandidates":["openclaw"]}]'
@@ -30,7 +31,7 @@ NAIKAKU_LEDGER_DIR=.naikaku-data
 
 These values are operator-owned. The open-source project must keep token and API-key examples blank or synthetic; maintainers do not distribute shared gateway tokens, provider keys, or credits. Real values should be set only in the operator's local shell, ignored `.env`, private vault, CI secret store, or deployment environment.
 
-`VITE_NAIKAKU_GATEWAY_URL` is read by the browser app. The other values are read by the Node gateway.
+`VITE_NAIKAKU_GATEWAY_URL` is the browser app's build-time fallback. `NAIKAKU_PUBLIC_GATEWAY_URL` is used by `scripts/write-runtime-config.mjs` to write `dist/naikaku-config.js`, which lets static and Docker deployments point the browser to a gateway without changing source code. The other values are read by the Node gateway.
 
 `NAIKAKU_RUNNER_TOKEN` is a user-created local gateway token. It protects executor-facing routes in legacy shared-token mode when it is set. Local development can omit it, but `/health` will then report `runnerAuth.mode` as `development-open`.
 

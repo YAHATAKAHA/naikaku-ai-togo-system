@@ -42,6 +42,14 @@ import type {
 
 const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8787";
 
+declare global {
+  interface Window {
+    NAIKAKU_CONFIG?: {
+      gatewayUrl?: string;
+    };
+  }
+}
+
 export interface GatewayRunResult {
   run: CabinetRun;
   source: "gateway" | "fallback";
@@ -369,8 +377,11 @@ export interface EvidenceLedgerQuery {
 }
 
 export function gatewayBaseUrl() {
+  const fromRuntime = typeof window !== "undefined"
+    ? window.NAIKAKU_CONFIG?.gatewayUrl
+    : undefined;
   const fromEnv = import.meta.env.VITE_NAIKAKU_GATEWAY_URL as string | undefined;
-  return (fromEnv || DEFAULT_GATEWAY_URL).replace(/\/$/, "");
+  return (fromRuntime || fromEnv || DEFAULT_GATEWAY_URL).replace(/\/$/, "");
 }
 
 async function gatewayErrorMessage(response: Response, fallback: string) {
