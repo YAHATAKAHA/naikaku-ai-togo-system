@@ -83,9 +83,9 @@ function buildReviewedDrillReport(): ReleaseRehearsalReport {
         row,
         ok: true,
         secretReady: true,
-        source: "local-fallback",
-        checkedAt: "2026-06-27T00:00:00.000Z",
-        message: "Reviewed drill provider alias is ready."
+          source: "gateway",
+          checkedAt: "2026-06-27T00:00:00.000Z",
+          message: "Reviewed drill gateway provider check is ready."
       })
     ),
     generatedAt: "2026-06-27T00:00:00.000Z"

@@ -22,6 +22,7 @@ describe("engineering runner presets", () => {
     expect(registry.templates.map((template) => template.id)).toEqual([
       "codex-cli-local",
       "claude-code-local",
+      "qwen-code-local",
       "openclaw-local"
     ]);
     expect(registry.templates.every((template) => template.enabled === false)).toBe(true);
@@ -121,6 +122,11 @@ describe("engineering runner presets", () => {
       generatedAt: "2026-06-27T00:03:00.000Z",
       configPath
     });
+    const qwen = enableEngineeringRunnerPresetTemplate({
+      templateId: "qwen-code-local",
+      generatedAt: "2026-06-27T00:04:00.000Z",
+      configPath
+    });
 
     expect(codex.ok).toBe(true);
     expect(codex.preset).toMatchObject({
@@ -140,7 +146,20 @@ describe("engineering runner presets", () => {
     });
     expect(claude.preset?.args).toContain("--allowedTools");
     expect(claude.preset?.args).toContain("--disallowedTools");
-    expect(claude.registry.summary.configured).toBe(3);
+    expect(qwen.ok).toBe(true);
+    expect(qwen.preset).toMatchObject({
+      id: "qwen-code-local",
+      adapterId: "qwen-code-runner",
+      command: "qwen",
+      source: "file"
+    });
+    expect(qwen.preset?.args).toContain("--approval-mode");
+    expect(qwen.preset?.args).toContain("auto");
+    expect(qwen.preset?.args).toContain("--safe-mode");
+    expect(qwen.preset?.args).toContain("--max-session-turns");
+    expect(qwen.preset?.args).toContain("--max-tool-calls");
+    expect(qwen.preset?.args.join(" ")).toContain("{receiptDraftPath}");
+    expect(qwen.registry.summary.configured).toBe(4);
   });
 
   it("blocks unknown safe preset templates", () => {

@@ -127,9 +127,9 @@ function buildReadyProviderMatrix(
       row,
       ok: true,
       secretReady: true,
-      source: "local-fallback",
+      source: "gateway",
       checkedAt: generatedAt,
-      message: "Release drill verified provider alias through local fallback; no raw secret persisted."
+      message: "Release drill fixture supplies a reviewed gateway provider check; no raw secret is persisted."
     })
   );
 

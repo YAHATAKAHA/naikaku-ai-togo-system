@@ -38,6 +38,25 @@ describe("cabinet orchestrator", () => {
     expect(score.decision).toBe("block");
   });
 
+  it("requires revision when live provider artifacts were skipped or failed", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const score = scoreCabinetRun(
+      run.artifacts.map((artifact) => ({
+        ...artifact,
+        providerStatus: "skipped" as const
+      })),
+      defaultRoles,
+      defaultSandboxPolicy
+    );
+
+    expect(score.decision).toBe("revise");
+    expect(score.execution).toBeLessThan(run.score.execution);
+  });
+
   it("keeps saved config free of raw secret fields", () => {
     const saved = stripUnsafeSecrets({
       roles: defaultRoles,

@@ -65,6 +65,21 @@ npm ci
 npm run dev
 ```
 
+### Naikaku CLI
+
+The repository also exposes a first-party `naikaku` command. It is available immediately through npm, and can be linked into the local shell when that is more convenient.
+
+```bash
+npm run naikaku -- doctor
+npm link
+naikaku doctor
+naikaku start
+naikaku gateway
+naikaku task "Prepare a reviewed implementation plan"
+```
+
+`doctor` only checks the local Node runtime, dependency installation, local gateway health, and whether `codex`, `claude`, or `qwen` is visible on `PATH`. It never runs a model, a Coding CLI, a provider call, or desktop automation. `task` is governed by default: without an explicit runner mode, it prepares a reviewable task and evidence package rather than starting an external coding runner. `naikaku verify` runs the public-source verification suite.
+
 For local API and runner gateway features, start the gateway in another terminal:
 
 ```bash
@@ -72,6 +87,12 @@ npm run gateway
 ```
 
 The repository does not ship API keys, runner tokens, or hosted credentials. Leave `.env.example` values blank until you need live providers or authenticated runners, then set your own environment variables in your local shell, `.env`, local vault, or deployment environment.
+
+### Local Coding CLIs
+
+For code work, the easiest path is to use an already authenticated local CLI rather than copying a provider key into the Workbench. Click **Use local Coding CLI** on the first screen after starting the gateway; Naikaku checks the local `codex`, `claude`, and `qwen` commands, then offers only fixed gateway-side runner templates. The browser never receives the CLI login, Coding Plan credential, or an arbitrary shell command.
+
+For Qwen Code, install and authenticate the upstream CLI first, run `qwen`, then use `/auth` and select **Alibaba ModelStudio -> Coding Plan** (or another supported provider). After the local command is detected, enable `qwen-code-local`, review the scoped worktree, and explicitly confirm the adapter for that run. The template uses controlled Auto mode with a turn/tool budget, captures stdout/stderr, and still requires a Naikaku receipt before implementation can be accepted.
 
 To run the public verification checks:
 
@@ -112,7 +133,7 @@ Naikaku has four main layers:
 1. Workbench UI - React/Vite interface for mission entry, role configuration, readiness, run logs, and evidence review.
 2. Cabinet domain - TypeScript domain modules for roles, decisions, automation, sandbox policy, memory, receipts, and verification.
 3. Local gateway - Server-side routes for provider calls, runner contracts, ledger records, and sandbox execution gates.
-4. Runner adapters - Bounded bridges for tools such as Codex CLI, Claude Code, OpenHands-style CLIs, OpenClaw-style local agents, Hammerspoon, Playwright, or custom command-line tools.
+4. Runner adapters - Bounded bridges for tools such as Codex CLI, Claude Code, Qwen Code with Alibaba Cloud Coding Plan, OpenHands-style CLIs, OpenClaw-style local agents, Hammerspoon, Playwright, or custom command-line tools.
 
 The runner layer is intentionally contract-first. A runner must return structured evidence before Naikaku treats the work as complete.
 
@@ -121,6 +142,8 @@ The runner layer is intentionally contract-first. A runner must return structure
 Naikaku supports bring-your-own provider configuration through environment-variable aliases. Browser state should store aliases such as `NAIKAKU_OPENAI_API_KEY`, not raw keys.
 
 This open-source repository provides only configuration fields and examples. Project maintainers do not provide shared provider keys, gateway tokens, or bundled credits. For live model calls, each operator supplies their own key in the gateway process environment, for example `NAIKAKU_OPENAI_API_KEY` or `DASHSCOPE_API_KEY`. The no-provider fixture and replay checks work without paid credentials.
+
+The workbench's Provider Configuration check is deliberately non-billable: it validates the endpoint/model/alias boundary and whether a key is available, but does not send a paid prompt to a provider. A session-only key may be entered for that one check and is never saved; it does not unlock live mode. For a live cabinet run, set the same alias in the local gateway process environment. If the gateway is offline, the workbench records only an unchecked local structural result, never a false-ready provider result.
 
 Supported adapter families include:
 

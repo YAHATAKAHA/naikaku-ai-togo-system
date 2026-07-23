@@ -193,6 +193,36 @@ const PRESET_TEMPLATES: Array<Omit<EngineeringRunnerPresetTemplate, "enabled"> &
     }
   },
   {
+    id: "qwen-code-local",
+    label: "Qwen Code local runner",
+    adapterId: "qwen-code-runner",
+    command: "qwen",
+    commandCandidates: ["qwen"],
+    summary: "Run locally authenticated Qwen Code with a fixed scoped task prompt and controlled approval mode.",
+    nextAction: "Install and authenticate Qwen Code through /auth, choose Alibaba Cloud Coding Plan or your provider, then approve one scoped local run.",
+    preset: {
+      id: "qwen-code-local",
+      label: "Qwen Code local runner",
+      adapterId: "qwen-code-runner",
+      command: "qwen",
+      args: [
+        "--prompt",
+        "Read and execute this scoped Naikaku task file: {taskPath}. Work only inside the approved worktree. Write the required receipt JSON to {receiptDraftPath}. Do not commit, push, deploy, send external messages, read host secrets, alter login or global settings, or expand beyond the task file.",
+        "--output-format",
+        "json",
+        "--approval-mode",
+        "auto",
+        "--safe-mode",
+        "--max-session-turns",
+        "18",
+        "--max-tool-calls",
+        "45"
+      ],
+      commandCandidates: ["qwen"],
+      nextAction: "Run Qwen Code in controlled Auto mode against one scoped Naikaku task file and import the returned receipt."
+    }
+  },
+  {
     id: "openclaw-local",
     label: "OpenClaw local agent",
     adapterId: "openclaw-desktop-runner",

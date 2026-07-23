@@ -43,11 +43,11 @@ These values are operator-owned. The open-source project must keep token and API
 
 - `id`: lowercase preset id shown to the Workbench.
 - `label`: operator-facing label.
-- `adapterId`: one of the known adapter ids such as `codex-cli-runner`, `claude-code-runner`, `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
+- `adapterId`: one of the known adapter ids such as `codex-cli-runner`, `claude-code-runner`, `qwen-code-runner`, `openclaw-desktop-runner`, `browser-use-runner`, `playwright-browser-runner`, `hammerspoon-mac-adapter`, `mcp-tool-runner`, or `openhands-coding-agent`.
 - `command`: a bare command name, for example `openclaw`, `browser-use`, `npx`, `hs`, or `mcp`.
 - `args`: fixed arguments passed to the command. Supported placeholders are the same as `engineering:run-adapter`: `{jobPath}`, `{taskPath}`, `{receiptDraftPath}`, and `{sessionId}`.
 
-The Workbench can also call `/v1/engineering/runner-presets/enable` with a safe built-in template id such as `codex-cli-local`, `claude-code-local`, or `openclaw-local`. That endpoint writes the fixed gateway-side command template into the preset config file; it does not accept shell commands from the browser.
+The Workbench can also call `/v1/engineering/runner-presets/enable` with a safe built-in template id such as `codex-cli-local`, `claude-code-local`, `qwen-code-local`, or `openclaw-local`. That endpoint writes the fixed gateway-side command template into the preset config file; it does not accept shell commands from the browser. The Qwen template invokes the user-installed `qwen` CLI in `--approval-mode auto` with `--safe-mode`, bounded session/tool budgets, JSON output, and a required Naikaku receipt. It never enables Qwen Code YOLO mode.
 
 The workbench Server Ledger panel reads `/v1/ledger/status`, `/v1/ledger/approvals`, and `/v1/ledger/evidence` for operator review. It does not store or send runner tokens from the browser; when evidence reads are protected by runner authentication, the panel surfaces the gateway authentication error and still shows approval/status data.
 
@@ -68,6 +68,18 @@ x-naikaku-runner-id: shell-runner-01
 When scoped credentials are configured, that runner can receive or submit evidence only for its configured executor profiles. For example, a runner with `executorProfiles: ["shell-container"]` cannot run or read `browser-sandbox`, `desktop-vm`, `mcp-proxy`, or `human-approval` evidence. `/v1/executor/handoff` filters ready actions to the authenticated runner scope, while executor run, evidence, ledger evidence writes, and coding-agent sandbox-runner execution return `403` when the submitted payload contains out-of-scope profiles.
 
 ## Endpoints
+
+## First-party CLI
+
+The repository ships a local `naikaku` binary through the package `bin` field. From a checkout, use `npm run naikaku -- doctor`; `npm link` makes the same command available as `naikaku` in the local shell. The command routes only to fixed local entrypoints:
+
+- `naikaku doctor` reads local prerequisites and `GET /health`. It does not execute a provider, Coding CLI, shell runner, or desktop action.
+- `naikaku start` starts the Vite Workbench.
+- `naikaku gateway` starts this local gateway.
+- `naikaku task ...` delegates to the governed task entrypoint. Its default mode prepares a reviewable task and evidence package; a real runner still requires an explicit preset, readiness, and approval.
+- `naikaku verify` runs `npm run ci:open-source`.
+
+The binary accepts no provider key input and does not expose an arbitrary command shell. Upstream Coding CLI authentication remains entirely with the operator's installed `codex`, `claude`, or `qwen` client.
 
 ### `GET /health`
 
@@ -99,9 +111,9 @@ The response also includes runner auth posture:
 
 ### `POST /v1/provider/test`
 
-Validates a provider configuration structurally. It does not persist secrets.
-If `sessionSecret` is provided, the gateway only uses it to mark this one-off test as secret-ready.
-Live cabinet runs still resolve role secrets from gateway environment variables.
+Validates a provider configuration structurally. It does not call the remote model API or persist secrets.
+If `sessionSecret` is provided, the gateway uses it only to mark this one configuration check as secret-ready. A valid `apiKeyAlias` is still required.
+Live cabinet runs still resolve role secrets from gateway environment variables; a session-only check never unlocks live mode.
 
 For live providers, `apiKeyAlias` points to an environment variable owned by the operator running the gateway. The repository never includes the raw key.
 
@@ -121,7 +133,7 @@ For live providers, `apiKeyAlias` points to an environment variable owned by the
 
 ### `GET /v1/engineering/runner-readiness`
 
-Detects known local command-line or app candidates for the engineering Workbench. It reports the built-in local runner plus OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtime candidates. The endpoint is read-only: it does not install upstream tools, accept licenses, grant Mac permissions, expose a browser shell, or mark an adapter approved for real work.
+Detects known local command-line or app candidates for the engineering Workbench. It reports the built-in local runner plus Codex CLI, Claude Code, Qwen Code, OpenHands, OpenClaw, browser-use, Playwright, Hammerspoon, E2B, MCP, and Hermes-style runtime candidates. The endpoint is read-only: it does not install upstream tools, accept licenses, grant Mac permissions, expose a browser shell, or mark an adapter approved for real work.
 
 Successful responses include per-adapter status, detected commands/apps, whether the Workbench can launch the preset today, required permissions, evidence requirements, and the next safe action:
 
@@ -235,7 +247,7 @@ Starts the same supervised engineering pipeline as `npm run engineering:auto-wor
 - `prepared`: prepare handoff tasks without starting an external runner.
 - `fixture`: run the deterministic local fixture adapter under `output/engineering-auto-work-ui/fixture-worktree` and verify the returned receipt/evidence/artifact audit.
 - `openhands`: run the user-installed OpenHands CLI preset. This requires `adapterReady: true` so the operator explicitly records local installation and license review for this run.
-- configured templates such as `codex-cli-local`, `claude-code-local`, or `openclaw-local`: run fixed local command templates after the operator enables the template and marks the adapter ready.
+- configured templates such as `codex-cli-local`, `claude-code-local`, `qwen-code-local`, or `openclaw-local`: run fixed local command templates after the operator enables the template and marks the adapter ready.
 
 The route only accepts relative workspace paths, keeps UI output under `output/`, maps fixture work to the ignored output fixture worktree by default, and invokes npm through an argument array instead of exposing an arbitrary browser shell. It does not grant push, deploy, host-secret access, or unbounded Mac control.
 
@@ -297,7 +309,7 @@ Runs the cabinet orchestrator and returns artifacts, automation actions, logs, s
 `mode` can be:
 
 - `dry-run`: no external model calls.
-- `live`: provider calls are attempted through server-side adapters. Missing keys or provider failures are recorded in artifact provider status fields.
+- `live`: provider calls are attempted through server-side adapters. Missing keys or provider failures are recorded in artifact provider status fields, replace the deterministic draft with an explicit no-output notice, revise the cabinet decision, and block the corresponding automation actions.
 
 Live mode uses role-level `apiKeyAlias` values to read environment variables from the gateway process. The browser never receives raw provider keys.
 

@@ -49,7 +49,22 @@ describe("provider adapters", () => {
 
     expect(result.ok).toBe(true);
     expect(result.secretReady).toBe(true);
-    expect(result.message).toContain("one-off gateway test");
+    expect(result.message).toContain("configuration check");
+  });
+
+  it("requires an alias before a session-only secret can pass configuration validation", () => {
+    const result = validateProviderConfig(
+      {
+        ...defaultRoles[0].provider,
+        apiKeyAlias: ""
+      },
+      {},
+      "session-secret"
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.secretReady).toBe(false);
+    expect(result.message).toContain("API key alias");
   });
 
   it("calls OpenAI Responses with normalized input when a secret exists", async () => {

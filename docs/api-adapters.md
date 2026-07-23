@@ -15,17 +15,17 @@ interface ProviderConfig {
 }
 ```
 
-The frontend accepts a session secret for testing but does not persist it. Production code should resolve `apiKeyAlias` server-side or through a local encrypted vault.
+The frontend accepts a session-only key for configuration checking but does not persist it. It does not enable a live cabinet run. Live code resolves `apiKeyAlias` in the local gateway process or through a local encrypted vault.
 
 ## Provider Readiness
 
 The workbench includes an editable Provider Readiness matrix so each cabinet role can be configured and checked before a run:
 
-- Operators can edit provider, endpoint, model, API key alias, and session-only secret for each role in one table.
+- Operators can edit provider, endpoint, model, API key alias, and session-only configuration-check key for each role in one table.
 - Static checks verify endpoint, model, and API key alias shape.
-- Session-only secrets can be used for a one-off test and are not persisted.
-- `/v1/provider/test` validates provider configuration through the local gateway.
-- If the gateway is offline, local fallback validates endpoint/model shape and marks the source as `local-fallback`.
+- A session-only key can be used for one configuration check and is not persisted; it never substitutes for the gateway environment variable used by `live` mode.
+- `/v1/provider/test` validates provider configuration through the local gateway without calling the remote model API.
+- If the gateway is offline, local fallback validates endpoint/model shape, marks the source as `local-fallback`, and remains `unchecked` rather than `ready`.
 - Exports use `naikaku.provider-readiness.v1` and contain status metadata, not raw secrets.
 
 ## Adapter Contract
@@ -85,7 +85,7 @@ The local gateway now includes server-side adapters for:
 Run mode matters:
 
 - `dry-run`: deterministic local artifacts, no external provider calls.
-- `live`: attempts provider calls through the gateway. Missing secrets become `skipped` provider statuses, not frontend errors.
+- `live`: attempts provider calls through the gateway. Missing secrets or provider failures become `skipped` or `failed` provider statuses. Their artifacts contain an explicit no-output notice, the cabinet decision is revised, and downstream automation remains blocked.
 
 Secret resolution rules:
 

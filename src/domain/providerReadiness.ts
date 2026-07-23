@@ -57,7 +57,9 @@ export function createProviderReadinessCheck({
 }: ProviderReadinessCheckInput): ProviderReadinessRow {
   return {
     ...row,
-    status: checkedStatus(row, ok, secretReady),
+    status: source === "local-fallback"
+      ? structuralStatus(row)
+      : checkedStatus(row, ok, secretReady),
     source,
     message,
     secretReady,
@@ -81,9 +83,10 @@ function buildStaticRow({
   const endpoint = role.provider.endpoint.trim();
   const model = role.provider.model.trim();
   const apiKeyAlias = role.provider.apiKeyAlias.trim();
-  const sessionSecretReady = Boolean(sessionSecret?.trim());
+  const sessionSecretProvided = Boolean(sessionSecret?.trim());
   const aliasValid = !apiKeyAlias || isEnvAlias(apiKeyAlias);
   const secretOptional = role.provider.provider === "local" || role.provider.provider === "custom";
+  const sessionSecretReady = sessionSecretProvided && Boolean(apiKeyAlias) && aliasValid;
   const secretReady = sessionSecretReady || (secretOptional && !apiKeyAlias);
 
   if (!endpoint || !model) {
@@ -110,7 +113,7 @@ function buildStaticRow({
     });
   }
 
-  if (!apiKeyAlias && !secretOptional && !sessionSecretReady) {
+  if (sessionSecretProvided && !apiKeyAlias) {
     return row(role, {
       generatedAt,
       endpoint,
@@ -118,7 +121,19 @@ function buildStaticRow({
       apiKeyAlias,
       secretReady: false,
       status: "missing-secret",
-      message: "Add an API key alias or a session-only test secret."
+      message: "Add a valid API key alias before using a session-only test secret."
+    });
+  }
+
+  if (!apiKeyAlias && !secretOptional) {
+    return row(role, {
+      generatedAt,
+      endpoint,
+      model,
+      apiKeyAlias,
+      secretReady: false,
+      status: "missing-secret",
+      message: "Add a valid API key alias before this provider can be checked."
     });
   }
 
@@ -130,10 +145,10 @@ function buildStaticRow({
     secretReady,
     status: "unchecked",
     message: sessionSecretReady
-      ? "Session-only secret is available for testing and will not be persisted."
+      ? "Session-only test secret is available and will not be persisted. Live runs still require the same alias in the gateway environment."
       : secretReady
         ? "Configuration can be tested without a provider secret."
-      : "Configuration is structurally complete; run a readiness test."
+        : "Configuration is structurally complete; run a readiness test."
   });
 }
 
@@ -200,6 +215,15 @@ function checkedStatus(
   if (ok && !secretReady) return "missing-secret";
   if (ok) return "ready";
   return "failed";
+}
+
+function structuralStatus(row: ProviderReadinessRow): ProviderReadinessRow["status"] {
+  const secretOptional = row.provider === "local" || row.provider === "custom";
+
+  if (!row.endpoint || !row.model) return "missing-config";
+  if (row.apiKeyAlias && !isEnvAlias(row.apiKeyAlias)) return "missing-secret";
+  if (!row.apiKeyAlias && !secretOptional) return "missing-secret";
+  return "unchecked";
 }
 
 function summarizeRows(rows: ProviderReadinessRow[]): ProviderReadinessMatrix["summary"] {

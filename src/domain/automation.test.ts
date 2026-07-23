@@ -54,6 +54,30 @@ describe("automation planner", () => {
     expect(actions.every((action) => action.reason.includes("kill switch"))).toBe(true);
   });
 
+  it("blocks automation when a live provider did not produce its stage artifact", () => {
+    const run = runCabinetMission({
+      mission: defaultMission,
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+    const actions = buildAutomationPlan({
+      run: {
+        ...run,
+        artifacts: run.artifacts.map((artifact) => ({
+          ...artifact,
+          providerStatus: "skipped" as const,
+          providerDetail: "Environment variable is not set."
+        }))
+      },
+      roles: defaultRoles,
+      sandboxPolicy: defaultSandboxPolicy
+    });
+
+    expect(actions.every((action) => action.status === "blocked")).toBe(true);
+    expect(actions.every((action) => action.reason.includes("did not generate an artifact"))).toBe(true);
+    expect(actions.every((action) => action.auditTags.includes("provider-artifact-unavailable"))).toBe(true);
+  });
+
   it("builds executor handoff only from allowed or approved actions", () => {
     const run = runCabinetMission({
       mission: defaultMission,

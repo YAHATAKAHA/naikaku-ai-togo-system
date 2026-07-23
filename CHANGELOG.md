@@ -6,6 +6,8 @@ All notable public-source changes are tracked here. This project uses a source-a
 
 ### Added
 
+- First-party `naikaku` CLI binary with read-only local readiness checks plus fixed `start`, `gateway`, `task`, and `verify` entrypoints. The CLI does not accept provider keys or arbitrary shell commands.
+- Fixed local-runner templates and readiness detection for Codex CLI, Claude Code, and Qwen Code; Qwen Code can use the operator's locally authenticated Alibaba Cloud Coding Plan without exposing that credential to the browser.
 - Self-host preview deployment path with `Dockerfile`, `compose.yaml`, and `.dockerignore`.
 - Runtime frontend gateway configuration through `/naikaku-config.js`, so hosted builds can change gateway URL without rebuilding source.
 - `npm run deployment:check` for deployment, environment, commercial-boundary, and public-source safety checks.
@@ -16,9 +18,13 @@ All notable public-source changes are tracked here. This project uses a source-a
 
 ### Changed
 
+- The Japanese-first quick start now exposes a direct local Coding CLI path and opens a local runner readiness check instead of requiring API configuration for coding work.
 - `ci:open-source` now includes deployment readiness checks.
 - README and Japanese README now expose deployment and commercial-readiness entry points.
 - `ci:open-source` now runs the strategy iteration report before MVP and test checks.
+- Provider configuration checks now distinguish gateway configuration from a real model call; offline structural checks remain unchecked instead of becoming false-ready.
+- Live cabinet runs now withhold deterministic dry-run text when a provider is skipped or fails, revise the cabinet decision, and block downstream automation for those stages.
+- The Provider Configuration panel now explains the session-key versus local-gateway-environment boundary in Japanese, English, Simplified Chinese, Traditional Chinese, and Korean.
 
 ### Security
 

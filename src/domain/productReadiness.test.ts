@@ -130,5 +130,27 @@ describe("product readiness report", () => {
     expect(report.gates.find((gate) => gate.id === "memory-review")?.status).toBe("warn");
     expect(report.summary.categories).toContain("automation");
     expect(report.summary.categories).toContain("data-governance");
+
+    const unavailableProviderReport = buildProductReadinessReport({
+      workspace,
+      run: {
+        ...run,
+        artifacts: run.artifacts.map((artifact) => ({
+          ...artifact,
+          providerStatus: "skipped" as const,
+          providerDetail: "Environment variable is not set."
+        }))
+      },
+      providerReadiness,
+      sandboxCapabilities,
+      automationRunbook,
+      teamHandoff,
+      roleWorkspaces,
+      developmentBoard,
+      issueDrafts,
+      generatedAt: "2026-06-26T00:02:00.000Z"
+    });
+
+    expect(unavailableProviderReport.gates.find((gate) => gate.id === "cabinet-run")?.status).toBe("block");
   });
 });

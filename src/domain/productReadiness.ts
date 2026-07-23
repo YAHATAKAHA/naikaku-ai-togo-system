@@ -282,6 +282,23 @@ function runGate(run: CabinetRun | null): ProductReadinessGate {
     );
   }
 
+  const unavailableLiveArtifacts = run.artifacts.filter(
+    (artifact) => artifact.providerStatus === "skipped" || artifact.providerStatus === "failed"
+  );
+  if (unavailableLiveArtifacts.length > 0) {
+    return gate(
+      "cabinet-run",
+      "automation",
+      "Cabinet run",
+      "block",
+      `${unavailableLiveArtifacts.length} live provider stages did not produce usable artifacts.`,
+      unavailableLiveArtifacts.slice(0, 3).map(
+        (artifact) => `${artifact.stageId}: ${artifact.providerStatus} (${artifact.providerDetail || "no detail"})`
+      ),
+      "Resolve gateway provider configuration or provider failures, then run the cabinet again before automation handoff."
+    );
+  }
+
   return gate(
     "cabinet-run",
     "automation",

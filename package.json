@@ -13,9 +13,14 @@
     "url": "https://github.com/YAHATAKAHA/naikaku-ai-togo-system/issues"
   },
   "type": "module",
+  "bin": {
+    "naikaku": "./bin/naikaku.mjs"
+  },
   "scripts": {
     "dev": "vite",
     "gateway": "tsx server/gateway.ts",
+    "naikaku": "node ./bin/naikaku.mjs",
+    "naikaku:doctor": "node ./bin/naikaku.mjs doctor",
     "rehearsal": "tsx scripts/rehearsal.ts",
     "rehearsal:strict": "tsx scripts/rehearsal.ts --strict",
     "rehearsal:drill": "tsx scripts/release-drill-fixtures.ts --out output/release-drill && tsx scripts/rehearsal.ts --strict --workspace output/release-drill/workspace.json --run output/release-drill/run.json --provider-readiness output/release-drill/provider-readiness.json --approvals output/release-drill/approvals.json --audit output/release-drill/audit.json --memory output/release-drill/memory.json --saved-items output/release-drill/saved-items.json --secret-probe DRILL_REDACTION_PROBE --out output/rehearsal-drill",

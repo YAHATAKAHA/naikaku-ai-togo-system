@@ -67,6 +67,21 @@ npm ci
 npm run dev
 ```
 
+### Naikaku CLI
+
+このリポジトリには、Naikaku 自身の `naikaku` コマンドも含まれます。まずは npm 経由で使え、必要ならローカル shell に link できます。
+
+```bash
+npm run naikaku -- doctor
+npm link
+naikaku doctor
+naikaku start
+naikaku gateway
+naikaku task "レビュー可能な実装計画を準備する"
+```
+
+`doctor` は Node.js、依存関係、local gateway の health、`PATH` 上の `codex`、`claude`、`qwen` だけを確認します。モデル、Coding CLI、provider、desktop automation は実行しません。`task` はデフォルトで統制された準備モードです。runner を明示しない限り、外部 Coding CLI を始めず、レビュー可能な task と evidence package だけを準備します。`naikaku verify` は公開ソース向け検証一式を実行します。
+
 ローカル API とランナーゲートウェイ機能を使う場合は、別のターミナルで起動します。
 
 ```bash
@@ -74,6 +89,12 @@ npm run gateway
 ```
 
 このリポジトリには API キー、runner token、ホスト済み認証情報は含めません。`.env.example` は空のプレースホルダーです。live provider や認証付き runner を使う利用者が、自分のローカル shell、`.env`、ローカル vault、またはデプロイ環境に値を設定します。
+
+### 本機の Coding CLI
+
+コード工程では、provider key を Workbench に貼り付ける代わりに、すでに認証済みの本機 CLI を使う方法が最も簡単です。gateway 起動後の最初の画面で **本機の Coding CLI を使う** を選ぶと、Naikaku は本機の `codex`、`claude`、`qwen` コマンドを確認し、固定された gateway 側 runner テンプレートだけを表示します。ブラウザには CLI のログイン情報、Coding Plan の認証情報、任意の shell コマンドを渡しません。
+
+Qwen Code は先に upstream CLI を導入して認証します。`qwen` を起動し、`/auth` から **Alibaba ModelStudio -> Coding Plan**（または対応 provider）を選択してください。本機でコマンドが検出された後、`qwen-code-local` を有効にし、対象 worktree を確認してから、その実行に限って adapter を明示確認します。テンプレートは YOLO ではなく制御された Auto mode と turn/tool の上限を使い、stdout/stderr を記録します。Naikaku のレシートがない実装は、完了として受け入れません。
 
 公開検証チェック:
 
@@ -114,7 +135,7 @@ Naikaku は主に 4 つの層で構成されています。
 1. Workbench UI - ミッション入力、ロール設定、readiness、実行ログ、証跡レビューのための React/Vite UI。
 2. Cabinet domain - ロール、判断、自動化、サンドボックスポリシー、記憶、レシート、検証を扱う TypeScript domain module。
 3. Local gateway - プロバイダー呼び出し、ランナー契約、ledger record、サンドボックス実行ゲートのための server-side route。
-4. Runner adapters - Codex CLI、Claude Code、OpenHands 系 CLI、OpenClaw 系 local agent、Hammerspoon、Playwright、custom CLI などを接続する境界付き bridge。
+4. Runner adapters - Codex CLI、Claude Code、Alibaba Cloud Coding Plan と接続できる Qwen Code、OpenHands 系 CLI、OpenClaw 系 local agent、Hammerspoon、Playwright、custom CLI などを接続する境界付き bridge。
 
 ランナー層は contract-first です。Naikaku が作業完了として扱う前に、ランナーは構造化された証跡を返す必要があります。
 
@@ -123,6 +144,8 @@ Naikaku は主に 4 つの層で構成されています。
 Naikaku は bring-your-own provider 構成に対応します。ブラウザ状態には生のキーではなく、`NAIKAKU_OPENAI_API_KEY` のような環境変数エイリアスを保存します。
 
 この公開リポジトリが提供するのは、設定項目と例だけです。プロジェクト保守者は共用 provider key、gateway token、同梱クレジットを提供しません。live model call を使う場合、利用者が gateway process の環境変数に `NAIKAKU_OPENAI_API_KEY` や `DASHSCOPE_API_KEY` などを設定します。有料認証情報なしでも、fixture / replay による検証は実行できます。
+
+Workbench の Provider 設定確認は、課金される prompt を provider に送らず、endpoint / model / alias の境界とキーの利用可能性だけを確認します。この確認のために入力するセッション限定キーは保存されず、live mode を有効にはしません。live 内閣実行には、同じ alias をローカル gateway process の環境変数へ設定してください。gateway がオフラインの場合、Workbench はローカル構造確認を未確認として記録し、provider を誤って ready にはしません。
 
 対応する adapter family:
 

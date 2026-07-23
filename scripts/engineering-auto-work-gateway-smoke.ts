@@ -163,7 +163,7 @@ async function main() {
   try {
     const health = await getJson<{ capabilities?: string[] }>(`${gatewayUrl}/health`);
     const presets = await getJson<RunnerPresetsBody>(`${gatewayUrl}/v1/engineering/runner-presets`);
-    const safeTemplateIds = ["codex-cli-local", "claude-code-local", "openclaw-local"];
+    const safeTemplateIds = ["codex-cli-local", "claude-code-local", "qwen-code-local", "openclaw-local"];
     const presetEnables: Array<JsonResponse<RunnerPresetEnableBody>> = [];
     for (const templateId of safeTemplateIds) {
       presetEnables.push(await postJson<RunnerPresetEnableBody>(
@@ -242,7 +242,7 @@ async function main() {
           presetEnable.body.preset?.source === "file" &&
           presetTemplates.some((template) => template.id === "openclaw-local" && template.enabled === true) &&
           presetItems.some((preset) => preset.id === "openclaw-local" && preset.source === "file"),
-        safeCodingRunnerTemplatesEnabled: ["codex-cli-local", "claude-code-local"].every((id) =>
+        safeCodingRunnerTemplatesEnabled: ["codex-cli-local", "claude-code-local", "qwen-code-local"].every((id) =>
           presetTemplates.some((template) => template.id === id && template.enabled === true) &&
           presetItems.some((preset) => preset.id === id && preset.source === "file")
         ),

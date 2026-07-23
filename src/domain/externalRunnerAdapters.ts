@@ -2,6 +2,7 @@ export type ExternalRunnerAdapterId =
   | "naikaku-local-engineering-runner"
   | "codex-cli-runner"
   | "claude-code-runner"
+  | "qwen-code-runner"
   | "openhands-coding-agent"
   | "openclaw-desktop-runner"
   | "browser-use-runner"
@@ -15,6 +16,7 @@ export const externalRunnerAdapterIds: ExternalRunnerAdapterId[] = [
   "naikaku-local-engineering-runner",
   "codex-cli-runner",
   "claude-code-runner",
+  "qwen-code-runner",
   "openhands-coding-agent",
   "openclaw-desktop-runner",
   "browser-use-runner",
@@ -337,6 +339,50 @@ const baseAdapters: Array<Omit<ExternalRunnerAdapter, "status">> = [
       "Authentication or subscription failures should be reported as readiness, not hidden behind fallback claims."
     ],
     nextAction: "Authenticate Claude Code and wrap --print structured output into Naikaku receipts before implementation runs."
+  },
+  {
+    id: "qwen-code-runner",
+    label: "Qwen Code runner",
+    projectUrl: "https://github.com/QwenLM/qwen-code",
+    license: "upstream license; verify the installed Qwen Code release and dependency notices before distribution",
+    licenseUrl: "https://github.com/QwenLM/qwen-code/blob/main/LICENSE",
+    installMode: "user-installed-cli",
+    risk: "high",
+    capabilities: ["repo-coding", "allowlisted-shell", "terminal-automation"],
+    contractInput: "naikaku.coding-agent-runner-invocation.v1 or a scoped role prompt",
+    receiptOutput: "Naikaku session receipt plus Qwen Code JSON output and command transcripts",
+    installHint: "Install Qwen Code separately, authenticate it through /auth with Alibaba Cloud Coding Plan or another supported provider, and run it through a Naikaku receipt wrapper.",
+    permissionsRequired: [
+      "scoped repository worktree",
+      "Qwen Code approval mode",
+      "transcript/evidence output path",
+      "local Qwen authentication managed outside the browser"
+    ],
+    prohibitedByDefault: [
+      "YOLO approval mode",
+      "unreviewed Git push",
+      "deploy",
+      "external messages",
+      "host secrets"
+    ],
+    evidenceRequired: [
+      "Qwen Code JSON output",
+      "command transcripts",
+      "approval mode",
+      "command results",
+      "Naikaku receipt JSON"
+    ],
+    stopConditions: [
+      "missing Qwen Code authentication",
+      "unsafe approval mode",
+      "unapproved command",
+      "missing receipt path"
+    ],
+    safetyNotes: [
+      "Qwen Code uses the operator's local Coding Plan or provider authentication; Naikaku never receives that credential in the browser.",
+      "The fixed template uses Qwen Code Auto mode, never YOLO mode, and Naikaku still owns the review and vote decision."
+    ],
+    nextAction: "Authenticate Qwen Code with /auth, then enable the fixed qwen-code-local runner template before one scoped run."
   },
   {
     id: "openclaw-desktop-runner",

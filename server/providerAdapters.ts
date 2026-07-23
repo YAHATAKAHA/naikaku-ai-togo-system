@@ -102,21 +102,28 @@ export function validateProviderConfig(
   const structurallyValid = Boolean(config.endpoint && config.model);
   const alias = config.apiKeyAlias.trim();
   const hasInvalidAlias = Boolean(alias && !isEnvAlias(alias));
-  const sessionSecretReady = Boolean(sessionSecret?.trim()) && !hasInvalidAlias;
+  const sessionSecretProvided = Boolean(sessionSecret?.trim());
+  const sessionSecretReady = sessionSecretProvided && Boolean(alias) && !hasInvalidAlias;
+  const missingAliasForRequiredProvider = !alias && config.provider !== "local" && config.provider !== "custom";
+  const configurationValid = structurallyValid && !hasInvalidAlias && !missingAliasForRequiredProvider;
 
   return {
-    ok: structurallyValid,
+    ok: configurationValid,
     provider: config.provider,
     model: config.model,
     endpoint: config.endpoint,
     secretReady: secret.ok || sessionSecretReady,
-    message: structurallyValid
-      ? secret.ok
-        ? secret.detail
-        : sessionSecretReady
-          ? "Session secret provided for one-off gateway test; it will not be persisted."
-          : secret.detail
-      : "Provider endpoint or model is missing."
+    message: !structurallyValid
+      ? "Provider endpoint or model is missing."
+      : hasInvalidAlias
+        ? "API key alias must be an environment variable name, not a raw secret."
+        : missingAliasForRequiredProvider
+          ? "A valid API key alias is required before this provider can be checked."
+          : secret.ok
+            ? secret.detail
+            : sessionSecretReady
+              ? "Session-only secret supplied for this configuration check; it will not be persisted and does not enable live cabinet runs."
+              : secret.detail
   };
 }
 

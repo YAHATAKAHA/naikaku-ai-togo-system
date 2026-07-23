@@ -25,6 +25,10 @@ describe("gateway cabinet modes", () => {
     });
 
     expect(run.artifacts.some((artifact) => artifact.providerStatus === "skipped")).toBe(true);
+    expect(run.artifacts.some((artifact) => artifact.body.includes("No live model artifact was generated"))).toBe(true);
+    expect(run.artifacts.every((artifact) => artifact.body.includes("Mission focus:") === false)).toBe(true);
+    expect(run.automationActions?.every((action) => action.status === "blocked")).toBe(true);
+    expect(run.score.decision).toBe("revise");
     expect(run.nextIteration[0]).toContain("provider configuration");
   });
 });

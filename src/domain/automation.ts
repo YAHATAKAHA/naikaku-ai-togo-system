@@ -89,9 +89,10 @@ export function buildAutomationPlan({
       blueprint.executorProfileId ||
       role?.executorProfileId ||
       sandboxPolicy.defaultExecutorProfileId;
-    const permissionBlock = role
+    const providerBlock = providerArtifactBlockReason(artifact);
+    const permissionBlock = providerBlock || (role
       ? permissionBlockReason(blueprint.action, role.permissions)
-      : "No enabled role owns this automation action.";
+      : "No enabled role owns this automation action.");
     const decision = evaluateSandboxAction(
       {
         executorProfileId,
@@ -116,11 +117,21 @@ export function buildAutomationPlan({
       status,
       approvalRequired: status === "needs-approval",
       reason: permissionBlock || decision.reason,
-      auditTags: permissionBlock
-        ? [executorProfileId, blueprint.action, blueprint.riskLevel, "role-permission-denied"]
+      auditTags: providerBlock
+        ? [executorProfileId, blueprint.action, blueprint.riskLevel, "provider-artifact-unavailable"]
+        : permissionBlock
+          ? [executorProfileId, blueprint.action, blueprint.riskLevel, "role-permission-denied"]
         : decision.auditTags
     };
   });
+}
+
+function providerArtifactBlockReason(artifact: CabinetRun["artifacts"][number]) {
+  if (artifact.providerStatus !== "skipped" && artifact.providerStatus !== "failed") {
+    return "";
+  }
+
+  return "The live provider did not generate an artifact for this stage; automation remains blocked.";
 }
 
 export function createApprovalRecord({

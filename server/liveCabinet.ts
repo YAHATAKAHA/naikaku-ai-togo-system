@@ -1,6 +1,6 @@
 import { cabinetStages } from "../src/data/defaultCabinet";
 import { buildAutomationPlan } from "../src/domain/automation";
-import { runCabinetMission } from "../src/domain/orchestrator";
+import { runCabinetMission, scoreCabinetRun } from "../src/domain/orchestrator";
 import type {
   CabinetArtifact,
   CabinetLogEntry,
@@ -63,6 +63,7 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
     if (!role || !role.enabled) {
       artifacts.push({
         ...baseArtifact,
+        body: unavailableLiveArtifactBody("No enabled role owns this stage."),
         providerStatus: "skipped",
         providerDetail: "No enabled role owns this stage."
       });
@@ -74,9 +75,16 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
       mission: input.mission,
       context: artifacts
     });
+    const hasLiveArtifact = providerResult.status === "called" && Boolean(providerResult.text.trim());
     const nextArtifact: CabinetArtifact = {
       ...baseArtifact,
-      body: providerResult.text || baseArtifact.body,
+      body: hasLiveArtifact
+        ? providerResult.text
+        : unavailableLiveArtifactBody(
+            providerResult.status === "called"
+              ? "The provider returned an empty artifact."
+              : providerResult.detail
+          ),
       providerStatus: providerResult.status,
       providerDetail: providerResult.detail,
       tokensUsed: providerResult.tokensUsed,
@@ -94,15 +102,21 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
   const skippedOrFailed = artifacts.filter(
     (artifact) => artifact.providerStatus === "skipped" || artifact.providerStatus === "failed"
   );
-
-  return {
+  const score = scoreCabinetRun(
+    artifacts,
+    input.roles.filter((role) => role.enabled),
+    input.sandboxPolicy
+  );
+  const runWithArtifacts = {
     ...baseRun,
     artifacts,
+    score
+  };
+
+  return {
+    ...runWithArtifacts,
     automationActions: buildAutomationPlan({
-      run: {
-        ...baseRun,
-        artifacts
-      },
+      run: runWithArtifacts,
       roles: input.roles.filter((role) => role.enabled),
       sandboxPolicy: input.sandboxPolicy
     }),
@@ -114,4 +128,12 @@ export async function runGatewayCabinet(input: GatewayCabinetRunInput): Promise<
         ]
       : baseRun.nextIteration
   };
+}
+
+function unavailableLiveArtifactBody(detail: string) {
+  return [
+    "No live model artifact was generated for this stage.",
+    `Reason: ${detail}`,
+    "The deterministic dry-run draft is intentionally withheld in live mode."
+  ].join("\n");
 }

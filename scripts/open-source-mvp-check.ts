@@ -572,7 +572,7 @@ function buildSummary({
     gatewayEvidence.preset === "fixture" &&
     gatewayEvidence.mode === "external-run-attempted" &&
     gatewayEvidence.presetsConfigured >= 3 &&
-    ["codex-cli-local", "claude-code-local", "openclaw-local"].every((id) =>
+    ["codex-cli-local", "claude-code-local", "qwen-code-local", "openclaw-local"].every((id) =>
       gatewayEvidence.presetEnabledPresets.includes(id)
     ) &&
     gatewayEvidence.importedReceipts >= 1 &&

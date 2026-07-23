@@ -36,6 +36,10 @@ describe("external runner adapter registry", () => {
         status: "needs-license-review"
       }),
       expect.objectContaining({
+        id: "qwen-code-runner",
+        status: "needs-license-review"
+      }),
+      expect.objectContaining({
         id: "browser-use-runner",
         status: "needs-license-review"
       })
@@ -90,6 +94,7 @@ describe("external runner adapter registry", () => {
     expect(markdown).toContain("OpenHands coding agent");
     expect(markdown).toContain("Codex CLI runner");
     expect(markdown).toContain("Claude Code runner");
+    expect(markdown).toContain("Qwen Code runner");
     expect(markdown).toContain("OpenClaw desktop runner");
     expect(markdown).toContain("Prefer user-installed upstream runners");
   });

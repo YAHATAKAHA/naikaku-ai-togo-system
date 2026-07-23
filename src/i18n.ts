@@ -14,7 +14,11 @@ export interface ReleaseRehearsalCopy {
   warnings: (count: number) => string;
   blockers: (count: number) => string;
   localDryRun: string;
-  sourceLine: (sourceRun: string, level: string, evidenceItems: number) => string;
+  sourceLine: (
+    sourceRun: string,
+    level: string,
+    evidenceItems: number,
+  ) => string;
   run: string;
   exportReport: string;
   verify: string;
@@ -69,7 +73,12 @@ export interface EngineeringLaunchpadCopy {
   realityCodeLabel: string;
   realityMacLabel: string;
   realityExternalLabel: string;
-  realityCodeStatus: (hasVerifiedExecution: boolean, canRunCodeSandbox: boolean, missionReady: boolean, hasSelfSimulation: boolean) => string;
+  realityCodeStatus: (
+    hasVerifiedExecution: boolean,
+    canRunCodeSandbox: boolean,
+    missionReady: boolean,
+    hasSelfSimulation: boolean,
+  ) => string;
   realityMacStatus: (canControlMacDesktop: boolean) => string;
   realityExternalStatus: (externalWriteRequested: boolean) => string;
   missionInputHelp: string;
@@ -111,8 +120,17 @@ export interface EngineeringLaunchpadCopy {
   guidedCycleIdle: string;
   guidedCycleStarting: (cycle: number, total: number) => string;
   guidedCycleExecuting: (cycle: number, total: number) => string;
-  guidedCycleCompleted: (cycles: number, total: number, decision: string, outputDir: string) => string;
-  guidedCycleBlocked: (cycle: number, total: number, decision: string) => string;
+  guidedCycleCompleted: (
+    cycles: number,
+    total: number,
+    decision: string,
+    outputDir: string,
+  ) => string;
+  guidedCycleBlocked: (
+    cycle: number,
+    total: number,
+    decision: string,
+  ) => string;
   guidedCycleFailed: (cycle: number, total: number) => string;
   guidedCycleGatewayFailed: (message: string) => string;
   guidedCycleSummary: (cycles: number, total: number) => string;
@@ -122,9 +140,21 @@ export interface EngineeringLaunchpadCopy {
   autoWorkAdapterNeedsReady: (preset: string) => string;
   autoWorkOutputLabel: string;
   autoWorkChecks: (passed: number, failed: number) => string;
-  autoWorkResult: (preset: string, mode: string, completedJobs: number, receipts: number, evidence: number, artifacts: number) => string;
+  autoWorkResult: (
+    preset: string,
+    mode: string,
+    completedJobs: number,
+    receipts: number,
+    evidence: number,
+    artifacts: number,
+  ) => string;
   autoWorkStarting: (preset: string) => string;
-  autoWorkCompleted: (preset: string, passed: number, completedJobs: number, outputDir: string) => string;
+  autoWorkCompleted: (
+    preset: string,
+    passed: number,
+    completedJobs: number,
+    outputDir: string,
+  ) => string;
   autoWorkFailed: (exitCode: number | null, outputDir: string) => string;
   autoWorkGatewayUnavailable: (errorMessage: string) => string;
   codexSmokeIdle: string;
@@ -132,12 +162,21 @@ export interface EngineeringLaunchpadCopy {
   codexSmokeCompleted: (passed: number, outputDir: string) => string;
   codexSmokeFailed: (exitCode: number | null, outputDir: string) => string;
   codexSmokeUnavailable: (errorMessage: string) => string;
-  codexSmokeResult: (changedFiles: number, baselineExitCode: number | null, finalExitCode: number | null) => string;
+  codexSmokeResult: (
+    changedFiles: number,
+    baselineExitCode: number | null,
+    finalExitCode: number | null,
+  ) => string;
   runnerReadinessLabel: string;
   runnerReadinessRefresh: string;
   runnerReadinessChecking: string;
   runnerReadinessIdle: string;
-  runnerReadinessStatus: (ready: number, detected: number, launchable: number, total: number) => string;
+  runnerReadinessStatus: (
+    ready: number,
+    detected: number,
+    launchable: number,
+    total: number,
+  ) => string;
   runnerReadinessUnavailable: (errorMessage: string) => string;
   runnerReadinessAdapterStatus: (status: string) => string;
   runnerReadinessDetected: (commands: number, apps: number) => string;
@@ -164,7 +203,12 @@ export interface EngineeringLaunchpadCopy {
   missionInputLabel: string;
   missionInputPlaceholder: string;
   missionDraftLabel: string;
-  missionDraftScore: (score: number, present: number, missing: number, recommended: number) => string;
+  missionDraftScore: (
+    score: number,
+    present: number,
+    missing: number,
+    recommended: number,
+  ) => string;
   capabilitiesLabel: string;
   signalsLabel: string;
   unlockChecklistLabel: string;
@@ -190,16 +234,69 @@ export interface EngineeringLaunchpadCopy {
   completionGateLabel: string;
   completionGateNextActionLabel: string;
   completionGateBlockedClaimsLabel: string;
-  selfSimulationSummary: (readySessions: number, heldSessions: number, allowedCommands: number, evidenceArtifacts: number) => string;
-  selfSimulationStatus: (decision: string, readySessions: number, allowedCommands: number, evidenceArtifacts: number) => string;
-  permissionRequestSummary: (requests: number, askBeforeUse: number, deniedDefaults: number) => string;
-  capabilityGapSummary: (engineeringReadiness: number, macRuntimeReadiness: number, canPrepareEngineering: boolean, canControlMacDesktop: boolean) => string;
-  launchQueueSummary: (readyToRun: number, readyToHandoff: number, held: number, allowedCommands: number, evidenceArtifacts: number) => string;
-  executionReceiptSummary: (executedTasks: number, verifiedReceipts: number, acceptedEvidence: number, verifiedArtifacts: number, canClaimCompletion: boolean) => string;
-  macRunnerSummary: (readyCapabilities: number, approvalRequired: number, runtimeNeeded: number, deniedByDefault: number, availableAdapters: number) => string;
-  macRunnerContractSummary: (totalActions: number, readyForApproval: number, needsRuntime: number, blocked: number, evidenceTargets: number, requiredPermissions: number) => string;
-  handoffReceiptSummary: (canHandOff: boolean, canRunSandbox: boolean, approvalItems: number, evidenceArtifacts: number) => string;
-  completionGateSummary: (canClaimCompletion: boolean, canClaimCodeChanged: boolean, canClaimExternalWrite: boolean) => string;
+  selfSimulationSummary: (
+    readySessions: number,
+    heldSessions: number,
+    allowedCommands: number,
+    evidenceArtifacts: number,
+  ) => string;
+  selfSimulationStatus: (
+    decision: string,
+    readySessions: number,
+    allowedCommands: number,
+    evidenceArtifacts: number,
+  ) => string;
+  permissionRequestSummary: (
+    requests: number,
+    askBeforeUse: number,
+    deniedDefaults: number,
+  ) => string;
+  capabilityGapSummary: (
+    engineeringReadiness: number,
+    macRuntimeReadiness: number,
+    canPrepareEngineering: boolean,
+    canControlMacDesktop: boolean,
+  ) => string;
+  launchQueueSummary: (
+    readyToRun: number,
+    readyToHandoff: number,
+    held: number,
+    allowedCommands: number,
+    evidenceArtifacts: number,
+  ) => string;
+  executionReceiptSummary: (
+    executedTasks: number,
+    verifiedReceipts: number,
+    acceptedEvidence: number,
+    verifiedArtifacts: number,
+    canClaimCompletion: boolean,
+  ) => string;
+  macRunnerSummary: (
+    readyCapabilities: number,
+    approvalRequired: number,
+    runtimeNeeded: number,
+    deniedByDefault: number,
+    availableAdapters: number,
+  ) => string;
+  macRunnerContractSummary: (
+    totalActions: number,
+    readyForApproval: number,
+    needsRuntime: number,
+    blocked: number,
+    evidenceTargets: number,
+    requiredPermissions: number,
+  ) => string;
+  handoffReceiptSummary: (
+    canHandOff: boolean,
+    canRunSandbox: boolean,
+    approvalItems: number,
+    evidenceArtifacts: number,
+  ) => string;
+  completionGateSummary: (
+    canClaimCompletion: boolean,
+    canClaimCodeChanged: boolean,
+    canClaimExternalWrite: boolean,
+  ) => string;
   state: (state: string) => string;
   permissionMode: (mode: string) => string;
   launchStage: (stage: string) => string;
@@ -343,31 +440,68 @@ export interface CodingAgentBriefsCopy {
   dispatchSummary: (ready: number, held: number, promptFiles: number) => string;
   dispatchReceiptTemplate: (receiptTemplates: number) => string;
   dispatchArchive: string;
-  dispatchArchiveSummary: (files: number, promptFiles: number, totalBytes: number) => string;
+  dispatchArchiveSummary: (
+    files: number,
+    promptFiles: number,
+    totalBytes: number,
+  ) => string;
   dispatchUnassignedHeld: (count: number) => string;
   dispatchArchiveAudit: string;
   dispatchAuditDecisionLabel: (decision: string) => string;
-  dispatchAuditSummary: (passed: number, warnings: number, blockers: number) => string;
+  dispatchAuditSummary: (
+    passed: number,
+    warnings: number,
+    blockers: number,
+  ) => string;
   dispatchSimulation: string;
   dispatchSimulationDecisionLabel: (decision: string) => string;
-  dispatchSimulationSummary: (ready: number, held: number, blocked: number) => string;
+  dispatchSimulationSummary: (
+    ready: number,
+    held: number,
+    blocked: number,
+  ) => string;
   runnerManifest: string;
   runnerManifestDecisionLabel: (decision: string) => string;
-  runnerManifestSummary: (readyTasks: number, runnerTasks: number, blockedTasks: number) => string;
+  runnerManifestSummary: (
+    readyTasks: number,
+    runnerTasks: number,
+    blockedTasks: number,
+  ) => string;
   runnerInvocation: string;
   runnerInvocationDecisionLabel: (decision: string) => string;
-  runnerInvocationSummary: (readyInvocations: number, invocationFiles: number, blockedInvocations: number) => string;
+  runnerInvocationSummary: (
+    readyInvocations: number,
+    invocationFiles: number,
+    blockedInvocations: number,
+  ) => string;
   runnerIntake: string;
   runnerIntakeDecisionLabel: (decision: string) => string;
-  runnerIntakeSummary: (acceptedIntakes: number, invocationFiles: number, blockedIntakes: number) => string;
+  runnerIntakeSummary: (
+    acceptedIntakes: number,
+    invocationFiles: number,
+    blockedIntakes: number,
+  ) => string;
   runnerSelfTest: string;
   runnerSelfTestDecisionLabel: (decision: string) => string;
-  runnerSelfTestSummary: (wouldRun: number, notExecutedCommands: number, blockedTasks: number) => string;
+  runnerSelfTestSummary: (
+    wouldRun: number,
+    notExecutedCommands: number,
+    blockedTasks: number,
+  ) => string;
   sandboxRunnerPreflightDecisionLabel: (decision: string) => string;
-  sandboxRunnerPreflightSummary: (readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number) => string;
+  sandboxRunnerPreflightSummary: (
+    readyTasks: number,
+    heldTasks: number,
+    blockedTasks: number,
+    processExecutions: number,
+  ) => string;
   sandboxRunner: string;
   sandboxRunnerDecisionLabel: (decision: string) => string;
-  sandboxRunnerSummary: (executedTasks: number, processExecutions: number, commandResults: number) => string;
+  sandboxRunnerSummary: (
+    executedTasks: number,
+    processExecutions: number,
+    commandResults: number,
+  ) => string;
   drillDecision: string;
   drillNextAction: string;
   drillReady: string;
@@ -394,23 +528,106 @@ export interface CodingAgentBriefsCopy {
   statusGateway: string;
   statusFallback: (errorMessage?: string) => string;
   statusMarkdown: string;
-  statusReviewGateway: (decision: string, blockers: number, warnings: number) => string;
-  statusReviewLocal: (decision: string, blockers: number, warnings: number, errorMessage?: string) => string;
-  statusSessionGateway: (decision: string, ready: number, held: number) => string;
-  statusSessionLocal: (decision: string, ready: number, held: number, errorMessage?: string) => string;
-  statusDispatchGateway: (decision: string, ready: number, held: number, promptFiles: number) => string;
-  statusDispatchLocal: (decision: string, ready: number, held: number, promptFiles: number, errorMessage?: string) => string;
-  statusSandboxRunnerPreflightGateway: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number) => string;
-  statusSandboxRunnerPreflightLocal: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number, processExecutions: number, errorMessage?: string) => string;
-  statusSandboxRunnerPreflightBlocked: (decision: string, readyTasks: number, heldTasks: number, blockedTasks: number) => string;
-  statusSandboxRunnerGateway: (decision: string, executedTasks: number, processExecutions: number, commandResults: number) => string;
+  statusReviewGateway: (
+    decision: string,
+    blockers: number,
+    warnings: number,
+  ) => string;
+  statusReviewLocal: (
+    decision: string,
+    blockers: number,
+    warnings: number,
+    errorMessage?: string,
+  ) => string;
+  statusSessionGateway: (
+    decision: string,
+    ready: number,
+    held: number,
+  ) => string;
+  statusSessionLocal: (
+    decision: string,
+    ready: number,
+    held: number,
+    errorMessage?: string,
+  ) => string;
+  statusDispatchGateway: (
+    decision: string,
+    ready: number,
+    held: number,
+    promptFiles: number,
+  ) => string;
+  statusDispatchLocal: (
+    decision: string,
+    ready: number,
+    held: number,
+    promptFiles: number,
+    errorMessage?: string,
+  ) => string;
+  statusSandboxRunnerPreflightGateway: (
+    decision: string,
+    readyTasks: number,
+    heldTasks: number,
+    blockedTasks: number,
+    processExecutions: number,
+  ) => string;
+  statusSandboxRunnerPreflightLocal: (
+    decision: string,
+    readyTasks: number,
+    heldTasks: number,
+    blockedTasks: number,
+    processExecutions: number,
+    errorMessage?: string,
+  ) => string;
+  statusSandboxRunnerPreflightBlocked: (
+    decision: string,
+    readyTasks: number,
+    heldTasks: number,
+    blockedTasks: number,
+  ) => string;
+  statusSandboxRunnerGateway: (
+    decision: string,
+    executedTasks: number,
+    processExecutions: number,
+    commandResults: number,
+  ) => string;
   statusSandboxRunnerUnavailable: (errorMessage?: string) => string;
-  statusDrillGateway: (decision: string, wouldAssign: number, notAssigned: number) => string;
-  statusDrillLocal: (decision: string, wouldAssign: number, notAssigned: number, errorMessage?: string) => string;
-  statusReceiptGateway: (decision: string, verified: number, pending: number, failed: number) => string;
-  statusReceiptLocal: (decision: string, verified: number, pending: number, failed: number, errorMessage?: string) => string;
-  statusReceiptReviewGateway: (decision: string, verified: number, pending: number, failed: number) => string;
-  statusReceiptReviewLocal: (decision: string, verified: number, pending: number, failed: number, errorMessage?: string) => string;
+  statusDrillGateway: (
+    decision: string,
+    wouldAssign: number,
+    notAssigned: number,
+  ) => string;
+  statusDrillLocal: (
+    decision: string,
+    wouldAssign: number,
+    notAssigned: number,
+    errorMessage?: string,
+  ) => string;
+  statusReceiptGateway: (
+    decision: string,
+    verified: number,
+    pending: number,
+    failed: number,
+  ) => string;
+  statusReceiptLocal: (
+    decision: string,
+    verified: number,
+    pending: number,
+    failed: number,
+    errorMessage?: string,
+  ) => string;
+  statusReceiptReviewGateway: (
+    decision: string,
+    verified: number,
+    pending: number,
+    failed: number,
+  ) => string;
+  statusReceiptReviewLocal: (
+    decision: string,
+    verified: number,
+    pending: number,
+    failed: number,
+    errorMessage?: string,
+  ) => string;
   statusReceiptReviewApplied: (
     message: string,
     artifactDecision: string,
@@ -421,9 +638,96 @@ export interface CodingAgentBriefsCopy {
     reusedTranscriptRefs: number,
     reusedChangedFileRefs: number,
     reusedEvidenceArtifactRefs: number,
-    transcriptContentMismatches: number
+    transcriptContentMismatches: number,
   ) => string;
   statusReceiptImportError: (errorMessage: string) => string;
+}
+
+export interface ProviderReadinessCopy {
+  title: string;
+  summary: (ready: number, enabled: number) => string;
+  quickSetupTitle: string;
+  quickSetupBody: string;
+  quickSetupApply: (roles: number) => string;
+  ready: (count: number) => string;
+  unchecked: (count: number) => string;
+  missing: (count: number) => string;
+  failed: (count: number) => string;
+  matrix: (roles: number) => string;
+  checkAll: string;
+  checkingAll: string;
+  export: string;
+  downloadJson: string;
+  noModel: string;
+  noAlias: string;
+  secretReady: string;
+  secretPending: string;
+  provider: string;
+  model: string;
+  endpoint: string;
+  apiKeyAlias: string;
+  testSecret: string;
+  secretBoundary: string;
+  noEndpoint: string;
+  check: string;
+  checking: string;
+  status: (status: string) => string;
+  source: (source: string) => string;
+  message: (status: string, source: string, detail: string) => string;
+}
+
+export interface QuickStartCopy {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  missionLabel: string;
+  missionPlaceholder: string;
+  missionHelp: string;
+  runDry: string;
+  running: string;
+  connectApi: string;
+  localCli: string;
+  advanced: string;
+  cabinetRoles: (count: number) => string;
+  safetyBoundary: string;
+  resultTitle: string;
+  resultDecision: (decision: string) => string;
+  resultSummary: (artifacts: number) => string;
+  inspectResult: string;
+}
+
+export interface LocalCodingCliCopy {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  credentialBoundary: string;
+  scopeBoundary: string;
+  refresh: string;
+  checking: string;
+  idle: string;
+  status: (status: string) => string;
+  detected: string;
+  missing: string;
+  enabled: string;
+  enable: string;
+  select: string;
+  qwenSetup: string;
+  approval: string;
+  taskRequired: string;
+  run: string;
+  running: string;
+  result: string;
+  openDetails: string;
+  returnToCli: string;
+}
+
+export interface AdvancedWorkspaceCopy {
+  returnToStart: string;
+  cabinet: string;
+  providers: string;
+  automation: string;
+  engineering: string;
+  governance: string;
 }
 
 export interface AppCopy {
@@ -440,16 +744,32 @@ export interface AppCopy {
   runCabinet: string;
   running: string;
   gatewayReady: string;
+  cabinetCallingGateway: (gateway: string) => string;
+  cabinetRunCompleted: (
+    mode: string,
+    called: number,
+    skipped: number,
+    failed: number,
+  ) => string;
+  cabinetRunFallback: (errorMessage?: string) => string;
   missionKicker: string;
   missionTitle: string;
   decision: string;
   notRun: string;
-  releaseRehearsalStatus: (decision: string, blockers: number, warnings: number) => string;
+  releaseRehearsalStatus: (
+    decision: string,
+    blockers: number,
+    warnings: number,
+  ) => string;
   releaseVerificationFallback: (errorMessage?: string) => string;
   releaseVerificationStatus: (decision: string, failed: number) => string;
   releaseRehearsal: ReleaseRehearsalCopy;
   engineeringLaunchpad: EngineeringLaunchpadCopy;
   codingBriefs: CodingAgentBriefsCopy;
+  providerReadiness: ProviderReadinessCopy;
+  quickStart: QuickStartCopy;
+  localCodingCli: LocalCodingCliCopy;
+  advancedWorkspace: AdvancedWorkspaceCopy;
 }
 
 const STORAGE_KEY = "naikaku.locale";
@@ -459,7 +779,7 @@ export const supportedLocales: LocaleOption[] = [
   { code: "en", label: "English", nativeLabel: "English" },
   { code: "zh-Hans", label: "Simplified Chinese", nativeLabel: "简体中文" },
   { code: "zh-Hant", label: "Traditional Chinese", nativeLabel: "繁體中文" },
-  { code: "ko", label: "Korean", nativeLabel: "한국어" }
+  { code: "ko", label: "Korean", nativeLabel: "한국어" },
 ];
 
 export function getInitialLocale(): SupportedLocale {
@@ -489,8 +809,317 @@ function isSupportedLocale(value: string | null): value is SupportedLocale {
 }
 
 function canUseLocalStorage() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+  );
 }
+
+const providerReadinessCopies: Record<SupportedLocale, ProviderReadinessCopy> =
+  {
+    ja: {
+      title: "プロバイダー設定確認",
+      summary: (ready, enabled) => `${ready}/${enabled} 設定確認済み`,
+      quickSetupTitle: "同じモデルを全役割に使う",
+      quickSetupBody:
+        "最初は一つの Provider 設定を有効な役割へまとめて適用できます。実際の API キーは入力せず、この alias と同名の環境変数をローカル Gateway に設定してください。",
+      quickSetupApply: (roles) => `${roles}役割に適用`,
+      ready: (count) => `${count} 設定済み`,
+      unchecked: (count) => `${count} 未確認`,
+      missing: (count) => `${count} 不足`,
+      failed: (count) => `${count} 失敗`,
+      matrix: (roles) => `Gateway 設定: ${roles}役割`,
+      checkAll: "全設定を確認",
+      checkingAll: "確認中...",
+      export: "設定状態を出力",
+      downloadJson: "JSON取得",
+      noModel: "model 未設定",
+      noAlias: "alias 未設定",
+      secretReady: "テストキーあり",
+      secretPending: "キー未確認",
+      provider: "Provider",
+      model: "Model",
+      endpoint: "Endpoint",
+      apiKeyAlias: "API key alias",
+      testSecret: "テスト用セッションキー",
+      secretBoundary:
+        "この欄のキーは設定確認のためだけに一時使用され、保存されません。live 実行には、同じ alias の環境変数をローカル Gateway プロセスに設定してください。設定確認は外部モデルへ有料リクエストを送信しません。",
+      noEndpoint: "Endpoint 未設定",
+      check: "設定を確認",
+      checking: "確認中",
+      status: (status) =>
+        ({
+          ready: "設定済み",
+          unchecked: "未確認",
+          "missing-config": "設定不足",
+          "missing-secret": "キー不足",
+          failed: "確認失敗",
+        })[status] || status,
+      source: (source) =>
+        ({
+          static: "入力内容",
+          gateway: "ローカルGateway確認",
+          "local-fallback": "ローカル構造確認",
+        })[source] || source,
+      message: (status, source, detail) => {
+        if (source === "static") {
+          if (status === "unchecked")
+            return "入力内容を確認しました。ローカル Gateway で設定を確認してください。";
+          if (status === "missing-config")
+            return "Endpoint と model を入力してから設定を確認してください。";
+          if (status === "missing-secret")
+            return "有効な API key alias を設定してから確認してください。";
+        }
+        if (source === "local-fallback") {
+          return "ローカル Gateway が未接続のため、endpoint と model の形式だけを確認しました。Provider は未確認です。";
+        }
+        const prefix =
+          status === "ready"
+            ? "ローカル Gateway の設定確認が完了しました。外部モデルは呼び出していません。"
+            : "ローカル Gateway の設定確認結果:";
+        return detail ? `${prefix} ${detail}` : prefix;
+      },
+    },
+    en: {
+      title: "Provider configuration",
+      summary: (ready, enabled) => `${ready}/${enabled} configuration-ready`,
+      quickSetupTitle: "Use one model for every role",
+      quickSetupBody:
+        "Apply one provider configuration to the enabled roles to get started. Do not enter the API key here; set an environment variable with this alias in the local Gateway instead.",
+      quickSetupApply: (roles) => `Apply to ${roles} roles`,
+      ready: (count) => `${count} configured`,
+      unchecked: (count) => `${count} unchecked`,
+      missing: (count) => `${count} missing`,
+      failed: (count) => `${count} failed`,
+      matrix: (roles) => `Gateway configuration: ${roles} roles`,
+      checkAll: "Check all configuration",
+      checkingAll: "Checking...",
+      export: "Export configuration",
+      downloadJson: "Download JSON",
+      noModel: "no model",
+      noAlias: "no alias",
+      secretReady: "test key present",
+      secretPending: "key unchecked",
+      provider: "Provider",
+      model: "Model",
+      endpoint: "Endpoint",
+      apiKeyAlias: "API key alias",
+      testSecret: "Session key for configuration check",
+      secretBoundary:
+        "This key is used temporarily for configuration checking and is never saved. For live runs, set the same alias in the local Gateway process environment. Configuration checks do not send paid requests to external models.",
+      noEndpoint: "No endpoint",
+      check: "Check configuration",
+      checking: "Checking",
+      status: (status) =>
+        ({
+          ready: "configured",
+          unchecked: "unchecked",
+          "missing-config": "missing config",
+          "missing-secret": "missing key",
+          failed: "check failed",
+        })[status] || status,
+      source: (source) =>
+        ({
+          static: "workspace input",
+          gateway: "local Gateway check",
+          "local-fallback": "local structural check",
+        })[source] || source,
+      message: (status, source, detail) => {
+        if (source === "local-fallback") {
+          return "Local structural check passed; the provider remains unchecked until the local Gateway validates its configuration.";
+        }
+        if (source === "gateway" && status === "ready") {
+          return `Local Gateway configuration check completed without a remote model call.${detail ? ` ${detail}` : ""}`;
+        }
+        return detail;
+      },
+    },
+    "zh-Hans": {
+      title: "提供商配置检查",
+      summary: (ready, enabled) => `${ready}/${enabled} 已完成配置检查`,
+      quickSetupTitle: "为全部角色使用同一个模型",
+      quickSetupBody:
+        "开始时可将一套提供商配置应用到所有启用角色。不要在此输入 API 密钥；请在本地 Gateway 中设置与此别名相同的环境变量。",
+      quickSetupApply: (roles) => `应用到 ${roles} 个角色`,
+      ready: (count) => `${count} 已配置`,
+      unchecked: (count) => `${count} 未检查`,
+      missing: (count) => `${count} 缺失`,
+      failed: (count) => `${count} 失败`,
+      matrix: (roles) => `网关配置：${roles} 个角色`,
+      checkAll: "检查全部配置",
+      checkingAll: "检查中...",
+      export: "导出配置状态",
+      downloadJson: "下载 JSON",
+      noModel: "未设置模型",
+      noAlias: "未设置别名",
+      secretReady: "已有测试密钥",
+      secretPending: "未检查密钥",
+      provider: "提供商",
+      model: "模型",
+      endpoint: "端点",
+      apiKeyAlias: "API 密钥别名",
+      testSecret: "配置检查会话密钥",
+      secretBoundary:
+        "此处密钥仅临时用于配置检查，不会保存。实际 live 运行请在本地 Gateway 进程环境中设置同名别名。配置检查不会向外部模型发送付费请求。",
+      noEndpoint: "未设置端点",
+      check: "检查配置",
+      checking: "检查中",
+      status: (status) =>
+        ({
+          ready: "已配置",
+          unchecked: "未检查",
+          "missing-config": "缺少配置",
+          "missing-secret": "缺少密钥",
+          failed: "检查失败",
+        })[status] || status,
+      source: (source) =>
+        ({
+          static: "工作区输入",
+          gateway: "本地网关检查",
+          "local-fallback": "本地结构检查",
+        })[source] || source,
+      message: (status, source, detail) => {
+        if (source === "static") {
+          if (status === "unchecked")
+            return "已检查输入内容，请通过本地 Gateway 确认配置。";
+          if (status === "missing-config")
+            return "请先填写端点和模型，再检查配置。";
+          if (status === "missing-secret")
+            return "请先设置有效的 API 密钥别名。";
+        }
+        if (source === "local-fallback")
+          return "本地 Gateway 未连接，只检查了端点和模型格式；提供商仍为未检查状态。";
+        const prefix =
+          status === "ready"
+            ? "本地 Gateway 配置检查完成，未调用外部模型。"
+            : "本地 Gateway 配置检查结果：";
+        return detail ? `${prefix} ${detail}` : prefix;
+      },
+    },
+    "zh-Hant": {
+      title: "供應商設定檢查",
+      summary: (ready, enabled) => `${ready}/${enabled} 已完成設定檢查`,
+      quickSetupTitle: "為全部角色使用同一個模型",
+      quickSetupBody:
+        "開始時可將一套供應商設定套用到所有啟用角色。不要在此輸入 API 金鑰；請在本機 Gateway 中設定與此別名相同的環境變數。",
+      quickSetupApply: (roles) => `套用到 ${roles} 個角色`,
+      ready: (count) => `${count} 已設定`,
+      unchecked: (count) => `${count} 未檢查`,
+      missing: (count) => `${count} 缺少`,
+      failed: (count) => `${count} 失敗`,
+      matrix: (roles) => `閘道設定：${roles} 個角色`,
+      checkAll: "檢查全部設定",
+      checkingAll: "檢查中...",
+      export: "匯出設定狀態",
+      downloadJson: "下載 JSON",
+      noModel: "未設定模型",
+      noAlias: "未設定別名",
+      secretReady: "已有測試金鑰",
+      secretPending: "未檢查金鑰",
+      provider: "供應商",
+      model: "模型",
+      endpoint: "端點",
+      apiKeyAlias: "API 金鑰別名",
+      testSecret: "設定檢查工作階段金鑰",
+      secretBoundary:
+        "此處金鑰只會暫時用於設定檢查，絕不儲存。實際 live 執行請在本地 Gateway 行程環境中設定同名別名。設定檢查不會向外部模型傳送付費請求。",
+      noEndpoint: "未設定端點",
+      check: "檢查設定",
+      checking: "檢查中",
+      status: (status) =>
+        ({
+          ready: "已設定",
+          unchecked: "未檢查",
+          "missing-config": "缺少設定",
+          "missing-secret": "缺少金鑰",
+          failed: "檢查失敗",
+        })[status] || status,
+      source: (source) =>
+        ({
+          static: "工作區輸入",
+          gateway: "本地閘道檢查",
+          "local-fallback": "本地結構檢查",
+        })[source] || source,
+      message: (status, source, detail) => {
+        if (source === "static") {
+          if (status === "unchecked")
+            return "已檢查輸入內容，請透過本地 Gateway 確認設定。";
+          if (status === "missing-config")
+            return "請先填寫端點和模型，再檢查設定。";
+          if (status === "missing-secret")
+            return "請先設定有效的 API 金鑰別名。";
+        }
+        if (source === "local-fallback")
+          return "本地 Gateway 未連線，只檢查了端點和模型格式；供應商仍為未檢查狀態。";
+        const prefix =
+          status === "ready"
+            ? "本地 Gateway 設定檢查完成，未呼叫外部模型。"
+            : "本地 Gateway 設定檢查結果：";
+        return detail ? `${prefix} ${detail}` : prefix;
+      },
+    },
+    ko: {
+      title: "프로바이더 설정 확인",
+      summary: (ready, enabled) => `${ready}/${enabled}개 설정 확인됨`,
+      quickSetupTitle: "모든 역할에 하나의 모델 사용",
+      quickSetupBody:
+        "처음에는 하나의 프로바이더 설정을 활성 역할 전체에 적용할 수 있습니다. API 키는 여기에 입력하지 말고, 이 별칭과 같은 환경 변수를 로컬 Gateway에 설정하세요.",
+      quickSetupApply: (roles) => `${roles}개 역할에 적용`,
+      ready: (count) => `${count}개 설정됨`,
+      unchecked: (count) => `${count}개 미확인`,
+      missing: (count) => `${count}개 누락`,
+      failed: (count) => `${count}개 실패`,
+      matrix: (roles) => `Gateway 설정: ${roles}개 역할`,
+      checkAll: "모든 설정 확인",
+      checkingAll: "확인 중...",
+      export: "설정 상태 내보내기",
+      downloadJson: "JSON 다운로드",
+      noModel: "모델 없음",
+      noAlias: "별칭 없음",
+      secretReady: "테스트 키 있음",
+      secretPending: "키 미확인",
+      provider: "프로바이더",
+      model: "모델",
+      endpoint: "엔드포인트",
+      apiKeyAlias: "API 키 별칭",
+      testSecret: "설정 확인용 세션 키",
+      secretBoundary:
+        "이 키는 설정 확인에만 일시적으로 사용되며 저장되지 않습니다. 실제 live 실행에는 같은 별칭을 로컬 Gateway 프로세스 환경에 설정하세요. 설정 확인은 외부 모델에 유료 요청을 보내지 않습니다.",
+      noEndpoint: "엔드포인트 없음",
+      check: "설정 확인",
+      checking: "확인 중",
+      status: (status) =>
+        ({
+          ready: "설정됨",
+          unchecked: "미확인",
+          "missing-config": "설정 누락",
+          "missing-secret": "키 누락",
+          failed: "확인 실패",
+        })[status] || status,
+      source: (source) =>
+        ({
+          static: "워크스페이스 입력",
+          gateway: "로컬 Gateway 확인",
+          "local-fallback": "로컬 구조 확인",
+        })[source] || source,
+      message: (status, source, detail) => {
+        if (source === "static") {
+          if (status === "unchecked")
+            return "입력 내용을 확인했습니다. 로컬 Gateway에서 설정을 확인하세요.";
+          if (status === "missing-config")
+            return "엔드포인트와 모델을 입력한 후 설정을 확인하세요.";
+          if (status === "missing-secret")
+            return "유효한 API 키 별칭을 설정한 후 확인하세요.";
+        }
+        if (source === "local-fallback")
+          return "로컬 Gateway가 연결되지 않아 엔드포인트와 모델 형식만 확인했습니다. 프로바이더는 아직 미확인입니다.";
+        const prefix =
+          status === "ready"
+            ? "로컬 Gateway 설정 확인이 완료되었습니다. 외부 모델은 호출하지 않았습니다."
+            : "로컬 Gateway 설정 확인 결과:";
+        return detail ? `${prefix} ${detail}` : prefix;
+      },
+    },
+  };
 
 const copies: Record<SupportedLocale, AppCopy> = {
   ja: {
@@ -507,17 +1136,93 @@ const copies: Record<SupportedLocale, AppCopy> = {
     runCabinet: "内閣を実行",
     running: "実行中...",
     gatewayReady: "ローカルゲートウェイ待機中。",
+    cabinetCallingGateway: (gateway) =>
+      `ローカル Gateway (${gateway}) を呼び出しています。`,
+    cabinetRunCompleted: (mode, called, skipped, failed) =>
+      mode === "live"
+        ? `live 実行完了: provider 呼び出し ${called}件、未生成 ${skipped}件、失敗 ${failed}件。未生成または失敗した工程の自動化は停止しています。`
+        : "dry-run 完了: 外部モデルは呼び出していません。",
+    cabinetRunFallback: (errorMessage) =>
+      `Gateway を利用できないため、外部モデル呼び出しなしのローカル dry-run を使用しました。${errorMessage ? ` ${errorMessage}` : ""}`,
+    providerReadiness: providerReadinessCopies.ja,
+    quickStart: {
+      kicker: "かんたん開始",
+      title: "内閣に仕事を任せる",
+      subtitle: "依頼を書いて、安全な試運転から始めます。",
+      missionLabel: "やってほしいこと",
+      missionPlaceholder:
+        "例: このリポジトリのログイン画面を修正し、テストとビルドを実行して根拠をまとめて。",
+      missionHelp: "目的、対象、変更してよい範囲、確認したいことを書きます。",
+      runDry: "安全に試す",
+      running: "内閣が確認中...",
+      connectApi: "自分の API をつなぐ",
+      localCli: "本機の Coding CLI を使う",
+      advanced: "高度な設定",
+      cabinetRoles: (count) => `${count}役割を設定済み`,
+      safetyBoundary:
+        "試運転では外部モデル、Mac 操作、外部への書き込みを実行しません。",
+      resultTitle: "内閣の結果",
+      resultDecision: (decision) =>
+        ({ ship: "確認して次へ", revise: "見直しが必要", block: "停止中" })[
+          decision
+        ] || decision,
+      resultSummary: (artifacts) => `${artifacts}件の工程記録を確認できます。`,
+      inspectResult: "結果を詳しく見る",
+    },
+    localCodingCli: {
+      kicker: "本機のコーディング",
+      title: "本機の Coding CLI を使う",
+      subtitle: "本機で認証済みの CLI を、現在の工程だけに使います。",
+      credentialBoundary: "ログイン情報と Coding Plan の認証情報は本機に残ります。",
+      scopeBoundary: "Git push、deploy、外部送信、Mac 操作、秘密情報の読取りは許可しません。",
+      refresh: "本機を確認",
+      checking: "本機の CLI を確認中...",
+      idle: "確認して使う CLI を選びます。",
+      status: (status) =>
+        ({
+          ready: "利用可能",
+          "detected-needs-approval": "確認済み・承認待ち",
+          "detected-needs-adapter": "確認済み・有効化待ち",
+          missing: "未導入",
+          "blocked-by-default": "既定で停止",
+        })[status] || status,
+      detected: "本機で確認済み",
+      missing: "本機で未確認",
+      enabled: "有効",
+      enable: "この CLI を有効化",
+      select: "この CLI を選ぶ",
+      qwenSetup: "Qwen Code を導入後、qwen -> /auth -> Alibaba ModelStudio -> Coding Plan を選択します。",
+      approval: "今回のタスクに限り、現在のリポジトリ内でこの CLI を実行することを承認する",
+      taskRequired: "先に、かんたん開始でタスクを書いてください。",
+      run: "監督付きで開始",
+      running: "CLI を起動中...",
+      result: "実行結果",
+      openDetails: "詳細な工程ワークベンチ",
+      returnToCli: "本機の Coding CLI へ戻る",
+    },
+    advancedWorkspace: {
+      returnToStart: "かんたん開始へ",
+      cabinet: "内閣結果",
+      providers: "API 接続",
+      automation: "実行と権限",
+      engineering: "工程ワークベンチ",
+      governance: "証跡と管理",
+    },
     missionKicker: "ミッション自動化",
     missionTitle: "計画、実行、監査、採点、改善を安全なサンドボックスで。",
     decision: "判定",
     notRun: "未実行",
-    releaseRehearsalStatus: (decision, blockers, warnings) => `リリース演習 ${jaRehearsalDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
-    releaseVerificationFallback: (errorMessage) => `ゲートウェイ検証を利用できないため、ローカル検証を使用しました。${errorMessage || ""}`,
-    releaseVerificationStatus: (decision, failed) => `リリース検証 ${jaVerificationDecision(decision)}: 失敗 ${failed}件。`,
+    releaseRehearsalStatus: (decision, blockers, warnings) =>
+      `リリース演習 ${jaRehearsalDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
+    releaseVerificationFallback: (errorMessage) =>
+      `ゲートウェイ検証を利用できないため、ローカル検証を使用しました。${errorMessage || ""}`,
+    releaseVerificationStatus: (decision, failed) =>
+      `リリース検証 ${jaVerificationDecision(decision)}: 失敗 ${failed}件。`,
     engineeringLaunchpad: {
       kicker: "Mac工程起動台",
       title: "ここから監督役とコーディング代理を開始",
-      subtitle: "ミッションを書き、内閣で分解し、監督用ブリーフと runner 起動パッケージを作り、許可された Mac ローカル操作だけを実行します。",
+      subtitle:
+        "ミッションを書き、内閣で分解し、監督用ブリーフと runner 起動パッケージを作り、許可された Mac ローカル操作だけを実行します。",
       stateLabel: "状態",
       metricsLabel: "Engineering launch metrics",
       permissionModeLabel: "権限モード",
@@ -525,21 +1230,33 @@ const copies: Record<SupportedLocale, AppCopy> = {
       nextActionLabel: "次の操作",
       entryLabel: "開始入口",
       entryTitle: "ここに工程タスクを入力して監督組を動かします",
-      entryBody: "まず mission brief を書き、自己模擬で監督役同士の復盤、権限境界、runner キューを確認します。実行や Mac 操作は証拠と承認がそろうまで進みません。",
+      entryBody:
+        "まず mission brief を書き、自己模擬で監督役同士の復盤、権限境界、runner キューを確認します。実行や Mac 操作は証拠と承認がそろうまで進みません。",
       realityLabel: "今の実能力",
       realityCodeLabel: "コード工程",
       realityMacLabel: "Mac 操作",
       realityExternalLabel: "外部書込",
       realityCodeStatus: (verified, canRun, missionReady, simulated) =>
-        verified ? "実行証拠あり" : canRun ? "未実行・準備済み" : simulated ? "agent 引き渡し準備中" : missionReady ? "自己模擬待ち" : "入力待ち",
-      realityMacStatus: (canControl) => canControl ? "承認済み runner のみ" : "未接続",
-      realityExternalStatus: (requested) => requested ? "未承認で停止" : "既定で拒否",
-      missionInputHelp: "ここがユーザーの入力欄です。まずは既定の Fixture + API mock なら token なしで試せます。live provider の実キーは利用者が自分の gateway 環境に置きます。",
+        verified
+          ? "実行証拠あり"
+          : canRun
+            ? "未実行・準備済み"
+            : simulated
+              ? "agent 引き渡し準備中"
+              : missionReady
+                ? "自己模擬待ち"
+                : "入力待ち",
+      realityMacStatus: (canControl) =>
+        canControl ? "承認済み runner のみ" : "未接続",
+      realityExternalStatus: (requested) =>
+        requested ? "未承認で停止" : "既定で拒否",
+      missionInputHelp:
+        "ここがユーザーの入力欄です。まずは既定の Fixture + API mock なら token なしで試せます。live provider の実キーは利用者が自分の gateway 環境に置きます。",
       macScopeLabel: "Mac版の実用範囲",
       macScopeItems: [
         "通常はリポジトリ内のコード作成、テスト、ビルド、証拠回収まで",
         "ブラウザ/Mac操作/MCPは runner ごとの allowlist と人間承認が必要",
-        "無制限のコンピュータ操作、秘密情報、push/deploy は既定で拒否"
+        "無制限のコンピュータ操作、秘密情報、push/deploy は既定で拒否",
       ],
       macRunnerLabel: "Mac runner 準備度",
       macRunnerPermissionsLabel: "必要権限",
@@ -550,17 +1267,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
         canControl
           ? "このミッション範囲では、承認済みの Mac runner だけがデスクトップ操作できます。"
           : "Naikaku は監督付きのコーディング工程を準備できますが、Mac デスクトップ操作は権限、adapter runtime、action log、receipt がそろうまで未接続です。",
-      macRunnerHonestyLimit: "この readiness は権限を付与しません。Accessibility、画面収録、Automation、MCP、push/deploy は別途承認が必要です。",
+      macRunnerHonestyLimit:
+        "この readiness は権限を付与しません。Accessibility、画面収録、Automation、MCP、push/deploy は別途承認が必要です。",
       macRunnerContractLabel: "Mac runner 契約",
       macRunnerContractChecksLabel: "契約チェック",
       macRunnerContractDeniedLabel: "拒否される動作",
       macRunnerContractInstructionsLabel: "Runner 指示",
       missionInputLabel: "ここに工程タスクを入力",
-      missionInputPlaceholder: "例: Mac 版を中心に、ユーザーがこの欄へタスクを入れると監督役が復盤し、coding agent がリポジトリ内で実装、npm run test / npm run build、証拠回収を行う。Git push と Mac 操作は人間承認。",
+      missionInputPlaceholder:
+        "例: Mac 版を中心に、ユーザーがこの欄へタスクを入れると監督役が復盤し、coding agent がリポジトリ内で実装、npm run test / npm run build、証拠回収を行う。Git push と Mac 操作は人間承認。",
       missionDraftLabel: "ミッション体検",
       autoWorkLabel: "自動工程",
       autoWorkTitle: "入力したタスクを gateway から実行",
-      autoWorkBody: "既定の Fixture + API mock は外部ツールも provider token も使わずに監督ループを検証します。OpenHands や live provider は利用者が自分で導入・設定した時だけ使います。",
+      autoWorkBody:
+        "既定の Fixture + API mock は外部ツールも provider token も使わずに監督ループを検証します。OpenHands や live provider は利用者が自分で導入・設定した時だけ使います。",
       autoWorkPresetLabel: "Runner",
       autoWorkPrepared: "準備のみ",
       autoWorkFixture: "Fixture 自動テスト",
@@ -568,8 +1288,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkWorktreeLabel: "作業ツリー",
       autoWorkAdapterReadyLabel: "ローカル adapter 導入・ライセンス確認済み",
       autoWorkAdapterFixtureLabel: "Fixture は adapter 確認不要",
-      autoWorkAdapterReadyHelp: "既定の試走はローカル gateway の fixture だけを呼びます。push、deploy、無制限の Mac 操作、秘密情報アクセスは許可しません。",
-      autoWorkLiveTokenHelp: "live provider の欄に入れるのは生の key ではなく環境変数名です。実 token は利用者の shell、.env、vault、または非公開デプロイだけに置きます。",
+      autoWorkAdapterReadyHelp:
+        "既定の試走はローカル gateway の fixture だけを呼びます。push、deploy、無制限の Mac 操作、秘密情報アクセスは許可しません。",
+      autoWorkLiveTokenHelp:
+        "live provider の欄に入れるのは生の key ではなく環境変数名です。実 token は利用者の shell、.env、vault、または非公開デプロイだけに置きます。",
       autoWorkRun: "Runner だけ実行",
       autoWorkRunning: "実行中",
       autoWorkSelfTest: "Fixture 自測",
@@ -584,50 +1306,72 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCabinetModelLabel: "役割 model",
       guidedCabinetModelPlaceholder: "OPENAI_MODEL または model 名",
       guidedCabinetApiKeyAliasLabel: "API key alias",
-      guidedCabinetApiKeyAliasHelp: "生の key は入れません。例: NAIKAKU_OPENAI_API_KEY",
+      guidedCabinetApiKeyAliasHelp:
+        "生の key は入れません。例: NAIKAKU_OPENAI_API_KEY",
       guidedCabinetEndpointLabel: "Endpoint 任意",
       guidedCabinetEndpointPlaceholder: "provider 既定を使用",
       safeStartLabel: "初回の安全な流れ",
       safeStartSteps: [
-        { title: "タスクを書く", body: "対象 repo、変更内容、検証コマンドを書きます。" },
-        { title: "token なしで試す", body: "Fixture + API mock は利用者のキーを使いません。" },
-        { title: "監督付きで開始", body: "内閣が判断し、許可された runner だけが証拠を返します。" }
+        {
+          title: "タスクを書く",
+          body: "対象 repo、変更内容、検証コマンドを書きます。",
+        },
+        {
+          title: "token なしで試す",
+          body: "Fixture + API mock は利用者のキーを使いません。",
+        },
+        {
+          title: "監督付きで開始",
+          body: "内閣が判断し、許可された runner だけが証拠を返します。",
+        },
       ],
       guidedCycleLimitLabel: "継続上限",
       guidedCycleLimitOption: (count) => `${count} 周まで`,
       guidedCycleRun: "監督付きで開始",
       guidedCycleRunning: "監督と実行中",
       guidedCycleIdle: "一括サイクルはまだ開始していません。",
-      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 周: 内閣で投票し、実行可否を決めています。`,
-      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 周: 内閣結果を受けて Codex 実行に進んでいます。`,
+      guidedCycleStarting: (cycle, total) =>
+        `第 ${cycle}/${total} 周: 内閣で投票し、実行可否を決めています。`,
+      guidedCycleExecuting: (cycle, total) =>
+        `第 ${cycle}/${total} 周: 内閣結果を受けて Codex 実行に進んでいます。`,
       guidedCycleCompleted: (cycles, total, decision, outputDir) =>
         `一括サイクル完了: ${cycles}/${total} 周、内閣 ${decision}、実行証拠 ${outputDir}。`,
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 周で停止: 内閣 ${decision}。実行せず監査結果を確認してください。`,
-      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 周で停止: 実行証拠の取得に失敗しました。`,
-      guidedCycleGatewayFailed: (message) => `一括サイクル gateway が失敗しました: ${message}`,
+      guidedCycleFailed: (cycle, total) =>
+        `第 ${cycle}/${total} 周で停止: 実行証拠の取得に失敗しました。`,
+      guidedCycleGatewayFailed: (message) =>
+        `一括サイクル gateway が失敗しました: ${message}`,
       guidedCycleSummary: (cycles, total) => `継続 ${cycles}/${total} 周`,
       autoWorkIdle: "まだ自動工程は起動していません。",
-      autoWorkMissionRequired: "工程タスクを入力してから自動工程を開始してください。",
-      autoWorkOpenHandsNeedsReady: "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
-      autoWorkAdapterNeedsReady: (preset) => `${preset} を使う前に、ローカル CLI の導入、ライセンス確認、この実行への承認を明示してください。`,
+      autoWorkMissionRequired:
+        "工程タスクを入力してから自動工程を開始してください。",
+      autoWorkOpenHandsNeedsReady:
+        "OpenHands を使う前に、ローカル CLI の導入とライセンス確認を明示してください。",
+      autoWorkAdapterNeedsReady: (preset) =>
+        `${preset} を使う前に、ローカル CLI の導入、ライセンス確認、この実行への承認を明示してください。`,
       autoWorkOutputLabel: "出力",
-      autoWorkChecks: (passed, failed) => `チェック ${passed} pass / ${failed} fail`,
+      autoWorkChecks: (passed, failed) =>
+        `チェック ${passed} pass / ${failed} fail`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
         `${preset}・${mode}・完了 job ${jobs}・receipt ${receipts}・証拠 ${evidence}・artifact ${artifacts}`,
-      autoWorkStarting: (preset) => `${preset} runner で自動工程を開始しています。`,
+      autoWorkStarting: (preset) =>
+        `${preset} runner で自動工程を開始しています。`,
       autoWorkCompleted: (preset, passed, jobs, outputDir) =>
         `${preset} 自動工程が完了しました。${passed} checks pass、完了 job ${jobs}、出力 ${outputDir}。`,
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
-      autoWorkGatewayUnavailable: (errorMessage) => `ローカル gateway の自動工程を利用できません。${errorMessage}`,
+      autoWorkGatewayUnavailable: (errorMessage) =>
+        `ローカル gateway の自動工程を利用できません。${errorMessage}`,
       codexSmokeIdle: "Codex smoke はまだ実行していません。",
-      codexSmokeStarting: "内閣の許可後、Codex CLI に生成小工程を任せています。",
+      codexSmokeStarting:
+        "内閣の許可後、Codex CLI に生成小工程を任せています。",
       codexSmokeCompleted: (passed, outputDir) =>
         `Codex smoke が完了しました。${passed} checks pass、出力 ${outputDir}。`,
       codexSmokeFailed: (exitCode, outputDir) =>
         `Codex smoke が失敗しました。exit ${exitCode ?? "unknown"}、出力 ${outputDir}。`,
-      codexSmokeUnavailable: (errorMessage) => `Codex smoke を利用できません。${errorMessage}`,
+      codexSmokeUnavailable: (errorMessage) =>
+        `Codex smoke を利用できません。${errorMessage}`,
       codexSmokeResult: (changed, baseline, final) =>
         `変更 ${changed} file・test ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 体検",
@@ -636,23 +1380,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessIdle: "本機 runner はまだ確認していません。",
       runnerReadinessStatus: (ready, detected, launchable, total) =>
         `${total} runner 中 ${ready} ready、${detected} 件検出、Workbench 起動 ${launchable} 件。`,
-      runnerReadinessUnavailable: (errorMessage) => `Runner 体検を利用できません。${errorMessage}`,
+      runnerReadinessUnavailable: (errorMessage) =>
+        `Runner 体検を利用できません。${errorMessage}`,
       runnerReadinessAdapterStatus: (status) => status,
-      runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
+      runnerReadinessDetected: (commands, apps) =>
+        `cmd ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "次の操作",
       runnerPresetTemplatesLabel: "追加 runner テンプレート",
       runnerPresetEnable: "有効化",
       runnerPresetEnabled: "有効",
-      runnerPresetEnableStarting: (label) => `${label} をローカル gateway に追加しています。`,
-      runnerPresetEnableCompleted: (label) => `${label} を有効化しました。Runner から選択できます。`,
-      runnerPresetEnableFailed: (errorMessage) => `Runner テンプレートを有効化できません。${errorMessage}`,
-      missionDraftScore: (score, present, missing, recommended) => `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
+      runnerPresetEnableStarting: (label) =>
+        `${label} をローカル gateway に追加しています。`,
+      runnerPresetEnableCompleted: (label) =>
+        `${label} を有効化しました。Runner から選択できます。`,
+      runnerPresetEnableFailed: (errorMessage) =>
+        `Runner テンプレートを有効化できません。${errorMessage}`,
+      missionDraftScore: (score, present, missing, recommended) =>
+        `${score}% / 入力 ${present}・不足 ${missing}・推奨 ${recommended}`,
       capabilitiesLabel: "必要な Mac 工程能力",
       signalsLabel: "検出したミッション信号",
       unlockChecklistLabel: "工程解放チェックリスト",
       selfSimulationLabel: "自己シミュレーション",
       selfSimulationEmpty: "未実行",
-      selfSimulationEmptyDetail: "ローカルだけで監督、agent、runner、preflight の流れを演習できます。",
+      selfSimulationEmptyDetail:
+        "ローカルだけで監督、agent、runner、preflight の流れを演習できます。",
       selfSimulationNextActionsLabel: "次の操作",
       selfSimulationHonestyLabel: "正直境界",
       permissionRequestLabel: "権限リクエスト",
@@ -672,18 +1423,34 @@ const copies: Record<SupportedLocale, AppCopy> = {
       completionGateLabel: "完了宣言ゲート",
       completionGateNextActionLabel: "受入前の次操作",
       completionGateBlockedClaimsLabel: "まだ言えないこと",
-      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held・許可コマンド ${commands}・証拠 ${evidence}`,
-      selfSimulationStatus: (decision, ready, commands, evidence) => `自己シミュレーション ${jaEngineeringSelfSimulationDecision(decision)}: ready ${ready}、許可コマンド ${commands}、証拠 ${evidence}。`,
-      permissionRequestSummary: (requests, ask, denied) => `${requests}件要求・実行前確認 ${ask}・既定拒否 ${denied}`,
+      selfSimulationSummary: (ready, held, commands, evidence) =>
+        `${ready} ready / ${held} held・許可コマンド ${commands}・証拠 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) =>
+        `自己シミュレーション ${jaEngineeringSelfSimulationDecision(decision)}: ready ${ready}、許可コマンド ${commands}、証拠 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) =>
+        `${requests}件要求・実行前確認 ${ask}・既定拒否 ${denied}`,
       capabilityGapSummary: (engineering, mac, prepare, control) =>
         `工程準備 ${engineering}%・Mac runtime ${mac}%・工程準備 ${prepare ? "可" : "未完"}・Mac 操作 ${control ? "可" : "未接続"}`,
       launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
         `実行可 ${runReady}・引き渡し可 ${handoffReady}・保留 ${held}・許可コマンド ${commands}・証拠 ${evidence}`,
-      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+      executionReceiptSummary: (
+        executed,
+        receipts,
+        evidence,
+        artifacts,
+        claim,
+      ) =>
         `実行 ${executed}・検証済み receipt ${receipts}・受理証拠 ${evidence}・確認済み artifact ${artifacts}・完了宣言 ${claim ? "可" : "不可"}`,
       macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
         `ready能力 ${ready}・承認待ち ${approvals}・runtime必要 ${runtime}・既定拒否 ${denied}・adapter ${adapters}`,
-      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+      macRunnerContractSummary: (
+        total,
+        approval,
+        runtime,
+        blocked,
+        evidence,
+        permissions,
+      ) =>
         `動作 ${total}・承認待ち ${approval}・runtime必要 ${runtime}・停止 ${blocked}・証拠 ${evidence}・権限 ${permissions}`,
       handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
         `Agent 引き渡し ${handoff ? "可" : "未完"}・Sandbox ${sandbox ? "実行可" : "待機"}・承認 ${approvals}・予定証拠 ${evidence}`,
@@ -697,7 +1464,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       selfSimulationStage: jaEngineeringSelfSimulationStage,
       selfSimulationStageStatus: jaEngineeringSelfSimulationStageStatus,
       selfSimulationCapability: jaEngineeringSelfSimulationCapability,
-      selfSimulationCapabilityStatus: jaEngineeringSelfSimulationCapabilityStatus,
+      selfSimulationCapabilityStatus:
+        jaEngineeringSelfSimulationCapabilityStatus,
       permissionRequestDecision: jaEngineeringPermissionRequestDecision,
       permissionRequestMode: jaEngineeringPermissionRequestMode,
       capabilityGapDecision: jaEngineeringCapabilityGapDecision,
@@ -737,7 +1505,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       roles: (count) => `${count}役割`,
       briefs: (total, implementable) => `${implementable}/${total}実装候補`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
-      runner: (tasks, decision) => `${tasks} runner / ${jaRunnerSelfTestDecision(decision)}`,
+      runner: (tasks, decision) =>
+        `${tasks} runner / ${jaRunnerSelfTestDecision(decision)}`,
       focusMission: "入力欄へ",
       runCabinet: "内閣で分解",
       preparePack: "工程組を準備",
@@ -755,24 +1524,24 @@ const copies: Record<SupportedLocale, AppCopy> = {
       steps: [
         {
           title: "1. ミッション入力",
-          body: "作らせたい機能、対象リポジトリ、制約、検証コマンドを mission brief に入れます。"
+          body: "作らせたい機能、対象リポジトリ、制約、検証コマンドを mission brief に入れます。",
         },
         {
           title: "2. 監督役で分解",
-          body: "内閣を実行すると複数ロールが計画、批評、実行境界、証拠要求を分けます。"
+          body: "内閣を実行すると複数ロールが計画、批評、実行境界、証拠要求を分けます。",
         },
         {
           title: "3. 工程パック作成",
-          body: "各 coding agent 用の prompt、receipt、runner invocation、intake、自検を一括生成します。"
+          body: "各 coding agent 用の prompt、receipt、runner invocation、intake、自検を一括生成します。",
         },
         {
           title: "4. Mac 権限確認",
-          body: "preflight が許可コマンド、証拠パス、危険操作、保留 session を実行前に止めます。"
+          body: "preflight が許可コマンド、証拠パス、危険操作、保留 session を実行前に止めます。",
         },
         {
           title: "5. 証拠付き実行",
-          body: "local gateway がある時だけ sandbox runner がテストを実行し、transcript と証拠を返します。"
-        }
+          body: "local gateway がある時だけ sandbox runner がテストを実行し、transcript と証拠を返します。",
+        },
       ],
       permissionGroups: [
         {
@@ -781,8 +1550,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "選択したリポジトリ配下の読み書き",
             "output/ 配下への transcript と証拠保存",
             "許可済み shell: npm run test / npm run build",
-            "Git 状態確認: status / diff の読み取り"
-          ]
+            "Git 状態確認: status / diff の読み取り",
+          ],
         },
         {
           title: "Mac版で追加する権限",
@@ -790,8 +1559,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Browser runner: ブラウザ自動化プロファイル",
             "Desktop runner: Accessibility と Screen Recording",
             "MCP runner: 明示 allowlist のツールだけ",
-            "Git push、deploy、外部送信は人間承認"
-          ]
+            "Git push、deploy、外部送信は人間承認",
+          ],
         },
         {
           title: "デフォルトで渡さないもの",
@@ -799,10 +1568,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "ホスト全体の秘密情報",
             "無制限のコンピュータ操作",
             "本番 deploy 権限",
-            "承認なしの GitHub 書き込み"
-          ]
-        }
-      ]
+            "承認なしの GitHub 書き込み",
+          ],
+        },
+      ],
     },
     codingBriefs: {
       title: "コーディング代理ブリーフ",
@@ -859,58 +1628,89 @@ const copies: Record<SupportedLocale, AppCopy> = {
       reviewNextAction: "次の対応",
       reviewReady: "全てのブリーフは代理への引き渡し前チェックを通過しました。",
       reviewDecisionLabel: jaBriefReviewDecision,
-      reviewSummary: (passed, warnings, blockers) => `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
+      reviewSummary: (passed, warnings, blockers) =>
+        `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
       sessionDecision: "Session判定",
       sessionNextAction: "次の対応",
-      sessionReady: "全ての session は sandboxed coding agent への引き渡し準備ができています。",
+      sessionReady:
+        "全ての session は sandboxed coding agent への引き渡し準備ができています。",
       sessionHeld: (status) => `保留: ${jaCodingSessionStatus(status)}`,
       sessionDecisionLabel: jaBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
-      sessionContractSummary: (contracts, humanApproval) => `${contracts}件契約 / ${humanApproval}件人間承認`,
+      sessionContractSummary: (contracts, humanApproval) =>
+        `${contracts}件契約 / ${humanApproval}件人間承認`,
       dispatchDecision: "Dispatch判定",
       dispatchNextAction: "次の対応",
-      dispatchReady: "引き渡し可能な session の prompt と証拠雛形を Dispatch 包として準備しました。",
+      dispatchReady:
+        "引き渡し可能な session の prompt と証拠雛形を Dispatch 包として準備しました。",
       dispatchDecisionLabel: jaCodingDispatchDecision,
-      dispatchSummary: (ready, held, promptFiles) => `引き渡し可 ${ready} / 保留 ${held} / prompt ${promptFiles}件`,
-      dispatchReceiptTemplate: (receiptTemplates) => `証拠雛形 ${receiptTemplates}件`,
+      dispatchSummary: (ready, held, promptFiles) =>
+        `引き渡し可 ${ready} / 保留 ${held} / prompt ${promptFiles}件`,
+      dispatchReceiptTemplate: (receiptTemplates) =>
+        `証拠雛形 ${receiptTemplates}件`,
       dispatchArchive: "Dispatch Archive",
-      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files}ファイル / prompt ${promptFiles}件 / ${totalBytes} bytes`,
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) =>
+        `${files}ファイル / prompt ${promptFiles}件 / ${totalBytes} bytes`,
       dispatchUnassignedHeld: (count) => `未割当の保留 ${count}件`,
       dispatchArchiveAudit: "Archive監査",
       dispatchAuditDecisionLabel: jaDispatchArchiveAuditDecision,
-      dispatchAuditSummary: (passed, warnings, blockers) => `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
+      dispatchAuditSummary: (passed, warnings, blockers) =>
+        `${passed}合格 / ${warnings}警告 / ${blockers}ブロッカー`,
       dispatchSimulation: "実行Simulation",
       dispatchSimulationDecisionLabel: jaDispatchSimulationDecision,
-      dispatchSimulationSummary: (ready, held, blocked) => `${ready} ready / ${held} held / ${blocked} block`,
+      dispatchSimulationSummary: (ready, held, blocked) =>
+        `${ready} ready / ${held} held / ${blocked} block`,
       runnerManifest: "Runnerマニフェスト",
       runnerManifestDecisionLabel: jaRunnerManifestDecision,
-      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks}件準備 / Runner ${runnerTasks}件 / ブロック ${blockedTasks}件`,
+      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) =>
+        `${readyTasks}件準備 / Runner ${runnerTasks}件 / ブロック ${blockedTasks}件`,
       runnerInvocation: "Runner起動パッケージ",
       runnerInvocationDecisionLabel: jaRunnerInvocationDecision,
-      runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations}件準備済み / 起動ファイル ${invocationFiles}件 / ブロック ${blockedInvocations}件`,
+      runnerInvocationSummary: (
+        readyInvocations,
+        invocationFiles,
+        blockedInvocations,
+      ) =>
+        `${readyInvocations}件準備済み / 起動ファイル ${invocationFiles}件 / ブロック ${blockedInvocations}件`,
       runnerIntake: "Runner受入監査",
       runnerIntakeDecisionLabel: jaRunnerIntakeDecision,
-      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes}件受入 / 起動ファイル ${invocationFiles}件 / ブロック ${blockedIntakes}件`,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) =>
+        `${acceptedIntakes}件受入 / 起動ファイル ${invocationFiles}件 / ブロック ${blockedIntakes}件`,
       runnerSelfTest: "Runner自己検証",
       runnerSelfTestDecisionLabel: jaRunnerSelfTestDecision,
-      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) =>
+        `${wouldRun}件模擬 / 未実行コマンド ${notExecutedCommands}件 / ブロック ${blockedTasks}件`,
       sandboxRunnerPreflightDecisionLabel: jaSandboxRunnerPreflightDecision,
-      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks}件ready / 保留 ${heldTasks}件 / ブロック ${blockedTasks}件 / 予定プロセス ${processExecutions}件`,
+      sandboxRunnerPreflightSummary: (
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `${readyTasks}件ready / 保留 ${heldTasks}件 / ブロック ${blockedTasks}件 / 予定プロセス ${processExecutions}件`,
       sandboxRunner: "Sandbox Runner",
       sandboxRunnerDecisionLabel: jaSandboxRunnerDecision,
-      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}件実行 / プロセス ${processExecutions}件 / 結果 ${commandResults}件`,
+      sandboxRunnerSummary: (
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `${executedTasks}件実行 / プロセス ${processExecutions}件 / 結果 ${commandResults}件`,
       drillDecision: "Drill判定",
       drillNextAction: "次の対応",
-      drillReady: "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
+      drillReady:
+        "全ての ready session は sandboxed coding agent への割当シミュレーションを通過しました。",
       drillAction: jaCodingDrillAction,
       drillDecisionLabel: jaCodingDrillDecision,
-      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign}割当 / ${notAssigned}停止`,
+      drillSummary: (wouldAssign, notAssigned) =>
+        `${wouldAssign}割当 / ${notAssigned}停止`,
       receiptDecision: "証拠判定",
       receiptNextAction: "次の対応",
       receiptReady: "全ての receipt は実装証拠レビューを通過しました。",
       receiptStatus: jaCodingReceiptStatus,
       receiptDecisionLabel: jaCodingReceiptDecision,
-      receiptSummary: (verified, pending, failed) => `${verified}確認 / ${pending}不足 / ${failed}失敗`,
+      receiptSummary: (verified, pending, failed) =>
+        `${verified}確認 / ${pending}不足 / ${failed}失敗`,
       mode: "モード",
       executor: "Executor",
       sandboxBoundary: "サンドボックス境界",
@@ -922,29 +1722,90 @@ const copies: Record<SupportedLocale, AppCopy> = {
       crossRole: "横断",
       promptReady: "代理用 prompt 準備済み",
       empty: "Development Board から coding agent brief を生成してください。",
-      statusGateway: "コーディング代理ブリーフをローカルゲートウェイ経由で出力しました。",
-      statusFallback: (errorMessage) => `ゲートウェイ brief を利用できないため、ローカル出力を使用しました。${errorMessage || ""}`,
-      statusMarkdown: "コーディング代理 Markdown prompt pack をローカルで準備しました。",
-      statusReviewGateway: (decision, blockers, warnings) => `ブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSessionGateway: (decision, ready, held) => `Session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDispatchGateway: (decision, ready, held, promptFiles) => `Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。`,
-      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `ローカルで Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。`,
-      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `ローカルで Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox実行は停止しました。Preflight ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件。`,
-      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${jaSandboxRunnerDecision(decision)}: 実行 ${executedTasks}件、プロセス ${processExecutions}件、結果 ${commandResults}件。`,
-      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner はローカル gateway が必要です。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDrillGateway: (decision, wouldAssign, notAssigned) => `Session演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。`,
-      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `ローカルで session 演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptGateway: (decision, verified, pending, failed) => `証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
-      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `ローカルで証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewGateway: (decision, verified, pending, failed) => `取り込んだ証拠の審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
-      statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `ローカルで取り込んだ証拠を審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs, reusedChangedFileRefs, reusedEvidenceArtifactRefs, transcriptContentMismatches) =>
+      statusGateway:
+        "コーディング代理ブリーフをローカルゲートウェイ経由で出力しました。",
+      statusFallback: (errorMessage) =>
+        `ゲートウェイ brief を利用できないため、ローカル出力を使用しました。${errorMessage || ""}`,
+      statusMarkdown:
+        "コーディング代理 Markdown prompt pack をローカルで準備しました。",
+      statusReviewGateway: (decision, blockers, warnings) =>
+        `ブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) =>
+        `ローカルでブリーフ review ${jaBriefReviewDecision(decision)}: ブロッカー ${blockers}、警告 ${warnings}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) =>
+        `Session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) =>
+        `ローカルで session bundle ${jaBriefReviewDecision(decision)}: ready ${ready}、held ${held}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDispatchGateway: (decision, ready, held, promptFiles) =>
+        `Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。`,
+      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) =>
+        `ローカルで Dispatch 包 ${jaCodingDispatchDecision(decision)}: 引き渡し可 ${ready}、保留 ${held}、prompt ${promptFiles}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。`,
+      statusSandboxRunnerPreflightLocal: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+        errorMessage,
+      ) =>
+        `ローカルで Sandbox確認 ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件、予定プロセス ${processExecutions}件。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+      ) =>
+        `Sandbox実行は停止しました。Preflight ${jaSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}件、保留 ${heldTasks}件、ブロック ${blockedTasks}件。`,
+      statusSandboxRunnerGateway: (
+        decision,
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `Sandbox Runner ${jaSandboxRunnerDecision(decision)}: 実行 ${executedTasks}件、プロセス ${processExecutions}件、結果 ${commandResults}件。`,
+      statusSandboxRunnerUnavailable: (errorMessage) =>
+        `Sandbox Runner はローカル gateway が必要です。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) =>
+        `Session演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) =>
+        `ローカルで session 演習 ${jaCodingDrillDecision(decision)}: 割当 ${wouldAssign}、停止 ${notAssigned}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptGateway: (decision, verified, pending, failed) =>
+        `証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
+      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) =>
+        `ローカルで証拠雛形 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewGateway: (decision, verified, pending, failed) =>
+        `取り込んだ証拠の審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。`,
+      statusReceiptReviewLocal: (
+        decision,
+        verified,
+        pending,
+        failed,
+        errorMessage,
+      ) =>
+        `ローカルで取り込んだ証拠を審査 ${jaCodingReceiptDecision(decision)}: 確認 ${verified}、不足 ${pending}、失敗 ${failed}。${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewApplied: (
+        message,
+        artifactDecision,
+        verifiedPaths,
+        unresolvedPaths,
+        applied,
+        skipped,
+        reusedTranscriptRefs,
+        reusedChangedFileRefs,
+        reusedEvidenceArtifactRefs,
+        transcriptContentMismatches,
+      ) =>
         `${message} アーティファクト監査 ${artifactDecision}: ${verifiedPaths}件確認、${unresolvedPaths}件未解決${reusedTranscriptRefs ? `、transcript再利用 ${reusedTranscriptRefs}件` : ""}${reusedChangedFileRefs ? `、changed file再利用 ${reusedChangedFileRefs}件` : ""}${reusedEvidenceArtifactRefs ? `、evidence artifact再利用 ${reusedEvidenceArtifactRefs}件` : ""}${transcriptContentMismatches ? `、内容不一致 ${transcriptContentMismatches}件` : ""}。Development Board へ ${applied}件反映、${skipped}件保留。`,
-      statusReceiptImportError: (errorMessage) => `証拠提出書を取り込めませんでした。${errorMessage}`
+      statusReceiptImportError: (errorMessage) =>
+        `証拠提出書を取り込めませんでした。${errorMessage}`,
     },
     releaseRehearsal: {
       title: "リリース演習",
@@ -954,7 +1815,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       warnings: (count) => `${count}警告`,
       blockers: (count) => `${count}ブロッカー`,
       localDryRun: "ローカル dry-run 演習",
-      sourceLine: (sourceRun, level, evidenceItems) => `${sourceRun} / ${level} / 証拠 ${evidenceItems}`,
+      sourceLine: (sourceRun, level, evidenceItems) =>
+        `${sourceRun} / ${level} / 証拠 ${evidenceItems}`,
       run: "演習実行",
       exportReport: "報告出力",
       verify: "検証",
@@ -970,7 +1832,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
         notes: "ノート",
         runner: "Runner",
         held: "保留",
-        ready: (count) => `${count} ready`
+        ready: (count) => `${count} ready`,
       },
       evidenceClaimTitle: (level) => `${level} 証拠クレーム`,
       remediationQueue: "改善キュー",
@@ -979,19 +1841,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
       decision: {
         releaseReady: "リリース可能",
         needsReview: "レビュー要",
-        blocked: "ブロック"
+        blocked: "ブロック",
       },
       verification: {
         decision: {
           verified: "検証済み",
           notProductionReady: "本番未準備",
-          invalid: "無効"
+          invalid: "無効",
         },
-        scope: (scope, requireProductionEvidence) => `${scope}${requireProductionEvidence ? " / 本番証拠必須" : ""}`,
+        scope: (scope, requireProductionEvidence) =>
+          `${scope}${requireProductionEvidence ? " / 本番証拠必須" : ""}`,
         result: (passed, failed) => `${passed}合格 / ${failed}失敗`,
-        ready: "検証レポートはレビュー可能です。"
-      }
-    }
+        ready: "検証レポートはレビュー可能です。",
+      },
+    },
   },
   en: {
     brandSubtitle: "Cabinet orchestration workbench",
@@ -1007,39 +1870,133 @@ const copies: Record<SupportedLocale, AppCopy> = {
     runCabinet: "Run cabinet",
     running: "Running...",
     gatewayReady: "Gateway ready when local service is running.",
+    cabinetCallingGateway: (gateway) =>
+      `Calling local Gateway at ${gateway}...`,
+    cabinetRunCompleted: (mode, called, skipped, failed) =>
+      mode === "live"
+        ? `Live run completed: ${called} provider calls, ${skipped} stages without a live artifact, ${failed} failed. Automation stays blocked for unavailable stages.`
+        : "Dry-run completed without external model calls.",
+    cabinetRunFallback: (errorMessage) =>
+      `Gateway unavailable; used a local dry-run without external model calls.${errorMessage ? ` ${errorMessage}` : ""}`,
+    providerReadiness: providerReadinessCopies.en,
+    quickStart: {
+      kicker: "Quick start",
+      title: "Give the cabinet a job",
+      subtitle: "Write the request, then begin with a safe trial.",
+      missionLabel: "What should the cabinet do?",
+      missionPlaceholder:
+        "Example: Fix the login screen in this repository, run tests and a build, then summarize the evidence.",
+      missionHelp:
+        "Include the goal, target, allowed scope, and what you want checked.",
+      runDry: "Try safely",
+      running: "Cabinet is reviewing...",
+      connectApi: "Connect my API",
+      localCli: "Use local Coding CLI",
+      advanced: "Advanced settings",
+      cabinetRoles: (count) => `${count} roles configured`,
+      safetyBoundary:
+        "A trial does not call external models, operate the Mac, or write outside the workspace.",
+      resultTitle: "Cabinet result",
+      resultDecision: (decision) =>
+        ({
+          ship: "Ready for review",
+          revise: "Needs revision",
+          block: "Blocked",
+        })[decision] || decision,
+      resultSummary: (artifacts) =>
+        `${artifacts} stage records are ready to inspect.`,
+      inspectResult: "Inspect result",
+    },
+    localCodingCli: {
+      kicker: "Local coding",
+      title: "Use a local Coding CLI",
+      subtitle: "Use a CLI already authenticated on this Mac for this scoped task only.",
+      credentialBoundary: "CLI login and Coding Plan credentials stay on this Mac.",
+      scopeBoundary: "Git push, deploy, external sends, Mac control, and secret reads remain blocked.",
+      refresh: "Check this Mac",
+      checking: "Checking local CLIs...",
+      idle: "Check this Mac, then choose a CLI.",
+      status: (status) =>
+        ({
+          ready: "available",
+          "detected-needs-approval": "detected; approval required",
+          "detected-needs-adapter": "detected; enable first",
+          missing: "not installed",
+          "blocked-by-default": "blocked by default",
+        })[status] || status,
+      detected: "detected on this Mac",
+      missing: "not detected on this Mac",
+      enabled: "enabled",
+      enable: "Enable this CLI",
+      select: "Use this CLI",
+      qwenSetup: "After installing Qwen Code, run qwen -> /auth -> Alibaba ModelStudio -> Coding Plan.",
+      approval: "Approve this CLI only for the current task inside the current repository",
+      taskRequired: "Write a task in Quick start first.",
+      run: "Start supervised work",
+      running: "Starting CLI...",
+      result: "Run result",
+      openDetails: "Detailed engineering workbench",
+      returnToCli: "Back to local Coding CLI",
+    },
+    advancedWorkspace: {
+      returnToStart: "Back to quick start",
+      cabinet: "Cabinet result",
+      providers: "API connection",
+      automation: "Execution and permissions",
+      engineering: "Engineering workbench",
+      governance: "Evidence and administration",
+    },
     missionKicker: "Mission automation",
-    missionTitle: "Plan, act, audit, score, and iterate inside a governed sandbox.",
+    missionTitle:
+      "Plan, act, audit, score, and iterate inside a governed sandbox.",
     decision: "Decision",
     notRun: "not run",
-    releaseRehearsalStatus: (decision, blockers, warnings) => `Release rehearsal ${decision}: ${blockers} blockers, ${warnings} warnings.`,
-    releaseVerificationFallback: (errorMessage) => `Gateway release verification unavailable; used local verifier.${errorMessage ? ` ${errorMessage}` : ""}`,
-    releaseVerificationStatus: (decision, failed) => `Release verification ${decision}: ${failed} failed checks.`,
+    releaseRehearsalStatus: (decision, blockers, warnings) =>
+      `Release rehearsal ${decision}: ${blockers} blockers, ${warnings} warnings.`,
+    releaseVerificationFallback: (errorMessage) =>
+      `Gateway release verification unavailable; used local verifier.${errorMessage ? ` ${errorMessage}` : ""}`,
+    releaseVerificationStatus: (decision, failed) =>
+      `Release verification ${decision}: ${failed} failed checks.`,
     engineeringLaunchpad: {
       kicker: "Mac engineering launchpad",
       title: "Start supervised coding agents here",
-      subtitle: "Write the mission, split it through the cabinet, prepare supervisor briefs and runner packages, then execute only approved local Mac actions.",
+      subtitle:
+        "Write the mission, split it through the cabinet, prepare supervisor briefs and runner packages, then execute only approved local Mac actions.",
       stateLabel: "State",
       metricsLabel: "Engineering launch metrics",
       permissionModeLabel: "Permission mode",
       launchStageLabel: "Launch stage",
       nextActionLabel: "Next action",
       entryLabel: "Start here",
-      entryTitle: "Type the engineering task here, then start supervisor review",
-      entryBody: "Write the mission brief first. Self-simulation rehearses supervisor review, permission boundaries, and runner queue readiness before any coding or Mac operation is claimed.",
+      entryTitle:
+        "Type the engineering task here, then start supervisor review",
+      entryBody:
+        "Write the mission brief first. Self-simulation rehearses supervisor review, permission boundaries, and runner queue readiness before any coding or Mac operation is claimed.",
       realityLabel: "Actual capability now",
       realityCodeLabel: "Code work",
       realityMacLabel: "Mac control",
       realityExternalLabel: "External write",
       realityCodeStatus: (verified, canRun, missionReady, simulated) =>
-        verified ? "execution evidenced" : canRun ? "not run; ready" : simulated ? "agent handoff preparing" : missionReady ? "waiting for self-simulation" : "waiting for input",
-      realityMacStatus: (canControl) => canControl ? "approved runner only" : "not connected",
-      realityExternalStatus: (requested) => requested ? "blocked until approved" : "denied by default",
-      missionInputHelp: "This is the user input field. The default Fixture + API mock path needs no token. Live provider keys belong only in the operator's own gateway environment.",
+        verified
+          ? "execution evidenced"
+          : canRun
+            ? "not run; ready"
+            : simulated
+              ? "agent handoff preparing"
+              : missionReady
+                ? "waiting for self-simulation"
+                : "waiting for input",
+      realityMacStatus: (canControl) =>
+        canControl ? "approved runner only" : "not connected",
+      realityExternalStatus: (requested) =>
+        requested ? "blocked until approved" : "denied by default",
+      missionInputHelp:
+        "This is the user input field. The default Fixture + API mock path needs no token. Live provider keys belong only in the operator's own gateway environment.",
       macScopeLabel: "Mac app capability scope",
       macScopeItems: [
         "Default scope: code changes inside the repo, tests, build, and evidence collection",
         "Browser, Mac desktop, and MCP control require runner allowlists plus human approval",
-        "Unbounded computer control, secrets, push, and deploy are denied by default"
+        "Unbounded computer control, secrets, push, and deploy are denied by default",
       ],
       macRunnerLabel: "Mac runner readiness",
       macRunnerPermissionsLabel: "Required permissions",
@@ -1050,17 +2007,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
         canControl
           ? "Only the approved Mac runner may control the desktop for this mission scope."
           : "Naikaku can prepare supervised coding work now; Mac desktop control remains disconnected until permissions, adapter runtime, action logs, and receipts exist.",
-      macRunnerHonestyLimit: "This readiness report does not grant Accessibility, Screen Recording, Automation, MCP, push, or deploy permission.",
+      macRunnerHonestyLimit:
+        "This readiness report does not grant Accessibility, Screen Recording, Automation, MCP, push, or deploy permission.",
       macRunnerContractLabel: "Mac runner contract",
       macRunnerContractChecksLabel: "Contract checks",
       macRunnerContractDeniedLabel: "Denied actions",
       macRunnerContractInstructionsLabel: "Runner instructions",
       missionInputLabel: "Type the engineering task here",
-      missionInputPlaceholder: "Example: Focus on the Mac app path. When the user enters a task here, supervisors review it and the coding agent edits the repo, runs npm run test / npm run build, and collects evidence. Git push and Mac control require human approval.",
+      missionInputPlaceholder:
+        "Example: Focus on the Mac app path. When the user enters a task here, supervisors review it and the coding agent edits the repo, runs npm run test / npm run build, and collects evidence. Git push and Mac control require human approval.",
       missionDraftLabel: "Mission check",
       autoWorkLabel: "Auto work",
       autoWorkTitle: "Run the entered task through the local gateway",
-      autoWorkBody: "The default Fixture + API mock path verifies the supervised loop without external tools or provider tokens. OpenHands and live providers run only after the operator installs and configures them.",
+      autoWorkBody:
+        "The default Fixture + API mock path verifies the supervised loop without external tools or provider tokens. OpenHands and live providers run only after the operator installs and configures them.",
       autoWorkPresetLabel: "Runner",
       autoWorkPrepared: "Prepare only",
       autoWorkFixture: "Fixture auto-test",
@@ -1068,8 +2028,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkWorktreeLabel: "Worktree",
       autoWorkAdapterReadyLabel: "Local adapter installed and license-reviewed",
       autoWorkAdapterFixtureLabel: "Fixture needs no adapter confirmation",
-      autoWorkAdapterReadyHelp: "The default trial calls only the local gateway fixture. It does not grant push, deploy, unbounded Mac control, or secret access.",
-      autoWorkLiveTokenHelp: "For live providers, enter an environment variable name, not a raw key. The real token stays in the operator's shell, .env, vault, or private deployment.",
+      autoWorkAdapterReadyHelp:
+        "The default trial calls only the local gateway fixture. It does not grant push, deploy, unbounded Mac control, or secret access.",
+      autoWorkLiveTokenHelp:
+        "For live providers, enter an environment variable name, not a raw key. The real token stays in the operator's shell, .env, vault, or private deployment.",
       autoWorkRun: "Run runner only",
       autoWorkRunning: "Running",
       autoWorkSelfTest: "Fixture self-test",
@@ -1084,50 +2046,72 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCabinetModelLabel: "Role model",
       guidedCabinetModelPlaceholder: "OPENAI_MODEL or model name",
       guidedCabinetApiKeyAliasLabel: "API key alias",
-      guidedCabinetApiKeyAliasHelp: "Do not enter a raw key. Example: NAIKAKU_OPENAI_API_KEY",
+      guidedCabinetApiKeyAliasHelp:
+        "Do not enter a raw key. Example: NAIKAKU_OPENAI_API_KEY",
       guidedCabinetEndpointLabel: "Endpoint optional",
       guidedCabinetEndpointPlaceholder: "Use provider default",
       safeStartLabel: "Safe first run",
       safeStartSteps: [
-        { title: "Write the task", body: "Add the target repo, change, and verification commands." },
-        { title: "Try without tokens", body: "Fixture + API mock does not use the operator's keys." },
-        { title: "Start supervised", body: "The cabinet decides, then approved runners return evidence." }
+        {
+          title: "Write the task",
+          body: "Add the target repo, change, and verification commands.",
+        },
+        {
+          title: "Try without tokens",
+          body: "Fixture + API mock does not use the operator's keys.",
+        },
+        {
+          title: "Start supervised",
+          body: "The cabinet decides, then approved runners return evidence.",
+        },
       ],
       guidedCycleLimitLabel: "Auto loops",
       guidedCycleLimitOption: (count) => `Up to ${count}`,
       guidedCycleRun: "Start supervised run",
       guidedCycleRunning: "Supervising and running",
       guidedCycleIdle: "The one-click cycle has not started yet.",
-      guidedCycleStarting: (cycle, total) => `Cycle ${cycle}/${total}: the cabinet is voting before execution.`,
-      guidedCycleExecuting: (cycle, total) => `Cycle ${cycle}/${total}: starting the Codex execution proof.`,
+      guidedCycleStarting: (cycle, total) =>
+        `Cycle ${cycle}/${total}: the cabinet is voting before execution.`,
+      guidedCycleExecuting: (cycle, total) =>
+        `Cycle ${cycle}/${total}: starting the Codex execution proof.`,
       guidedCycleCompleted: (cycles, total, decision, outputDir) =>
         `One-click cycle completed: ${cycles}/${total} cycles, cabinet ${decision}, evidence ${outputDir}.`,
       guidedCycleBlocked: (cycle, total, decision) =>
         `Stopped at cycle ${cycle}/${total}: cabinet ${decision}. Review the audit before execution.`,
-      guidedCycleFailed: (cycle, total) => `Stopped at cycle ${cycle}/${total}: execution evidence failed.`,
-      guidedCycleGatewayFailed: (message) => `Guided cycle gateway failed: ${message}`,
+      guidedCycleFailed: (cycle, total) =>
+        `Stopped at cycle ${cycle}/${total}: execution evidence failed.`,
+      guidedCycleGatewayFailed: (message) =>
+        `Guided cycle gateway failed: ${message}`,
       guidedCycleSummary: (cycles, total) => `${cycles}/${total} cycles`,
       autoWorkIdle: "Auto work has not started yet.",
-      autoWorkMissionRequired: "Enter an engineering task before starting auto work.",
-      autoWorkOpenHandsNeedsReady: "Confirm the local OpenHands CLI install and license review before using OpenHands.",
-      autoWorkAdapterNeedsReady: (preset) => `Confirm the local ${preset} CLI install, license review, and approval for this run before using it.`,
+      autoWorkMissionRequired:
+        "Enter an engineering task before starting auto work.",
+      autoWorkOpenHandsNeedsReady:
+        "Confirm the local OpenHands CLI install and license review before using OpenHands.",
+      autoWorkAdapterNeedsReady: (preset) =>
+        `Confirm the local ${preset} CLI install, license review, and approval for this run before using it.`,
       autoWorkOutputLabel: "Output",
-      autoWorkChecks: (passed, failed) => `${passed} checks passed / ${failed} failed`,
+      autoWorkChecks: (passed, failed) =>
+        `${passed} checks passed / ${failed} failed`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
         `${preset}, ${mode}, ${jobs} completed jobs, ${receipts} receipts, ${evidence} evidence, ${artifacts} artifacts`,
-      autoWorkStarting: (preset) => `Starting auto work with the ${preset} runner.`,
+      autoWorkStarting: (preset) =>
+        `Starting auto work with the ${preset} runner.`,
       autoWorkCompleted: (preset, passed, jobs, outputDir) =>
         `${preset} auto work completed: ${passed} checks passed, ${jobs} jobs completed, output ${outputDir}.`,
       autoWorkFailed: (exitCode, outputDir) =>
         `Auto work failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
-      autoWorkGatewayUnavailable: (errorMessage) => `Local gateway auto work is unavailable. ${errorMessage}`,
+      autoWorkGatewayUnavailable: (errorMessage) =>
+        `Local gateway auto work is unavailable. ${errorMessage}`,
       codexSmokeIdle: "Codex smoke has not run yet.",
-      codexSmokeStarting: "After cabinet approval, local Codex CLI is handling a generated tiny coding job.",
+      codexSmokeStarting:
+        "After cabinet approval, local Codex CLI is handling a generated tiny coding job.",
       codexSmokeCompleted: (passed, outputDir) =>
         `Codex smoke completed: ${passed} checks passed, output ${outputDir}.`,
       codexSmokeFailed: (exitCode, outputDir) =>
         `Codex smoke failed with exit ${exitCode ?? "unknown"}, output ${outputDir}.`,
-      codexSmokeUnavailable: (errorMessage) => `Codex smoke is unavailable. ${errorMessage}`,
+      codexSmokeUnavailable: (errorMessage) =>
+        `Codex smoke is unavailable. ${errorMessage}`,
       codexSmokeResult: (changed, baseline, final) =>
         `${changed} changed files, test ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner check",
@@ -1136,23 +2120,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessIdle: "Local runners have not been checked yet.",
       runnerReadinessStatus: (ready, detected, launchable, total) =>
         `${ready}/${total} ready, ${detected} detected, ${launchable} launchable from Workbench.`,
-      runnerReadinessUnavailable: (errorMessage) => `Runner readiness is unavailable. ${errorMessage}`,
+      runnerReadinessUnavailable: (errorMessage) =>
+        `Runner readiness is unavailable. ${errorMessage}`,
       runnerReadinessAdapterStatus: (status) => status,
-      runnerReadinessDetected: (commands, apps) => `${commands} cmd / ${apps} app`,
+      runnerReadinessDetected: (commands, apps) =>
+        `${commands} cmd / ${apps} app`,
       runnerReadinessNextActionLabel: "Next action",
       runnerPresetTemplatesLabel: "Additional runner templates",
       runnerPresetEnable: "Enable",
       runnerPresetEnabled: "Enabled",
-      runnerPresetEnableStarting: (label) => `Adding ${label} to the local gateway.`,
-      runnerPresetEnableCompleted: (label) => `${label} is enabled and selectable from Runner.`,
-      runnerPresetEnableFailed: (errorMessage) => `Runner template could not be enabled. ${errorMessage}`,
-      missionDraftScore: (score, present, missing, recommended) => `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
+      runnerPresetEnableStarting: (label) =>
+        `Adding ${label} to the local gateway.`,
+      runnerPresetEnableCompleted: (label) =>
+        `${label} is enabled and selectable from Runner.`,
+      runnerPresetEnableFailed: (errorMessage) =>
+        `Runner template could not be enabled. ${errorMessage}`,
+      missionDraftScore: (score, present, missing, recommended) =>
+        `${score}% / ${present} present, ${missing} missing, ${recommended} suggested`,
       capabilitiesLabel: "Required Mac engineering capabilities",
       signalsLabel: "Detected mission signals",
       unlockChecklistLabel: "Engineering unlock checklist",
       selfSimulationLabel: "Self-simulation",
       selfSimulationEmpty: "Not run",
-      selfSimulationEmptyDetail: "Rehearse supervision, agents, runner, and preflight locally without executing work.",
+      selfSimulationEmptyDetail:
+        "Rehearse supervision, agents, runner, and preflight locally without executing work.",
       selfSimulationNextActionsLabel: "Next actions",
       selfSimulationHonestyLabel: "Honesty boundary",
       permissionRequestLabel: "Permission request",
@@ -1172,18 +2163,34 @@ const copies: Record<SupportedLocale, AppCopy> = {
       completionGateLabel: "Completion claim gate",
       completionGateNextActionLabel: "Next before acceptance",
       completionGateBlockedClaimsLabel: "Blocked claims",
-      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held, ${commands} allowed commands, ${evidence} evidence`,
-      selfSimulationStatus: (decision, ready, commands, evidence) => `Self-simulation ${enEngineeringSelfSimulationDecision(decision)}: ${ready} ready sessions, ${commands} allowed commands, ${evidence} evidence artifacts.`,
-      permissionRequestSummary: (requests, ask, denied) => `${requests} requests, ${ask} ask-before-use, ${denied} denied defaults`,
+      selfSimulationSummary: (ready, held, commands, evidence) =>
+        `${ready} ready / ${held} held, ${commands} allowed commands, ${evidence} evidence`,
+      selfSimulationStatus: (decision, ready, commands, evidence) =>
+        `Self-simulation ${enEngineeringSelfSimulationDecision(decision)}: ${ready} ready sessions, ${commands} allowed commands, ${evidence} evidence artifacts.`,
+      permissionRequestSummary: (requests, ask, denied) =>
+        `${requests} requests, ${ask} ask-before-use, ${denied} denied defaults`,
       capabilityGapSummary: (engineering, mac, prepare, control) =>
         `engineering ${engineering}%, Mac runtime ${mac}%, prepare ${prepare ? "yes" : "no"}, Mac control ${control ? "yes" : "not connected"}`,
       launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
         `${runReady} ready to run, ${handoffReady} ready to handoff, ${held} held, ${commands} allowed commands, ${evidence} evidence`,
-      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+      executionReceiptSummary: (
+        executed,
+        receipts,
+        evidence,
+        artifacts,
+        claim,
+      ) =>
         `${executed} executed, ${receipts} verified receipts, ${evidence} accepted evidence, ${artifacts} verified artifacts, completion ${claim ? "claimable" : "blocked"}`,
       macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
         `${ready} ready capabilities, ${approvals} approvals, ${runtime} runtime gaps, ${denied} denied defaults, ${adapters} adapters`,
-      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+      macRunnerContractSummary: (
+        total,
+        approval,
+        runtime,
+        blocked,
+        evidence,
+        permissions,
+      ) =>
         `${total} actions, ${approval} approvals, ${runtime} runtime gaps, ${blocked} blocked, ${evidence} evidence targets, ${permissions} permissions`,
       handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
         `agent handoff ${handoff ? "ready" : "not ready"}, sandbox ${sandbox ? "runnable" : "waiting"}, approvals ${approvals}, expected evidence ${evidence}`,
@@ -1197,7 +2204,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       selfSimulationStage: enEngineeringSelfSimulationStage,
       selfSimulationStageStatus: enEngineeringSelfSimulationStageStatus,
       selfSimulationCapability: enEngineeringSelfSimulationCapability,
-      selfSimulationCapabilityStatus: enEngineeringSelfSimulationCapabilityStatus,
+      selfSimulationCapabilityStatus:
+        enEngineeringSelfSimulationCapabilityStatus,
       permissionRequestDecision: enEngineeringPermissionRequestDecision,
       permissionRequestMode: enEngineeringPermissionRequestMode,
       capabilityGapDecision: enEngineeringCapabilityGapDecision,
@@ -1235,9 +2243,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       unlockItem: enEngineeringUnlockItem,
       unlockStatus: enEngineeringUnlockStatus,
       roles: (count) => `${count} role${count === 1 ? "" : "s"}`,
-      briefs: (total, implementable) => `${implementable}/${total} implementation briefs`,
+      briefs: (total, implementable) =>
+        `${implementable}/${total} implementation briefs`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
-      runner: (tasks, decision) => `${tasks} runner / ${enRunnerSelfTestDecision(decision)}`,
+      runner: (tasks, decision) =>
+        `${tasks} runner / ${enRunnerSelfTestDecision(decision)}`,
       focusMission: "Go to input",
       runCabinet: "Split by cabinet",
       preparePack: "Prepare agents",
@@ -1255,24 +2265,24 @@ const copies: Record<SupportedLocale, AppCopy> = {
       steps: [
         {
           title: "1. Enter the mission",
-          body: "Put the feature, repository target, constraints, and verification commands in the mission brief."
+          body: "Put the feature, repository target, constraints, and verification commands in the mission brief.",
         },
         {
           title: "2. Split supervision",
-          body: "Run the cabinet so roles separate planning, critique, execution boundaries, and evidence requirements."
+          body: "Run the cabinet so roles separate planning, critique, execution boundaries, and evidence requirements.",
         },
         {
           title: "3. Prepare the agent pack",
-          body: "Generate prompts, receipts, runner invocations, intake audit, and self-test for coding agents."
+          body: "Generate prompts, receipts, runner invocations, intake audit, and self-test for coding agents.",
         },
         {
           title: "4. Check Mac permissions",
-          body: "Preflight blocks unsafe commands, bad artifact paths, and held sessions before execution starts."
+          body: "Preflight blocks unsafe commands, bad artifact paths, and held sessions before execution starts.",
         },
         {
           title: "5. Execute with evidence",
-          body: "When the local gateway is running, the sandbox runner executes tests and returns transcripts and evidence."
-        }
+          body: "When the local gateway is running, the sandbox runner executes tests and returns transcripts and evidence.",
+        },
       ],
       permissionGroups: [
         {
@@ -1281,8 +2291,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Read/write inside the selected repository",
             "Write transcripts and evidence under output/",
             "Allowlisted shell: npm run test / npm run build",
-            "Git status/diff read access"
-          ]
+            "Git status/diff read access",
+          ],
         },
         {
           title: "Mac app additions",
@@ -1290,8 +2300,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Browser runner: browser automation profile",
             "Desktop runner: Accessibility and Screen Recording",
             "MCP runner: explicit tool allowlist only",
-            "Git push, deploy, and external send require human approval"
-          ]
+            "Git push, deploy, and external send require human approval",
+          ],
         },
         {
           title: "Never default-granted",
@@ -1299,10 +2309,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Host-wide secrets",
             "Unbounded computer control",
             "Production deploy permission",
-            "Unapproved GitHub writes"
-          ]
-        }
-      ]
+            "Unapproved GitHub writes",
+          ],
+        },
+      ],
     },
     codingBriefs: {
       title: "Coding agent briefs",
@@ -1359,58 +2369,89 @@ const copies: Record<SupportedLocale, AppCopy> = {
       reviewNextAction: "Next action",
       reviewReady: "All briefs passed pre-handoff checks for coding agents.",
       reviewDecisionLabel: (decision) => decision,
-      reviewSummary: (passed, warnings, blockers) => `${passed} pass / ${warnings} warnings / ${blockers} blockers`,
+      reviewSummary: (passed, warnings, blockers) =>
+        `${passed} pass / ${warnings} warnings / ${blockers} blockers`,
       sessionDecision: "Session decision",
       sessionNextAction: "Next action",
-      sessionReady: "All sessions are ready for sandboxed coding agent handoff.",
+      sessionReady:
+        "All sessions are ready for sandboxed coding agent handoff.",
       sessionHeld: (status) => `Held: ${status}`,
       sessionDecisionLabel: (decision) => decision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
-      sessionContractSummary: (contracts, humanApproval) => `${contracts} contracts / ${humanApproval} human approvals`,
+      sessionContractSummary: (contracts, humanApproval) =>
+        `${contracts} contracts / ${humanApproval} human approvals`,
       dispatchDecision: "Dispatch decision",
       dispatchNextAction: "Next action",
-      dispatchReady: "Ready session prompts and the receipt template are prepared as a dispatch package.",
+      dispatchReady:
+        "Ready session prompts and the receipt template are prepared as a dispatch package.",
       dispatchDecisionLabel: enCodingDispatchDecision,
-      dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompts`,
-      dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} receipt template`,
+      dispatchSummary: (ready, held, promptFiles) =>
+        `${ready} ready / ${held} held / ${promptFiles} prompts`,
+      dispatchReceiptTemplate: (receiptTemplates) =>
+        `${receiptTemplates} receipt template`,
       dispatchArchive: "Dispatch archive",
-      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} files / ${promptFiles} prompts / ${totalBytes} bytes`,
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) =>
+        `${files} files / ${promptFiles} prompts / ${totalBytes} bytes`,
       dispatchUnassignedHeld: (count) => `${count} held unassigned`,
       dispatchArchiveAudit: "Archive audit",
       dispatchAuditDecisionLabel: enDispatchArchiveAuditDecision,
-      dispatchAuditSummary: (passed, warnings, blockers) => `${passed} passed / ${warnings} warnings / ${blockers} blockers`,
+      dispatchAuditSummary: (passed, warnings, blockers) =>
+        `${passed} passed / ${warnings} warnings / ${blockers} blockers`,
       dispatchSimulation: "Execution simulation",
       dispatchSimulationDecisionLabel: enDispatchSimulationDecision,
-      dispatchSimulationSummary: (ready, held, blocked) => `${ready} ready / ${held} held / ${blocked} blocked`,
+      dispatchSimulationSummary: (ready, held, blocked) =>
+        `${ready} ready / ${held} held / ${blocked} blocked`,
       runnerManifest: "Runner manifest",
       runnerManifestDecisionLabel: enRunnerManifestDecision,
-      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} ready / ${runnerTasks} runner tasks / ${blockedTasks} blocked`,
+      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) =>
+        `${readyTasks} ready / ${runnerTasks} runner tasks / ${blockedTasks} blocked`,
       runnerInvocation: "Runner invocation",
       runnerInvocationDecisionLabel: enRunnerInvocationDecision,
-      runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} ready / ${invocationFiles} invocation files / ${blockedInvocations} blocked`,
+      runnerInvocationSummary: (
+        readyInvocations,
+        invocationFiles,
+        blockedInvocations,
+      ) =>
+        `${readyInvocations} ready / ${invocationFiles} invocation files / ${blockedInvocations} blocked`,
       runnerIntake: "Runner intake",
       runnerIntakeDecisionLabel: enRunnerIntakeDecision,
-      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} accepted / ${invocationFiles} invocation files / ${blockedIntakes} blocked`,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) =>
+        `${acceptedIntakes} accepted / ${invocationFiles} invocation files / ${blockedIntakes} blocked`,
       runnerSelfTest: "Runner self-test",
       runnerSelfTestDecisionLabel: enRunnerSelfTestDecision,
-      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) =>
+        `${wouldRun} would run / ${notExecutedCommands} not-executed commands / ${blockedTasks} blocked`,
       sandboxRunnerPreflightDecisionLabel: enSandboxRunnerPreflightDecision,
-      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} held / ${blockedTasks} blocked / ${processExecutions} expected processes`,
+      sandboxRunnerPreflightSummary: (
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `${readyTasks} ready / ${heldTasks} held / ${blockedTasks} blocked / ${processExecutions} expected processes`,
       sandboxRunner: "Sandbox runner",
       sandboxRunnerDecisionLabel: enSandboxRunnerDecision,
-      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} executed / ${processExecutions} processes / ${commandResults} command results`,
+      sandboxRunnerSummary: (
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `${executedTasks} executed / ${processExecutions} processes / ${commandResults} command results`,
       drillDecision: "Drill decision",
       drillNextAction: "Next action",
-      drillReady: "All ready sessions passed the sandboxed coding-agent assignment simulation.",
+      drillReady:
+        "All ready sessions passed the sandboxed coding-agent assignment simulation.",
       drillAction: enCodingDrillAction,
       drillDecisionLabel: enCodingDrillDecision,
-      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} assign / ${notAssigned} stopped`,
+      drillSummary: (wouldAssign, notAssigned) =>
+        `${wouldAssign} assign / ${notAssigned} stopped`,
       receiptDecision: "Receipt decision",
       receiptNextAction: "Next action",
       receiptReady: "All receipts passed implementation evidence review.",
       receiptStatus: enCodingReceiptStatus,
       receiptDecisionLabel: enCodingReceiptDecision,
-      receiptSummary: (verified, pending, failed) => `${verified} verified / ${pending} pending / ${failed} failed`,
+      receiptSummary: (verified, pending, failed) =>
+        `${verified} verified / ${pending} pending / ${failed} failed`,
       mode: "Mode",
       executor: "Executor",
       sandboxBoundary: "Sandbox boundary",
@@ -1423,28 +2464,87 @@ const copies: Record<SupportedLocale, AppCopy> = {
       promptReady: "Agent prompt ready",
       empty: "Generate coding agent briefs from the Development Board.",
       statusGateway: "Coding agent briefs exported through the local gateway.",
-      statusFallback: (errorMessage) => `Gateway coding agent briefs unavailable; used local export.${errorMessage ? ` ${errorMessage}` : ""}`,
+      statusFallback: (errorMessage) =>
+        `Gateway coding agent briefs unavailable; used local export.${errorMessage ? ` ${errorMessage}` : ""}`,
       statusMarkdown: "Coding agent Markdown prompt pack prepared locally.",
-      statusReviewGateway: (decision, blockers, warnings) => `Coding brief review ${decision}: ${blockers} blockers, ${warnings} warnings.`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSessionGateway: (decision, ready, held) => `Coding session bundle ${decision}: ${ready} ready, ${held} held.`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDispatchGateway: (decision, ready, held, promptFiles) => `Coding dispatch package ${enCodingDispatchDecision(decision)}: ${ready} ready, ${held} held, ${promptFiles} prompts.`,
-      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `Coding dispatch package completed locally: ${enCodingDispatchDecision(decision)}, ${ready} ready, ${held} held, ${promptFiles} prompts.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox check ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.`,
-      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `Sandbox check completed locally: ${enSandboxRunnerPreflightDecision(decision)}, ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox execution stopped. Preflight ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked.`,
-      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox runner ${enSandboxRunnerDecision(decision)}: ${executedTasks} executed, ${processExecutions} processes, ${commandResults} command results.`,
-      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox runner requires the local gateway.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDrillGateway: (decision, wouldAssign, notAssigned) => `Coding session drill ${enCodingDrillDecision(decision)}: ${wouldAssign} assign, ${notAssigned} stopped.`,
-      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `Coding session drill completed locally: ${enCodingDrillDecision(decision)}, ${wouldAssign} assign, ${notAssigned} stopped.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptGateway: (decision, verified, pending, failed) => `Coding receipt template ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
-      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `Coding receipt template completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewGateway: (decision, verified, pending, failed) => `Imported receipt review ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
-      statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `Imported receipt review completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs, reusedChangedFileRefs, reusedEvidenceArtifactRefs, transcriptContentMismatches) =>
+      statusReviewGateway: (decision, blockers, warnings) =>
+        `Coding brief review ${decision}: ${blockers} blockers, ${warnings} warnings.`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) =>
+        `Coding brief review completed locally: ${decision}, ${blockers} blockers, ${warnings} warnings.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) =>
+        `Coding session bundle ${decision}: ${ready} ready, ${held} held.`,
+      statusSessionLocal: (decision, ready, held, errorMessage) =>
+        `Coding session bundle completed locally: ${decision}, ${ready} ready, ${held} held.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDispatchGateway: (decision, ready, held, promptFiles) =>
+        `Coding dispatch package ${enCodingDispatchDecision(decision)}: ${ready} ready, ${held} held, ${promptFiles} prompts.`,
+      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) =>
+        `Coding dispatch package completed locally: ${enCodingDispatchDecision(decision)}, ${ready} ready, ${held} held, ${promptFiles} prompts.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `Sandbox check ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.`,
+      statusSandboxRunnerPreflightLocal: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+        errorMessage,
+      ) =>
+        `Sandbox check completed locally: ${enSandboxRunnerPreflightDecision(decision)}, ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked, ${processExecutions} expected processes.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+      ) =>
+        `Sandbox execution stopped. Preflight ${enSandboxRunnerPreflightDecision(decision)}: ${readyTasks} ready, ${heldTasks} held, ${blockedTasks} blocked.`,
+      statusSandboxRunnerGateway: (
+        decision,
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `Sandbox runner ${enSandboxRunnerDecision(decision)}: ${executedTasks} executed, ${processExecutions} processes, ${commandResults} command results.`,
+      statusSandboxRunnerUnavailable: (errorMessage) =>
+        `Sandbox runner requires the local gateway.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) =>
+        `Coding session drill ${enCodingDrillDecision(decision)}: ${wouldAssign} assign, ${notAssigned} stopped.`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) =>
+        `Coding session drill completed locally: ${enCodingDrillDecision(decision)}, ${wouldAssign} assign, ${notAssigned} stopped.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptGateway: (decision, verified, pending, failed) =>
+        `Coding receipt template ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
+      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) =>
+        `Coding receipt template completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewGateway: (decision, verified, pending, failed) =>
+        `Imported receipt review ${enCodingReceiptDecision(decision)}: ${verified} verified, ${pending} pending, ${failed} failed.`,
+      statusReceiptReviewLocal: (
+        decision,
+        verified,
+        pending,
+        failed,
+        errorMessage,
+      ) =>
+        `Imported receipt review completed locally: ${enCodingReceiptDecision(decision)}, ${verified} verified, ${pending} pending, ${failed} failed.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewApplied: (
+        message,
+        artifactDecision,
+        verifiedPaths,
+        unresolvedPaths,
+        applied,
+        skipped,
+        reusedTranscriptRefs,
+        reusedChangedFileRefs,
+        reusedEvidenceArtifactRefs,
+        transcriptContentMismatches,
+      ) =>
         `${message} Artifact audit ${artifactDecision}: ${verifiedPaths} verified, ${unresolvedPaths} unresolved${reusedTranscriptRefs ? `, ${reusedTranscriptRefs} reused transcript refs` : ""}${reusedChangedFileRefs ? `, ${reusedChangedFileRefs} reused changed-file refs` : ""}${reusedEvidenceArtifactRefs ? `, ${reusedEvidenceArtifactRefs} reused evidence-artifact refs` : ""}${transcriptContentMismatches ? `, ${transcriptContentMismatches} content mismatches` : ""}. Development Board applied ${applied}, held ${skipped}.`,
-      statusReceiptImportError: (errorMessage) => `Receipt import failed. ${errorMessage}`
+      statusReceiptImportError: (errorMessage) =>
+        `Receipt import failed. ${errorMessage}`,
     },
     releaseRehearsal: {
       title: "Release rehearsal",
@@ -1454,7 +2554,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       warnings: (count) => `${count} warnings`,
       blockers: (count) => `${count} blockers`,
       localDryRun: "Local dry-run rehearsal",
-      sourceLine: (sourceRun, level, evidenceItems) => `${sourceRun} / ${level} / ${evidenceItems} evidence`,
+      sourceLine: (sourceRun, level, evidenceItems) =>
+        `${sourceRun} / ${level} / ${evidenceItems} evidence`,
       run: "Run rehearsal",
       exportReport: "Export report",
       verify: "Verify",
@@ -1470,7 +2571,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
         notes: "Notes",
         runner: "Runner",
         held: "Held",
-        ready: (count) => `${count} ready`
+        ready: (count) => `${count} ready`,
       },
       evidenceClaimTitle: (level) => `${level} evidence claim`,
       remediationQueue: "Remediation queue",
@@ -1479,19 +2580,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
       decision: {
         releaseReady: "release ready",
         needsReview: "needs review",
-        blocked: "blocked"
+        blocked: "blocked",
       },
       verification: {
         decision: {
           verified: "verified",
           notProductionReady: "not-production-ready",
-          invalid: "invalid"
+          invalid: "invalid",
         },
-        scope: (scope, requireProductionEvidence) => `${scope}${requireProductionEvidence ? " / production required" : ""}`,
+        scope: (scope, requireProductionEvidence) =>
+          `${scope}${requireProductionEvidence ? " / production required" : ""}`,
         result: (passed, failed) => `${passed} pass / ${failed} fail`,
-        ready: "Verification report is ready for handoff review."
-      }
-    }
+        ready: "Verification report is ready for handoff review.",
+      },
+    },
   },
   "zh-Hans": {
     brandSubtitle: "内阁编排工作台",
@@ -1507,17 +2609,91 @@ const copies: Record<SupportedLocale, AppCopy> = {
     runCabinet: "运行内阁",
     running: "运行中...",
     gatewayReady: "本地网关就绪后可运行。",
+    cabinetCallingGateway: (gateway) => `正在调用本地 Gateway (${gateway})...`,
+    cabinetRunCompleted: (mode, called, skipped, failed) =>
+      mode === "live"
+        ? `live 运行完成：${called} 次提供商调用，${skipped} 个阶段未生成 live 工件，${failed} 个失败。未生成或失败阶段的自动化已停止。`
+        : "dry-run 已完成，未调用外部模型。",
+    cabinetRunFallback: (errorMessage) =>
+      `网关不可用，已使用不调用外部模型的本地 dry-run。${errorMessage ? ` ${errorMessage}` : ""}`,
+    providerReadiness: providerReadinessCopies["zh-Hans"],
+    quickStart: {
+      kicker: "快速开始",
+      title: "交给内阁一项工作",
+      subtitle: "写下任务，从安全试运行开始。",
+      missionLabel: "希望内阁做什么？",
+      missionPlaceholder:
+        "例如：修复此仓库的登录页面，运行测试和构建，并整理证据。",
+      missionHelp: "写明目标、对象、允许修改的范围，以及希望确认的事项。",
+      runDry: "安全试运行",
+      running: "内阁正在审查...",
+      connectApi: "连接我的 API",
+      localCli: "使用本机 Coding CLI",
+      advanced: "高级设置",
+      cabinetRoles: (count) => `已设置 ${count} 个角色`,
+      safetyBoundary: "试运行不会调用外部模型、操作 Mac 或向工作区外写入内容。",
+      resultTitle: "内阁结果",
+      resultDecision: (decision) =>
+        ({ ship: "可进入确认", revise: "需要修改", block: "已阻止" })[
+          decision
+        ] || decision,
+      resultSummary: (artifacts) => `可查看 ${artifacts} 条流程记录。`,
+      inspectResult: "查看详细结果",
+    },
+    localCodingCli: {
+      kicker: "本机编码",
+      title: "使用本机 Coding CLI",
+      subtitle: "只让本机已登录的 CLI 处理当前受限任务。",
+      credentialBoundary: "CLI 登录和 Coding Plan 凭据只留在本机。",
+      scopeBoundary: "Git push、部署、外部发送、Mac 操作和读取密钥仍被阻止。",
+      refresh: "检查本机",
+      checking: "正在检查本机 CLI...",
+      idle: "先检查本机，再选择 CLI。",
+      status: (status) =>
+        ({
+          ready: "可用",
+          "detected-needs-approval": "已检测，等待确认",
+          "detected-needs-adapter": "已检测，先启用",
+          missing: "未安装",
+          "blocked-by-default": "默认阻止",
+        })[status] || status,
+      detected: "已在本机检测到",
+      missing: "本机未检测到",
+      enabled: "已启用",
+      enable: "启用此 CLI",
+      select: "选择此 CLI",
+      qwenSetup: "安装 Qwen Code 后，运行 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan。",
+      approval: "仅批准此 CLI 在当前仓库内处理本次任务",
+      taskRequired: "请先在快速开始中填写任务。",
+      run: "开始受监督工程",
+      running: "正在启动 CLI...",
+      result: "执行结果",
+      openDetails: "详细工程工作台",
+      returnToCli: "返回本机 Coding CLI",
+    },
+    advancedWorkspace: {
+      returnToStart: "返回快速开始",
+      cabinet: "内阁结果",
+      providers: "API 连接",
+      automation: "执行与权限",
+      engineering: "工程工作台",
+      governance: "证据与管理",
+    },
     missionKicker: "任务自动化",
     missionTitle: "在受治理的沙箱中计划、执行、审计、评分并迭代。",
     decision: "判定",
     notRun: "未运行",
-    releaseRehearsalStatus: (decision, blockers, warnings) => `发布演练 ${zhHansRehearsalDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
-    releaseVerificationFallback: (errorMessage) => `网关验证不可用，已使用本地验证。${errorMessage || ""}`,
-    releaseVerificationStatus: (decision, failed) => `发布验证 ${zhHansVerificationDecision(decision)}：${failed} 个失败检查。`,
+    releaseRehearsalStatus: (decision, blockers, warnings) =>
+      `发布演练 ${zhHansRehearsalDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
+    releaseVerificationFallback: (errorMessage) =>
+      `网关验证不可用，已使用本地验证。${errorMessage || ""}`,
+    releaseVerificationStatus: (decision, failed) =>
+      `发布验证 ${zhHansVerificationDecision(decision)}：${failed} 个失败检查。`,
     engineeringLaunchpad: {
       kicker: "Mac 工程启动台",
       title: "从这里启动监督组和编程代理",
-      subtitle: "先写任务，再让内阁拆分监督，生成 agent brief 和 runner 包，最后只执行被允许的本地 Mac 操作。",
+      subtitle:
+        "先写任务，再让内阁拆分监督，生成 agent brief 和 runner 包，最后只执行被允许的本地 Mac 操作。",
       stateLabel: "状态",
       metricsLabel: "工程启动指标",
       permissionModeLabel: "权限模式",
@@ -1525,21 +2701,33 @@ const copies: Record<SupportedLocale, AppCopy> = {
       nextActionLabel: "下一步",
       entryLabel: "从这里开始",
       entryTitle: "在这里输入工程任务，然后启动监督组复盘",
-      entryBody: "先把任务写进 mission brief。自己模拟会让监督角色复盘边界、权限和 runner 队列；没有真实证据前，不会宣称已经写代码或完成。",
+      entryBody:
+        "先把任务写进 mission brief。自己模拟会让监督角色复盘边界、权限和 runner 队列；没有真实证据前，不会宣称已经写代码或完成。",
       realityLabel: "现在真实能力",
       realityCodeLabel: "代码工程",
       realityMacLabel: "Mac 控制",
       realityExternalLabel: "外部写入",
       realityCodeStatus: (verified, canRun, missionReady, simulated) =>
-        verified ? "已有执行证据" : canRun ? "未执行，仅准备好" : simulated ? "agent 交付准备中" : missionReady ? "等待自己模拟" : "等待输入",
-      realityMacStatus: (canControl) => canControl ? "仅批准 runner 可用" : "未接入",
-      realityExternalStatus: (requested) => requested ? "未审批，已停止" : "默认拒绝",
-      missionInputHelp: "这里就是用户输入入口。默认 Fixture + API mock 不需要 token。live provider 的真实 key 只放在使用者自己的 gateway 环境里。",
+        verified
+          ? "已有执行证据"
+          : canRun
+            ? "未执行，仅准备好"
+            : simulated
+              ? "agent 交付准备中"
+              : missionReady
+                ? "等待自己模拟"
+                : "等待输入",
+      realityMacStatus: (canControl) =>
+        canControl ? "仅批准 runner 可用" : "未接入",
+      realityExternalStatus: (requested) =>
+        requested ? "未审批，已停止" : "默认拒绝",
+      missionInputHelp:
+        "这里就是用户输入入口。默认 Fixture + API mock 不需要 token。live provider 的真实 key 只放在使用者自己的 gateway 环境里。",
       macScopeLabel: "Mac 版能力范围",
       macScopeItems: [
         "默认范围：仓库内写代码、跑测试/构建、收集证据",
         "浏览器、Mac 桌面、MCP 控制需要 runner allowlist 和人工批准",
-        "无限制电脑控制、秘密信息、push、deploy 默认拒绝"
+        "无限制电脑控制、秘密信息、push、deploy 默认拒绝",
       ],
       macRunnerLabel: "Mac runner 就绪度",
       macRunnerPermissionsLabel: "需要的权限",
@@ -1550,17 +2738,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
         canControl
           ? "只有已批准的 Mac runner 可以在本任务范围内控制桌面。"
           : "Naikaku 现在可以准备受监督的编程工程；Mac 桌面控制要等权限、适配器 runtime、动作日志和收据都齐了才算接入。",
-      macRunnerHonestyLimit: "这份 readiness 不会授予辅助功能、屏幕录制、自动化、MCP、push 或 deploy 权限。",
+      macRunnerHonestyLimit:
+        "这份 readiness 不会授予辅助功能、屏幕录制、自动化、MCP、push 或 deploy 权限。",
       macRunnerContractLabel: "Mac runner 合约",
       macRunnerContractChecksLabel: "合约检查",
       macRunnerContractDeniedLabel: "拒绝的动作",
       macRunnerContractInstructionsLabel: "Runner 指令",
       missionInputLabel: "在这里输入工程任务",
-      missionInputPlaceholder: "例：以 Mac 版为主，用户在这个输入框填写任务后，监督角色先复盘，coding agent 再在仓库内实现、运行 npm run test / npm run build、收集证据；Git push 和 Mac 控制必须人工审核。",
+      missionInputPlaceholder:
+        "例：以 Mac 版为主，用户在这个输入框填写任务后，监督角色先复盘，coding agent 再在仓库内实现、运行 npm run test / npm run build、收集证据；Git push 和 Mac 控制必须人工审核。",
       missionDraftLabel: "任务体检",
       autoWorkLabel: "自动工程",
       autoWorkTitle: "把输入的任务交给本地 gateway 执行",
-      autoWorkBody: "默认 Fixture + API mock 不需要外部工具或 provider token，可以验证监督循环。OpenHands 和 live provider 只在使用者自己安装、自己配置后才运行。",
+      autoWorkBody:
+        "默认 Fixture + API mock 不需要外部工具或 provider token，可以验证监督循环。OpenHands 和 live provider 只在使用者自己安装、自己配置后才运行。",
       autoWorkPresetLabel: "Runner",
       autoWorkPrepared: "只准备任务",
       autoWorkFixture: "Fixture 自动测试",
@@ -1568,8 +2759,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkWorktreeLabel: "工作区",
       autoWorkAdapterReadyLabel: "本地 adapter 已安装并审过许可",
       autoWorkAdapterFixtureLabel: "Fixture 不需要 adapter 确认",
-      autoWorkAdapterReadyHelp: "默认试跑只调用本地 gateway fixture，不授予 push、deploy、无限制 Mac 控制或秘密信息访问。",
-      autoWorkLiveTokenHelp: "live provider 里填的是环境变量名，不是原始 key。真实 token 只放在使用者自己的 shell、.env、vault 或非公开部署里。",
+      autoWorkAdapterReadyHelp:
+        "默认试跑只调用本地 gateway fixture，不授予 push、deploy、无限制 Mac 控制或秘密信息访问。",
+      autoWorkLiveTokenHelp:
+        "live provider 里填的是环境变量名，不是原始 key。真实 token 只放在使用者自己的 shell、.env、vault 或非公开部署里。",
       autoWorkRun: "只运行 runner",
       autoWorkRunning: "正在运行",
       autoWorkSelfTest: "Fixture 自测",
@@ -1584,35 +2777,49 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCabinetModelLabel: "角色模型",
       guidedCabinetModelPlaceholder: "OPENAI_MODEL 或模型名",
       guidedCabinetApiKeyAliasLabel: "API key 别名",
-      guidedCabinetApiKeyAliasHelp: "不要填原始 key。例：NAIKAKU_OPENAI_API_KEY",
+      guidedCabinetApiKeyAliasHelp:
+        "不要填原始 key。例：NAIKAKU_OPENAI_API_KEY",
       guidedCabinetEndpointLabel: "Endpoint 可选",
       guidedCabinetEndpointPlaceholder: "使用 provider 默认值",
       safeStartLabel: "安全首次运行",
       safeStartSteps: [
         { title: "写任务", body: "写清目标仓库、改什么、验证命令。" },
-        { title: "无 token 试跑", body: "Fixture + API mock 不会使用使用者的 key。" },
-        { title: "启动监督执行", body: "内阁先判断，再让批准的 runner 返回证据。" }
+        {
+          title: "无 token 试跑",
+          body: "Fixture + API mock 不会使用使用者的 key。",
+        },
+        {
+          title: "启动监督执行",
+          body: "内阁先判断，再让批准的 runner 返回证据。",
+        },
       ],
       guidedCycleLimitLabel: "自动轮数",
       guidedCycleLimitOption: (count) => `最多 ${count} 轮`,
       guidedCycleRun: "启动监督执行",
       guidedCycleRunning: "监督和执行中",
       guidedCycleIdle: "一键循环还没有开始。",
-      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 轮：内阁正在投票，决定是否执行。`,
-      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 轮：内阁结果已出，正在启动 Codex 执行证明。`,
+      guidedCycleStarting: (cycle, total) =>
+        `第 ${cycle}/${total} 轮：内阁正在投票，决定是否执行。`,
+      guidedCycleExecuting: (cycle, total) =>
+        `第 ${cycle}/${total} 轮：内阁结果已出，正在启动 Codex 执行证明。`,
       guidedCycleCompleted: (cycles, total, decision, outputDir) =>
         `一键循环完成：${cycles}/${total} 轮，内阁 ${decision}，证据 ${outputDir}。`,
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 轮停止：内阁 ${decision}。请先看审计结果，不继续执行。`,
-      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 轮停止：执行证据获取失败。`,
-      guidedCycleGatewayFailed: (message) => `一键循环 gateway 失败：${message}`,
+      guidedCycleFailed: (cycle, total) =>
+        `第 ${cycle}/${total} 轮停止：执行证据获取失败。`,
+      guidedCycleGatewayFailed: (message) =>
+        `一键循环 gateway 失败：${message}`,
       guidedCycleSummary: (cycles, total) => `已继续 ${cycles}/${total} 轮`,
       autoWorkIdle: "自动工程还没有启动。",
       autoWorkMissionRequired: "先输入工程任务，再启动自动工程。",
-      autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
-      autoWorkAdapterNeedsReady: (preset) => `使用 ${preset} 前，请先确认本机 CLI 已安装、许可已审查，并批准本次运行。`,
+      autoWorkOpenHandsNeedsReady:
+        "使用 OpenHands 前，请先确认本机 CLI 已安装并完成许可审查。",
+      autoWorkAdapterNeedsReady: (preset) =>
+        `使用 ${preset} 前，请先确认本机 CLI 已安装、许可已审查，并批准本次运行。`,
       autoWorkOutputLabel: "输出",
-      autoWorkChecks: (passed, failed) => `检查 ${passed} 通过 / ${failed} 失败`,
+      autoWorkChecks: (passed, failed) =>
+        `检查 ${passed} 通过 / ${failed} 失败`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
         `${preset}，${mode}，完成 job ${jobs}，receipt ${receipts}，证据 ${evidence}，artifact ${artifacts}`,
       autoWorkStarting: (preset) => `正在用 ${preset} runner 启动自动工程。`,
@@ -1620,14 +2827,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
         `${preset} 自动工程完成：${passed} 项检查通过，${jobs} 个 job 完成，输出 ${outputDir}。`,
       autoWorkFailed: (exitCode, outputDir) =>
         `自动工程失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
-      autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自动工程不可用。${errorMessage}`,
+      autoWorkGatewayUnavailable: (errorMessage) =>
+        `本地 gateway 自动工程不可用。${errorMessage}`,
       codexSmokeIdle: "Codex smoke 还没有运行。",
       codexSmokeStarting: "内阁批准后，正在让本地 Codex CLI 处理生成的小工程。",
       codexSmokeCompleted: (passed, outputDir) =>
         `Codex smoke 完成：${passed} 项检查通过，输出 ${outputDir}。`,
       codexSmokeFailed: (exitCode, outputDir) =>
         `Codex smoke 失败：exit ${exitCode ?? "unknown"}，输出 ${outputDir}。`,
-      codexSmokeUnavailable: (errorMessage) => `Codex smoke 不可用。${errorMessage}`,
+      codexSmokeUnavailable: (errorMessage) =>
+        `Codex smoke 不可用。${errorMessage}`,
       codexSmokeResult: (changed, baseline, final) =>
         `变更 ${changed} 个文件，测试 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 体检",
@@ -1636,23 +2845,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessIdle: "还没有检查本机 runner。",
       runnerReadinessStatus: (ready, detected, launchable, total) =>
         `${total} 个 runner 中 ${ready} 个 ready，检测到 ${detected} 个，Workbench 可启动 ${launchable} 个。`,
-      runnerReadinessUnavailable: (errorMessage) => `Runner 体检不可用。${errorMessage}`,
+      runnerReadinessUnavailable: (errorMessage) =>
+        `Runner 体检不可用。${errorMessage}`,
       runnerReadinessAdapterStatus: (status) => status,
-      runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
+      runnerReadinessDetected: (commands, apps) =>
+        `命令 ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "下一步",
       runnerPresetTemplatesLabel: "追加 runner 模板",
       runnerPresetEnable: "启用",
       runnerPresetEnabled: "已启用",
-      runnerPresetEnableStarting: (label) => `正在把 ${label} 加入本地 gateway。`,
-      runnerPresetEnableCompleted: (label) => `${label} 已启用，可在 Runner 中选择。`,
-      runnerPresetEnableFailed: (errorMessage) => `无法启用 runner 模板。${errorMessage}`,
-      missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
+      runnerPresetEnableStarting: (label) =>
+        `正在把 ${label} 加入本地 gateway。`,
+      runnerPresetEnableCompleted: (label) =>
+        `${label} 已启用，可在 Runner 中选择。`,
+      runnerPresetEnableFailed: (errorMessage) =>
+        `无法启用 runner 模板。${errorMessage}`,
+      missionDraftScore: (score, present, missing, recommended) =>
+        `${score}% / 已有 ${present}・缺少 ${missing}・建议 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "识别到的任务信号",
       unlockChecklistLabel: "工程解锁清单",
       selfSimulationLabel: "自己模拟",
       selfSimulationEmpty: "未运行",
-      selfSimulationEmptyDetail: "仅在本地演练监督、agent、runner 和 preflight，不执行真实工程。",
+      selfSimulationEmptyDetail:
+        "仅在本地演练监督、agent、runner 和 preflight，不执行真实工程。",
       selfSimulationNextActionsLabel: "下一步",
       selfSimulationHonestyLabel: "诚实边界",
       permissionRequestLabel: "权限请求",
@@ -1672,18 +2888,34 @@ const copies: Record<SupportedLocale, AppCopy> = {
       completionGateLabel: "完工声明闸门",
       completionGateNextActionLabel: "验收前下一步",
       completionGateBlockedClaimsLabel: "现在不能说",
-      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held，允许命令 ${commands}，证据 ${evidence}`,
-      selfSimulationStatus: (decision, ready, commands, evidence) => `自己模拟 ${zhHansEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允许命令 ${commands}，证据 ${evidence}。`,
-      permissionRequestSummary: (requests, ask, denied) => `${requests} 项请求，执行前确认 ${ask}，默认拒绝 ${denied}`,
+      selfSimulationSummary: (ready, held, commands, evidence) =>
+        `${ready} ready / ${held} held，允许命令 ${commands}，证据 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) =>
+        `自己模拟 ${zhHansEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允许命令 ${commands}，证据 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) =>
+        `${requests} 项请求，执行前确认 ${ask}，默认拒绝 ${denied}`,
       capabilityGapSummary: (engineering, mac, prepare, control) =>
         `工程准备 ${engineering}%，Mac runtime ${mac}%，准备工程${prepare ? "可行" : "未完成"}，Mac 控制${control ? "可行" : "未接入"}`,
       launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
         `可本地跑 ${runReady}，可交给 agent ${handoffReady}，保留 ${held}，允许命令 ${commands}，证据 ${evidence}`,
-      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+      executionReceiptSummary: (
+        executed,
+        receipts,
+        evidence,
+        artifacts,
+        claim,
+      ) =>
         `已执行 ${executed}，已验证收据 ${receipts}，已接受证据 ${evidence}，已验证工件 ${artifacts}，完工声明${claim ? "可说" : "不可说"}`,
       macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
         `ready 能力 ${ready}，待审批 ${approvals}，缺 runtime ${runtime}，默认拒绝 ${denied}，adapter ${adapters}`,
-      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+      macRunnerContractSummary: (
+        total,
+        approval,
+        runtime,
+        blocked,
+        evidence,
+        permissions,
+      ) =>
         `动作 ${total}，待审批 ${approval}，缺 runtime ${runtime}，阻止 ${blocked}，证据 ${evidence}，权限 ${permissions}`,
       handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
         `交给 agent ${handoff ? "可行" : "未就绪"}，沙箱${sandbox ? "可运行" : "等待"}，审批 ${approvals}，预计证据 ${evidence}`,
@@ -1697,7 +2929,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       selfSimulationStage: zhHansEngineeringSelfSimulationStage,
       selfSimulationStageStatus: zhHansEngineeringSelfSimulationStageStatus,
       selfSimulationCapability: zhHansEngineeringSelfSimulationCapability,
-      selfSimulationCapabilityStatus: zhHansEngineeringSelfSimulationCapabilityStatus,
+      selfSimulationCapabilityStatus:
+        zhHansEngineeringSelfSimulationCapabilityStatus,
       permissionRequestDecision: zhHansEngineeringPermissionRequestDecision,
       permissionRequestMode: zhHansEngineeringPermissionRequestMode,
       capabilityGapDecision: zhHansEngineeringCapabilityGapDecision,
@@ -1717,10 +2950,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       macRunnerNextAction: zhHansEngineeringMacRunnerNextAction,
       macRunnerContractDecision: zhHansEngineeringMacRunnerContractDecision,
       macRunnerContractAction: zhHansEngineeringMacRunnerContractAction,
-      macRunnerContractActionStatus: zhHansEngineeringMacRunnerContractActionStatus,
-      macRunnerContractCheckStatus: zhHansEngineeringMacRunnerContractCheckStatus,
-      macRunnerContractDeniedAction: zhHansEngineeringMacRunnerContractDeniedAction,
-      macRunnerContractInstruction: zhHansEngineeringMacRunnerContractInstruction,
+      macRunnerContractActionStatus:
+        zhHansEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus:
+        zhHansEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction:
+        zhHansEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction:
+        zhHansEngineeringMacRunnerContractInstruction,
       handoffReceiptDecision: zhHansEngineeringHandoffDecision,
       handoffLane: zhHansEngineeringHandoffLane,
       handoffLaneStatus: zhHansEngineeringHandoffLaneStatus,
@@ -1735,9 +2972,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       unlockItem: zhHansEngineeringUnlockItem,
       unlockStatus: zhHansEngineeringUnlockStatus,
       roles: (count) => `${count} 个角色`,
-      briefs: (total, implementable) => `${implementable}/${total} 个实现 brief`,
+      briefs: (total, implementable) =>
+        `${implementable}/${total} 个实现 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
-      runner: (tasks, decision) => `${tasks} runner / ${zhHansRunnerSelfTestDecision(decision)}`,
+      runner: (tasks, decision) =>
+        `${tasks} runner / ${zhHansRunnerSelfTestDecision(decision)}`,
       focusMission: "去输入",
       runCabinet: "内阁拆分",
       preparePack: "准备工程组",
@@ -1755,24 +2994,24 @@ const copies: Record<SupportedLocale, AppCopy> = {
       steps: [
         {
           title: "1. 输入任务",
-          body: "把要做的功能、仓库目标、限制条件、验证命令写进 mission brief。"
+          body: "把要做的功能、仓库目标、限制条件、验证命令写进 mission brief。",
         },
         {
           title: "2. 监督拆分",
-          body: "运行内阁，让多个角色分开做计划、批评、执行边界和证据要求。"
+          body: "运行内阁，让多个角色分开做计划、批评、执行边界和证据要求。",
         },
         {
           title: "3. 生成工程包",
-          body: "一次生成 prompt、receipt、runner invocation、接收审查和自测。"
+          body: "一次生成 prompt、receipt、runner invocation、接收审查和自测。",
         },
         {
           title: "4. Mac 权限检查",
-          body: "preflight 在执行前拦截危险命令、错误证据路径和被保留的 session。"
+          body: "preflight 在执行前拦截危险命令、错误证据路径和被保留的 session。",
         },
         {
           title: "5. 带证据执行",
-          body: "本地 gateway 运行时，sandbox runner 才会执行测试并返回 transcript 和证据。"
-        }
+          body: "本地 gateway 运行时，sandbox runner 才会执行测试并返回 transcript 和证据。",
+        },
       ],
       permissionGroups: [
         {
@@ -1781,8 +3020,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "所选仓库内的读写权限",
             "在 output/ 下写入 transcript 和证据",
             "允许的 shell: npm run test / npm run build",
-            "Git status/diff 读取权限"
-          ]
+            "Git status/diff 读取权限",
+          ],
         },
         {
           title: "Mac 版可追加能力",
@@ -1790,8 +3029,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Browser runner: 浏览器自动化配置",
             "Desktop runner: 辅助功能和屏幕录制权限",
             "MCP runner: 仅显式 allowlist 工具",
-            "Git push、deploy、外部发送都需要人工批准"
-          ]
+            "Git push、deploy、外部发送都需要人工批准",
+          ],
         },
         {
           title: "默认不给的权限",
@@ -1799,10 +3038,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "整台主机的秘密信息",
             "无限制电脑控制",
             "生产部署权限",
-            "未批准的 GitHub 写入"
-          ]
-        }
-      ]
+            "未批准的 GitHub 写入",
+          ],
+        },
+      ],
     },
     codingBriefs: {
       title: "编程代理 brief",
@@ -1859,58 +3098,87 @@ const copies: Record<SupportedLocale, AppCopy> = {
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通过交付给编程代理前的检查。",
       reviewDecisionLabel: zhHansBriefReviewDecision,
-      reviewSummary: (passed, warnings, blockers) => `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
+      reviewSummary: (passed, warnings, blockers) =>
+        `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
       sessionDecision: "Session 判定",
       sessionNextAction: "下一步",
       sessionReady: "所有 session 都已准备好交付给沙箱编程代理。",
       sessionHeld: (status) => `保留：${zhHansCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHansBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
-      sessionContractSummary: (contracts, humanApproval) => `${contracts} 个合约 / ${humanApproval} 个需人工批准`,
+      sessionContractSummary: (contracts, humanApproval) =>
+        `${contracts} 个合约 / ${humanApproval} 个需人工批准`,
       dispatchDecision: "Dispatch 判定",
       dispatchNextAction: "下一步",
-      dispatchReady: "Ready session 的 prompt 和 receipt template 已作为 dispatch 包准备好。",
+      dispatchReady:
+        "Ready session 的 prompt 和 receipt template 已作为 dispatch 包准备好。",
       dispatchDecisionLabel: zhHansCodingDispatchDecision,
-      dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompt`,
-      dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} 个 receipt template`,
+      dispatchSummary: (ready, held, promptFiles) =>
+        `${ready} ready / ${held} held / ${promptFiles} prompt`,
+      dispatchReceiptTemplate: (receiptTemplates) =>
+        `${receiptTemplates} 个 receipt template`,
       dispatchArchive: "Dispatch 归档",
-      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} 个文件 / ${promptFiles} 个 prompt / ${totalBytes} bytes`,
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) =>
+        `${files} 个文件 / ${promptFiles} 个 prompt / ${totalBytes} bytes`,
       dispatchUnassignedHeld: (count) => `${count} 个 held 未分配`,
       dispatchArchiveAudit: "归档审计",
       dispatchAuditDecisionLabel: zhHansDispatchArchiveAuditDecision,
-      dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
+      dispatchAuditSummary: (passed, warnings, blockers) =>
+        `${passed} 通过 / ${warnings} 警告 / ${blockers} 阻塞`,
       dispatchSimulation: "执行模拟",
       dispatchSimulationDecisionLabel: zhHansDispatchSimulationDecision,
-      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
+      dispatchSimulationSummary: (ready, held, blocked) =>
+        `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
       runnerManifest: "Runner 清单",
       runnerManifestDecisionLabel: zhHansRunnerManifestDecision,
-      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} 可交付 / ${runnerTasks} runner 任务 / ${blockedTasks} 阻塞`,
+      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) =>
+        `${readyTasks} 可交付 / ${runnerTasks} runner 任务 / ${blockedTasks} 阻塞`,
       runnerInvocation: "Runner 调用包",
       runnerInvocationDecisionLabel: zhHansRunnerInvocationDecision,
-      runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} 个已准备 / ${invocationFiles} 个调用文件 / ${blockedInvocations} 个阻塞`,
+      runnerInvocationSummary: (
+        readyInvocations,
+        invocationFiles,
+        blockedInvocations,
+      ) =>
+        `${readyInvocations} 个已准备 / ${invocationFiles} 个调用文件 / ${blockedInvocations} 个阻塞`,
       runnerIntake: "Runner 接收审查",
       runnerIntakeDecisionLabel: zhHansRunnerIntakeDecision,
-      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} 个已接收 / ${invocationFiles} 个调用文件 / ${blockedIntakes} 个阻塞`,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) =>
+        `${acceptedIntakes} 个已接收 / ${invocationFiles} 个调用文件 / ${blockedIntakes} 个阻塞`,
       runnerSelfTest: "Runner 自测",
       runnerSelfTestDecisionLabel: zhHansRunnerSelfTestDecision,
-      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) =>
+        `${wouldRun} 可模拟 / ${notExecutedCommands} 条未执行命令 / ${blockedTasks} 阻塞`,
       sandboxRunnerPreflightDecisionLabel: zhHansSandboxRunnerPreflightDecision,
-      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 个预计进程`,
+      sandboxRunnerPreflightSummary: (
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 个预计进程`,
       sandboxRunner: "沙箱 Runner",
       sandboxRunnerDecisionLabel: zhHansSandboxRunnerDecision,
-      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已执行 / ${processExecutions} 个进程 / ${commandResults} 条命令结果`,
+      sandboxRunnerSummary: (
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `${executedTasks} 已执行 / ${processExecutions} 个进程 / ${commandResults} 条命令结果`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通过沙箱编程代理分配模拟。",
       drillAction: zhHansCodingDrillAction,
       drillDecisionLabel: zhHansCodingDrillDecision,
-      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 分配 / ${notAssigned} 停止`,
+      drillSummary: (wouldAssign, notAssigned) =>
+        `${wouldAssign} 分配 / ${notAssigned} 停止`,
       receiptDecision: "证据判定",
       receiptNextAction: "下一步",
       receiptReady: "所有 receipt 已通过实现证据审查。",
       receiptStatus: zhHansCodingReceiptStatus,
       receiptDecisionLabel: zhHansCodingReceiptDecision,
-      receiptSummary: (verified, pending, failed) => `${verified} 已确认 / ${pending} 缺证据 / ${failed} 失败`,
+      receiptSummary: (verified, pending, failed) =>
+        `${verified} 已确认 / ${pending} 缺证据 / ${failed} 失败`,
       mode: "模式",
       executor: "Executor",
       sandboxBoundary: "沙箱边界",
@@ -1923,28 +3191,87 @@ const copies: Record<SupportedLocale, AppCopy> = {
       promptReady: "代理 prompt 已准备",
       empty: "请从 Development Board 生成编程代理 brief。",
       statusGateway: "编程代理 brief 已通过本地网关导出。",
-      statusFallback: (errorMessage) => `网关 brief 不可用，已使用本地导出。${errorMessage || ""}`,
+      statusFallback: (errorMessage) =>
+        `网关 brief 不可用，已使用本地导出。${errorMessage || ""}`,
       statusMarkdown: "编程代理 Markdown prompt pack 已在本地准备。",
-      statusReviewGateway: (decision, blockers, warnings) => `编程代理 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusSessionGateway: (decision, ready, held) => `编程代理 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusDispatchGateway: (decision, ready, held, promptFiles) => `编程代理 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
-      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。`,
-      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `已在本地完成沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `沙箱执行已停止。预检 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
-      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHansSandboxRunnerDecision(decision)}：执行 ${executedTasks} 项，进程 ${processExecutions} 个，命令结果 ${commandResults} 条。`,
-      statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusDrillGateway: (decision, wouldAssign, notAssigned) => `编程代理 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
-      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusReceiptGateway: (decision, verified, pending, failed) => `编程代理证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
-      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusReceiptReviewGateway: (decision, verified, pending, failed) => `导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
-      statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs, reusedChangedFileRefs, reusedEvidenceArtifactRefs, transcriptContentMismatches) =>
+      statusReviewGateway: (decision, blockers, warnings) =>
+        `编程代理 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) =>
+        `已在本地完成 brief 审查 ${zhHansBriefReviewDecision(decision)}：${blockers} 个阻塞，${warnings} 个警告。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) =>
+        `编程代理 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) =>
+        `已在本地完成 session 包 ${zhHansBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusDispatchGateway: (decision, ready, held, promptFiles) =>
+        `编程代理 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
+      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) =>
+        `已在本地完成 dispatch 包 ${zhHansCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。`,
+      statusSandboxRunnerPreflightLocal: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+        errorMessage,
+      ) =>
+        `已在本地完成沙箱检查 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，预计进程 ${processExecutions} 个。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+      ) =>
+        `沙箱执行已停止。预检 ${zhHansSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
+      statusSandboxRunnerGateway: (
+        decision,
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `沙箱 Runner ${zhHansSandboxRunnerDecision(decision)}：执行 ${executedTasks} 项，进程 ${processExecutions} 个，命令结果 ${commandResults} 条。`,
+      statusSandboxRunnerUnavailable: (errorMessage) =>
+        `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) =>
+        `编程代理 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) =>
+        `已在本地完成 session 演练 ${zhHansCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusReceiptGateway: (decision, verified, pending, failed) =>
+        `编程代理证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
+      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) =>
+        `已在本地完成证据模板 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusReceiptReviewGateway: (decision, verified, pending, failed) =>
+        `导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。`,
+      statusReceiptReviewLocal: (
+        decision,
+        verified,
+        pending,
+        failed,
+        errorMessage,
+      ) =>
+        `已在本地完成导入证据审查 ${zhHansCodingReceiptDecision(decision)}：${verified} 已确认，${pending} 缺证据，${failed} 失败。${errorMessage ? ` 网关：${errorMessage}` : ""}`,
+      statusReceiptReviewApplied: (
+        message,
+        artifactDecision,
+        verifiedPaths,
+        unresolvedPaths,
+        applied,
+        skipped,
+        reusedTranscriptRefs,
+        reusedChangedFileRefs,
+        reusedEvidenceArtifactRefs,
+        transcriptContentMismatches,
+      ) =>
         `${message} 工件审计 ${artifactDecision}：${verifiedPaths} 项已确认，${unresolvedPaths} 项未解决${reusedTranscriptRefs ? `，${reusedTranscriptRefs} 项 transcript 复用` : ""}${reusedChangedFileRefs ? `，${reusedChangedFileRefs} 项 changed file 复用` : ""}${reusedEvidenceArtifactRefs ? `，${reusedEvidenceArtifactRefs} 项 evidence artifact 复用` : ""}${transcriptContentMismatches ? `，${transcriptContentMismatches} 项内容不匹配` : ""}。Development Board 已应用 ${applied} 项，保留 ${skipped} 项。`,
-      statusReceiptImportError: (errorMessage) => `证据回执导入失败。${errorMessage}`
+      statusReceiptImportError: (errorMessage) =>
+        `证据回执导入失败。${errorMessage}`,
     },
     releaseRehearsal: {
       title: "发布演练",
@@ -1954,7 +3281,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       warnings: (count) => `${count} 警告`,
       blockers: (count) => `${count} 阻塞`,
       localDryRun: "本地 dry-run 演练",
-      sourceLine: (sourceRun, level, evidenceItems) => `${sourceRun} / ${level} / ${evidenceItems} 条证据`,
+      sourceLine: (sourceRun, level, evidenceItems) =>
+        `${sourceRun} / ${level} / ${evidenceItems} 条证据`,
       run: "运行演练",
       exportReport: "导出报告",
       verify: "验证",
@@ -1970,7 +3298,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
         notes: "Notes",
         runner: "Runner",
         held: "保留",
-        ready: (count) => `${count} ready`
+        ready: (count) => `${count} ready`,
       },
       evidenceClaimTitle: (level) => `${level} 证据声明`,
       remediationQueue: "整改队列",
@@ -1979,19 +3307,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
       decision: {
         releaseReady: "可发布",
         needsReview: "需审查",
-        blocked: "已阻塞"
+        blocked: "已阻塞",
       },
       verification: {
         decision: {
           verified: "已验证",
           notProductionReady: "生产未就绪",
-          invalid: "无效"
+          invalid: "无效",
         },
-        scope: (scope, requireProductionEvidence) => `${scope}${requireProductionEvidence ? " / 需要生产证据" : ""}`,
+        scope: (scope, requireProductionEvidence) =>
+          `${scope}${requireProductionEvidence ? " / 需要生产证据" : ""}`,
         result: (passed, failed) => `${passed} 通过 / ${failed} 失败`,
-        ready: "验证报告已可用于交付审查。"
-      }
-    }
+        ready: "验证报告已可用于交付审查。",
+      },
+    },
   },
   "zh-Hant": {
     brandSubtitle: "內閣編排工作台",
@@ -2007,17 +3336,91 @@ const copies: Record<SupportedLocale, AppCopy> = {
     runCabinet: "執行內閣",
     running: "執行中...",
     gatewayReady: "本地閘道就緒後可執行。",
+    cabinetCallingGateway: (gateway) => `正在呼叫本地 Gateway (${gateway})...`,
+    cabinetRunCompleted: (mode, called, skipped, failed) =>
+      mode === "live"
+        ? `live 執行完成：${called} 次供應商呼叫，${skipped} 個階段未生成 live 工件，${failed} 個失敗。未生成或失敗階段的自動化已停止。`
+        : "dry-run 已完成，未呼叫外部模型。",
+    cabinetRunFallback: (errorMessage) =>
+      `閘道不可用，已使用不呼叫外部模型的本地 dry-run。${errorMessage ? ` ${errorMessage}` : ""}`,
+    providerReadiness: providerReadinessCopies["zh-Hant"],
+    quickStart: {
+      kicker: "快速開始",
+      title: "交給內閣一項工作",
+      subtitle: "寫下任務，從安全試執行開始。",
+      missionLabel: "希望內閣做什麼？",
+      missionPlaceholder:
+        "例如：修正此儲存庫的登入頁面，執行測試與建置，並整理證據。",
+      missionHelp: "寫明目標、對象、允許修改的範圍，以及希望確認的事項。",
+      runDry: "安全試執行",
+      running: "內閣正在審查...",
+      connectApi: "連接我的 API",
+      localCli: "使用本機 Coding CLI",
+      advanced: "進階設定",
+      cabinetRoles: (count) => `已設定 ${count} 個角色`,
+      safetyBoundary: "試執行不會呼叫外部模型、操作 Mac 或向工作區外寫入內容。",
+      resultTitle: "內閣結果",
+      resultDecision: (decision) =>
+        ({ ship: "可進入確認", revise: "需要修改", block: "已阻止" })[
+          decision
+        ] || decision,
+      resultSummary: (artifacts) => `可查看 ${artifacts} 條流程記錄。`,
+      inspectResult: "查看詳細結果",
+    },
+    localCodingCli: {
+      kicker: "本機編碼",
+      title: "使用本機 Coding CLI",
+      subtitle: "只讓本機已登入的 CLI 處理目前受限任務。",
+      credentialBoundary: "CLI 登入和 Coding Plan 憑據只留在本機。",
+      scopeBoundary: "Git push、部署、外部傳送、Mac 操作和讀取密鑰仍被阻止。",
+      refresh: "檢查本機",
+      checking: "正在檢查本機 CLI...",
+      idle: "先檢查本機，再選擇 CLI。",
+      status: (status) =>
+        ({
+          ready: "可用",
+          "detected-needs-approval": "已偵測，等待確認",
+          "detected-needs-adapter": "已偵測，先啟用",
+          missing: "未安裝",
+          "blocked-by-default": "預設阻止",
+        })[status] || status,
+      detected: "已在本機偵測到",
+      missing: "本機未偵測到",
+      enabled: "已啟用",
+      enable: "啟用此 CLI",
+      select: "選擇此 CLI",
+      qwenSetup: "安裝 Qwen Code 後，執行 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan。",
+      approval: "僅核准此 CLI 在目前儲存庫內處理本次任務",
+      taskRequired: "請先在快速開始中填寫任務。",
+      run: "開始受監督工程",
+      running: "正在啟動 CLI...",
+      result: "執行結果",
+      openDetails: "詳細工程工作台",
+      returnToCli: "返回本機 Coding CLI",
+    },
+    advancedWorkspace: {
+      returnToStart: "返回快速開始",
+      cabinet: "內閣結果",
+      providers: "API 連接",
+      automation: "執行與權限",
+      engineering: "工程工作台",
+      governance: "證據與管理",
+    },
     missionKicker: "任務自動化",
     missionTitle: "在受治理的沙箱中規劃、執行、稽核、評分並迭代。",
     decision: "判定",
     notRun: "未執行",
-    releaseRehearsalStatus: (decision, blockers, warnings) => `發布演練 ${zhHantRehearsalDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
-    releaseVerificationFallback: (errorMessage) => `閘道驗證不可用，已使用本地驗證。${errorMessage || ""}`,
-    releaseVerificationStatus: (decision, failed) => `發布驗證 ${zhHantVerificationDecision(decision)}：${failed} 個失敗檢查。`,
+    releaseRehearsalStatus: (decision, blockers, warnings) =>
+      `發布演練 ${zhHantRehearsalDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
+    releaseVerificationFallback: (errorMessage) =>
+      `閘道驗證不可用，已使用本地驗證。${errorMessage || ""}`,
+    releaseVerificationStatus: (decision, failed) =>
+      `發布驗證 ${zhHantVerificationDecision(decision)}：${failed} 個失敗檢查。`,
     engineeringLaunchpad: {
       kicker: "Mac 工程啟動台",
       title: "從這裡啟動監督組和編程代理",
-      subtitle: "先寫任務，再讓內閣拆分監督，生成 agent brief 和 runner 包，最後只執行被允許的本地 Mac 操作。",
+      subtitle:
+        "先寫任務，再讓內閣拆分監督，生成 agent brief 和 runner 包，最後只執行被允許的本地 Mac 操作。",
       stateLabel: "狀態",
       metricsLabel: "工程啟動指標",
       permissionModeLabel: "權限模式",
@@ -2025,21 +3428,33 @@ const copies: Record<SupportedLocale, AppCopy> = {
       nextActionLabel: "下一步",
       entryLabel: "從這裡開始",
       entryTitle: "在這裡輸入工程任務，然後啟動監督組復盤",
-      entryBody: "先把任務寫進 mission brief。自己模擬會讓監督角色復盤邊界、權限和 runner 佇列；沒有真實證據前，不會宣稱已經寫程式或完成。",
+      entryBody:
+        "先把任務寫進 mission brief。自己模擬會讓監督角色復盤邊界、權限和 runner 佇列；沒有真實證據前，不會宣稱已經寫程式或完成。",
       realityLabel: "現在真實能力",
       realityCodeLabel: "程式工程",
       realityMacLabel: "Mac 控制",
       realityExternalLabel: "外部寫入",
       realityCodeStatus: (verified, canRun, missionReady, simulated) =>
-        verified ? "已有執行證據" : canRun ? "未執行，僅準備好" : simulated ? "agent 交付準備中" : missionReady ? "等待自己模擬" : "等待輸入",
-      realityMacStatus: (canControl) => canControl ? "僅批准 runner 可用" : "未接入",
-      realityExternalStatus: (requested) => requested ? "未審批，已停止" : "預設拒絕",
-      missionInputHelp: "這裡就是使用者輸入入口。預設 Fixture + API mock 不需要 token。live provider 的真實 key 只放在使用者自己的 gateway 環境裡。",
+        verified
+          ? "已有執行證據"
+          : canRun
+            ? "未執行，僅準備好"
+            : simulated
+              ? "agent 交付準備中"
+              : missionReady
+                ? "等待自己模擬"
+                : "等待輸入",
+      realityMacStatus: (canControl) =>
+        canControl ? "僅批准 runner 可用" : "未接入",
+      realityExternalStatus: (requested) =>
+        requested ? "未審批，已停止" : "預設拒絕",
+      missionInputHelp:
+        "這裡就是使用者輸入入口。預設 Fixture + API mock 不需要 token。live provider 的真實 key 只放在使用者自己的 gateway 環境裡。",
       macScopeLabel: "Mac 版能力範圍",
       macScopeItems: [
         "預設範圍：倉庫內寫程式、跑測試/建置、收集證據",
         "瀏覽器、Mac 桌面、MCP 控制需要 runner allowlist 和人工批准",
-        "無限制電腦控制、秘密資訊、push、deploy 預設拒絕"
+        "無限制電腦控制、秘密資訊、push、deploy 預設拒絕",
       ],
       macRunnerLabel: "Mac runner 就緒度",
       macRunnerPermissionsLabel: "需要的權限",
@@ -2050,17 +3465,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
         canControl
           ? "只有已批准的 Mac runner 可以在本任務範圍內控制桌面。"
           : "Naikaku 現在可以準備受監督的編程工程；Mac 桌面控制要等權限、適配器 runtime、動作日誌和收據都齊了才算接入。",
-      macRunnerHonestyLimit: "這份 readiness 不會授予輔助使用、螢幕錄製、自動化、MCP、push 或 deploy 權限。",
+      macRunnerHonestyLimit:
+        "這份 readiness 不會授予輔助使用、螢幕錄製、自動化、MCP、push 或 deploy 權限。",
       macRunnerContractLabel: "Mac runner 合約",
       macRunnerContractChecksLabel: "合約檢查",
       macRunnerContractDeniedLabel: "拒絕的動作",
       macRunnerContractInstructionsLabel: "Runner 指令",
       missionInputLabel: "在這裡輸入工程任務",
-      missionInputPlaceholder: "例：以 Mac 版為主，使用者在這個輸入框填寫任務後，監督角色先復盤，coding agent 再在倉庫內實作、執行 npm run test / npm run build、收集證據；Git push 和 Mac 控制必須人工審核。",
+      missionInputPlaceholder:
+        "例：以 Mac 版為主，使用者在這個輸入框填寫任務後，監督角色先復盤，coding agent 再在倉庫內實作、執行 npm run test / npm run build、收集證據；Git push 和 Mac 控制必須人工審核。",
       missionDraftLabel: "任務體檢",
       autoWorkLabel: "自動工程",
       autoWorkTitle: "把輸入的任務交給本地 gateway 執行",
-      autoWorkBody: "預設 Fixture + API mock 不需要外部工具或 provider token，可以驗證監督循環。OpenHands 和 live provider 只在使用者自己安裝、自己設定後才執行。",
+      autoWorkBody:
+        "預設 Fixture + API mock 不需要外部工具或 provider token，可以驗證監督循環。OpenHands 和 live provider 只在使用者自己安裝、自己設定後才執行。",
       autoWorkPresetLabel: "Runner",
       autoWorkPrepared: "只準備任務",
       autoWorkFixture: "Fixture 自動測試",
@@ -2068,8 +3486,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkWorktreeLabel: "工作區",
       autoWorkAdapterReadyLabel: "本地 adapter 已安裝並審過授權",
       autoWorkAdapterFixtureLabel: "Fixture 不需要 adapter 確認",
-      autoWorkAdapterReadyHelp: "預設試跑只呼叫本地 gateway fixture，不授予 push、deploy、無限制 Mac 控制或秘密資訊存取。",
-      autoWorkLiveTokenHelp: "live provider 裡填的是環境變數名，不是原始 key。真實 token 只放在使用者自己的 shell、.env、vault 或非公開部署裡。",
+      autoWorkAdapterReadyHelp:
+        "預設試跑只呼叫本地 gateway fixture，不授予 push、deploy、無限制 Mac 控制或秘密資訊存取。",
+      autoWorkLiveTokenHelp:
+        "live provider 裡填的是環境變數名，不是原始 key。真實 token 只放在使用者自己的 shell、.env、vault 或非公開部署裡。",
       autoWorkRun: "只執行 runner",
       autoWorkRunning: "正在執行",
       autoWorkSelfTest: "Fixture 自測",
@@ -2084,35 +3504,49 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCabinetModelLabel: "角色模型",
       guidedCabinetModelPlaceholder: "OPENAI_MODEL 或模型名",
       guidedCabinetApiKeyAliasLabel: "API key 別名",
-      guidedCabinetApiKeyAliasHelp: "不要填原始 key。例：NAIKAKU_OPENAI_API_KEY",
+      guidedCabinetApiKeyAliasHelp:
+        "不要填原始 key。例：NAIKAKU_OPENAI_API_KEY",
       guidedCabinetEndpointLabel: "Endpoint 可選",
       guidedCabinetEndpointPlaceholder: "使用 provider 預設值",
       safeStartLabel: "安全首次執行",
       safeStartSteps: [
         { title: "寫任務", body: "寫清目標倉庫、改什麼、驗證命令。" },
-        { title: "無 token 試跑", body: "Fixture + API mock 不會使用使用者的 key。" },
-        { title: "啟動監督執行", body: "內閣先判斷，再讓批准的 runner 回傳證據。" }
+        {
+          title: "無 token 試跑",
+          body: "Fixture + API mock 不會使用使用者的 key。",
+        },
+        {
+          title: "啟動監督執行",
+          body: "內閣先判斷，再讓批准的 runner 回傳證據。",
+        },
       ],
       guidedCycleLimitLabel: "自動輪數",
       guidedCycleLimitOption: (count) => `最多 ${count} 輪`,
       guidedCycleRun: "啟動監督執行",
       guidedCycleRunning: "監督和執行中",
       guidedCycleIdle: "一鍵循環還沒有開始。",
-      guidedCycleStarting: (cycle, total) => `第 ${cycle}/${total} 輪：內閣正在投票，決定是否執行。`,
-      guidedCycleExecuting: (cycle, total) => `第 ${cycle}/${total} 輪：內閣結果已出，正在啟動 Codex 執行證明。`,
+      guidedCycleStarting: (cycle, total) =>
+        `第 ${cycle}/${total} 輪：內閣正在投票，決定是否執行。`,
+      guidedCycleExecuting: (cycle, total) =>
+        `第 ${cycle}/${total} 輪：內閣結果已出，正在啟動 Codex 執行證明。`,
       guidedCycleCompleted: (cycles, total, decision, outputDir) =>
         `一鍵循環完成：${cycles}/${total} 輪，內閣 ${decision}，證據 ${outputDir}。`,
       guidedCycleBlocked: (cycle, total, decision) =>
         `第 ${cycle}/${total} 輪停止：內閣 ${decision}。請先看審計結果，不繼續執行。`,
-      guidedCycleFailed: (cycle, total) => `第 ${cycle}/${total} 輪停止：執行證據取得失敗。`,
-      guidedCycleGatewayFailed: (message) => `一鍵循環 gateway 失敗：${message}`,
+      guidedCycleFailed: (cycle, total) =>
+        `第 ${cycle}/${total} 輪停止：執行證據取得失敗。`,
+      guidedCycleGatewayFailed: (message) =>
+        `一鍵循環 gateway 失敗：${message}`,
       guidedCycleSummary: (cycles, total) => `已繼續 ${cycles}/${total} 輪`,
       autoWorkIdle: "自動工程還沒有啟動。",
       autoWorkMissionRequired: "先輸入工程任務，再啟動自動工程。",
-      autoWorkOpenHandsNeedsReady: "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
-      autoWorkAdapterNeedsReady: (preset) => `使用 ${preset} 前，請先確認本機 CLI 已安裝、授權已審查，並批准本次執行。`,
+      autoWorkOpenHandsNeedsReady:
+        "使用 OpenHands 前，請先確認本機 CLI 已安裝並完成授權審查。",
+      autoWorkAdapterNeedsReady: (preset) =>
+        `使用 ${preset} 前，請先確認本機 CLI 已安裝、授權已審查，並批准本次執行。`,
       autoWorkOutputLabel: "輸出",
-      autoWorkChecks: (passed, failed) => `檢查 ${passed} 通過 / ${failed} 失敗`,
+      autoWorkChecks: (passed, failed) =>
+        `檢查 ${passed} 通過 / ${failed} 失敗`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
         `${preset}，${mode}，完成 job ${jobs}，receipt ${receipts}，證據 ${evidence}，artifact ${artifacts}`,
       autoWorkStarting: (preset) => `正在用 ${preset} runner 啟動自動工程。`,
@@ -2120,14 +3554,16 @@ const copies: Record<SupportedLocale, AppCopy> = {
         `${preset} 自動工程完成：${passed} 項檢查通過，${jobs} 個 job 完成，輸出 ${outputDir}。`,
       autoWorkFailed: (exitCode, outputDir) =>
         `自動工程失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
-      autoWorkGatewayUnavailable: (errorMessage) => `本地 gateway 自動工程不可用。${errorMessage}`,
+      autoWorkGatewayUnavailable: (errorMessage) =>
+        `本地 gateway 自動工程不可用。${errorMessage}`,
       codexSmokeIdle: "Codex smoke 還沒有執行。",
       codexSmokeStarting: "內閣批准後，正在讓本地 Codex CLI 處理生成的小工程。",
       codexSmokeCompleted: (passed, outputDir) =>
         `Codex smoke 完成：${passed} 項檢查通過，輸出 ${outputDir}。`,
       codexSmokeFailed: (exitCode, outputDir) =>
         `Codex smoke 失敗：exit ${exitCode ?? "unknown"}，輸出 ${outputDir}。`,
-      codexSmokeUnavailable: (errorMessage) => `Codex smoke 不可用。${errorMessage}`,
+      codexSmokeUnavailable: (errorMessage) =>
+        `Codex smoke 不可用。${errorMessage}`,
       codexSmokeResult: (changed, baseline, final) =>
         `變更 ${changed} 個檔案，測試 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 體檢",
@@ -2136,23 +3572,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessIdle: "還沒有檢查本機 runner。",
       runnerReadinessStatus: (ready, detected, launchable, total) =>
         `${total} 個 runner 中 ${ready} 個 ready，偵測到 ${detected} 個，Workbench 可啟動 ${launchable} 個。`,
-      runnerReadinessUnavailable: (errorMessage) => `Runner 體檢不可用。${errorMessage}`,
+      runnerReadinessUnavailable: (errorMessage) =>
+        `Runner 體檢不可用。${errorMessage}`,
       runnerReadinessAdapterStatus: (status) => status,
-      runnerReadinessDetected: (commands, apps) => `命令 ${commands} / app ${apps}`,
+      runnerReadinessDetected: (commands, apps) =>
+        `命令 ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "下一步",
       runnerPresetTemplatesLabel: "追加 runner 模板",
       runnerPresetEnable: "啟用",
       runnerPresetEnabled: "已啟用",
-      runnerPresetEnableStarting: (label) => `正在把 ${label} 加入本地 gateway。`,
-      runnerPresetEnableCompleted: (label) => `${label} 已啟用，可在 Runner 中選擇。`,
-      runnerPresetEnableFailed: (errorMessage) => `無法啟用 runner 模板。${errorMessage}`,
-      missionDraftScore: (score, present, missing, recommended) => `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
+      runnerPresetEnableStarting: (label) =>
+        `正在把 ${label} 加入本地 gateway。`,
+      runnerPresetEnableCompleted: (label) =>
+        `${label} 已啟用，可在 Runner 中選擇。`,
+      runnerPresetEnableFailed: (errorMessage) =>
+        `無法啟用 runner 模板。${errorMessage}`,
+      missionDraftScore: (score, present, missing, recommended) =>
+        `${score}% / 已有 ${present}・缺少 ${missing}・建議 ${recommended}`,
       capabilitiesLabel: "所需 Mac 工程能力",
       signalsLabel: "識別到的任務信號",
       unlockChecklistLabel: "工程解鎖清單",
       selfSimulationLabel: "自己模擬",
       selfSimulationEmpty: "未執行",
-      selfSimulationEmptyDetail: "僅在本地演練監督、agent、runner 和 preflight，不執行真實工程。",
+      selfSimulationEmptyDetail:
+        "僅在本地演練監督、agent、runner 和 preflight，不執行真實工程。",
       selfSimulationNextActionsLabel: "下一步",
       selfSimulationHonestyLabel: "誠實邊界",
       permissionRequestLabel: "權限請求",
@@ -2172,18 +3615,34 @@ const copies: Record<SupportedLocale, AppCopy> = {
       completionGateLabel: "完工聲明閘門",
       completionGateNextActionLabel: "驗收前下一步",
       completionGateBlockedClaimsLabel: "現在不能說",
-      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held，允許命令 ${commands}，證據 ${evidence}`,
-      selfSimulationStatus: (decision, ready, commands, evidence) => `自己模擬 ${zhHantEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允許命令 ${commands}，證據 ${evidence}。`,
-      permissionRequestSummary: (requests, ask, denied) => `${requests} 項請求，執行前確認 ${ask}，預設拒絕 ${denied}`,
+      selfSimulationSummary: (ready, held, commands, evidence) =>
+        `${ready} ready / ${held} held，允許命令 ${commands}，證據 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) =>
+        `自己模擬 ${zhHantEngineeringSelfSimulationDecision(decision)}：ready ${ready}，允許命令 ${commands}，證據 ${evidence}。`,
+      permissionRequestSummary: (requests, ask, denied) =>
+        `${requests} 項請求，執行前確認 ${ask}，預設拒絕 ${denied}`,
       capabilityGapSummary: (engineering, mac, prepare, control) =>
         `工程準備 ${engineering}%，Mac runtime ${mac}%，準備工程${prepare ? "可行" : "未完成"}，Mac 控制${control ? "可行" : "未接入"}`,
       launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
         `可本地跑 ${runReady}，可交給 agent ${handoffReady}，保留 ${held}，允許命令 ${commands}，證據 ${evidence}`,
-      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+      executionReceiptSummary: (
+        executed,
+        receipts,
+        evidence,
+        artifacts,
+        claim,
+      ) =>
         `已執行 ${executed}，已驗證收據 ${receipts}，已接受證據 ${evidence}，已驗證工件 ${artifacts}，完工聲明${claim ? "可說" : "不可說"}`,
       macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
         `ready 能力 ${ready}，待審批 ${approvals}，缺 runtime ${runtime}，預設拒絕 ${denied}，adapter ${adapters}`,
-      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+      macRunnerContractSummary: (
+        total,
+        approval,
+        runtime,
+        blocked,
+        evidence,
+        permissions,
+      ) =>
         `動作 ${total}，待審批 ${approval}，缺 runtime ${runtime}，阻止 ${blocked}，證據 ${evidence}，權限 ${permissions}`,
       handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
         `交給 agent ${handoff ? "可行" : "未就緒"}，沙箱${sandbox ? "可執行" : "等待"}，審批 ${approvals}，預計證據 ${evidence}`,
@@ -2197,7 +3656,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       selfSimulationStage: zhHantEngineeringSelfSimulationStage,
       selfSimulationStageStatus: zhHantEngineeringSelfSimulationStageStatus,
       selfSimulationCapability: zhHantEngineeringSelfSimulationCapability,
-      selfSimulationCapabilityStatus: zhHantEngineeringSelfSimulationCapabilityStatus,
+      selfSimulationCapabilityStatus:
+        zhHantEngineeringSelfSimulationCapabilityStatus,
       permissionRequestDecision: zhHantEngineeringPermissionRequestDecision,
       permissionRequestMode: zhHantEngineeringPermissionRequestMode,
       capabilityGapDecision: zhHantEngineeringCapabilityGapDecision,
@@ -2217,10 +3677,14 @@ const copies: Record<SupportedLocale, AppCopy> = {
       macRunnerNextAction: zhHantEngineeringMacRunnerNextAction,
       macRunnerContractDecision: zhHantEngineeringMacRunnerContractDecision,
       macRunnerContractAction: zhHantEngineeringMacRunnerContractAction,
-      macRunnerContractActionStatus: zhHantEngineeringMacRunnerContractActionStatus,
-      macRunnerContractCheckStatus: zhHantEngineeringMacRunnerContractCheckStatus,
-      macRunnerContractDeniedAction: zhHantEngineeringMacRunnerContractDeniedAction,
-      macRunnerContractInstruction: zhHantEngineeringMacRunnerContractInstruction,
+      macRunnerContractActionStatus:
+        zhHantEngineeringMacRunnerContractActionStatus,
+      macRunnerContractCheckStatus:
+        zhHantEngineeringMacRunnerContractCheckStatus,
+      macRunnerContractDeniedAction:
+        zhHantEngineeringMacRunnerContractDeniedAction,
+      macRunnerContractInstruction:
+        zhHantEngineeringMacRunnerContractInstruction,
       handoffReceiptDecision: zhHantEngineeringHandoffDecision,
       handoffLane: zhHantEngineeringHandoffLane,
       handoffLaneStatus: zhHantEngineeringHandoffLaneStatus,
@@ -2235,9 +3699,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       unlockItem: zhHantEngineeringUnlockItem,
       unlockStatus: zhHantEngineeringUnlockStatus,
       roles: (count) => `${count} 個角色`,
-      briefs: (total, implementable) => `${implementable}/${total} 個實作 brief`,
+      briefs: (total, implementable) =>
+        `${implementable}/${total} 個實作 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
-      runner: (tasks, decision) => `${tasks} runner / ${zhHantRunnerSelfTestDecision(decision)}`,
+      runner: (tasks, decision) =>
+        `${tasks} runner / ${zhHantRunnerSelfTestDecision(decision)}`,
       focusMission: "去輸入",
       runCabinet: "內閣拆分",
       preparePack: "準備工程組",
@@ -2255,24 +3721,24 @@ const copies: Record<SupportedLocale, AppCopy> = {
       steps: [
         {
           title: "1. 輸入任務",
-          body: "把要做的功能、倉庫目標、限制條件、驗證命令寫進 mission brief。"
+          body: "把要做的功能、倉庫目標、限制條件、驗證命令寫進 mission brief。",
         },
         {
           title: "2. 監督拆分",
-          body: "執行內閣，讓多個角色分開做計畫、批評、執行邊界和證據要求。"
+          body: "執行內閣，讓多個角色分開做計畫、批評、執行邊界和證據要求。",
         },
         {
           title: "3. 生成工程包",
-          body: "一次生成 prompt、receipt、runner invocation、接收審查和自測。"
+          body: "一次生成 prompt、receipt、runner invocation、接收審查和自測。",
         },
         {
           title: "4. Mac 權限檢查",
-          body: "preflight 在執行前攔截危險命令、錯誤證據路徑和被保留的 session。"
+          body: "preflight 在執行前攔截危險命令、錯誤證據路徑和被保留的 session。",
         },
         {
           title: "5. 帶證據執行",
-          body: "本地 gateway 執行時，sandbox runner 才會執行測試並返回 transcript 和證據。"
-        }
+          body: "本地 gateway 執行時，sandbox runner 才會執行測試並返回 transcript 和證據。",
+        },
       ],
       permissionGroups: [
         {
@@ -2281,8 +3747,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "所選倉庫內的讀寫權限",
             "在 output/ 下寫入 transcript 和證據",
             "允許的 shell: npm run test / npm run build",
-            "Git status/diff 讀取權限"
-          ]
+            "Git status/diff 讀取權限",
+          ],
         },
         {
           title: "Mac 版可追加能力",
@@ -2290,8 +3756,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Browser runner: 瀏覽器自動化設定",
             "Desktop runner: 輔助功能和螢幕錄製權限",
             "MCP runner: 僅明確 allowlist 工具",
-            "Git push、deploy、外部傳送都需要人工批准"
-          ]
+            "Git push、deploy、外部傳送都需要人工批准",
+          ],
         },
         {
           title: "預設不給的權限",
@@ -2299,10 +3765,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "整台主機的秘密資訊",
             "無限制電腦控制",
             "生產部署權限",
-            "未批准的 GitHub 寫入"
-          ]
-        }
-      ]
+            "未批准的 GitHub 寫入",
+          ],
+        },
+      ],
     },
     codingBriefs: {
       title: "編程代理 brief",
@@ -2359,58 +3825,87 @@ const copies: Record<SupportedLocale, AppCopy> = {
       reviewNextAction: "下一步",
       reviewReady: "所有 brief 已通過交付給編程代理前的檢查。",
       reviewDecisionLabel: zhHantBriefReviewDecision,
-      reviewSummary: (passed, warnings, blockers) => `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
+      reviewSummary: (passed, warnings, blockers) =>
+        `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
       sessionDecision: "Session 判定",
       sessionNextAction: "下一步",
       sessionReady: "所有 session 都已準備好交付給沙箱編程代理。",
       sessionHeld: (status) => `保留：${zhHantCodingSessionStatus(status)}`,
       sessionDecisionLabel: zhHantBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
-      sessionContractSummary: (contracts, humanApproval) => `${contracts} 個合約 / ${humanApproval} 個需人工批准`,
+      sessionContractSummary: (contracts, humanApproval) =>
+        `${contracts} 個合約 / ${humanApproval} 個需人工批准`,
       dispatchDecision: "Dispatch 判定",
       dispatchNextAction: "下一步",
-      dispatchReady: "Ready session 的 prompt 和 receipt template 已作為 dispatch 包準備好。",
+      dispatchReady:
+        "Ready session 的 prompt 和 receipt template 已作為 dispatch 包準備好。",
       dispatchDecisionLabel: zhHantCodingDispatchDecision,
-      dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / ${promptFiles} prompt`,
-      dispatchReceiptTemplate: (receiptTemplates) => `${receiptTemplates} 個 receipt template`,
+      dispatchSummary: (ready, held, promptFiles) =>
+        `${ready} ready / ${held} held / ${promptFiles} prompt`,
+      dispatchReceiptTemplate: (receiptTemplates) =>
+        `${receiptTemplates} 個 receipt template`,
       dispatchArchive: "Dispatch 歸檔",
-      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `${files} 個檔案 / ${promptFiles} 個 prompt / ${totalBytes} bytes`,
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) =>
+        `${files} 個檔案 / ${promptFiles} 個 prompt / ${totalBytes} bytes`,
       dispatchUnassignedHeld: (count) => `${count} 個 held 未分配`,
       dispatchArchiveAudit: "歸檔稽核",
       dispatchAuditDecisionLabel: zhHantDispatchArchiveAuditDecision,
-      dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
+      dispatchAuditSummary: (passed, warnings, blockers) =>
+        `${passed} 通過 / ${warnings} 警告 / ${blockers} 阻塞`,
       dispatchSimulation: "執行模擬",
       dispatchSimulationDecisionLabel: zhHantDispatchSimulationDecision,
-      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
+      dispatchSimulationSummary: (ready, held, blocked) =>
+        `${ready} 可交付 / ${held} 保留 / ${blocked} 阻塞`,
       runnerManifest: "Runner 清單",
       runnerManifestDecisionLabel: zhHantRunnerManifestDecision,
-      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks} 可交付 / ${runnerTasks} runner 任務 / ${blockedTasks} 阻塞`,
+      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) =>
+        `${readyTasks} 可交付 / ${runnerTasks} runner 任務 / ${blockedTasks} 阻塞`,
       runnerInvocation: "Runner 呼叫包",
       runnerInvocationDecisionLabel: zhHantRunnerInvocationDecision,
-      runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations} 個已準備 / ${invocationFiles} 個呼叫檔 / ${blockedInvocations} 個阻塞`,
+      runnerInvocationSummary: (
+        readyInvocations,
+        invocationFiles,
+        blockedInvocations,
+      ) =>
+        `${readyInvocations} 個已準備 / ${invocationFiles} 個呼叫檔 / ${blockedInvocations} 個阻塞`,
       runnerIntake: "Runner 接收審查",
       runnerIntakeDecisionLabel: zhHantRunnerIntakeDecision,
-      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes} 個已接收 / ${invocationFiles} 個呼叫檔 / ${blockedIntakes} 個阻塞`,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) =>
+        `${acceptedIntakes} 個已接收 / ${invocationFiles} 個呼叫檔 / ${blockedIntakes} 個阻塞`,
       runnerSelfTest: "Runner 自測",
       runnerSelfTestDecisionLabel: zhHantRunnerSelfTestDecision,
-      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) =>
+        `${wouldRun} 可模擬 / ${notExecutedCommands} 條未執行命令 / ${blockedTasks} 阻塞`,
       sandboxRunnerPreflightDecisionLabel: zhHantSandboxRunnerPreflightDecision,
-      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 個預計程序`,
+      sandboxRunnerPreflightSummary: (
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `${readyTasks} ready / ${heldTasks} 保留 / ${blockedTasks} 阻塞 / ${processExecutions} 個預計程序`,
       sandboxRunner: "沙箱 Runner",
       sandboxRunnerDecisionLabel: zhHantSandboxRunnerDecision,
-      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks} 已執行 / ${processExecutions} 個程序 / ${commandResults} 條命令結果`,
+      sandboxRunnerSummary: (
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `${executedTasks} 已執行 / ${processExecutions} 個程序 / ${commandResults} 條命令結果`,
       drillDecision: "Drill 判定",
       drillNextAction: "下一步",
       drillReady: "所有 ready session 已通過沙箱編程代理分配模擬。",
       drillAction: zhHantCodingDrillAction,
       drillDecisionLabel: zhHantCodingDrillDecision,
-      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 分配 / ${notAssigned} 停止`,
+      drillSummary: (wouldAssign, notAssigned) =>
+        `${wouldAssign} 分配 / ${notAssigned} 停止`,
       receiptDecision: "證據判定",
       receiptNextAction: "下一步",
       receiptReady: "所有 receipt 已通過實作證據審查。",
       receiptStatus: zhHantCodingReceiptStatus,
       receiptDecisionLabel: zhHantCodingReceiptDecision,
-      receiptSummary: (verified, pending, failed) => `${verified} 已確認 / ${pending} 缺證據 / ${failed} 失敗`,
+      receiptSummary: (verified, pending, failed) =>
+        `${verified} 已確認 / ${pending} 缺證據 / ${failed} 失敗`,
       mode: "模式",
       executor: "Executor",
       sandboxBoundary: "沙箱邊界",
@@ -2423,28 +3918,87 @@ const copies: Record<SupportedLocale, AppCopy> = {
       promptReady: "代理 prompt 已準備",
       empty: "請從 Development Board 生成編程代理 brief。",
       statusGateway: "編程代理 brief 已透過本地閘道匯出。",
-      statusFallback: (errorMessage) => `閘道 brief 不可用，已使用本地匯出。${errorMessage || ""}`,
+      statusFallback: (errorMessage) =>
+        `閘道 brief 不可用，已使用本地匯出。${errorMessage || ""}`,
       statusMarkdown: "編程代理 Markdown prompt pack 已在本地準備。",
-      statusReviewGateway: (decision, blockers, warnings) => `編程代理 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusSessionGateway: (decision, ready, held) => `編程代理 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusDispatchGateway: (decision, ready, held, promptFiles) => `編程代理 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
-      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `已在本地完成 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。`,
-      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `已在本地完成沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `沙箱執行已停止。預檢 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
-      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `沙箱 Runner ${zhHantSandboxRunnerDecision(decision)}：執行 ${executedTasks} 項，程序 ${processExecutions} 個，命令結果 ${commandResults} 條。`,
-      statusSandboxRunnerUnavailable: (errorMessage) => `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusDrillGateway: (decision, wouldAssign, notAssigned) => `編程代理 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
-      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `已在本地完成 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusReceiptGateway: (decision, verified, pending, failed) => `編程代理證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
-      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusReceiptReviewGateway: (decision, verified, pending, failed) => `匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
-      statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `已在本地完成匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs, reusedChangedFileRefs, reusedEvidenceArtifactRefs, transcriptContentMismatches) =>
+      statusReviewGateway: (decision, blockers, warnings) =>
+        `編程代理 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) =>
+        `已在本地完成 brief 審查 ${zhHantBriefReviewDecision(decision)}：${blockers} 個阻塞，${warnings} 個警告。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) =>
+        `編程代理 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。`,
+      statusSessionLocal: (decision, ready, held, errorMessage) =>
+        `已在本地完成 session 包 ${zhHantBriefReviewDecision(decision)}：${ready} ready，${held} held。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusDispatchGateway: (decision, ready, held, promptFiles) =>
+        `編程代理 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。`,
+      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) =>
+        `已在本地完成 dispatch 包 ${zhHantCodingDispatchDecision(decision)}：${ready} ready，${held} held，${promptFiles} prompt。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。`,
+      statusSandboxRunnerPreflightLocal: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+        errorMessage,
+      ) =>
+        `已在本地完成沙箱檢查 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞，預計程序 ${processExecutions} 個。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+      ) =>
+        `沙箱執行已停止。預檢 ${zhHantSandboxRunnerPreflightDecision(decision)}：${readyTasks} ready，${heldTasks} 保留，${blockedTasks} 阻塞。`,
+      statusSandboxRunnerGateway: (
+        decision,
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `沙箱 Runner ${zhHantSandboxRunnerDecision(decision)}：執行 ${executedTasks} 項，程序 ${processExecutions} 個，命令結果 ${commandResults} 條。`,
+      statusSandboxRunnerUnavailable: (errorMessage) =>
+        `沙箱 Runner 需要本地 gateway。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) =>
+        `編程代理 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) =>
+        `已在本地完成 session 演練 ${zhHantCodingDrillDecision(decision)}：${wouldAssign} 分配，${notAssigned} 停止。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusReceiptGateway: (decision, verified, pending, failed) =>
+        `編程代理證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
+      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) =>
+        `已在本地完成證據範本 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusReceiptReviewGateway: (decision, verified, pending, failed) =>
+        `匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。`,
+      statusReceiptReviewLocal: (
+        decision,
+        verified,
+        pending,
+        failed,
+        errorMessage,
+      ) =>
+        `已在本地完成匯入證據審查 ${zhHantCodingReceiptDecision(decision)}：${verified} 已確認，${pending} 缺證據，${failed} 失敗。${errorMessage ? ` 閘道：${errorMessage}` : ""}`,
+      statusReceiptReviewApplied: (
+        message,
+        artifactDecision,
+        verifiedPaths,
+        unresolvedPaths,
+        applied,
+        skipped,
+        reusedTranscriptRefs,
+        reusedChangedFileRefs,
+        reusedEvidenceArtifactRefs,
+        transcriptContentMismatches,
+      ) =>
         `${message} 工件稽核 ${artifactDecision}：${verifiedPaths} 項已確認，${unresolvedPaths} 項未解決${reusedTranscriptRefs ? `，${reusedTranscriptRefs} 項 transcript 重複使用` : ""}${reusedChangedFileRefs ? `，${reusedChangedFileRefs} 項 changed file 重複使用` : ""}${reusedEvidenceArtifactRefs ? `，${reusedEvidenceArtifactRefs} 項 evidence artifact 重複使用` : ""}${transcriptContentMismatches ? `，${transcriptContentMismatches} 項內容不符` : ""}。Development Board 已套用 ${applied} 項，保留 ${skipped} 項。`,
-      statusReceiptImportError: (errorMessage) => `證據回執匯入失敗。${errorMessage}`
+      statusReceiptImportError: (errorMessage) =>
+        `證據回執匯入失敗。${errorMessage}`,
     },
     releaseRehearsal: {
       title: "發布演練",
@@ -2454,7 +4008,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       warnings: (count) => `${count} 警告`,
       blockers: (count) => `${count} 阻塞`,
       localDryRun: "本地 dry-run 演練",
-      sourceLine: (sourceRun, level, evidenceItems) => `${sourceRun} / ${level} / ${evidenceItems} 條證據`,
+      sourceLine: (sourceRun, level, evidenceItems) =>
+        `${sourceRun} / ${level} / ${evidenceItems} 條證據`,
       run: "執行演練",
       exportReport: "匯出報告",
       verify: "驗證",
@@ -2470,7 +4025,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
         notes: "Notes",
         runner: "Runner",
         held: "保留",
-        ready: (count) => `${count} ready`
+        ready: (count) => `${count} ready`,
       },
       evidenceClaimTitle: (level) => `${level} 證據聲明`,
       remediationQueue: "整改佇列",
@@ -2479,19 +4034,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
       decision: {
         releaseReady: "可發布",
         needsReview: "需審查",
-        blocked: "已阻塞"
+        blocked: "已阻塞",
       },
       verification: {
         decision: {
           verified: "已驗證",
           notProductionReady: "生產未就緒",
-          invalid: "無效"
+          invalid: "無效",
         },
-        scope: (scope, requireProductionEvidence) => `${scope}${requireProductionEvidence ? " / 需要生產證據" : ""}`,
+        scope: (scope, requireProductionEvidence) =>
+          `${scope}${requireProductionEvidence ? " / 需要生產證據" : ""}`,
         result: (passed, failed) => `${passed} 通過 / ${failed} 失敗`,
-        ready: "驗證報告已可用於交付審查。"
-      }
-    }
+        ready: "驗證報告已可用於交付審查。",
+      },
+    },
   },
   ko: {
     brandSubtitle: "AI 내각 오케스트레이션 워크벤치",
@@ -2507,17 +4063,94 @@ const copies: Record<SupportedLocale, AppCopy> = {
     runCabinet: "내각 실행",
     running: "실행 중...",
     gatewayReady: "로컬 게이트웨이가 실행되면 준비됩니다.",
+    cabinetCallingGateway: (gateway) =>
+      `로컬 Gateway (${gateway})를 호출하고 있습니다...`,
+    cabinetRunCompleted: (mode, called, skipped, failed) =>
+      mode === "live"
+        ? `live 실행 완료: 프로바이더 호출 ${called}건, live 아티팩트 미생성 ${skipped}건, 실패 ${failed}건. 미생성 또는 실패 단계의 자동화는 중지됩니다.`
+        : "외부 모델 호출 없이 dry-run을 완료했습니다.",
+    cabinetRunFallback: (errorMessage) =>
+      `Gateway를 사용할 수 없어 외부 모델 호출 없는 로컬 dry-run을 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
+    providerReadiness: providerReadinessCopies.ko,
+    quickStart: {
+      kicker: "빠른 시작",
+      title: "내각에 일을 맡기기",
+      subtitle: "요청을 작성하고 안전한 시험 실행부터 시작합니다.",
+      missionLabel: "내각이 무엇을 해야 하나요?",
+      missionPlaceholder:
+        "예: 이 저장소의 로그인 화면을 수정하고, 테스트와 빌드를 실행한 뒤 근거를 정리해 주세요.",
+      missionHelp: "목표, 대상, 수정 가능한 범위, 확인할 내용을 작성하세요.",
+      runDry: "안전하게 시험",
+      running: "내각이 검토 중...",
+      connectApi: "내 API 연결",
+      localCli: "로컬 Coding CLI 사용",
+      advanced: "고급 설정",
+      cabinetRoles: (count) => `${count}개 역할 설정됨`,
+      safetyBoundary:
+        "시험 실행은 외부 모델 호출, Mac 조작, 워크스페이스 밖 쓰기를 수행하지 않습니다.",
+      resultTitle: "내각 결과",
+      resultDecision: (decision) =>
+        ({ ship: "확인 후 다음 단계", revise: "수정 필요", block: "차단됨" })[
+          decision
+        ] || decision,
+      resultSummary: (artifacts) =>
+        `${artifacts}개의 단계 기록을 확인할 수 있습니다.`,
+      inspectResult: "결과 자세히 보기",
+    },
+    localCodingCli: {
+      kicker: "로컬 코딩",
+      title: "로컬 Coding CLI 사용",
+      subtitle: "이 Mac에 로그인된 CLI만 현재 범위의 작업에 사용합니다.",
+      credentialBoundary: "CLI 로그인 및 Coding Plan 자격 증명은 이 Mac에만 남습니다.",
+      scopeBoundary: "Git push, 배포, 외부 전송, Mac 제어, 비밀 읽기는 계속 차단됩니다.",
+      refresh: "이 Mac 확인",
+      checking: "로컬 CLI 확인 중...",
+      idle: "이 Mac을 확인한 뒤 CLI를 선택하세요.",
+      status: (status) =>
+        ({
+          ready: "사용 가능",
+          "detected-needs-approval": "확인됨, 승인 필요",
+          "detected-needs-adapter": "확인됨, 먼저 활성화",
+          missing: "미설치",
+          "blocked-by-default": "기본 차단",
+        })[status] || status,
+      detected: "이 Mac에서 확인됨",
+      missing: "이 Mac에서 미확인",
+      enabled: "활성화됨",
+      enable: "이 CLI 활성화",
+      select: "이 CLI 선택",
+      qwenSetup: "Qwen Code 설치 후 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan을 선택하세요.",
+      approval: "현재 저장소 안에서 이번 작업에만 이 CLI 실행을 승인합니다",
+      taskRequired: "먼저 빠른 시작에서 작업을 작성하세요.",
+      run: "감독 하에 시작",
+      running: "CLI 시작 중...",
+      result: "실행 결과",
+      openDetails: "상세 엔지니어링 워크벤치",
+      returnToCli: "로컬 Coding CLI로 돌아가기",
+    },
+    advancedWorkspace: {
+      returnToStart: "빠른 시작으로",
+      cabinet: "내각 결과",
+      providers: "API 연결",
+      automation: "실행 및 권한",
+      engineering: "엔지니어링 워크벤치",
+      governance: "증거 및 관리",
+    },
     missionKicker: "미션 자동화",
     missionTitle: "통제된 샌드박스 안에서 계획, 실행, 감사, 평가, 반복합니다.",
     decision: "판정",
     notRun: "미실행",
-    releaseRehearsalStatus: (decision, blockers, warnings) => `릴리스 리허설 ${koRehearsalDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
-    releaseVerificationFallback: (errorMessage) => `게이트웨이 검증을 사용할 수 없어 로컬 검증을 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
-    releaseVerificationStatus: (decision, failed) => `릴리스 검증 ${koVerificationDecision(decision)}: 실패 ${failed}개.`,
+    releaseRehearsalStatus: (decision, blockers, warnings) =>
+      `릴리스 리허설 ${koRehearsalDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
+    releaseVerificationFallback: (errorMessage) =>
+      `게이트웨이 검증을 사용할 수 없어 로컬 검증을 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
+    releaseVerificationStatus: (decision, failed) =>
+      `릴리스 검증 ${koVerificationDecision(decision)}: 실패 ${failed}개.`,
     engineeringLaunchpad: {
       kicker: "Mac 엔지니어링 런치패드",
       title: "여기서 감독 역할과 코딩 에이전트를 시작",
-      subtitle: "미션을 작성하고 내각으로 분해한 뒤 agent brief와 runner 패키지를 만들고, 허용된 로컬 Mac 동작만 실행합니다.",
+      subtitle:
+        "미션을 작성하고 내각으로 분해한 뒤 agent brief와 runner 패키지를 만들고, 허용된 로컬 Mac 동작만 실행합니다.",
       stateLabel: "상태",
       metricsLabel: "엔지니어링 시작 지표",
       permissionModeLabel: "권한 모드",
@@ -2525,21 +4158,33 @@ const copies: Record<SupportedLocale, AppCopy> = {
       nextActionLabel: "다음 작업",
       entryLabel: "여기서 시작",
       entryTitle: "여기에 엔지니어링 작업을 입력하고 감독 리뷰를 시작",
-      entryBody: "먼저 mission brief를 작성합니다. 자체 시뮬레이션은 실제 코딩이나 Mac 조작을 주장하기 전에 감독 리뷰, 권한 경계, runner 큐를 점검합니다.",
+      entryBody:
+        "먼저 mission brief를 작성합니다. 자체 시뮬레이션은 실제 코딩이나 Mac 조작을 주장하기 전에 감독 리뷰, 권한 경계, runner 큐를 점검합니다.",
       realityLabel: "현재 실제 능력",
       realityCodeLabel: "코드 작업",
       realityMacLabel: "Mac 제어",
       realityExternalLabel: "외부 쓰기",
       realityCodeStatus: (verified, canRun, missionReady, simulated) =>
-        verified ? "실행 증거 있음" : canRun ? "미실행・준비됨" : simulated ? "agent 인계 준비 중" : missionReady ? "자체 시뮬레이션 대기" : "입력 대기",
-      realityMacStatus: (canControl) => canControl ? "승인된 runner만 가능" : "미연결",
-      realityExternalStatus: (requested) => requested ? "미승인으로 중지" : "기본 거부",
-      missionInputHelp: "이곳이 사용자 입력 칸입니다. 기본 Fixture + API mock 경로는 token이 필요 없습니다. live provider 실제 key는 사용자의 gateway 환경에만 둡니다.",
+        verified
+          ? "실행 증거 있음"
+          : canRun
+            ? "미실행・준비됨"
+            : simulated
+              ? "agent 인계 준비 중"
+              : missionReady
+                ? "자체 시뮬레이션 대기"
+                : "입력 대기",
+      realityMacStatus: (canControl) =>
+        canControl ? "승인된 runner만 가능" : "미연결",
+      realityExternalStatus: (requested) =>
+        requested ? "미승인으로 중지" : "기본 거부",
+      missionInputHelp:
+        "이곳이 사용자 입력 칸입니다. 기본 Fixture + API mock 경로는 token이 필요 없습니다. live provider 실제 key는 사용자의 gateway 환경에만 둡니다.",
       macScopeLabel: "Mac 앱 기능 범위",
       macScopeItems: [
         "기본 범위: 저장소 안 코드 변경, 테스트, 빌드, 증거 수집",
         "브라우저, Mac 데스크톱, MCP 제어는 runner allowlist와 사람 승인 필요",
-        "무제한 컴퓨터 제어, 비밀값, push, deploy는 기본 거부"
+        "무제한 컴퓨터 제어, 비밀값, push, deploy는 기본 거부",
       ],
       macRunnerLabel: "Mac runner 준비도",
       macRunnerPermissionsLabel: "필요 권한",
@@ -2550,17 +4195,20 @@ const copies: Record<SupportedLocale, AppCopy> = {
         canControl
           ? "승인된 Mac runner만 이 미션 범위에서 데스크톱을 제어할 수 있습니다."
           : "Naikaku는 감독된 코딩 작업을 준비할 수 있지만, Mac 데스크톱 제어는 권한, adapter runtime, action log, receipt가 있어야 연결됩니다.",
-      macRunnerHonestyLimit: "이 readiness는 손쉬운 사용, 화면 기록, 자동화, MCP, push, deploy 권한을 부여하지 않습니다.",
+      macRunnerHonestyLimit:
+        "이 readiness는 손쉬운 사용, 화면 기록, 자동화, MCP, push, deploy 권한을 부여하지 않습니다.",
       macRunnerContractLabel: "Mac runner contract",
       macRunnerContractChecksLabel: "Contract checks",
       macRunnerContractDeniedLabel: "거부 동작",
       macRunnerContractInstructionsLabel: "Runner 지시",
       missionInputLabel: "여기에 엔지니어링 작업 입력",
-      missionInputPlaceholder: "예: Mac 앱을 중심으로, 사용자가 이 입력 칸에 작업을 넣으면 감독 역할이 먼저 리뷰하고 coding agent가 저장소를 수정, npm run test / npm run build 실행, 증거 수집을 합니다. Git push와 Mac 제어는 사람 승인.",
+      missionInputPlaceholder:
+        "예: Mac 앱을 중심으로, 사용자가 이 입력 칸에 작업을 넣으면 감독 역할이 먼저 리뷰하고 coding agent가 저장소를 수정, npm run test / npm run build 실행, 증거 수집을 합니다. Git push와 Mac 제어는 사람 승인.",
       missionDraftLabel: "미션 점검",
       autoWorkLabel: "자동 엔지니어링",
       autoWorkTitle: "입력한 작업을 로컬 gateway로 실행",
-      autoWorkBody: "기본 Fixture + API mock은 외부 도구나 provider token 없이 감독 루프를 검증합니다. OpenHands와 live provider는 사용자가 직접 설치하고 설정한 뒤에만 실행됩니다.",
+      autoWorkBody:
+        "기본 Fixture + API mock은 외부 도구나 provider token 없이 감독 루프를 검증합니다. OpenHands와 live provider는 사용자가 직접 설치하고 설정한 뒤에만 실행됩니다.",
       autoWorkPresetLabel: "Runner",
       autoWorkPrepared: "준비만",
       autoWorkFixture: "Fixture 자동 테스트",
@@ -2568,8 +4216,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       autoWorkWorktreeLabel: "Worktree",
       autoWorkAdapterReadyLabel: "로컬 adapter 설치 및 라이선스 확인 완료",
       autoWorkAdapterFixtureLabel: "Fixture는 adapter 확인이 필요 없습니다",
-      autoWorkAdapterReadyHelp: "기본 시험 실행은 로컬 gateway fixture만 호출합니다. push, deploy, 무제한 Mac 제어, 비밀값 접근 권한을 주지 않습니다.",
-      autoWorkLiveTokenHelp: "live provider에는 raw key가 아니라 환경 변수명을 입력합니다. 실제 token은 사용자의 shell, .env, vault 또는 비공개 배포에만 둡니다.",
+      autoWorkAdapterReadyHelp:
+        "기본 시험 실행은 로컬 gateway fixture만 호출합니다. push, deploy, 무제한 Mac 제어, 비밀값 접근 권한을 주지 않습니다.",
+      autoWorkLiveTokenHelp:
+        "live provider에는 raw key가 아니라 환경 변수명을 입력합니다. 실제 token은 사용자의 shell, .env, vault 또는 비공개 배포에만 둡니다.",
       autoWorkRun: "runner만 실행",
       autoWorkRunning: "실행 중",
       autoWorkSelfTest: "Fixture 자체 테스트",
@@ -2584,50 +4234,72 @@ const copies: Record<SupportedLocale, AppCopy> = {
       guidedCabinetModelLabel: "역할 모델",
       guidedCabinetModelPlaceholder: "OPENAI_MODEL 또는 모델명",
       guidedCabinetApiKeyAliasLabel: "API key alias",
-      guidedCabinetApiKeyAliasHelp: "raw key를 입력하지 않습니다. 예: NAIKAKU_OPENAI_API_KEY",
+      guidedCabinetApiKeyAliasHelp:
+        "raw key를 입력하지 않습니다. 예: NAIKAKU_OPENAI_API_KEY",
       guidedCabinetEndpointLabel: "Endpoint 선택",
       guidedCabinetEndpointPlaceholder: "provider 기본값 사용",
       safeStartLabel: "안전한 첫 실행",
       safeStartSteps: [
-        { title: "작업 작성", body: "대상 저장소, 변경 내용, 검증 명령을 적습니다." },
-        { title: "token 없이 시험", body: "Fixture + API mock은 사용자의 key를 쓰지 않습니다." },
-        { title: "감독 실행 시작", body: "내각이 판단한 뒤 승인된 runner만 증거를 반환합니다." }
+        {
+          title: "작업 작성",
+          body: "대상 저장소, 변경 내용, 검증 명령을 적습니다.",
+        },
+        {
+          title: "token 없이 시험",
+          body: "Fixture + API mock은 사용자의 key를 쓰지 않습니다.",
+        },
+        {
+          title: "감독 실행 시작",
+          body: "내각이 판단한 뒤 승인된 runner만 증거를 반환합니다.",
+        },
       ],
       guidedCycleLimitLabel: "자동 반복",
       guidedCycleLimitOption: (count) => `최대 ${count}회`,
       guidedCycleRun: "감독 실행 시작",
       guidedCycleRunning: "감독 및 실행 중",
       guidedCycleIdle: "원클릭 사이클은 아직 시작되지 않았습니다.",
-      guidedCycleStarting: (cycle, total) => `${cycle}/${total}회차: 내각이 실행 전 투표 중입니다.`,
-      guidedCycleExecuting: (cycle, total) => `${cycle}/${total}회차: Codex 실행 증명을 시작합니다.`,
+      guidedCycleStarting: (cycle, total) =>
+        `${cycle}/${total}회차: 내각이 실행 전 투표 중입니다.`,
+      guidedCycleExecuting: (cycle, total) =>
+        `${cycle}/${total}회차: Codex 실행 증명을 시작합니다.`,
       guidedCycleCompleted: (cycles, total, decision, outputDir) =>
         `원클릭 사이클 완료: ${cycles}/${total}회, 내각 ${decision}, 증거 ${outputDir}.`,
       guidedCycleBlocked: (cycle, total, decision) =>
         `${cycle}/${total}회차에서 중지: 내각 ${decision}. 감사 결과를 먼저 확인하세요.`,
-      guidedCycleFailed: (cycle, total) => `${cycle}/${total}회차에서 중지: 실행 증거 수집에 실패했습니다.`,
-      guidedCycleGatewayFailed: (message) => `원클릭 사이클 gateway 실패: ${message}`,
+      guidedCycleFailed: (cycle, total) =>
+        `${cycle}/${total}회차에서 중지: 실행 증거 수집에 실패했습니다.`,
+      guidedCycleGatewayFailed: (message) =>
+        `원클릭 사이클 gateway 실패: ${message}`,
       guidedCycleSummary: (cycles, total) => `${cycles}/${total}회 진행`,
       autoWorkIdle: "자동 엔지니어링이 아직 시작되지 않았습니다.",
-      autoWorkMissionRequired: "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
-      autoWorkOpenHandsNeedsReady: "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
-      autoWorkAdapterNeedsReady: (preset) => `${preset} 사용 전 로컬 CLI 설치, 라이선스 검토, 이번 실행 승인을 확인하세요.`,
+      autoWorkMissionRequired:
+        "엔지니어링 작업을 입력한 뒤 자동 엔지니어링을 시작하세요.",
+      autoWorkOpenHandsNeedsReady:
+        "OpenHands 사용 전 로컬 CLI 설치와 라이선스 검토를 확인하세요.",
+      autoWorkAdapterNeedsReady: (preset) =>
+        `${preset} 사용 전 로컬 CLI 설치, 라이선스 검토, 이번 실행 승인을 확인하세요.`,
       autoWorkOutputLabel: "출력",
-      autoWorkChecks: (passed, failed) => `검사 ${passed} pass / ${failed} fail`,
+      autoWorkChecks: (passed, failed) =>
+        `검사 ${passed} pass / ${failed} fail`,
       autoWorkResult: (preset, mode, jobs, receipts, evidence, artifacts) =>
         `${preset}・${mode}・완료 job ${jobs}・receipt ${receipts}・증거 ${evidence}・artifact ${artifacts}`,
-      autoWorkStarting: (preset) => `${preset} runner로 자동 엔지니어링을 시작합니다.`,
+      autoWorkStarting: (preset) =>
+        `${preset} runner로 자동 엔지니어링을 시작합니다.`,
       autoWorkCompleted: (preset, passed, jobs, outputDir) =>
         `${preset} 자동 엔지니어링 완료: ${passed}개 검사 통과, ${jobs}개 job 완료, 출력 ${outputDir}.`,
       autoWorkFailed: (exitCode, outputDir) =>
         `자동 엔지니어링 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
-      autoWorkGatewayUnavailable: (errorMessage) => `로컬 gateway 자동 엔지니어링을 사용할 수 없습니다. ${errorMessage}`,
+      autoWorkGatewayUnavailable: (errorMessage) =>
+        `로컬 gateway 자동 엔지니어링을 사용할 수 없습니다. ${errorMessage}`,
       codexSmokeIdle: "Codex smoke는 아직 실행되지 않았습니다.",
-      codexSmokeStarting: "내각 승인 후 로컬 Codex CLI가 생성된 작은 코딩 작업을 처리합니다.",
+      codexSmokeStarting:
+        "내각 승인 후 로컬 Codex CLI가 생성된 작은 코딩 작업을 처리합니다.",
       codexSmokeCompleted: (passed, outputDir) =>
         `Codex smoke 완료: ${passed}개 검사 통과, 출력 ${outputDir}.`,
       codexSmokeFailed: (exitCode, outputDir) =>
         `Codex smoke 실패: exit ${exitCode ?? "unknown"}, 출력 ${outputDir}.`,
-      codexSmokeUnavailable: (errorMessage) => `Codex smoke를 사용할 수 없습니다. ${errorMessage}`,
+      codexSmokeUnavailable: (errorMessage) =>
+        `Codex smoke를 사용할 수 없습니다. ${errorMessage}`,
       codexSmokeResult: (changed, baseline, final) =>
         `변경 파일 ${changed}개, 테스트 ${baseline ?? "?"} -> ${final ?? "?"}`,
       runnerReadinessLabel: "Runner 점검",
@@ -2636,23 +4308,30 @@ const copies: Record<SupportedLocale, AppCopy> = {
       runnerReadinessIdle: "로컬 runner를 아직 확인하지 않았습니다.",
       runnerReadinessStatus: (ready, detected, launchable, total) =>
         `${total}개 runner 중 ${ready}개 ready, ${detected}개 감지, Workbench 실행 가능 ${launchable}개.`,
-      runnerReadinessUnavailable: (errorMessage) => `Runner readiness를 사용할 수 없습니다. ${errorMessage}`,
+      runnerReadinessUnavailable: (errorMessage) =>
+        `Runner readiness를 사용할 수 없습니다. ${errorMessage}`,
       runnerReadinessAdapterStatus: (status) => status,
-      runnerReadinessDetected: (commands, apps) => `cmd ${commands} / app ${apps}`,
+      runnerReadinessDetected: (commands, apps) =>
+        `cmd ${commands} / app ${apps}`,
       runnerReadinessNextActionLabel: "다음 작업",
       runnerPresetTemplatesLabel: "추가 runner 템플릿",
       runnerPresetEnable: "활성화",
       runnerPresetEnabled: "활성화됨",
-      runnerPresetEnableStarting: (label) => `${label}을 로컬 gateway에 추가하는 중입니다.`,
-      runnerPresetEnableCompleted: (label) => `${label}이 활성화되어 Runner에서 선택할 수 있습니다.`,
-      runnerPresetEnableFailed: (errorMessage) => `Runner 템플릿을 활성화할 수 없습니다. ${errorMessage}`,
-      missionDraftScore: (score, present, missing, recommended) => `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
+      runnerPresetEnableStarting: (label) =>
+        `${label}을 로컬 gateway에 추가하는 중입니다.`,
+      runnerPresetEnableCompleted: (label) =>
+        `${label}이 활성화되어 Runner에서 선택할 수 있습니다.`,
+      runnerPresetEnableFailed: (errorMessage) =>
+        `Runner 템플릿을 활성화할 수 없습니다. ${errorMessage}`,
+      missionDraftScore: (score, present, missing, recommended) =>
+        `${score}% / 입력 ${present}・부족 ${missing}・권장 ${recommended}`,
       capabilitiesLabel: "필요한 Mac 엔지니어링 기능",
       signalsLabel: "감지된 미션 신호",
       unlockChecklistLabel: "엔지니어링 잠금 해제 체크리스트",
       selfSimulationLabel: "자체 시뮬레이션",
       selfSimulationEmpty: "미실행",
-      selfSimulationEmptyDetail: "감독, agent, runner, preflight 흐름을 로컬에서만 리허설합니다.",
+      selfSimulationEmptyDetail:
+        "감독, agent, runner, preflight 흐름을 로컬에서만 리허설합니다.",
       selfSimulationNextActionsLabel: "다음 작업",
       selfSimulationHonestyLabel: "정직 경계",
       permissionRequestLabel: "권한 요청",
@@ -2672,18 +4351,34 @@ const copies: Record<SupportedLocale, AppCopy> = {
       completionGateLabel: "완료 선언 게이트",
       completionGateNextActionLabel: "수락 전 다음 작업",
       completionGateBlockedClaimsLabel: "아직 말할 수 없는 것",
-      selfSimulationSummary: (ready, held, commands, evidence) => `${ready} ready / ${held} held・허용 명령 ${commands}・증거 ${evidence}`,
-      selfSimulationStatus: (decision, ready, commands, evidence) => `자체 시뮬레이션 ${koEngineeringSelfSimulationDecision(decision)}: ready ${ready}, 허용 명령 ${commands}, 증거 ${evidence}.`,
-      permissionRequestSummary: (requests, ask, denied) => `${requests}개 요청・사용 전 확인 ${ask}개・기본 거부 ${denied}개`,
+      selfSimulationSummary: (ready, held, commands, evidence) =>
+        `${ready} ready / ${held} held・허용 명령 ${commands}・증거 ${evidence}`,
+      selfSimulationStatus: (decision, ready, commands, evidence) =>
+        `자체 시뮬레이션 ${koEngineeringSelfSimulationDecision(decision)}: ready ${ready}, 허용 명령 ${commands}, 증거 ${evidence}.`,
+      permissionRequestSummary: (requests, ask, denied) =>
+        `${requests}개 요청・사용 전 확인 ${ask}개・기본 거부 ${denied}개`,
       capabilityGapSummary: (engineering, mac, prepare, control) =>
         `엔지니어링 ${engineering}%・Mac runtime ${mac}%・준비 ${prepare ? "가능" : "미완"}・Mac 제어 ${control ? "가능" : "미연결"}`,
       launchQueueSummary: (runReady, handoffReady, held, commands, evidence) =>
         `실행 가능 ${runReady}・인계 가능 ${handoffReady}・보류 ${held}・허용 명령 ${commands}・증거 ${evidence}`,
-      executionReceiptSummary: (executed, receipts, evidence, artifacts, claim) =>
+      executionReceiptSummary: (
+        executed,
+        receipts,
+        evidence,
+        artifacts,
+        claim,
+      ) =>
         `실행 ${executed}・검증 receipt ${receipts}・수락 증거 ${evidence}・검증 artifact ${artifacts}・완료 선언 ${claim ? "가능" : "불가"}`,
       macRunnerSummary: (ready, approvals, runtime, denied, adapters) =>
         `ready 기능 ${ready}・승인 대기 ${approvals}・runtime 필요 ${runtime}・기본 거부 ${denied}・adapter ${adapters}`,
-      macRunnerContractSummary: (total, approval, runtime, blocked, evidence, permissions) =>
+      macRunnerContractSummary: (
+        total,
+        approval,
+        runtime,
+        blocked,
+        evidence,
+        permissions,
+      ) =>
         `동작 ${total}・승인 대기 ${approval}・runtime 필요 ${runtime}・차단 ${blocked}・증거 ${evidence}・권한 ${permissions}`,
       handoffReceiptSummary: (handoff, sandbox, approvals, evidence) =>
         `agent 인계 ${handoff ? "가능" : "미준비"}・sandbox ${sandbox ? "실행 가능" : "대기"}・승인 ${approvals}・예상 증거 ${evidence}`,
@@ -2697,7 +4392,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       selfSimulationStage: koEngineeringSelfSimulationStage,
       selfSimulationStageStatus: koEngineeringSelfSimulationStageStatus,
       selfSimulationCapability: koEngineeringSelfSimulationCapability,
-      selfSimulationCapabilityStatus: koEngineeringSelfSimulationCapabilityStatus,
+      selfSimulationCapabilityStatus:
+        koEngineeringSelfSimulationCapabilityStatus,
       permissionRequestDecision: koEngineeringPermissionRequestDecision,
       permissionRequestMode: koEngineeringPermissionRequestMode,
       capabilityGapDecision: koEngineeringCapabilityGapDecision,
@@ -2735,9 +4431,11 @@ const copies: Record<SupportedLocale, AppCopy> = {
       unlockItem: koEngineeringUnlockItem,
       unlockStatus: koEngineeringUnlockStatus,
       roles: (count) => `${count}개 역할`,
-      briefs: (total, implementable) => `${implementable}/${total}개 구현 brief`,
+      briefs: (total, implementable) =>
+        `${implementable}/${total}개 구현 brief`,
       sessions: (ready, held) => `${ready} ready / ${held} held`,
-      runner: (tasks, decision) => `${tasks} runner / ${koRunnerSelfTestDecision(decision)}`,
+      runner: (tasks, decision) =>
+        `${tasks} runner / ${koRunnerSelfTestDecision(decision)}`,
       focusMission: "입력으로 이동",
       runCabinet: "내각으로 분해",
       preparePack: "엔지니어링 준비",
@@ -2755,24 +4453,24 @@ const copies: Record<SupportedLocale, AppCopy> = {
       steps: [
         {
           title: "1. 미션 입력",
-          body: "만들 기능, 대상 저장소, 제한 조건, 검증 명령을 mission brief에 넣습니다."
+          body: "만들 기능, 대상 저장소, 제한 조건, 검증 명령을 mission brief에 넣습니다.",
         },
         {
           title: "2. 감독 분해",
-          body: "내각을 실행해 여러 역할이 계획, 비평, 실행 경계, 증거 요구를 나눕니다."
+          body: "내각을 실행해 여러 역할이 계획, 비평, 실행 경계, 증거 요구를 나눕니다.",
         },
         {
           title: "3. 엔지니어링 패키지 생성",
-          body: "prompt, receipt, runner invocation, intake 감사, self-test를 한 번에 만듭니다."
+          body: "prompt, receipt, runner invocation, intake 감사, self-test를 한 번에 만듭니다.",
         },
         {
           title: "4. Mac 권한 확인",
-          body: "preflight가 위험 명령, 잘못된 증거 경로, 보류 session을 실행 전에 막습니다."
+          body: "preflight가 위험 명령, 잘못된 증거 경로, 보류 session을 실행 전에 막습니다.",
         },
         {
           title: "5. 증거와 함께 실행",
-          body: "로컬 gateway가 실행 중일 때만 sandbox runner가 테스트를 실행하고 transcript와 증거를 반환합니다."
-        }
+          body: "로컬 gateway가 실행 중일 때만 sandbox runner가 테스트를 실행하고 transcript와 증거를 반환합니다.",
+        },
       ],
       permissionGroups: [
         {
@@ -2781,8 +4479,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "선택한 저장소 내부 읽기/쓰기",
             "output/ 아래 transcript와 증거 쓰기",
             "허용된 shell: npm run test / npm run build",
-            "Git status/diff 읽기 권한"
-          ]
+            "Git status/diff 읽기 권한",
+          ],
         },
         {
           title: "Mac 앱 추가 권한",
@@ -2790,8 +4488,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "Browser runner: 브라우저 자동화 프로필",
             "Desktop runner: 손쉬운 사용과 화면 기록",
             "MCP runner: 명시 allowlist 도구만",
-            "Git push, deploy, 외부 전송은 사람 승인 필요"
-          ]
+            "Git push, deploy, 외부 전송은 사람 승인 필요",
+          ],
         },
         {
           title: "기본 제공하지 않는 권한",
@@ -2799,10 +4497,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
             "호스트 전체 비밀값",
             "무제한 컴퓨터 제어",
             "운영 deploy 권한",
-            "승인 없는 GitHub 쓰기"
-          ]
-        }
-      ]
+            "승인 없는 GitHub 쓰기",
+          ],
+        },
+      ],
     },
     codingBriefs: {
       title: "코딩 에이전트 브리프",
@@ -2859,58 +4557,89 @@ const copies: Record<SupportedLocale, AppCopy> = {
       reviewNextAction: "다음 조치",
       reviewReady: "모든 브리프가 코딩 에이전트 인계 전 검사를 통과했습니다.",
       reviewDecisionLabel: koBriefReviewDecision,
-      reviewSummary: (passed, warnings, blockers) => `${passed} 통과 / ${warnings} 경고 / ${blockers} 차단`,
+      reviewSummary: (passed, warnings, blockers) =>
+        `${passed} 통과 / ${warnings} 경고 / ${blockers} 차단`,
       sessionDecision: "Session 판정",
       sessionNextAction: "다음 조치",
-      sessionReady: "모든 session이 샌드박스 코딩 에이전트 인계 준비를 마쳤습니다.",
+      sessionReady:
+        "모든 session이 샌드박스 코딩 에이전트 인계 준비를 마쳤습니다.",
       sessionHeld: (status) => `보류: ${koCodingSessionStatus(status)}`,
       sessionDecisionLabel: koBriefReviewDecision,
       sessionSummary: (ready, held) => `${ready} ready / ${held} held`,
-      sessionContractSummary: (contracts, humanApproval) => `${contracts}개 계약 / 사람 승인 ${humanApproval}개`,
+      sessionContractSummary: (contracts, humanApproval) =>
+        `${contracts}개 계약 / 사람 승인 ${humanApproval}개`,
       dispatchDecision: "Dispatch 판정",
       dispatchNextAction: "다음 조치",
-      dispatchReady: "Ready session prompt와 receipt template이 dispatch package로 준비되었습니다.",
+      dispatchReady:
+        "Ready session prompt와 receipt template이 dispatch package로 준비되었습니다.",
       dispatchDecisionLabel: koCodingDispatchDecision,
-      dispatchSummary: (ready, held, promptFiles) => `${ready} ready / ${held} held / prompt ${promptFiles}개`,
-      dispatchReceiptTemplate: (receiptTemplates) => `receipt template ${receiptTemplates}개`,
+      dispatchSummary: (ready, held, promptFiles) =>
+        `${ready} ready / ${held} held / prompt ${promptFiles}개`,
+      dispatchReceiptTemplate: (receiptTemplates) =>
+        `receipt template ${receiptTemplates}개`,
       dispatchArchive: "Dispatch archive",
-      dispatchArchiveSummary: (files, promptFiles, totalBytes) => `파일 ${files}개 / prompt ${promptFiles}개 / ${totalBytes} bytes`,
+      dispatchArchiveSummary: (files, promptFiles, totalBytes) =>
+        `파일 ${files}개 / prompt ${promptFiles}개 / ${totalBytes} bytes`,
       dispatchUnassignedHeld: (count) => `미할당 보류 ${count}개`,
       dispatchArchiveAudit: "Archive 감사",
       dispatchAuditDecisionLabel: koDispatchArchiveAuditDecision,
-      dispatchAuditSummary: (passed, warnings, blockers) => `${passed} 통과 / 경고 ${warnings}개 / 차단 ${blockers}개`,
+      dispatchAuditSummary: (passed, warnings, blockers) =>
+        `${passed} 통과 / 경고 ${warnings}개 / 차단 ${blockers}개`,
       dispatchSimulation: "실행 Simulation",
       dispatchSimulationDecisionLabel: koDispatchSimulationDecision,
-      dispatchSimulationSummary: (ready, held, blocked) => `${ready} 준비 / 보류 ${held}개 / 차단 ${blocked}개`,
+      dispatchSimulationSummary: (ready, held, blocked) =>
+        `${ready} 준비 / 보류 ${held}개 / 차단 ${blocked}개`,
       runnerManifest: "Runner 매니페스트",
       runnerManifestDecisionLabel: koRunnerManifestDecision,
-      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) => `${readyTasks}개 준비 / Runner 작업 ${runnerTasks}개 / 차단 ${blockedTasks}개`,
+      runnerManifestSummary: (readyTasks, runnerTasks, blockedTasks) =>
+        `${readyTasks}개 준비 / Runner 작업 ${runnerTasks}개 / 차단 ${blockedTasks}개`,
       runnerInvocation: "Runner 호출 패키지",
       runnerInvocationDecisionLabel: koRunnerInvocationDecision,
-      runnerInvocationSummary: (readyInvocations, invocationFiles, blockedInvocations) => `${readyInvocations}개 준비 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedInvocations}개`,
+      runnerInvocationSummary: (
+        readyInvocations,
+        invocationFiles,
+        blockedInvocations,
+      ) =>
+        `${readyInvocations}개 준비 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedInvocations}개`,
       runnerIntake: "Runner 수락 감사",
       runnerIntakeDecisionLabel: koRunnerIntakeDecision,
-      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) => `${acceptedIntakes}개 수락 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedIntakes}개`,
+      runnerIntakeSummary: (acceptedIntakes, invocationFiles, blockedIntakes) =>
+        `${acceptedIntakes}개 수락 / 호출 파일 ${invocationFiles}개 / 차단 ${blockedIntakes}개`,
       runnerSelfTest: "Runner 자체 검증",
       runnerSelfTestDecisionLabel: koRunnerSelfTestDecision,
-      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) => `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
+      runnerSelfTestSummary: (wouldRun, notExecutedCommands, blockedTasks) =>
+        `${wouldRun}개 모의 실행 / 미실행 명령 ${notExecutedCommands}개 / 차단 ${blockedTasks}개`,
       sandboxRunnerPreflightDecisionLabel: koSandboxRunnerPreflightDecision,
-      sandboxRunnerPreflightSummary: (readyTasks, heldTasks, blockedTasks, processExecutions) => `${readyTasks}개 ready / 보류 ${heldTasks}개 / 차단 ${blockedTasks}개 / 예상 프로세스 ${processExecutions}개`,
+      sandboxRunnerPreflightSummary: (
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `${readyTasks}개 ready / 보류 ${heldTasks}개 / 차단 ${blockedTasks}개 / 예상 프로세스 ${processExecutions}개`,
       sandboxRunner: "Sandbox Runner",
       sandboxRunnerDecisionLabel: koSandboxRunnerDecision,
-      sandboxRunnerSummary: (executedTasks, processExecutions, commandResults) => `${executedTasks}개 실행 / 프로세스 ${processExecutions}개 / 명령 결과 ${commandResults}개`,
+      sandboxRunnerSummary: (
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `${executedTasks}개 실행 / 프로세스 ${processExecutions}개 / 명령 결과 ${commandResults}개`,
       drillDecision: "Drill 판정",
       drillNextAction: "다음 조치",
-      drillReady: "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
+      drillReady:
+        "모든 ready session이 샌드박스 코딩 에이전트 할당 시뮬레이션을 통과했습니다.",
       drillAction: koCodingDrillAction,
       drillDecisionLabel: koCodingDrillDecision,
-      drillSummary: (wouldAssign, notAssigned) => `${wouldAssign} 할당 / ${notAssigned} 중지`,
+      drillSummary: (wouldAssign, notAssigned) =>
+        `${wouldAssign} 할당 / ${notAssigned} 중지`,
       receiptDecision: "증거 판정",
       receiptNextAction: "다음 조치",
       receiptReady: "모든 receipt가 구현 증거 검토를 통과했습니다.",
       receiptStatus: koCodingReceiptStatus,
       receiptDecisionLabel: koCodingReceiptDecision,
-      receiptSummary: (verified, pending, failed) => `${verified} 확인 / ${pending} 증거 부족 / ${failed} 실패`,
+      receiptSummary: (verified, pending, failed) =>
+        `${verified} 확인 / ${pending} 증거 부족 / ${failed} 실패`,
       mode: "모드",
       executor: "Executor",
       sandboxBoundary: "Sandbox 경계",
@@ -2923,28 +4652,88 @@ const copies: Record<SupportedLocale, AppCopy> = {
       promptReady: "에이전트 prompt 준비됨",
       empty: "Development Board에서 코딩 에이전트 브리프를 생성하세요.",
       statusGateway: "코딩 에이전트 브리프를 로컬 게이트웨이로 내보냈습니다.",
-      statusFallback: (errorMessage) => `게이트웨이 브리프를 사용할 수 없어 로컬 내보내기를 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
-      statusMarkdown: "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다.",
-      statusReviewGateway: (decision, blockers, warnings) => `코딩 에이전트 브리프 검토 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
-      statusReviewLocal: (decision, blockers, warnings, errorMessage) => `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSessionGateway: (decision, ready, held) => `코딩 에이전트 session bundle ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.`,
-      statusSessionLocal: (decision, ready, held, errorMessage) => `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDispatchGateway: (decision, ready, held, promptFiles) => `코딩 에이전트 dispatch package ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.`,
-      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) => `로컬에서 dispatch package 완료 ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightGateway: (decision, readyTasks, heldTasks, blockedTasks, processExecutions) => `Sandbox 확인 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.`,
-      statusSandboxRunnerPreflightLocal: (decision, readyTasks, heldTasks, blockedTasks, processExecutions, errorMessage) => `로컬에서 Sandbox 확인 완료 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusSandboxRunnerPreflightBlocked: (decision, readyTasks, heldTasks, blockedTasks) => `Sandbox 실행을 중지했습니다. Preflight ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개.`,
-      statusSandboxRunnerGateway: (decision, executedTasks, processExecutions, commandResults) => `Sandbox Runner ${koSandboxRunnerDecision(decision)}: 실행 ${executedTasks}개, 프로세스 ${processExecutions}개, 명령 결과 ${commandResults}개.`,
-      statusSandboxRunnerUnavailable: (errorMessage) => `Sandbox Runner에는 로컬 gateway가 필요합니다.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusDrillGateway: (decision, wouldAssign, notAssigned) => `코딩 에이전트 session 모의실행 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.`,
-      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) => `로컬에서 session 모의실행 완료 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptGateway: (decision, verified, pending, failed) => `코딩 에이전트 증거 템플릿 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
-      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) => `로컬에서 증거 템플릿 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewGateway: (decision, verified, pending, failed) => `가져온 증거 검토 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
-      statusReceiptReviewLocal: (decision, verified, pending, failed, errorMessage) => `로컬에서 가져온 증거 검토 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
-      statusReceiptReviewApplied: (message, artifactDecision, verifiedPaths, unresolvedPaths, applied, skipped, reusedTranscriptRefs, reusedChangedFileRefs, reusedEvidenceArtifactRefs, transcriptContentMismatches) =>
+      statusFallback: (errorMessage) =>
+        `게이트웨이 브리프를 사용할 수 없어 로컬 내보내기를 사용했습니다.${errorMessage ? ` ${errorMessage}` : ""}`,
+      statusMarkdown:
+        "코딩 에이전트 Markdown prompt pack을 로컬에서 준비했습니다.",
+      statusReviewGateway: (decision, blockers, warnings) =>
+        `코딩 에이전트 브리프 검토 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.`,
+      statusReviewLocal: (decision, blockers, warnings, errorMessage) =>
+        `로컬에서 브리프 검토 완료 ${koBriefReviewDecision(decision)}: 차단 ${blockers}개, 경고 ${warnings}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSessionGateway: (decision, ready, held) =>
+        `코딩 에이전트 session bundle ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.`,
+      statusSessionLocal: (decision, ready, held, errorMessage) =>
+        `로컬에서 session bundle 완료 ${koBriefReviewDecision(decision)}: ready ${ready}개, held ${held}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDispatchGateway: (decision, ready, held, promptFiles) =>
+        `코딩 에이전트 dispatch package ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.`,
+      statusDispatchLocal: (decision, ready, held, promptFiles, errorMessage) =>
+        `로컬에서 dispatch package 완료 ${koCodingDispatchDecision(decision)}: ready ${ready}개, held ${held}개, prompt ${promptFiles}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightGateway: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+      ) =>
+        `Sandbox 확인 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.`,
+      statusSandboxRunnerPreflightLocal: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+        processExecutions,
+        errorMessage,
+      ) =>
+        `로컬에서 Sandbox 확인 완료 ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개, 예상 프로세스 ${processExecutions}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusSandboxRunnerPreflightBlocked: (
+        decision,
+        readyTasks,
+        heldTasks,
+        blockedTasks,
+      ) =>
+        `Sandbox 실행을 중지했습니다. Preflight ${koSandboxRunnerPreflightDecision(decision)}: ready ${readyTasks}개, 보류 ${heldTasks}개, 차단 ${blockedTasks}개.`,
+      statusSandboxRunnerGateway: (
+        decision,
+        executedTasks,
+        processExecutions,
+        commandResults,
+      ) =>
+        `Sandbox Runner ${koSandboxRunnerDecision(decision)}: 실행 ${executedTasks}개, 프로세스 ${processExecutions}개, 명령 결과 ${commandResults}개.`,
+      statusSandboxRunnerUnavailable: (errorMessage) =>
+        `Sandbox Runner에는 로컬 gateway가 필요합니다.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusDrillGateway: (decision, wouldAssign, notAssigned) =>
+        `코딩 에이전트 session 모의실행 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.`,
+      statusDrillLocal: (decision, wouldAssign, notAssigned, errorMessage) =>
+        `로컬에서 session 모의실행 완료 ${koCodingDrillDecision(decision)}: 할당 ${wouldAssign}개, 중지 ${notAssigned}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptGateway: (decision, verified, pending, failed) =>
+        `코딩 에이전트 증거 템플릿 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
+      statusReceiptLocal: (decision, verified, pending, failed, errorMessage) =>
+        `로컬에서 증거 템플릿 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewGateway: (decision, verified, pending, failed) =>
+        `가져온 증거 검토 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.`,
+      statusReceiptReviewLocal: (
+        decision,
+        verified,
+        pending,
+        failed,
+        errorMessage,
+      ) =>
+        `로컬에서 가져온 증거 검토 완료 ${koCodingReceiptDecision(decision)}: 확인 ${verified}개, 증거 부족 ${pending}개, 실패 ${failed}개.${errorMessage ? ` Gateway: ${errorMessage}` : ""}`,
+      statusReceiptReviewApplied: (
+        message,
+        artifactDecision,
+        verifiedPaths,
+        unresolvedPaths,
+        applied,
+        skipped,
+        reusedTranscriptRefs,
+        reusedChangedFileRefs,
+        reusedEvidenceArtifactRefs,
+        transcriptContentMismatches,
+      ) =>
         `${message} 아티팩트 감사 ${artifactDecision}: ${verifiedPaths}개 확인, ${unresolvedPaths}개 미해결${reusedTranscriptRefs ? `, transcript 재사용 ${reusedTranscriptRefs}개` : ""}${reusedChangedFileRefs ? `, changed file 재사용 ${reusedChangedFileRefs}개` : ""}${reusedEvidenceArtifactRefs ? `, evidence artifact 재사용 ${reusedEvidenceArtifactRefs}개` : ""}${transcriptContentMismatches ? `, 내용 불일치 ${transcriptContentMismatches}개` : ""}. Development Board에 ${applied}개 적용, ${skipped}개 보류.`,
-      statusReceiptImportError: (errorMessage) => `증거 제출서 가져오기에 실패했습니다. ${errorMessage}`
+      statusReceiptImportError: (errorMessage) =>
+        `증거 제출서 가져오기에 실패했습니다. ${errorMessage}`,
     },
     releaseRehearsal: {
       title: "릴리스 리허설",
@@ -2954,7 +4743,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       warnings: (count) => `${count} 경고`,
       blockers: (count) => `${count} 차단`,
       localDryRun: "로컬 dry-run 리허설",
-      sourceLine: (sourceRun, level, evidenceItems) => `${sourceRun} / ${level} / 증거 ${evidenceItems}개`,
+      sourceLine: (sourceRun, level, evidenceItems) =>
+        `${sourceRun} / ${level} / 증거 ${evidenceItems}개`,
       run: "리허설 실행",
       exportReport: "보고서 내보내기",
       verify: "검증",
@@ -2970,7 +4760,7 @@ const copies: Record<SupportedLocale, AppCopy> = {
         notes: "Notes",
         runner: "Runner",
         held: "보류",
-        ready: (count) => `${count} ready`
+        ready: (count) => `${count} ready`,
       },
       evidenceClaimTitle: (level) => `${level} 증거 선언`,
       remediationQueue: "개선 대기열",
@@ -2979,20 +4769,21 @@ const copies: Record<SupportedLocale, AppCopy> = {
       decision: {
         releaseReady: "릴리스 가능",
         needsReview: "검토 필요",
-        blocked: "차단됨"
+        blocked: "차단됨",
       },
       verification: {
         decision: {
           verified: "검증됨",
           notProductionReady: "운영 준비 전",
-          invalid: "무효"
+          invalid: "무효",
         },
-        scope: (scope, requireProductionEvidence) => `${scope}${requireProductionEvidence ? " / 운영 증거 필요" : ""}`,
+        scope: (scope, requireProductionEvidence) =>
+          `${scope}${requireProductionEvidence ? " / 운영 증거 필요" : ""}`,
         result: (passed, failed) => `${passed} 통과 / ${failed} 실패`,
-        ready: "검증 보고서를 인계 검토에 사용할 수 있습니다."
-      }
-    }
-  }
+        ready: "검증 보고서를 인계 검토에 사용할 수 있습니다.",
+      },
+    },
+  },
 };
 
 function jaRehearsalDecision(decision: string) {
@@ -3622,7 +5413,7 @@ function jaEngineeringPermissionMode(mode: string) {
     "code-only": "コード作業のみ",
     "browser-assisted": "ブラウザ補助",
     "mac-assisted": "Mac 操作あり",
-    "approval-gated": "人間承認ゲート"
+    "approval-gated": "人間承認ゲート",
   });
 }
 
@@ -3631,7 +5422,7 @@ function enEngineeringPermissionMode(mode: string) {
     "code-only": "code only",
     "browser-assisted": "browser assisted",
     "mac-assisted": "Mac assisted",
-    "approval-gated": "approval gated"
+    "approval-gated": "approval gated",
   });
 }
 
@@ -3640,7 +5431,7 @@ function zhHansEngineeringPermissionMode(mode: string) {
     "code-only": "仅代码工程",
     "browser-assisted": "浏览器辅助",
     "mac-assisted": "需要 Mac 操作",
-    "approval-gated": "人审闸门"
+    "approval-gated": "人审闸门",
   });
 }
 
@@ -3649,7 +5440,7 @@ function zhHantEngineeringPermissionMode(mode: string) {
     "code-only": "僅程式碼工程",
     "browser-assisted": "瀏覽器輔助",
     "mac-assisted": "需要 Mac 操作",
-    "approval-gated": "人審閘門"
+    "approval-gated": "人審閘門",
   });
 }
 
@@ -3658,7 +5449,7 @@ function koEngineeringPermissionMode(mode: string) {
     "code-only": "코드 작업만",
     "browser-assisted": "브라우저 보조",
     "mac-assisted": "Mac 조작 포함",
-    "approval-gated": "승인 게이트"
+    "approval-gated": "승인 게이트",
   });
 }
 
@@ -3671,7 +5462,7 @@ function jaEngineeringLaunchStage(stage: string) {
     "preflight-ready": "権限確認待ち",
     "sandbox-ready": "ローカル実行待ち",
     "evidence-review": "証拠レビュー",
-    "needs-review": "レビュー要"
+    "needs-review": "レビュー要",
   });
 }
 
@@ -3684,7 +5475,7 @@ function enEngineeringLaunchStage(stage: string) {
     "preflight-ready": "permission check",
     "sandbox-ready": "local run ready",
     "evidence-review": "evidence review",
-    "needs-review": "needs review"
+    "needs-review": "needs review",
   });
 }
 
@@ -3697,7 +5488,7 @@ function zhHansEngineeringLaunchStage(stage: string) {
     "preflight-ready": "等待权限检查",
     "sandbox-ready": "等待本地运行",
     "evidence-review": "证据审查",
-    "needs-review": "需要审查"
+    "needs-review": "需要审查",
   });
 }
 
@@ -3710,7 +5501,7 @@ function zhHantEngineeringLaunchStage(stage: string) {
     "preflight-ready": "等待權限檢查",
     "sandbox-ready": "等待本地執行",
     "evidence-review": "證據審查",
-    "needs-review": "需要審查"
+    "needs-review": "需要審查",
   });
 }
 
@@ -3723,7 +5514,7 @@ function koEngineeringLaunchStage(stage: string) {
     "preflight-ready": "권한 확인 대기",
     "sandbox-ready": "로컬 실행 대기",
     "evidence-review": "증거 검토",
-    "needs-review": "검토 필요"
+    "needs-review": "검토 필요",
   });
 }
 
@@ -3735,7 +5526,7 @@ function jaEngineeringNextAction(action: string) {
     "run-preflight": "権限を確認",
     "run-sandbox": "ローカル実行",
     "review-evidence": "証拠を確認",
-    "request-approval": "承認を取る"
+    "request-approval": "承認を取る",
   });
 }
 
@@ -3747,7 +5538,7 @@ function enEngineeringNextAction(action: string) {
     "run-preflight": "check permission",
     "run-sandbox": "run local sandbox",
     "review-evidence": "review evidence",
-    "request-approval": "request approval"
+    "request-approval": "request approval",
   });
 }
 
@@ -3759,7 +5550,7 @@ function zhHansEngineeringNextAction(action: string) {
     "run-preflight": "检查权限",
     "run-sandbox": "运行本地沙箱",
     "review-evidence": "审查证据",
-    "request-approval": "请求人审"
+    "request-approval": "请求人审",
   });
 }
 
@@ -3771,7 +5562,7 @@ function zhHantEngineeringNextAction(action: string) {
     "run-preflight": "檢查權限",
     "run-sandbox": "執行本地沙箱",
     "review-evidence": "審查證據",
-    "request-approval": "請求人審"
+    "request-approval": "請求人審",
   });
 }
 
@@ -3783,7 +5574,7 @@ function koEngineeringNextAction(action: string) {
     "run-preflight": "권한 확인",
     "run-sandbox": "로컬 샌드박스 실행",
     "review-evidence": "증거 검토",
-    "request-approval": "승인 요청"
+    "request-approval": "승인 요청",
   });
 }
 
@@ -3793,7 +5584,7 @@ function jaEngineeringSelfSimulationDecision(decision: string) {
     "simulated-ready": "模擬準備済み",
     "approval-required": "承認が必要",
     "needs-review": "レビュー要",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -3803,7 +5594,7 @@ function enEngineeringSelfSimulationDecision(decision: string) {
     "simulated-ready": "simulated ready",
     "approval-required": "approval required",
     "needs-review": "needs review",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -3813,7 +5604,7 @@ function zhHansEngineeringSelfSimulationDecision(decision: string) {
     "simulated-ready": "模拟就绪",
     "approval-required": "需要审批",
     "needs-review": "需要审查",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -3823,7 +5614,7 @@ function zhHantEngineeringSelfSimulationDecision(decision: string) {
     "simulated-ready": "模擬就緒",
     "approval-required": "需要審批",
     "needs-review": "需要審查",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -3833,7 +5624,7 @@ function koEngineeringSelfSimulationDecision(decision: string) {
     "simulated-ready": "시뮬레이션 준비됨",
     "approval-required": "승인 필요",
     "needs-review": "검토 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -3846,7 +5637,7 @@ function jaEngineeringSelfSimulationStage(stage: string) {
     dispatch: "Dispatch",
     runner: "Runner",
     preflight: "Preflight",
-    evidence: "証拠"
+    evidence: "証拠",
   });
 }
 
@@ -3859,7 +5650,7 @@ function enEngineeringSelfSimulationStage(stage: string) {
     dispatch: "dispatch",
     runner: "runner",
     preflight: "preflight",
-    evidence: "evidence"
+    evidence: "evidence",
   });
 }
 
@@ -3872,7 +5663,7 @@ function zhHansEngineeringSelfSimulationStage(stage: string) {
     dispatch: "分发",
     runner: "Runner",
     preflight: "预检",
-    evidence: "证据"
+    evidence: "证据",
   });
 }
 
@@ -3885,7 +5676,7 @@ function zhHantEngineeringSelfSimulationStage(stage: string) {
     dispatch: "分發",
     runner: "Runner",
     preflight: "預檢",
-    evidence: "證據"
+    evidence: "證據",
   });
 }
 
@@ -3898,7 +5689,7 @@ function koEngineeringSelfSimulationStage(stage: string) {
     dispatch: "Dispatch",
     runner: "Runner",
     preflight: "Preflight",
-    evidence: "증거"
+    evidence: "증거",
   });
 }
 
@@ -3907,7 +5698,7 @@ function jaEngineeringSelfSimulationStageStatus(status: string) {
     pass: "通過",
     warn: "注意",
     block: "停止",
-    waiting: "待機"
+    waiting: "待機",
   });
 }
 
@@ -3916,7 +5707,7 @@ function enEngineeringSelfSimulationStageStatus(status: string) {
     pass: "pass",
     warn: "warn",
     block: "block",
-    waiting: "waiting"
+    waiting: "waiting",
   });
 }
 
@@ -3925,7 +5716,7 @@ function zhHansEngineeringSelfSimulationStageStatus(status: string) {
     pass: "通过",
     warn: "注意",
     block: "阻止",
-    waiting: "等待"
+    waiting: "等待",
   });
 }
 
@@ -3934,7 +5725,7 @@ function zhHantEngineeringSelfSimulationStageStatus(status: string) {
     pass: "通過",
     warn: "注意",
     block: "阻止",
-    waiting: "等待"
+    waiting: "等待",
   });
 }
 
@@ -3943,7 +5734,7 @@ function koEngineeringSelfSimulationStageStatus(status: string) {
     pass: "통과",
     warn: "주의",
     block: "차단",
-    waiting: "대기"
+    waiting: "대기",
   });
 }
 
@@ -3954,7 +5745,7 @@ function jaEngineeringSelfSimulationCapability(capability: string) {
     "browser-assist": "ブラウザ補助",
     "mac-desktop": "Mac 操作",
     "mcp-tools": "MCP",
-    "external-writes": "外部書き込み"
+    "external-writes": "外部書き込み",
   });
 }
 
@@ -3965,7 +5756,7 @@ function enEngineeringSelfSimulationCapability(capability: string) {
     "browser-assist": "browser assist",
     "mac-desktop": "Mac desktop",
     "mcp-tools": "MCP tools",
-    "external-writes": "external writes"
+    "external-writes": "external writes",
   });
 }
 
@@ -3976,7 +5767,7 @@ function zhHansEngineeringSelfSimulationCapability(capability: string) {
     "browser-assist": "浏览器辅助",
     "mac-desktop": "Mac 桌面",
     "mcp-tools": "MCP 工具",
-    "external-writes": "外部写入"
+    "external-writes": "外部写入",
   });
 }
 
@@ -3987,7 +5778,7 @@ function zhHantEngineeringSelfSimulationCapability(capability: string) {
     "browser-assist": "瀏覽器輔助",
     "mac-desktop": "Mac 桌面",
     "mcp-tools": "MCP 工具",
-    "external-writes": "外部寫入"
+    "external-writes": "外部寫入",
   });
 }
 
@@ -3998,7 +5789,7 @@ function koEngineeringSelfSimulationCapability(capability: string) {
     "browser-assist": "브라우저 보조",
     "mac-desktop": "Mac 데스크톱",
     "mcp-tools": "MCP 도구",
-    "external-writes": "외부 쓰기"
+    "external-writes": "외부 쓰기",
   });
 }
 
@@ -4008,7 +5799,7 @@ function jaEngineeringSelfSimulationCapabilityStatus(status: string) {
     simulated: "模擬",
     "approval-required": "承認必要",
     "not-requested": "未要求",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4018,7 +5809,7 @@ function enEngineeringSelfSimulationCapabilityStatus(status: string) {
     simulated: "simulated",
     "approval-required": "approval",
     "not-requested": "not requested",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4028,7 +5819,7 @@ function zhHansEngineeringSelfSimulationCapabilityStatus(status: string) {
     simulated: "已模拟",
     "approval-required": "需审批",
     "not-requested": "未请求",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4038,7 +5829,7 @@ function zhHantEngineeringSelfSimulationCapabilityStatus(status: string) {
     simulated: "已模擬",
     "approval-required": "需審批",
     "not-requested": "未請求",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4048,7 +5839,7 @@ function koEngineeringSelfSimulationCapabilityStatus(status: string) {
     simulated: "시뮬레이션",
     "approval-required": "승인 필요",
     "not-requested": "요청 없음",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4056,7 +5847,7 @@ function jaEngineeringPermissionRequestDecision(decision: string) {
   return engineeringLabel(decision, {
     ready: "ローカル準備済み",
     "approval-required": "承認が必要",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4064,7 +5855,7 @@ function enEngineeringPermissionRequestDecision(decision: string) {
   return engineeringLabel(decision, {
     ready: "local ready",
     "approval-required": "approval required",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4072,7 +5863,7 @@ function zhHansEngineeringPermissionRequestDecision(decision: string) {
   return engineeringLabel(decision, {
     ready: "本地就绪",
     "approval-required": "需要审批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4080,7 +5871,7 @@ function zhHantEngineeringPermissionRequestDecision(decision: string) {
   return engineeringLabel(decision, {
     ready: "本地就緒",
     "approval-required": "需要審批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4088,7 +5879,7 @@ function koEngineeringPermissionRequestDecision(decision: string) {
   return engineeringLabel(decision, {
     ready: "로컬 준비됨",
     "approval-required": "승인 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4097,7 +5888,7 @@ function jaEngineeringPermissionRequestMode(mode: string) {
     "default-local": "ローカル既定",
     "ask-before-use": "使用前確認",
     "not-requested": "未要求",
-    blocked: "拒否"
+    blocked: "拒否",
   });
 }
 
@@ -4106,7 +5897,7 @@ function enEngineeringPermissionRequestMode(mode: string) {
     "default-local": "local default",
     "ask-before-use": "ask before use",
     "not-requested": "not requested",
-    blocked: "denied"
+    blocked: "denied",
   });
 }
 
@@ -4115,7 +5906,7 @@ function zhHansEngineeringPermissionRequestMode(mode: string) {
     "default-local": "本地默认",
     "ask-before-use": "使用前确认",
     "not-requested": "未请求",
-    blocked: "拒绝"
+    blocked: "拒绝",
   });
 }
 
@@ -4124,7 +5915,7 @@ function zhHantEngineeringPermissionRequestMode(mode: string) {
     "default-local": "本地預設",
     "ask-before-use": "使用前確認",
     "not-requested": "未請求",
-    blocked: "拒絕"
+    blocked: "拒絕",
   });
 }
 
@@ -4133,7 +5924,7 @@ function koEngineeringPermissionRequestMode(mode: string) {
     "default-local": "로컬 기본",
     "ask-before-use": "사용 전 확인",
     "not-requested": "요청 없음",
-    blocked: "거부"
+    blocked: "거부",
   });
 }
 
@@ -4142,7 +5933,7 @@ function jaEngineeringCapabilityGapDecision(decision: string) {
     "engineering-ready": "工程準備中",
     "agent-ready": "Agent 準備済み",
     "runtime-needed": "Runtime 要接続",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4151,7 +5942,7 @@ function enEngineeringCapabilityGapDecision(decision: string) {
     "engineering-ready": "engineering ready",
     "agent-ready": "agent ready",
     "runtime-needed": "runtime needed",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4160,7 +5951,7 @@ function zhHansEngineeringCapabilityGapDecision(decision: string) {
     "engineering-ready": "工程准备中",
     "agent-ready": "Agent 就绪",
     "runtime-needed": "需要运行时",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4169,7 +5960,7 @@ function zhHantEngineeringCapabilityGapDecision(decision: string) {
     "engineering-ready": "工程準備中",
     "agent-ready": "Agent 就緒",
     "runtime-needed": "需要執行時",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4178,7 +5969,7 @@ function koEngineeringCapabilityGapDecision(decision: string) {
     "engineering-ready": "엔지니어링 준비",
     "agent-ready": "agent 준비됨",
     "runtime-needed": "runtime 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4189,7 +5980,7 @@ function jaEngineeringCapabilityGapItem(item: string) {
     "browser-automation": "ブラウザ自動化",
     "mac-desktop-control": "Mac デスクトップ操作",
     "mcp-connectors": "MCP connector",
-    "external-writes": "外部書き込み"
+    "external-writes": "外部書き込み",
   });
 }
 
@@ -4200,7 +5991,7 @@ function enEngineeringCapabilityGapItem(item: string) {
     "browser-automation": "browser automation",
     "mac-desktop-control": "Mac desktop control",
     "mcp-connectors": "MCP connectors",
-    "external-writes": "external writes"
+    "external-writes": "external writes",
   });
 }
 
@@ -4211,7 +6002,7 @@ function zhHansEngineeringCapabilityGapItem(item: string) {
     "browser-automation": "浏览器自动化",
     "mac-desktop-control": "Mac 桌面控制",
     "mcp-connectors": "MCP 连接器",
-    "external-writes": "外部写入"
+    "external-writes": "外部写入",
   });
 }
 
@@ -4222,7 +6013,7 @@ function zhHantEngineeringCapabilityGapItem(item: string) {
     "browser-automation": "瀏覽器自動化",
     "mac-desktop-control": "Mac 桌面控制",
     "mcp-connectors": "MCP 連接器",
-    "external-writes": "外部寫入"
+    "external-writes": "外部寫入",
   });
 }
 
@@ -4233,7 +6024,7 @@ function koEngineeringCapabilityGapItem(item: string) {
     "browser-automation": "브라우저 자동화",
     "mac-desktop-control": "Mac 데스크톱 제어",
     "mcp-connectors": "MCP 커넥터",
-    "external-writes": "외부 쓰기"
+    "external-writes": "외부 쓰기",
   });
 }
 
@@ -4243,7 +6034,7 @@ function jaEngineeringCapabilityGapStatus(status: string) {
     simulated: "模擬",
     "approval-required": "承認必要",
     missing: "未接続",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4253,7 +6044,7 @@ function enEngineeringCapabilityGapStatus(status: string) {
     simulated: "simulated",
     "approval-required": "approval",
     missing: "missing",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4263,7 +6054,7 @@ function zhHansEngineeringCapabilityGapStatus(status: string) {
     simulated: "已模拟",
     "approval-required": "需审批",
     missing: "未接入",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4273,7 +6064,7 @@ function zhHantEngineeringCapabilityGapStatus(status: string) {
     simulated: "已模擬",
     "approval-required": "需審批",
     missing: "未接入",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4283,7 +6074,7 @@ function koEngineeringCapabilityGapStatus(status: string) {
     simulated: "시뮬레이션",
     "approval-required": "승인 필요",
     missing: "미연결",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4293,7 +6084,7 @@ function jaEngineeringLaunchQueueDecision(decision: string) {
     "queue-ready": "引き渡し準備済み",
     "preflight-ready": "ローカル実行準備済み",
     "needs-review": "確認待ち",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4303,7 +6094,7 @@ function enEngineeringLaunchQueueDecision(decision: string) {
     "queue-ready": "queue ready",
     "preflight-ready": "preflight ready",
     "needs-review": "needs review",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4313,7 +6104,7 @@ function zhHansEngineeringLaunchQueueDecision(decision: string) {
     "queue-ready": "可交给 agent",
     "preflight-ready": "可本地执行",
     "needs-review": "需要复核",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4323,7 +6114,7 @@ function zhHantEngineeringLaunchQueueDecision(decision: string) {
     "queue-ready": "可交給 agent",
     "preflight-ready": "可本地執行",
     "needs-review": "需要複核",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4333,7 +6124,7 @@ function koEngineeringLaunchQueueDecision(decision: string) {
     "queue-ready": "인계 준비됨",
     "preflight-ready": "로컬 실행 준비됨",
     "needs-review": "검토 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4342,7 +6133,7 @@ function jaEngineeringLaunchQueueStatus(status: string) {
     "ready-to-run": "実行可",
     "ready-to-handoff": "引き渡し可",
     held: "保留",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4351,7 +6142,7 @@ function enEngineeringLaunchQueueStatus(status: string) {
     "ready-to-run": "ready to run",
     "ready-to-handoff": "ready to handoff",
     held: "held",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4360,7 +6151,7 @@ function zhHansEngineeringLaunchQueueStatus(status: string) {
     "ready-to-run": "可本地跑",
     "ready-to-handoff": "可交给 agent",
     held: "保留",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4369,7 +6160,7 @@ function zhHantEngineeringLaunchQueueStatus(status: string) {
     "ready-to-run": "可本地跑",
     "ready-to-handoff": "可交給 agent",
     held: "保留",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4378,7 +6169,7 @@ function koEngineeringLaunchQueueStatus(status: string) {
     "ready-to-run": "실행 가능",
     "ready-to-handoff": "인계 가능",
     held: "보류",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4389,7 +6180,7 @@ function jaEngineeringExecutionReceiptDecision(decision: string) {
     "needs-evidence": "証拠不足",
     "needs-artifacts": "Artifact 要確認",
     accepted: "受理",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4400,7 +6191,7 @@ function enEngineeringExecutionReceiptDecision(decision: string) {
     "needs-evidence": "needs evidence",
     "needs-artifacts": "needs artifacts",
     accepted: "accepted",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4411,7 +6202,7 @@ function zhHansEngineeringExecutionReceiptDecision(decision: string) {
     "needs-evidence": "缺少证据",
     "needs-artifacts": "需验证工件",
     accepted: "已接受",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4422,7 +6213,7 @@ function zhHantEngineeringExecutionReceiptDecision(decision: string) {
     "needs-evidence": "缺少證據",
     "needs-artifacts": "需驗證工件",
     accepted: "已接受",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4433,7 +6224,7 @@ function koEngineeringExecutionReceiptDecision(decision: string) {
     "needs-evidence": "증거 필요",
     "needs-artifacts": "artifact 확인 필요",
     accepted: "수락",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4444,7 +6235,7 @@ function jaEngineeringExecutionReceiptStatus(status: string) {
     "needs-evidence": "証拠不足",
     "needs-artifacts": "Artifact不足",
     accepted: "受理",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4455,7 +6246,7 @@ function enEngineeringExecutionReceiptStatus(status: string) {
     "needs-evidence": "needs evidence",
     "needs-artifacts": "needs artifacts",
     accepted: "accepted",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4466,7 +6257,7 @@ function zhHansEngineeringExecutionReceiptStatus(status: string) {
     "needs-evidence": "缺证据",
     "needs-artifacts": "缺工件",
     accepted: "已接受",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4477,7 +6268,7 @@ function zhHantEngineeringExecutionReceiptStatus(status: string) {
     "needs-evidence": "缺證據",
     "needs-artifacts": "缺工件",
     accepted: "已接受",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4488,7 +6279,7 @@ function koEngineeringExecutionReceiptStatus(status: string) {
     "needs-evidence": "증거 필요",
     "needs-artifacts": "artifact 필요",
     accepted: "수락",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4498,7 +6289,7 @@ function jaEngineeringMacRunnerDecision(decision: string) {
     "code-ready": "コード工程準備",
     "approval-required": "承認待ち",
     "runtime-needed": "Mac runtime 必要",
-    "evidence-ready": "証拠受理済み"
+    "evidence-ready": "証拠受理済み",
   });
 }
 
@@ -4508,7 +6299,7 @@ function enEngineeringMacRunnerDecision(decision: string) {
     "code-ready": "code ready",
     "approval-required": "approval required",
     "runtime-needed": "runtime needed",
-    "evidence-ready": "evidence ready"
+    "evidence-ready": "evidence ready",
   });
 }
 
@@ -4518,7 +6309,7 @@ function zhHansEngineeringMacRunnerDecision(decision: string) {
     "code-ready": "代码工程就绪",
     "approval-required": "需要审批",
     "runtime-needed": "需要 Mac runtime",
-    "evidence-ready": "证据已接受"
+    "evidence-ready": "证据已接受",
   });
 }
 
@@ -4528,7 +6319,7 @@ function zhHantEngineeringMacRunnerDecision(decision: string) {
     "code-ready": "程式工程就緒",
     "approval-required": "需要審批",
     "runtime-needed": "需要 Mac runtime",
-    "evidence-ready": "證據已接受"
+    "evidence-ready": "證據已接受",
   });
 }
 
@@ -4538,7 +6329,7 @@ function koEngineeringMacRunnerDecision(decision: string) {
     "code-ready": "코드 준비",
     "approval-required": "승인 필요",
     "runtime-needed": "Mac runtime 필요",
-    "evidence-ready": "증거 수락됨"
+    "evidence-ready": "증거 수락됨",
   });
 }
 
@@ -4569,7 +6360,7 @@ function jaEngineeringMacRunnerCapabilityStatus(status: string) {
     "approval-required": "承認必要",
     "needs-runtime": "runtime必要",
     blocked: "停止",
-    "not-requested": "未要求"
+    "not-requested": "未要求",
   });
 }
 
@@ -4580,7 +6371,7 @@ function enEngineeringMacRunnerCapabilityStatus(status: string) {
     "approval-required": "approval",
     "needs-runtime": "needs runtime",
     blocked: "blocked",
-    "not-requested": "not requested"
+    "not-requested": "not requested",
   });
 }
 
@@ -4591,7 +6382,7 @@ function zhHansEngineeringMacRunnerCapabilityStatus(status: string) {
     "approval-required": "需审批",
     "needs-runtime": "缺 runtime",
     blocked: "阻止",
-    "not-requested": "未请求"
+    "not-requested": "未请求",
   });
 }
 
@@ -4602,7 +6393,7 @@ function zhHantEngineeringMacRunnerCapabilityStatus(status: string) {
     "approval-required": "需審批",
     "needs-runtime": "缺 runtime",
     blocked: "阻止",
-    "not-requested": "未請求"
+    "not-requested": "未請求",
   });
 }
 
@@ -4613,7 +6404,7 @@ function koEngineeringMacRunnerCapabilityStatus(status: string) {
     "approval-required": "승인 필요",
     "needs-runtime": "runtime 필요",
     blocked: "차단",
-    "not-requested": "요청 없음"
+    "not-requested": "요청 없음",
   });
 }
 
@@ -4643,7 +6434,7 @@ function jaEngineeringMacRunnerPermissionStatus(status: string) {
     "ask-before-use": "使用前確認",
     "not-requested": "未要求",
     "denied-by-default": "既定拒否",
-    missing: "不足"
+    missing: "不足",
   });
 }
 
@@ -4653,7 +6444,7 @@ function enEngineeringMacRunnerPermissionStatus(status: string) {
     "ask-before-use": "ask first",
     "not-requested": "not requested",
     "denied-by-default": "denied by default",
-    missing: "missing"
+    missing: "missing",
   });
 }
 
@@ -4663,7 +6454,7 @@ function zhHansEngineeringMacRunnerPermissionStatus(status: string) {
     "ask-before-use": "使用前确认",
     "not-requested": "未请求",
     "denied-by-default": "默认拒绝",
-    missing: "缺失"
+    missing: "缺失",
   });
 }
 
@@ -4673,7 +6464,7 @@ function zhHantEngineeringMacRunnerPermissionStatus(status: string) {
     "ask-before-use": "使用前確認",
     "not-requested": "未請求",
     "denied-by-default": "預設拒絕",
-    missing: "缺失"
+    missing: "缺失",
   });
 }
 
@@ -4683,7 +6474,7 @@ function koEngineeringMacRunnerPermissionStatus(status: string) {
     "ask-before-use": "사용 전 확인",
     "not-requested": "요청 없음",
     "denied-by-default": "기본 거부",
-    missing: "부족"
+    missing: "부족",
   });
 }
 
@@ -4714,7 +6505,7 @@ function jaEngineeringMacRunnerAdapterStatus(status: string) {
     "approval-required": "承認必要",
     "needs-runtime": "runtime必要",
     "denied-by-default": "既定拒否",
-    "not-requested": "未要求"
+    "not-requested": "未要求",
   });
 }
 
@@ -4725,7 +6516,7 @@ function enEngineeringMacRunnerAdapterStatus(status: string) {
     "approval-required": "approval",
     "needs-runtime": "needs runtime",
     "denied-by-default": "denied",
-    "not-requested": "not requested"
+    "not-requested": "not requested",
   });
 }
 
@@ -4736,7 +6527,7 @@ function zhHansEngineeringMacRunnerAdapterStatus(status: string) {
     "approval-required": "需审批",
     "needs-runtime": "缺 runtime",
     "denied-by-default": "默认拒绝",
-    "not-requested": "未请求"
+    "not-requested": "未请求",
   });
 }
 
@@ -4747,7 +6538,7 @@ function zhHantEngineeringMacRunnerAdapterStatus(status: string) {
     "approval-required": "需審批",
     "needs-runtime": "缺 runtime",
     "denied-by-default": "預設拒絕",
-    "not-requested": "未請求"
+    "not-requested": "未請求",
   });
 }
 
@@ -4758,72 +6549,102 @@ function koEngineeringMacRunnerAdapterStatus(status: string) {
     "approval-required": "승인 필요",
     "needs-runtime": "runtime 필요",
     "denied-by-default": "기본 거부",
-    "not-requested": "요청 없음"
+    "not-requested": "요청 없음",
   });
 }
 
 function jaEngineeringMacRunnerNextAction(action: string) {
   return engineeringLabel(action, {
-    "write-mission": "工程タスク、対象リポジトリ、検証コマンド、承認境界を入力する。",
-    "prepare-dispatch-package": "自己模擬を実行し、coding-agent dispatch package を準備する。",
-    "approve-browser-profile": "ブラウザ自動化前に隔離プロファイルと URL 範囲を承認する。",
-    "connect-mac-adapter": "Mac adapter を接続し、Accessibility、画面収録、Automation 範囲、action log、kill switch を承認する。",
+    "write-mission":
+      "工程タスク、対象リポジトリ、検証コマンド、承認境界を入力する。",
+    "prepare-dispatch-package":
+      "自己模擬を実行し、coding-agent dispatch package を準備する。",
+    "approve-browser-profile":
+      "ブラウザ自動化前に隔離プロファイルと URL 範囲を承認する。",
+    "connect-mac-adapter":
+      "Mac adapter を接続し、Accessibility、画面収録、Automation 範囲、action log、kill switch を承認する。",
     "allowlist-mcp-tools": "使用する MCP tool と引数を allowlist に入れる。",
-    "approve-external-writes": "Git push、deploy、issue 作成、message send などを承認または削除する。",
-    "run-or-import-receipts": "governed local runner を実行するか、receipt、transcript、diff、artifact を取り込む。",
-    "review-accepted-evidence": "受理済み証拠を確認し、board 更新可否を判断する。"
+    "approve-external-writes":
+      "Git push、deploy、issue 作成、message send などを承認または削除する。",
+    "run-or-import-receipts":
+      "governed local runner を実行するか、receipt、transcript、diff、artifact を取り込む。",
+    "review-accepted-evidence":
+      "受理済み証拠を確認し、board 更新可否を判断する。",
   });
 }
 
 function enEngineeringMacRunnerNextAction(action: string) {
   return engineeringLabel(action, {
-    "write-mission": "Write the engineering task, target repository, verification commands, and approval boundary.",
-    "prepare-dispatch-package": "Run self-simulation and prepare the coding-agent dispatch package before execution.",
-    "approve-browser-profile": "Approve an isolated browser profile and URL scope before browser automation.",
-    "connect-mac-adapter": "Connect a governed Mac adapter, then approve Accessibility, Screen Recording, Automation scope, action logs, and kill switch.",
-    "allowlist-mcp-tools": "Name each MCP tool and arguments in an allowlist before use.",
-    "approve-external-writes": "Approve or remove Git push, deploy, issue creation, message sends, and other external writes.",
-    "run-or-import-receipts": "Run the governed local runner or import completed receipts, transcripts, diffs, and artifacts.",
-    "review-accepted-evidence": "Review the accepted evidence, then decide whether the board can be updated."
+    "write-mission":
+      "Write the engineering task, target repository, verification commands, and approval boundary.",
+    "prepare-dispatch-package":
+      "Run self-simulation and prepare the coding-agent dispatch package before execution.",
+    "approve-browser-profile":
+      "Approve an isolated browser profile and URL scope before browser automation.",
+    "connect-mac-adapter":
+      "Connect a governed Mac adapter, then approve Accessibility, Screen Recording, Automation scope, action logs, and kill switch.",
+    "allowlist-mcp-tools":
+      "Name each MCP tool and arguments in an allowlist before use.",
+    "approve-external-writes":
+      "Approve or remove Git push, deploy, issue creation, message sends, and other external writes.",
+    "run-or-import-receipts":
+      "Run the governed local runner or import completed receipts, transcripts, diffs, and artifacts.",
+    "review-accepted-evidence":
+      "Review the accepted evidence, then decide whether the board can be updated.",
   });
 }
 
 function zhHansEngineeringMacRunnerNextAction(action: string) {
   return engineeringLabel(action, {
     "write-mission": "填写工程任务、目标仓库、验证命令和审批边界。",
-    "prepare-dispatch-package": "先运行自己模拟，再准备 coding-agent dispatch package。",
+    "prepare-dispatch-package":
+      "先运行自己模拟，再准备 coding-agent dispatch package。",
     "approve-browser-profile": "浏览器自动化前先批准隔离 profile 和 URL 范围。",
-    "connect-mac-adapter": "接入受治理的 Mac adapter，并批准辅助功能、屏幕录制、自动化范围、动作日志和 kill switch。",
+    "connect-mac-adapter":
+      "接入受治理的 Mac adapter，并批准辅助功能、屏幕录制、自动化范围、动作日志和 kill switch。",
     "allowlist-mcp-tools": "把每个 MCP tool 和参数写进 allowlist。",
-    "approve-external-writes": "批准或移除 Git push、deploy、issue 创建、消息发送等外部写入。",
-    "run-or-import-receipts": "运行受治理的本地 runner，或导入 receipt、transcript、diff 和 artifact。",
-    "review-accepted-evidence": "审查已接受证据，再决定是否更新 board。"
+    "approve-external-writes":
+      "批准或移除 Git push、deploy、issue 创建、消息发送等外部写入。",
+    "run-or-import-receipts":
+      "运行受治理的本地 runner，或导入 receipt、transcript、diff 和 artifact。",
+    "review-accepted-evidence": "审查已接受证据，再决定是否更新 board。",
   });
 }
 
 function zhHantEngineeringMacRunnerNextAction(action: string) {
   return engineeringLabel(action, {
     "write-mission": "填寫工程任務、目標倉庫、驗證命令和審批邊界。",
-    "prepare-dispatch-package": "先執行自己模擬，再準備 coding-agent dispatch package。",
+    "prepare-dispatch-package":
+      "先執行自己模擬，再準備 coding-agent dispatch package。",
     "approve-browser-profile": "瀏覽器自動化前先批准隔離 profile 和 URL 範圍。",
-    "connect-mac-adapter": "接入受治理的 Mac adapter，並批准輔助使用、螢幕錄製、自動化範圍、動作日誌和 kill switch。",
+    "connect-mac-adapter":
+      "接入受治理的 Mac adapter，並批准輔助使用、螢幕錄製、自動化範圍、動作日誌和 kill switch。",
     "allowlist-mcp-tools": "把每個 MCP tool 和參數寫進 allowlist。",
-    "approve-external-writes": "批准或移除 Git push、deploy、issue 建立、訊息傳送等外部寫入。",
-    "run-or-import-receipts": "執行受治理的本地 runner，或匯入 receipt、transcript、diff 和 artifact。",
-    "review-accepted-evidence": "審查已接受證據，再決定是否更新 board。"
+    "approve-external-writes":
+      "批准或移除 Git push、deploy、issue 建立、訊息傳送等外部寫入。",
+    "run-or-import-receipts":
+      "執行受治理的本地 runner，或匯入 receipt、transcript、diff 和 artifact。",
+    "review-accepted-evidence": "審查已接受證據，再決定是否更新 board。",
   });
 }
 
 function koEngineeringMacRunnerNextAction(action: string) {
   return engineeringLabel(action, {
-    "write-mission": "엔지니어링 작업, 대상 저장소, 검증 명령, 승인 경계를 작성합니다.",
-    "prepare-dispatch-package": "실행 전에 자체 시뮬레이션을 실행하고 coding-agent dispatch package를 준비합니다.",
-    "approve-browser-profile": "브라우저 자동화 전에 격리 profile과 URL 범위를 승인합니다.",
-    "connect-mac-adapter": "통제된 Mac adapter를 연결하고 손쉬운 사용, 화면 기록, 자동화 범위, action log, kill switch를 승인합니다.",
+    "write-mission":
+      "엔지니어링 작업, 대상 저장소, 검증 명령, 승인 경계를 작성합니다.",
+    "prepare-dispatch-package":
+      "실행 전에 자체 시뮬레이션을 실행하고 coding-agent dispatch package를 준비합니다.",
+    "approve-browser-profile":
+      "브라우저 자동화 전에 격리 profile과 URL 범위를 승인합니다.",
+    "connect-mac-adapter":
+      "통제된 Mac adapter를 연결하고 손쉬운 사용, 화면 기록, 자동화 범위, action log, kill switch를 승인합니다.",
     "allowlist-mcp-tools": "각 MCP tool과 인자를 allowlist에 명시합니다.",
-    "approve-external-writes": "Git push, deploy, issue 생성, 메시지 전송 등 외부 쓰기를 승인하거나 제거합니다.",
-    "run-or-import-receipts": "통제된 로컬 runner를 실행하거나 receipt, transcript, diff, artifact를 가져옵니다.",
-    "review-accepted-evidence": "수락된 증거를 검토한 뒤 board 업데이트 여부를 결정합니다."
+    "approve-external-writes":
+      "Git push, deploy, issue 생성, 메시지 전송 등 외부 쓰기를 승인하거나 제거합니다.",
+    "run-or-import-receipts":
+      "통제된 로컬 runner를 실행하거나 receipt, transcript, diff, artifact를 가져옵니다.",
+    "review-accepted-evidence":
+      "수락된 증거를 검토한 뒤 board 업데이트 여부를 결정합니다.",
   });
 }
 
@@ -4833,7 +6654,7 @@ function jaEngineeringMacRunnerContractDecision(decision: string) {
     "draft-ready": "contract 草案",
     "approval-required": "承認必要",
     "runtime-needed": "runtime必要",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -4843,7 +6664,7 @@ function enEngineeringMacRunnerContractDecision(decision: string) {
     "draft-ready": "draft ready",
     "approval-required": "approval required",
     "runtime-needed": "runtime needed",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -4853,7 +6674,7 @@ function zhHansEngineeringMacRunnerContractDecision(decision: string) {
     "draft-ready": "合约草案就绪",
     "approval-required": "需要审批",
     "runtime-needed": "需要 runtime",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4863,7 +6684,7 @@ function zhHantEngineeringMacRunnerContractDecision(decision: string) {
     "draft-ready": "合約草案就緒",
     "approval-required": "需要審批",
     "runtime-needed": "需要 runtime",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -4873,7 +6694,7 @@ function koEngineeringMacRunnerContractDecision(decision: string) {
     "draft-ready": "contract 초안",
     "approval-required": "승인 필요",
     "runtime-needed": "runtime 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -4902,7 +6723,7 @@ function jaEngineeringMacRunnerContractActionStatus(status: string) {
     "ready-for-approval": "承認待ち",
     "needs-runtime": "runtime必要",
     blocked: "停止",
-    "not-requested": "未要求"
+    "not-requested": "未要求",
   });
 }
 
@@ -4911,7 +6732,7 @@ function enEngineeringMacRunnerContractActionStatus(status: string) {
     "ready-for-approval": "ready for approval",
     "needs-runtime": "needs runtime",
     blocked: "blocked",
-    "not-requested": "not requested"
+    "not-requested": "not requested",
   });
 }
 
@@ -4920,7 +6741,7 @@ function zhHansEngineeringMacRunnerContractActionStatus(status: string) {
     "ready-for-approval": "等待审批",
     "needs-runtime": "缺 runtime",
     blocked: "阻止",
-    "not-requested": "未请求"
+    "not-requested": "未请求",
   });
 }
 
@@ -4929,7 +6750,7 @@ function zhHantEngineeringMacRunnerContractActionStatus(status: string) {
     "ready-for-approval": "等待審批",
     "needs-runtime": "缺 runtime",
     blocked: "阻止",
-    "not-requested": "未請求"
+    "not-requested": "未請求",
   });
 }
 
@@ -4938,7 +6759,7 @@ function koEngineeringMacRunnerContractActionStatus(status: string) {
     "ready-for-approval": "승인 대기",
     "needs-runtime": "runtime 필요",
     blocked: "차단",
-    "not-requested": "요청 없음"
+    "not-requested": "요청 없음",
   });
 }
 
@@ -4946,7 +6767,7 @@ function jaEngineeringMacRunnerContractCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通過",
     warn: "注意",
-    block: "停止"
+    block: "停止",
   });
 }
 
@@ -4954,7 +6775,7 @@ function enEngineeringMacRunnerContractCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "pass",
     warn: "warn",
-    block: "block"
+    block: "block",
   });
 }
 
@@ -4962,7 +6783,7 @@ function zhHansEngineeringMacRunnerContractCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通过",
     warn: "注意",
-    block: "阻止"
+    block: "阻止",
   });
 }
 
@@ -4970,7 +6791,7 @@ function zhHantEngineeringMacRunnerContractCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通過",
     warn: "注意",
-    block: "阻止"
+    block: "阻止",
   });
 }
 
@@ -4978,7 +6799,7 @@ function koEngineeringMacRunnerContractCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "통과",
     warn: "주의",
-    block: "차단"
+    block: "차단",
   });
 }
 
@@ -5003,62 +6824,92 @@ function koEngineeringMacRunnerContractDeniedAction(action: string) {
 }
 
 function jaEngineeringMacRunnerContractInstruction(instruction: string) {
-  return engineeringLabel(instruction, macRunnerContractInstructionLabels("ja"));
+  return engineeringLabel(
+    instruction,
+    macRunnerContractInstructionLabels("ja"),
+  );
 }
 
 function enEngineeringMacRunnerContractInstruction(instruction: string) {
-  return engineeringLabel(instruction, macRunnerContractInstructionLabels("en"));
+  return engineeringLabel(
+    instruction,
+    macRunnerContractInstructionLabels("en"),
+  );
 }
 
 function zhHansEngineeringMacRunnerContractInstruction(instruction: string) {
-  return engineeringLabel(instruction, macRunnerContractInstructionLabels("zh-Hans"));
+  return engineeringLabel(
+    instruction,
+    macRunnerContractInstructionLabels("zh-Hans"),
+  );
 }
 
 function zhHantEngineeringMacRunnerContractInstruction(instruction: string) {
-  return engineeringLabel(instruction, macRunnerContractInstructionLabels("zh-Hant"));
+  return engineeringLabel(
+    instruction,
+    macRunnerContractInstructionLabels("zh-Hant"),
+  );
 }
 
 function koEngineeringMacRunnerContractInstruction(instruction: string) {
-  return engineeringLabel(instruction, macRunnerContractInstructionLabels("ko"));
+  return engineeringLabel(
+    instruction,
+    macRunnerContractInstructionLabels("ko"),
+  );
 }
 
 function macRunnerContractDeniedLabels(locale: SupportedLocale) {
   const labels = {
     ja: {
       "host-secrets": "ホスト秘密情報、keychain、cookie、raw env を読まない",
-      "out-of-scope-control": "承認範囲外の app、URL、window、screen を操作しない",
-      "bypass-evidence": "action log、receipt、redaction、artifact audit を省略しない",
+      "out-of-scope-control":
+        "承認範囲外の app、URL、window、screen を操作しない",
+      "bypass-evidence":
+        "action log、receipt、redaction、artifact audit を省略しない",
       "kill-switch-bypass": "kill switch 後、または証拠保存失敗後に続行しない",
-      "unapproved-external-write": "未承認の Git push、deploy、issue、message、purchase を行わない"
+      "unapproved-external-write":
+        "未承認の Git push、deploy、issue、message、purchase を行わない",
     },
     en: {
-      "host-secrets": "Do not read host secrets, keychain items, cookies, or raw env.",
-      "out-of-scope-control": "Do not control apps, URLs, windows, or screens outside approval scope.",
-      "bypass-evidence": "Do not bypass action logs, receipts, redaction, or artifact audit.",
-      "kill-switch-bypass": "Do not continue after kill switch or evidence write failure.",
-      "unapproved-external-write": "Do not perform unapproved Git push, deploy, issue, message, or purchase."
+      "host-secrets":
+        "Do not read host secrets, keychain items, cookies, or raw env.",
+      "out-of-scope-control":
+        "Do not control apps, URLs, windows, or screens outside approval scope.",
+      "bypass-evidence":
+        "Do not bypass action logs, receipts, redaction, or artifact audit.",
+      "kill-switch-bypass":
+        "Do not continue after kill switch or evidence write failure.",
+      "unapproved-external-write":
+        "Do not perform unapproved Git push, deploy, issue, message, or purchase.",
     },
     "zh-Hans": {
       "host-secrets": "不得读取主机秘密、keychain、cookie 或原始环境变量",
       "out-of-scope-control": "不得控制审批范围外的 app、URL、窗口或屏幕",
       "bypass-evidence": "不得跳过动作日志、收据、脱敏报告或工件审计",
       "kill-switch-bypass": "kill switch 触发或证据写入失败后不得继续",
-      "unapproved-external-write": "不得执行未审批的 Git push、deploy、issue、消息或购买"
+      "unapproved-external-write":
+        "不得执行未审批的 Git push、deploy、issue、消息或购买",
     },
     "zh-Hant": {
       "host-secrets": "不得讀取主機秘密、keychain、cookie 或原始環境變數",
       "out-of-scope-control": "不得控制審批範圍外的 app、URL、視窗或螢幕",
       "bypass-evidence": "不得跳過動作日誌、收據、脫敏報告或工件稽核",
       "kill-switch-bypass": "kill switch 觸發或證據寫入失敗後不得繼續",
-      "unapproved-external-write": "不得執行未審批的 Git push、deploy、issue、訊息或購買"
+      "unapproved-external-write":
+        "不得執行未審批的 Git push、deploy、issue、訊息或購買",
     },
     ko: {
-      "host-secrets": "호스트 비밀값, keychain, cookie, raw env를 읽지 않습니다",
-      "out-of-scope-control": "승인 범위 밖의 app, URL, window, screen을 제어하지 않습니다",
-      "bypass-evidence": "action log, receipt, redaction, artifact audit를 건너뛰지 않습니다",
-      "kill-switch-bypass": "kill switch 또는 증거 쓰기 실패 뒤 계속하지 않습니다",
-      "unapproved-external-write": "승인 없는 Git push, deploy, issue, message, purchase를 실행하지 않습니다"
-    }
+      "host-secrets":
+        "호스트 비밀값, keychain, cookie, raw env를 읽지 않습니다",
+      "out-of-scope-control":
+        "승인 범위 밖의 app, URL, window, screen을 제어하지 않습니다",
+      "bypass-evidence":
+        "action log, receipt, redaction, artifact audit를 건너뛰지 않습니다",
+      "kill-switch-bypass":
+        "kill switch 또는 증거 쓰기 실패 뒤 계속하지 않습니다",
+      "unapproved-external-write":
+        "승인 없는 Git push, deploy, issue, message, purchase를 실행하지 않습니다",
+    },
   };
   return labels[locale];
 }
@@ -5066,50 +6917,74 @@ function macRunnerContractDeniedLabels(locale: SupportedLocale) {
 function macRunnerContractInstructionLabels(locale: SupportedLocale) {
   const labels = {
     ja: {
-      "do-not-start": "この mission は Mac 操作を要求していないため adapter を開始しない。",
+      "do-not-start":
+        "この mission は Mac 操作を要求していないため adapter を開始しない。",
       "audit-only": "contract は監査文脈として保持するだけにする。",
-      "require-approval": "ask-before-use 権限の exact approval record がそろうまで実行しない。",
-      "load-scoped-runtime": "承認済み adapter runtime と target app/URL scope だけを読み込む。",
-      "write-evidence": "action log、screenshot、receipt、redaction report を action prefix 配下へ保存する。",
-      "return-receipt": "完了 receipt または refusal を返し、この草案だけで成功主張しない。",
-      "stop-on-risk": "kill switch、credential prompt、host secret、未承認外部書き込み、証拠保存失敗で即停止する。"
+      "require-approval":
+        "ask-before-use 権限の exact approval record がそろうまで実行しない。",
+      "load-scoped-runtime":
+        "承認済み adapter runtime と target app/URL scope だけを読み込む。",
+      "write-evidence":
+        "action log、screenshot、receipt、redaction report を action prefix 配下へ保存する。",
+      "return-receipt":
+        "完了 receipt または refusal を返し、この草案だけで成功主張しない。",
+      "stop-on-risk":
+        "kill switch、credential prompt、host secret、未承認外部書き込み、証拠保存失敗で即停止する。",
     },
     en: {
-      "do-not-start": "Do not start a Mac adapter; this mission did not request Mac control.",
+      "do-not-start":
+        "Do not start a Mac adapter; this mission did not request Mac control.",
       "audit-only": "Keep this contract for audit context only.",
-      "require-approval": "Do not execute until all ask-before-use permissions have exact approval records.",
-      "load-scoped-runtime": "Load only the approved adapter runtime and target app or URL scope.",
-      "write-evidence": "Write action logs, screenshots, receipts, and redaction reports under the action prefix.",
-      "return-receipt": "Return a completed receipt or refusal; never claim success from this draft alone.",
-      "stop-on-risk": "Stop on kill switch, credential prompt, host secret, unapproved external write, or evidence failure."
+      "require-approval":
+        "Do not execute until all ask-before-use permissions have exact approval records.",
+      "load-scoped-runtime":
+        "Load only the approved adapter runtime and target app or URL scope.",
+      "write-evidence":
+        "Write action logs, screenshots, receipts, and redaction reports under the action prefix.",
+      "return-receipt":
+        "Return a completed receipt or refusal; never claim success from this draft alone.",
+      "stop-on-risk":
+        "Stop on kill switch, credential prompt, host secret, unapproved external write, or evidence failure.",
     },
     "zh-Hans": {
       "do-not-start": "本任务未请求 Mac 控制，不启动 Mac adapter。",
       "audit-only": "该合约只作为审计上下文保留。",
       "require-approval": "所有使用前确认权限都有精确审批记录前不得执行。",
-      "load-scoped-runtime": "只加载已批准的 adapter runtime 和目标 app/URL 范围。",
-      "write-evidence": "把动作日志、截图、收据和脱敏报告写到 action prefix 下。",
+      "load-scoped-runtime":
+        "只加载已批准的 adapter runtime 和目标 app/URL 范围。",
+      "write-evidence":
+        "把动作日志、截图、收据和脱敏报告写到 action prefix 下。",
       "return-receipt": "返回完成收据或拒绝收据，不能只靠草案声称成功。",
-      "stop-on-risk": "遇到 kill switch、凭证提示、主机秘密、未审批外部写入或证据失败立即停止。"
+      "stop-on-risk":
+        "遇到 kill switch、凭证提示、主机秘密、未审批外部写入或证据失败立即停止。",
     },
     "zh-Hant": {
       "do-not-start": "本任務未請求 Mac 控制，不啟動 Mac adapter。",
       "audit-only": "該合約只作為稽核上下文保留。",
       "require-approval": "所有使用前確認權限都有精確審批記錄前不得執行。",
-      "load-scoped-runtime": "只載入已批准的 adapter runtime 和目標 app/URL 範圍。",
-      "write-evidence": "把動作日誌、截圖、收據和脫敏報告寫到 action prefix 下。",
+      "load-scoped-runtime":
+        "只載入已批准的 adapter runtime 和目標 app/URL 範圍。",
+      "write-evidence":
+        "把動作日誌、截圖、收據和脫敏報告寫到 action prefix 下。",
       "return-receipt": "返回完成收據或拒絕收據，不能只靠草案聲稱成功。",
-      "stop-on-risk": "遇到 kill switch、憑證提示、主機秘密、未審批外部寫入或證據失敗立即停止。"
+      "stop-on-risk":
+        "遇到 kill switch、憑證提示、主機秘密、未審批外部寫入或證據失敗立即停止。",
     },
     ko: {
-      "do-not-start": "이 미션은 Mac 제어를 요청하지 않았으므로 Mac adapter를 시작하지 않습니다.",
+      "do-not-start":
+        "이 미션은 Mac 제어를 요청하지 않았으므로 Mac adapter를 시작하지 않습니다.",
       "audit-only": "이 contract는 감사 맥락으로만 보관합니다.",
-      "require-approval": "ask-before-use 권한의 정확한 승인 기록이 있기 전에는 실행하지 않습니다.",
-      "load-scoped-runtime": "승인된 adapter runtime과 대상 app/URL scope만 로드합니다.",
-      "write-evidence": "action log, screenshot, receipt, redaction report를 action prefix 아래에 씁니다.",
-      "return-receipt": "완료 receipt 또는 refusal을 반환하고 초안만으로 성공을 주장하지 않습니다.",
-      "stop-on-risk": "kill switch, credential prompt, host secret, 미승인 외부 쓰기, 증거 실패 시 즉시 중지합니다."
-    }
+      "require-approval":
+        "ask-before-use 권한의 정확한 승인 기록이 있기 전에는 실행하지 않습니다.",
+      "load-scoped-runtime":
+        "승인된 adapter runtime과 대상 app/URL scope만 로드합니다.",
+      "write-evidence":
+        "action log, screenshot, receipt, redaction report를 action prefix 아래에 씁니다.",
+      "return-receipt":
+        "완료 receipt 또는 refusal을 반환하고 초안만으로 성공을 주장하지 않습니다.",
+      "stop-on-risk":
+        "kill switch, credential prompt, host secret, 미승인 외부 쓰기, 증거 실패 시 즉시 중지합니다.",
+    },
   };
   return labels[locale];
 }
@@ -5126,7 +7001,7 @@ function macRunnerContractActionLabels(locale: SupportedLocale) {
       "clipboard-read": "クリップボード読取",
       "clipboard-write": "クリップボード書込",
       "browser-open-url": "URL を開く",
-      "external-write": "外部書き込み"
+      "external-write": "外部書き込み",
     },
     en: {
       "observe-screen": "observe screen",
@@ -5138,7 +7013,7 @@ function macRunnerContractActionLabels(locale: SupportedLocale) {
       "clipboard-read": "clipboard read",
       "clipboard-write": "clipboard write",
       "browser-open-url": "open URL",
-      "external-write": "external write"
+      "external-write": "external write",
     },
     "zh-Hans": {
       "observe-screen": "观察屏幕",
@@ -5150,7 +7025,7 @@ function macRunnerContractActionLabels(locale: SupportedLocale) {
       "clipboard-read": "读取剪贴板",
       "clipboard-write": "写入剪贴板",
       "browser-open-url": "打开 URL",
-      "external-write": "外部写入"
+      "external-write": "外部写入",
     },
     "zh-Hant": {
       "observe-screen": "觀察螢幕",
@@ -5162,7 +7037,7 @@ function macRunnerContractActionLabels(locale: SupportedLocale) {
       "clipboard-read": "讀取剪貼簿",
       "clipboard-write": "寫入剪貼簿",
       "browser-open-url": "打開 URL",
-      "external-write": "外部寫入"
+      "external-write": "外部寫入",
     },
     ko: {
       "observe-screen": "화면 관찰",
@@ -5174,8 +7049,8 @@ function macRunnerContractActionLabels(locale: SupportedLocale) {
       "clipboard-read": "클립보드 읽기",
       "clipboard-write": "클립보드 쓰기",
       "browser-open-url": "URL 열기",
-      "external-write": "외부 쓰기"
-    }
+      "external-write": "외부 쓰기",
+    },
   };
   return labels[locale];
 }
@@ -5191,7 +7066,7 @@ function macRunnerCapabilityLabels(locale: SupportedLocale) {
       "app-window-control": "App/window 操作",
       clipboard: "クリップボード",
       "mcp-tools": "MCP ツール",
-      "external-writes": "外部書き込み"
+      "external-writes": "外部書き込み",
     },
     en: {
       "repo-coding": "repo coding",
@@ -5202,7 +7077,7 @@ function macRunnerCapabilityLabels(locale: SupportedLocale) {
       "app-window-control": "app/window control",
       clipboard: "clipboard",
       "mcp-tools": "MCP tools",
-      "external-writes": "external writes"
+      "external-writes": "external writes",
     },
     "zh-Hans": {
       "repo-coding": "仓库编程",
@@ -5213,7 +7088,7 @@ function macRunnerCapabilityLabels(locale: SupportedLocale) {
       "app-window-control": "App/window 控制",
       clipboard: "剪贴板",
       "mcp-tools": "MCP 工具",
-      "external-writes": "外部写入"
+      "external-writes": "外部写入",
     },
     "zh-Hant": {
       "repo-coding": "倉庫編程",
@@ -5224,7 +7099,7 @@ function macRunnerCapabilityLabels(locale: SupportedLocale) {
       "app-window-control": "App/window 控制",
       clipboard: "剪貼簿",
       "mcp-tools": "MCP 工具",
-      "external-writes": "外部寫入"
+      "external-writes": "外部寫入",
     },
     ko: {
       "repo-coding": "저장소 코딩",
@@ -5235,8 +7110,8 @@ function macRunnerCapabilityLabels(locale: SupportedLocale) {
       "app-window-control": "앱/window 제어",
       clipboard: "클립보드",
       "mcp-tools": "MCP 도구",
-      "external-writes": "외부 쓰기"
-    }
+      "external-writes": "외부 쓰기",
+    },
   };
   return labels[locale];
 }
@@ -5253,7 +7128,7 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
       "mac-automation": "Automation",
       "mcp-allowlist": "MCP allowlist",
       "external-write-approval": "外部書き込み承認",
-      "host-secrets": "ホスト秘密情報"
+      "host-secrets": "ホスト秘密情報",
     },
     en: {
       "repo-worktree": "repo worktree",
@@ -5265,7 +7140,7 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
       "mac-automation": "Automation",
       "mcp-allowlist": "MCP allowlist",
       "external-write-approval": "external write approval",
-      "host-secrets": "host secrets"
+      "host-secrets": "host secrets",
     },
     "zh-Hans": {
       "repo-worktree": "仓库 worktree",
@@ -5277,7 +7152,7 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
       "mac-automation": "自动化",
       "mcp-allowlist": "MCP 白名单",
       "external-write-approval": "外部写入审批",
-      "host-secrets": "主机秘密"
+      "host-secrets": "主机秘密",
     },
     "zh-Hant": {
       "repo-worktree": "倉庫 worktree",
@@ -5289,7 +7164,7 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
       "mac-automation": "自動化",
       "mcp-allowlist": "MCP 白名單",
       "external-write-approval": "外部寫入審批",
-      "host-secrets": "主機秘密"
+      "host-secrets": "主機秘密",
     },
     ko: {
       "repo-worktree": "저장소 worktree",
@@ -5301,8 +7176,8 @@ function macRunnerPermissionLabels(locale: SupportedLocale) {
       "mac-automation": "자동화",
       "mcp-allowlist": "MCP allowlist",
       "external-write-approval": "외부 쓰기 승인",
-      "host-secrets": "호스트 비밀값"
-    }
+      "host-secrets": "호스트 비밀값",
+    },
   };
   return labels[locale];
 }
@@ -5315,7 +7190,7 @@ function macRunnerAdapterLabels(locale: SupportedLocale) {
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw型 desktop",
       "mcp-tool-runner": "MCP runner",
-      "external-write-gateway": "外部書き込み gateway"
+      "external-write-gateway": "外部書き込み gateway",
     },
     en: {
       "codex-style-coding-agent": "Codex/OpenHands-style coding agent",
@@ -5323,7 +7198,7 @@ function macRunnerAdapterLabels(locale: SupportedLocale) {
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw-style desktop",
       "mcp-tool-runner": "MCP runner",
-      "external-write-gateway": "external write gateway"
+      "external-write-gateway": "external write gateway",
     },
     "zh-Hans": {
       "codex-style-coding-agent": "Codex/OpenHands 式编程代理",
@@ -5331,7 +7206,7 @@ function macRunnerAdapterLabels(locale: SupportedLocale) {
       "hammerspoon-adapter": "Hammerspoon 适配器",
       "openclaw-style-desktop": "OpenClaw 式桌面",
       "mcp-tool-runner": "MCP runner",
-      "external-write-gateway": "外部写入网关"
+      "external-write-gateway": "外部写入网关",
     },
     "zh-Hant": {
       "codex-style-coding-agent": "Codex/OpenHands 式編程代理",
@@ -5339,7 +7214,7 @@ function macRunnerAdapterLabels(locale: SupportedLocale) {
       "hammerspoon-adapter": "Hammerspoon 適配器",
       "openclaw-style-desktop": "OpenClaw 式桌面",
       "mcp-tool-runner": "MCP runner",
-      "external-write-gateway": "外部寫入閘道"
+      "external-write-gateway": "外部寫入閘道",
     },
     ko: {
       "codex-style-coding-agent": "Codex/OpenHands식 코딩 agent",
@@ -5347,8 +7222,8 @@ function macRunnerAdapterLabels(locale: SupportedLocale) {
       "hammerspoon-adapter": "Hammerspoon adapter",
       "openclaw-style-desktop": "OpenClaw식 desktop",
       "mcp-tool-runner": "MCP runner",
-      "external-write-gateway": "외부 쓰기 gateway"
-    }
+      "external-write-gateway": "외부 쓰기 gateway",
+    },
   };
   return labels[locale];
 }
@@ -5358,7 +7233,7 @@ function jaEngineeringHandoffDecision(decision: string) {
     "not-ready": "未準備",
     "agent-pack-ready": "Agent 引き渡し可",
     "approval-gated": "承認ゲートあり",
-    "evidence-review": "証拠レビュー"
+    "evidence-review": "証拠レビュー",
   });
 }
 
@@ -5367,7 +7242,7 @@ function enEngineeringHandoffDecision(decision: string) {
     "not-ready": "not ready",
     "agent-pack-ready": "agent pack ready",
     "approval-gated": "approval gated",
-    "evidence-review": "evidence review"
+    "evidence-review": "evidence review",
   });
 }
 
@@ -5376,7 +7251,7 @@ function zhHansEngineeringHandoffDecision(decision: string) {
     "not-ready": "未就绪",
     "agent-pack-ready": "Agent 包就绪",
     "approval-gated": "审批闸门",
-    "evidence-review": "证据审查"
+    "evidence-review": "证据审查",
   });
 }
 
@@ -5385,7 +7260,7 @@ function zhHantEngineeringHandoffDecision(decision: string) {
     "not-ready": "未就緒",
     "agent-pack-ready": "Agent 包就緒",
     "approval-gated": "審批閘門",
-    "evidence-review": "證據審查"
+    "evidence-review": "證據審查",
   });
 }
 
@@ -5394,7 +7269,7 @@ function koEngineeringHandoffDecision(decision: string) {
     "not-ready": "미준비",
     "agent-pack-ready": "agent pack 준비됨",
     "approval-gated": "승인 게이트",
-    "evidence-review": "증거 검토"
+    "evidence-review": "증거 검토",
   });
 }
 
@@ -5404,7 +7279,7 @@ function jaEngineeringHandoffLane(lane: string) {
     "coding-agent": "Coding agent",
     runner: "Runner",
     approval: "承認",
-    evidence: "証拠"
+    evidence: "証拠",
   });
 }
 
@@ -5414,7 +7289,7 @@ function enEngineeringHandoffLane(lane: string) {
     "coding-agent": "coding agent",
     runner: "runner",
     approval: "approval",
-    evidence: "evidence"
+    evidence: "evidence",
   });
 }
 
@@ -5424,7 +7299,7 @@ function zhHansEngineeringHandoffLane(lane: string) {
     "coding-agent": "编程代理",
     runner: "Runner",
     approval: "审批",
-    evidence: "证据"
+    evidence: "证据",
   });
 }
 
@@ -5434,7 +7309,7 @@ function zhHantEngineeringHandoffLane(lane: string) {
     "coding-agent": "編程代理",
     runner: "Runner",
     approval: "審批",
-    evidence: "證據"
+    evidence: "證據",
   });
 }
 
@@ -5444,7 +7319,7 @@ function koEngineeringHandoffLane(lane: string) {
     "coding-agent": "코딩 에이전트",
     runner: "Runner",
     approval: "승인",
-    evidence: "증거"
+    evidence: "증거",
   });
 }
 
@@ -5453,7 +7328,7 @@ function jaEngineeringHandoffLaneStatus(status: string) {
     ready: "準備済み",
     waiting: "待機",
     "approval-required": "承認必要",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -5462,7 +7337,7 @@ function enEngineeringHandoffLaneStatus(status: string) {
     ready: "ready",
     waiting: "waiting",
     "approval-required": "approval",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -5471,7 +7346,7 @@ function zhHansEngineeringHandoffLaneStatus(status: string) {
     ready: "已准备",
     waiting: "等待",
     "approval-required": "需审批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5480,7 +7355,7 @@ function zhHantEngineeringHandoffLaneStatus(status: string) {
     ready: "已準備",
     waiting: "等待",
     "approval-required": "需審批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5489,7 +7364,7 @@ function koEngineeringHandoffLaneStatus(status: string) {
     ready: "준비됨",
     waiting: "대기",
     "approval-required": "승인 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -5498,7 +7373,7 @@ function jaEngineeringCompletionGateDecision(decision: string) {
     "simulation-only": "模擬のみ",
     "evidence-ready": "証拠あり",
     "needs-evidence": "証拠不足",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -5507,7 +7382,7 @@ function enEngineeringCompletionGateDecision(decision: string) {
     "simulation-only": "simulation only",
     "evidence-ready": "evidence ready",
     "needs-evidence": "needs evidence",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -5516,7 +7391,7 @@ function zhHansEngineeringCompletionGateDecision(decision: string) {
     "simulation-only": "仅模拟",
     "evidence-ready": "证据就绪",
     "needs-evidence": "缺少证据",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5525,7 +7400,7 @@ function zhHantEngineeringCompletionGateDecision(decision: string) {
     "simulation-only": "僅模擬",
     "evidence-ready": "證據就緒",
     "needs-evidence": "缺少證據",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5534,7 +7409,7 @@ function koEngineeringCompletionGateDecision(decision: string) {
     "simulation-only": "시뮬레이션만",
     "evidence-ready": "증거 준비됨",
     "needs-evidence": "증거 부족",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -5545,7 +7420,7 @@ function jaEngineeringCompletionGateCheck(check: string) {
     "command-transcripts": "Transcript",
     "evidence-artifacts": "証拠",
     "command-results": "コマンド結果",
-    "approval-boundary": "承認境界"
+    "approval-boundary": "承認境界",
   });
 }
 
@@ -5556,7 +7431,7 @@ function enEngineeringCompletionGateCheck(check: string) {
     "command-transcripts": "transcripts",
     "evidence-artifacts": "evidence",
     "command-results": "command results",
-    "approval-boundary": "approval boundary"
+    "approval-boundary": "approval boundary",
   });
 }
 
@@ -5567,7 +7442,7 @@ function zhHansEngineeringCompletionGateCheck(check: string) {
     "command-transcripts": "命令记录",
     "evidence-artifacts": "证据工件",
     "command-results": "命令结果",
-    "approval-boundary": "审批边界"
+    "approval-boundary": "审批边界",
   });
 }
 
@@ -5578,7 +7453,7 @@ function zhHantEngineeringCompletionGateCheck(check: string) {
     "command-transcripts": "命令紀錄",
     "evidence-artifacts": "證據工件",
     "command-results": "命令結果",
-    "approval-boundary": "審批邊界"
+    "approval-boundary": "審批邊界",
   });
 }
 
@@ -5589,7 +7464,7 @@ function koEngineeringCompletionGateCheck(check: string) {
     "command-transcripts": "명령 기록",
     "evidence-artifacts": "증거",
     "command-results": "명령 결과",
-    "approval-boundary": "승인 경계"
+    "approval-boundary": "승인 경계",
   });
 }
 
@@ -5597,7 +7472,7 @@ function jaEngineeringCompletionGateCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通過",
     warn: "注意",
-    block: "不足"
+    block: "不足",
   });
 }
 
@@ -5605,7 +7480,7 @@ function enEngineeringCompletionGateCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "pass",
     warn: "warn",
-    block: "missing"
+    block: "missing",
   });
 }
 
@@ -5613,7 +7488,7 @@ function zhHansEngineeringCompletionGateCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通过",
     warn: "注意",
-    block: "缺失"
+    block: "缺失",
   });
 }
 
@@ -5621,7 +7496,7 @@ function zhHantEngineeringCompletionGateCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "通過",
     warn: "注意",
-    block: "缺失"
+    block: "缺失",
   });
 }
 
@@ -5629,7 +7504,7 @@ function koEngineeringCompletionGateCheckStatus(status: string) {
   return engineeringLabel(status, {
     pass: "통과",
     warn: "주의",
-    block: "부족"
+    block: "부족",
   });
 }
 
@@ -5644,7 +7519,7 @@ function jaEngineeringCapability(capability: string) {
     "mac-screen-recording": "画面収録",
     "mcp-allowlist": "MCP allowlist",
     "human-approval": "人間承認",
-    "external-write-approval": "外部書き込み承認"
+    "external-write-approval": "外部書き込み承認",
   });
 }
 
@@ -5659,7 +7534,7 @@ function enEngineeringCapability(capability: string) {
     "mac-screen-recording": "Screen Recording",
     "mcp-allowlist": "MCP allowlist",
     "human-approval": "human approval",
-    "external-write-approval": "external write approval"
+    "external-write-approval": "external write approval",
   });
 }
 
@@ -5674,7 +7549,7 @@ function zhHansEngineeringCapability(capability: string) {
     "mac-screen-recording": "屏幕录制权限",
     "mcp-allowlist": "MCP 白名单",
     "human-approval": "人类审批",
-    "external-write-approval": "外部写入审批"
+    "external-write-approval": "外部写入审批",
   });
 }
 
@@ -5689,7 +7564,7 @@ function zhHantEngineeringCapability(capability: string) {
     "mac-screen-recording": "螢幕錄製權限",
     "mcp-allowlist": "MCP 白名單",
     "human-approval": "人類審批",
-    "external-write-approval": "外部寫入審批"
+    "external-write-approval": "外部寫入審批",
   });
 }
 
@@ -5704,7 +7579,7 @@ function koEngineeringCapability(capability: string) {
     "mac-screen-recording": "화면 기록",
     "mcp-allowlist": "MCP 허용 목록",
     "human-approval": "인간 승인",
-    "external-write-approval": "외부 쓰기 승인"
+    "external-write-approval": "외부 쓰기 승인",
   });
 }
 
@@ -5713,7 +7588,7 @@ function jaEngineeringCapabilityStatus(status: string) {
     ready: "準備済み",
     needed: "必要",
     "approval-required": "承認必要",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -5722,7 +7597,7 @@ function enEngineeringCapabilityStatus(status: string) {
     ready: "ready",
     needed: "needed",
     "approval-required": "approval",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -5731,7 +7606,7 @@ function zhHansEngineeringCapabilityStatus(status: string) {
     ready: "已准备",
     needed: "需要",
     "approval-required": "需审批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5740,7 +7615,7 @@ function zhHantEngineeringCapabilityStatus(status: string) {
     ready: "已準備",
     needed: "需要",
     "approval-required": "需審批",
-    blocked: "已阻止"
+    blocked: "已阻止",
   });
 }
 
@@ -5749,7 +7624,7 @@ function koEngineeringCapabilityStatus(status: string) {
     ready: "준비됨",
     needed: "필요",
     "approval-required": "승인 필요",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
@@ -5761,7 +7636,7 @@ function jaEngineeringMissionDraftItem(item: string) {
     verification: "検証",
     "permission-boundary": "権限境界",
     "approval-boundary": "承認境界",
-    evidence: "証拠"
+    evidence: "証拠",
   });
 }
 
@@ -5773,7 +7648,7 @@ function enEngineeringMissionDraftItem(item: string) {
     verification: "verification",
     "permission-boundary": "permission boundary",
     "approval-boundary": "approval boundary",
-    evidence: "evidence"
+    evidence: "evidence",
   });
 }
 
@@ -5785,7 +7660,7 @@ function zhHansEngineeringMissionDraftItem(item: string) {
     verification: "验证",
     "permission-boundary": "权限边界",
     "approval-boundary": "人审边界",
-    evidence: "证据"
+    evidence: "证据",
   });
 }
 
@@ -5797,7 +7672,7 @@ function zhHantEngineeringMissionDraftItem(item: string) {
     verification: "驗證",
     "permission-boundary": "權限邊界",
     "approval-boundary": "人審邊界",
-    evidence: "證據"
+    evidence: "證據",
   });
 }
 
@@ -5809,7 +7684,7 @@ function koEngineeringMissionDraftItem(item: string) {
     verification: "검증",
     "permission-boundary": "권한 경계",
     "approval-boundary": "승인 경계",
-    evidence: "증거"
+    evidence: "증거",
   });
 }
 
@@ -5817,7 +7692,7 @@ function jaEngineeringMissionDraftStatus(status: string) {
   return engineeringLabel(status, {
     present: "入力済み",
     missing: "不足",
-    recommended: "推奨"
+    recommended: "推奨",
   });
 }
 
@@ -5825,7 +7700,7 @@ function enEngineeringMissionDraftStatus(status: string) {
   return engineeringLabel(status, {
     present: "present",
     missing: "missing",
-    recommended: "suggested"
+    recommended: "suggested",
   });
 }
 
@@ -5833,7 +7708,7 @@ function zhHansEngineeringMissionDraftStatus(status: string) {
   return engineeringLabel(status, {
     present: "已有",
     missing: "缺少",
-    recommended: "建议"
+    recommended: "建议",
   });
 }
 
@@ -5841,7 +7716,7 @@ function zhHantEngineeringMissionDraftStatus(status: string) {
   return engineeringLabel(status, {
     present: "已有",
     missing: "缺少",
-    recommended: "建議"
+    recommended: "建議",
   });
 }
 
@@ -5849,7 +7724,7 @@ function koEngineeringMissionDraftStatus(status: string) {
   return engineeringLabel(status, {
     present: "입력됨",
     missing: "부족",
-    recommended: "권장"
+    recommended: "권장",
   });
 }
 
@@ -5867,7 +7742,7 @@ function jaEngineeringSignal(signal: string) {
     "secrets-risk": "秘密リスク",
     "runner-pack-ready": "runner pack",
     "preflight-ready": "preflight OK",
-    "evidence-ready": "証拠あり"
+    "evidence-ready": "証拠あり",
   });
 }
 
@@ -5885,7 +7760,7 @@ function enEngineeringSignal(signal: string) {
     "secrets-risk": "secret risk",
     "runner-pack-ready": "runner pack",
     "preflight-ready": "preflight ready",
-    "evidence-ready": "evidence ready"
+    "evidence-ready": "evidence ready",
   });
 }
 
@@ -5903,7 +7778,7 @@ function zhHansEngineeringSignal(signal: string) {
     "secrets-risk": "密钥风险",
     "runner-pack-ready": "runner 包已就绪",
     "preflight-ready": "预检已通过",
-    "evidence-ready": "证据已生成"
+    "evidence-ready": "证据已生成",
   });
 }
 
@@ -5921,7 +7796,7 @@ function zhHantEngineeringSignal(signal: string) {
     "secrets-risk": "密鑰風險",
     "runner-pack-ready": "runner 包已就緒",
     "preflight-ready": "預檢已通過",
-    "evidence-ready": "證據已生成"
+    "evidence-ready": "證據已生成",
   });
 }
 
@@ -5939,7 +7814,7 @@ function koEngineeringSignal(signal: string) {
     "secrets-risk": "비밀값 위험",
     "runner-pack-ready": "runner pack 준비",
     "preflight-ready": "preflight 통과",
-    "evidence-ready": "증거 생성"
+    "evidence-ready": "증거 생성",
   });
 }
 
@@ -5948,15 +7823,19 @@ function jaEngineeringUnlockItem(item: string, count?: number) {
     "write-mission": "ミッションを書く",
     "run-cabinet": "内閣で分解する",
     "prepare-agent-pack": "工程パックを作る",
-    "review-held-sessions": count ? `${count}件の held session を確認` : "held session を確認",
+    "review-held-sessions": count
+      ? `${count}件の held session を確認`
+      : "held session を確認",
     "run-preflight": "権限 preflight を実行",
     "approve-browser-profile": "隔離ブラウザを承認",
-    "approve-mac-desktop": count ? `${count}件の Mac 権限を承認` : "Mac デスクトップ権限を承認",
+    "approve-mac-desktop": count
+      ? `${count}件の Mac 権限を承認`
+      : "Mac デスクトップ権限を承認",
     "approve-mcp-tools": "MCP ツール allowlist を承認",
     "approve-external-writes": "外部書き込みを人間承認",
     "run-local-sandbox": "ローカル sandbox を実行",
     "review-evidence": count ? `${count}件の証拠を確認` : "証拠を確認",
-    "keep-secrets-blocked": "秘密情報は渡さない"
+    "keep-secrets-blocked": "秘密情報は渡さない",
   });
 }
 
@@ -5965,15 +7844,21 @@ function enEngineeringUnlockItem(item: string, count?: number) {
     "write-mission": "Write the mission",
     "run-cabinet": "Split with cabinet",
     "prepare-agent-pack": "Prepare the agent pack",
-    "review-held-sessions": count ? `Review ${count} held sessions` : "Review held sessions",
+    "review-held-sessions": count
+      ? `Review ${count} held sessions`
+      : "Review held sessions",
     "run-preflight": "Run permission preflight",
     "approve-browser-profile": "Approve isolated browser",
-    "approve-mac-desktop": count ? `Approve ${count} Mac permissions` : "Approve Mac desktop permissions",
+    "approve-mac-desktop": count
+      ? `Approve ${count} Mac permissions`
+      : "Approve Mac desktop permissions",
     "approve-mcp-tools": "Approve MCP tool allowlist",
     "approve-external-writes": "Approve external writes",
     "run-local-sandbox": "Run local sandbox",
-    "review-evidence": count ? `Review ${count} evidence items` : "Review evidence",
-    "keep-secrets-blocked": "Keep secrets blocked"
+    "review-evidence": count
+      ? `Review ${count} evidence items`
+      : "Review evidence",
+    "keep-secrets-blocked": "Keep secrets blocked",
   });
 }
 
@@ -5982,15 +7867,19 @@ function zhHansEngineeringUnlockItem(item: string, count?: number) {
     "write-mission": "写清任务",
     "run-cabinet": "让内阁拆分",
     "prepare-agent-pack": "准备工程组包",
-    "review-held-sessions": count ? `审查 ${count} 个 held session` : "审查 held session",
+    "review-held-sessions": count
+      ? `审查 ${count} 个 held session`
+      : "审查 held session",
     "run-preflight": "运行权限预检",
     "approve-browser-profile": "批准隔离浏览器",
-    "approve-mac-desktop": count ? `批准 ${count} 项 Mac 权限` : "批准 Mac 桌面权限",
+    "approve-mac-desktop": count
+      ? `批准 ${count} 项 Mac 权限`
+      : "批准 Mac 桌面权限",
     "approve-mcp-tools": "批准 MCP 工具白名单",
     "approve-external-writes": "审批外部写入",
     "run-local-sandbox": "运行本地沙箱",
     "review-evidence": count ? `审查 ${count} 条证据` : "审查证据",
-    "keep-secrets-blocked": "密钥保持阻断"
+    "keep-secrets-blocked": "密钥保持阻断",
   });
 }
 
@@ -5999,15 +7888,19 @@ function zhHantEngineeringUnlockItem(item: string, count?: number) {
     "write-mission": "寫清任務",
     "run-cabinet": "讓內閣拆分",
     "prepare-agent-pack": "準備工程組包",
-    "review-held-sessions": count ? `審查 ${count} 個 held session` : "審查 held session",
+    "review-held-sessions": count
+      ? `審查 ${count} 個 held session`
+      : "審查 held session",
     "run-preflight": "執行權限預檢",
     "approve-browser-profile": "批准隔離瀏覽器",
-    "approve-mac-desktop": count ? `批准 ${count} 項 Mac 權限` : "批准 Mac 桌面權限",
+    "approve-mac-desktop": count
+      ? `批准 ${count} 項 Mac 權限`
+      : "批准 Mac 桌面權限",
     "approve-mcp-tools": "批准 MCP 工具白名單",
     "approve-external-writes": "審批外部寫入",
     "run-local-sandbox": "執行本地沙箱",
     "review-evidence": count ? `審查 ${count} 條證據` : "審查證據",
-    "keep-secrets-blocked": "密鑰保持阻斷"
+    "keep-secrets-blocked": "密鑰保持阻斷",
   });
 }
 
@@ -6016,15 +7909,19 @@ function koEngineeringUnlockItem(item: string, count?: number) {
     "write-mission": "미션 작성",
     "run-cabinet": "내각으로 분해",
     "prepare-agent-pack": "에이전트 패키지 준비",
-    "review-held-sessions": count ? `${count}개 held session 검토` : "held session 검토",
+    "review-held-sessions": count
+      ? `${count}개 held session 검토`
+      : "held session 검토",
     "run-preflight": "권한 preflight 실행",
     "approve-browser-profile": "격리 브라우저 승인",
-    "approve-mac-desktop": count ? `${count}개 Mac 권한 승인` : "Mac 데스크톱 권한 승인",
+    "approve-mac-desktop": count
+      ? `${count}개 Mac 권한 승인`
+      : "Mac 데스크톱 권한 승인",
     "approve-mcp-tools": "MCP 도구 허용 목록 승인",
     "approve-external-writes": "외부 쓰기 승인",
     "run-local-sandbox": "로컬 샌드박스 실행",
     "review-evidence": count ? `${count}개 증거 검토` : "증거 검토",
-    "keep-secrets-blocked": "비밀값 차단 유지"
+    "keep-secrets-blocked": "비밀값 차단 유지",
   });
 }
 
@@ -6034,7 +7931,7 @@ function jaEngineeringUnlockStatus(status: string) {
     next: "次",
     waiting: "待機",
     approval: "承認",
-    blocked: "停止"
+    blocked: "停止",
   });
 }
 
@@ -6044,7 +7941,7 @@ function enEngineeringUnlockStatus(status: string) {
     next: "next",
     waiting: "waiting",
     approval: "approval",
-    blocked: "blocked"
+    blocked: "blocked",
   });
 }
 
@@ -6054,7 +7951,7 @@ function zhHansEngineeringUnlockStatus(status: string) {
     next: "下一步",
     waiting: "等待",
     approval: "审批",
-    blocked: "阻止"
+    blocked: "阻止",
   });
 }
 
@@ -6064,7 +7961,7 @@ function zhHantEngineeringUnlockStatus(status: string) {
     next: "下一步",
     waiting: "等待",
     approval: "審批",
-    blocked: "阻止"
+    blocked: "阻止",
   });
 }
 
@@ -6074,14 +7971,14 @@ function koEngineeringUnlockStatus(status: string) {
     next: "다음",
     waiting: "대기",
     approval: "승인",
-    blocked: "차단"
+    blocked: "차단",
   });
 }
 
 function engineeringUnlockLabel(
   value: string,
   _count: number | undefined,
-  labels: Record<string, string>
+  labels: Record<string, string>,
 ) {
   return labels[value] || value;
 }

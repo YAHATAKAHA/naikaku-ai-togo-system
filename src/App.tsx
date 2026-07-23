@@ -2,6 +2,7 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
+  ArrowLeft,
   Brain,
   CheckCircle2,
   Download,
@@ -17,7 +18,7 @@ import {
   Shield,
   SlidersHorizontal,
   Sparkles,
-  Upload
+  Upload,
 } from "lucide-react";
 import { AuditTrailPanel } from "./components/AuditTrailPanel";
 import { AutomationQueue } from "./components/AutomationQueue";
@@ -28,8 +29,10 @@ import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
 import { EngineeringLaunchpad } from "./components/EngineeringLaunchpad";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
+import { LocalCodingCliPanel } from "./components/LocalCodingCliPanel";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
 import { ProductReadinessPanel } from "./components/ProductReadinessPanel";
+import { QuickStartPanel } from "./components/QuickStartPanel";
 import { ReleaseRehearsalPanel } from "./components/ReleaseRehearsalPanel";
 import { RoleInspector } from "./components/RoleInspector";
 import { RoleRail } from "./components/RoleRail";
@@ -113,9 +116,13 @@ import {
   serializeReleaseVerificationExport,
   serializeRoleWorkspaceScaffoldScriptExport,
   serializeRunBundle,
-  serializeWorkspace
+  serializeWorkspace,
 } from "./domain/storage";
-import { approvalRecordsByActionId, buildExecutorHandoff, createApprovalRecord } from "./domain/automation";
+import {
+  approvalRecordsByActionId,
+  buildExecutorHandoff,
+  createApprovalRecord,
+} from "./domain/automation";
 import { buildAutomationRunbook } from "./domain/automationRunbook";
 import { createAuditEvent } from "./domain/auditLog";
 import { buildCodingAgentBriefReview } from "./domain/codingAgentBriefReview";
@@ -134,9 +141,15 @@ import { buildCodingAgentImplementationEvidence } from "./domain/codingAgentImpl
 import { reconcileCodingAgentImplementationEvidence } from "./domain/codingAgentImplementationReconciliation";
 import { buildCodingAgentSessionBundle } from "./domain/codingAgentSessionBundle";
 import { buildCodingAgentSessionDrill } from "./domain/codingAgentSessionDrill";
-import { buildCodingAgentSessionReceiptTemplate, reviewCodingAgentSessionReceipt } from "./domain/codingAgentSessionReceipt";
-import { executorProfiles } from "./data/defaultCabinet";
-import { buildDevelopmentBoard, updateDevelopmentWorkItemStatus } from "./domain/developmentBoard";
+import {
+  buildCodingAgentSessionReceiptTemplate,
+  reviewCodingAgentSessionReceipt,
+} from "./domain/codingAgentSessionReceipt";
+import { defaultMission, executorProfiles } from "./data/defaultCabinet";
+import {
+  buildDevelopmentBoard,
+  updateDevelopmentWorkItemStatus,
+} from "./domain/developmentBoard";
 import { buildDevelopmentIssueDrafts } from "./domain/developmentIssues";
 import { buildEngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
 import { buildEngineeringLaunchProfile } from "./domain/engineeringLaunchProfile";
@@ -144,13 +157,19 @@ import { buildEngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
 import { buildEngineeringMacRunnerContract } from "./domain/engineeringMacRunnerContract";
 import { buildEngineeringMacRunnerReadiness } from "./domain/engineeringMacRunnerReadiness";
 import { buildEngineeringSelfSimulationReport } from "./domain/engineeringSelfSimulation";
-import { buildExecutorEvidenceBundle, runExecutorHandoff } from "./domain/executorRunner";
+import {
+  buildExecutorEvidenceBundle,
+  runExecutorHandoff,
+} from "./domain/executorRunner";
 import { findAdapter } from "./domain/adapters";
 import { buildMemoryCandidates, createMemoryDecision } from "./domain/memory";
 import { runCabinetMission } from "./domain/orchestrator";
 import { buildProductReadinessReport } from "./domain/productReadiness";
 import { buildProductReleaseBundle } from "./domain/productReleaseBundle";
-import { buildProviderReadinessMatrix, createProviderReadinessCheck } from "./domain/providerReadiness";
+import {
+  buildProviderReadinessMatrix,
+  createProviderReadinessCheck,
+} from "./domain/providerReadiness";
 import { buildReleaseRehearsalReport } from "./domain/releaseRehearsal";
 import { buildReleaseRemediationIssueDrafts } from "./domain/releaseRemediationIssues";
 import { buildReleaseVerification } from "./domain/releaseVerification";
@@ -158,7 +177,14 @@ import { buildRoleWorkspaceScaffolds } from "./domain/roleWorkspaceScaffolds";
 import { buildSandboxCapabilityRegistry } from "./domain/sandboxCapabilities";
 import { createCustomRole, isDefaultRoleId } from "./domain/roles";
 import { buildTeamHandoff, serializeTeamHandoff } from "./domain/teamPackages";
-import { getCopy, getInitialLocale, htmlLang, saveLocale, supportedLocales, type SupportedLocale } from "./i18n";
+import {
+  getCopy,
+  getInitialLocale,
+  htmlLang,
+  saveLocale,
+  supportedLocales,
+  type SupportedLocale,
+} from "./i18n";
 import {
   auditCodingAgentImplementationArtifactsViaGateway,
   createAutomationRunbookViaGateway,
@@ -198,7 +224,7 @@ import {
   runCabinetViaGateway,
   runExecutorHandoffViaGateway,
   saveApprovalRecordViaGateway,
-  testProviderViaGateway
+  testProviderViaGateway,
 } from "./domain/gatewayClient";
 import type {
   EngineeringAutoWorkGatewayPreset,
@@ -209,7 +235,7 @@ import type {
   EngineeringRunnerPreset,
   EngineeringRunnerPresetTemplate,
   EngineeringRunnerReadinessReport,
-  LedgerSummary
+  LedgerSummary,
 } from "./domain/gatewayClient";
 import type { EngineeringExecutionReceipt } from "./domain/engineeringExecutionReceipt";
 import type { EngineeringLaunchQueue } from "./domain/engineeringLaunchQueue";
@@ -255,15 +281,23 @@ import type {
   ReleaseVerificationReport,
   RoleWorkspaceScaffolds,
   RunHistoryItem,
-  TeamHandoff
+  TeamHandoff,
 } from "./domain/types";
 import type { CabinetRunMode } from "./domain/types";
 
 type AuditEventInput = Parameters<typeof createAuditEvent>[0];
-type EngineeringGuidedCycleStatus = "idle" | "running" | "completed" | "blocked" | "error";
+type EngineeringGuidedCycleStatus =
+  "idle" | "running" | "completed" | "blocked" | "error";
+type WorkspaceView = "guided" | "advanced";
+type EngineeringView = "cli" | "details";
+type AdvancedSection =
+  "cabinet" | "providers" | "automation" | "engineering" | "governance";
 
 function guidedCycleMaxRuns(value: number) {
-  return Math.max(1, Math.min(3, Math.trunc(Number.isFinite(value) ? value : 1)));
+  return Math.max(
+    1,
+    Math.min(3, Math.trunc(Number.isFinite(value) ? value : 1)),
+  );
 }
 
 interface ServerLedgerState {
@@ -276,107 +310,295 @@ interface ServerLedgerState {
 }
 
 export function App() {
-  const [locale, setLocale] = useState<SupportedLocale>(() => getInitialLocale());
+  const [locale, setLocale] = useState<SupportedLocale>(() =>
+    getInitialLocale(),
+  );
   const copy = useMemo(() => getCopy(locale), [locale]);
   const [workspace, setWorkspace] = useState(() => loadWorkspace());
-  const [selectedRoleId, setSelectedRoleId] = useState(workspace.roles[0]?.id || "");
-  const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>({});
+  const [selectedRoleId, setSelectedRoleId] = useState(
+    workspace.roles[0]?.id || "",
+  );
+  const [sessionSecrets, setSessionSecrets] = useState<Record<string, string>>(
+    {},
+  );
   const [run, setRun] = useState<CabinetRun | null>(() => loadCurrentRun());
   const [runMode, setRunMode] = useState<CabinetRunMode>("dry-run");
-  const [approvalRecords, setApprovalRecords] = useState<AutomationApprovalRecord[]>([]);
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("guided");
+  const [advancedSection, setAdvancedSection] =
+    useState<AdvancedSection>("cabinet");
+  const [engineeringView, setEngineeringView] =
+    useState<EngineeringView>("cli");
+  const [approvalRecords, setApprovalRecords] = useState<
+    AutomationApprovalRecord[]
+  >([]);
   const [executorRun, setExecutorRun] = useState<ExecutorRun | null>(null);
   const [executorRunning, setExecutorRunning] = useState(false);
-  const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() => loadRunHistory());
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => loadAuditEvents());
-  const [memoryEntries, setMemoryEntries] = useState<MemoryEntry[]>(() => loadMemoryEntries());
-  const [developmentItems, setDevelopmentItems] = useState<DevelopmentWorkItem[]>(() => loadDevelopmentItems());
-  const [providerReadinessRows, setProviderReadinessRows] = useState<ProviderReadinessRow[]>(() => loadProviderReadinessRows());
-  const [testingProviderRoleIds, setTestingProviderRoleIds] = useState<string[]>([]);
+  const [runHistory, setRunHistory] = useState<RunHistoryItem[]>(() =>
+    loadRunHistory(),
+  );
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() =>
+    loadAuditEvents(),
+  );
+  const [memoryEntries, setMemoryEntries] = useState<MemoryEntry[]>(() =>
+    loadMemoryEntries(),
+  );
+  const [developmentItems, setDevelopmentItems] = useState<
+    DevelopmentWorkItem[]
+  >(() => loadDevelopmentItems());
+  const [providerReadinessRows, setProviderReadinessRows] = useState<
+    ProviderReadinessRow[]
+  >(() => loadProviderReadinessRows());
+  const [testingProviderRoleIds, setTestingProviderRoleIds] = useState<
+    string[]
+  >([]);
   const [isTestingAllProviders, setIsTestingAllProviders] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [runState, setRunState] = useState<{
     status: "idle" | "running" | "gateway" | "fallback" | "local" | "error";
     message: string;
   }>({ status: "idle", message: getCopy(locale).gatewayReady });
-  const [exportLink, setExportLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [handoffLink, setHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [automationRunbookLink, setAutomationRunbookLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [teamHandoffLink, setTeamHandoffLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [productReadinessLink, setProductReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [productReleaseLink, setProductReleaseLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [releaseRehearsal, setReleaseRehearsal] = useState<ReleaseRehearsalReport | null>(null);
-  const [releaseRehearsalLink, setReleaseRehearsalLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [releaseVerification, setReleaseVerification] = useState<ReleaseVerificationReport | null>(null);
-  const [releaseVerificationLink, setReleaseVerificationLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [releaseRemediationIssuesLink, setReleaseRemediationIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [releaseRemediationScriptLink, setReleaseRemediationScriptLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [auditLink, setAuditLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [memoryLink, setMemoryLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [developmentBoardLink, setDevelopmentBoardLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentBriefsLink, setCodingAgentBriefsLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentBriefsMarkdownLink, setCodingAgentBriefsMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentBriefReview, setCodingAgentBriefReview] = useState<CodingAgentBriefReviewReport | null>(null);
-  const [codingAgentBriefReviewLink, setCodingAgentBriefReviewLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionBundle, setCodingAgentSessionBundle] = useState<CodingAgentSessionBundle | null>(null);
-  const [codingAgentSessionBundleLink, setCodingAgentSessionBundleLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionBundleMarkdownLink, setCodingAgentSessionBundleMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchManifest, setCodingAgentDispatchManifest] = useState<CodingAgentDispatchManifest | null>(null);
-  const [codingAgentDispatchManifestLink, setCodingAgentDispatchManifestLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchManifestMarkdownLink, setCodingAgentDispatchManifestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchArchive, setCodingAgentDispatchArchive] = useState<CodingAgentDispatchArchive | null>(null);
-  const [codingAgentDispatchArchiveLink, setCodingAgentDispatchArchiveLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchArchiveMarkdownLink, setCodingAgentDispatchArchiveMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchArchiveAudit, setCodingAgentDispatchArchiveAudit] = useState<CodingAgentDispatchArchiveAudit | null>(null);
-  const [codingAgentDispatchArchiveAuditLink, setCodingAgentDispatchArchiveAuditLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchArchiveAuditMarkdownLink, setCodingAgentDispatchArchiveAuditMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchSimulation, setCodingAgentDispatchSimulation] = useState<CodingAgentDispatchSimulation | null>(null);
-  const [codingAgentDispatchSimulationLink, setCodingAgentDispatchSimulationLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentDispatchSimulationMarkdownLink, setCodingAgentDispatchSimulationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerManifest, setCodingAgentRunnerManifest] = useState<CodingAgentRunnerManifest | null>(null);
-  const [codingAgentRunnerManifestLink, setCodingAgentRunnerManifestLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerManifestMarkdownLink, setCodingAgentRunnerManifestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerInvocation, setCodingAgentRunnerInvocation] = useState<CodingAgentRunnerInvocationPackage | null>(null);
-  const [codingAgentRunnerInvocationLink, setCodingAgentRunnerInvocationLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerInvocationMarkdownLink, setCodingAgentRunnerInvocationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerIntake, setCodingAgentRunnerIntake] = useState<CodingAgentRunnerIntakeAudit | null>(null);
-  const [codingAgentRunnerIntakeLink, setCodingAgentRunnerIntakeLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerIntakeMarkdownLink, setCodingAgentRunnerIntakeMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerSelfTest, setCodingAgentRunnerSelfTest] = useState<CodingAgentRunnerSelfTest | null>(null);
-  const [codingAgentRunnerSelfTestLink, setCodingAgentRunnerSelfTestLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentRunnerSelfTestMarkdownLink, setCodingAgentRunnerSelfTestMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSandboxRunnerPreflight, setCodingAgentSandboxRunnerPreflight] = useState<CodingAgentSandboxRunnerPreflight | null>(null);
-  const [codingAgentSandboxRunnerPreflightLink, setCodingAgentSandboxRunnerPreflightLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSandboxRunnerPreflightMarkdownLink, setCodingAgentSandboxRunnerPreflightMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSandboxRunnerReport, setCodingAgentSandboxRunnerReport] = useState<CodingAgentSandboxRunnerReport | null>(null);
-  const [codingAgentSandboxRunnerReportLink, setCodingAgentSandboxRunnerReportLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSandboxRunnerReportMarkdownLink, setCodingAgentSandboxRunnerReportMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionDrill, setCodingAgentSessionDrill] = useState<CodingAgentSessionDrillReport | null>(null);
-  const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionDrillMarkdownLink, setCodingAgentSessionDrillMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionReceipt, setCodingAgentSessionReceipt] = useState<CodingAgentSessionReceipt | null>(null);
-  const [codingAgentSessionReceiptLink, setCodingAgentSessionReceiptLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentSessionReceiptMarkdownLink, setCodingAgentSessionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentImplementationEvidenceLink, setCodingAgentImplementationEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [codingAgentImplementationEvidenceMarkdownLink, setCodingAgentImplementationEvidenceMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringSelfSimulation, setEngineeringSelfSimulation] = useState<EngineeringSelfSimulationReport | null>(null);
-  const [engineeringSelfSimulationLink, setEngineeringSelfSimulationLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringSelfSimulationMarkdownLink, setEngineeringSelfSimulationMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringLaunchQueue, setEngineeringLaunchQueue] = useState<EngineeringLaunchQueue | null>(null);
-  const [engineeringLaunchQueueLink, setEngineeringLaunchQueueLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringLaunchQueueMarkdownLink, setEngineeringLaunchQueueMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringExecutionReceipt, setEngineeringExecutionReceipt] = useState<EngineeringExecutionReceipt | null>(null);
-  const [engineeringExecutionReceiptLink, setEngineeringExecutionReceiptLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringExecutionReceiptMarkdownLink, setEngineeringExecutionReceiptMarkdownLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [engineeringAutoWorkPreset, setEngineeringAutoWorkPreset] = useState<EngineeringAutoWorkGatewayPreset>("fixture");
-  const [engineeringAutoWorkAdapterReady, setEngineeringAutoWorkAdapterReady] = useState(false);
-  const [engineeringAutoWorkWorktree, setEngineeringAutoWorkWorktree] = useState("output/engineering-auto-work-ui/fixture-worktree");
-  const [engineeringGuidedCabinetMode, setEngineeringGuidedCabinetMode] = useState<EngineeringGuidedCabinetMode>("api-mock");
-  const [engineeringGuidedCabinetProvider, setEngineeringGuidedCabinetProvider] = useState<ProviderKind>("openai");
-  const [engineeringGuidedCabinetEndpoint, setEngineeringGuidedCabinetEndpoint] = useState("");
-  const [engineeringGuidedCabinetModel, setEngineeringGuidedCabinetModel] = useState("");
-  const [engineeringGuidedCabinetApiKeyAlias, setEngineeringGuidedCabinetApiKeyAlias] = useState("NAIKAKU_OPENAI_API_KEY");
+  const [exportLink, setExportLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [handoffLink, setHandoffLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [automationRunbookLink, setAutomationRunbookLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [teamHandoffLink, setTeamHandoffLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [roleWorkspaceLink, setRoleWorkspaceLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [productReadinessLink, setProductReadinessLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [productReleaseLink, setProductReleaseLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [productReleaseNotesLink, setProductReleaseNotesLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [releaseRehearsal, setReleaseRehearsal] =
+    useState<ReleaseRehearsalReport | null>(null);
+  const [releaseRehearsalLink, setReleaseRehearsalLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [releaseVerification, setReleaseVerification] =
+    useState<ReleaseVerificationReport | null>(null);
+  const [releaseVerificationLink, setReleaseVerificationLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [releaseRemediationIssuesLink, setReleaseRemediationIssuesLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [releaseRemediationScriptLink, setReleaseRemediationScriptLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [auditLink, setAuditLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [memoryLink, setMemoryLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [developmentBoardLink, setDevelopmentBoardLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [codingAgentBriefsLink, setCodingAgentBriefsLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [codingAgentBriefsMarkdownLink, setCodingAgentBriefsMarkdownLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentBriefReview, setCodingAgentBriefReview] =
+    useState<CodingAgentBriefReviewReport | null>(null);
+  const [codingAgentBriefReviewLink, setCodingAgentBriefReviewLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [codingAgentSessionBundle, setCodingAgentSessionBundle] =
+    useState<CodingAgentSessionBundle | null>(null);
+  const [codingAgentSessionBundleLink, setCodingAgentSessionBundleLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSessionBundleMarkdownLink,
+    setCodingAgentSessionBundleMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchManifest, setCodingAgentDispatchManifest] =
+    useState<CodingAgentDispatchManifest | null>(null);
+  const [codingAgentDispatchManifestLink, setCodingAgentDispatchManifestLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentDispatchManifestMarkdownLink,
+    setCodingAgentDispatchManifestMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchArchive, setCodingAgentDispatchArchive] =
+    useState<CodingAgentDispatchArchive | null>(null);
+  const [codingAgentDispatchArchiveLink, setCodingAgentDispatchArchiveLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentDispatchArchiveMarkdownLink,
+    setCodingAgentDispatchArchiveMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchArchiveAudit, setCodingAgentDispatchArchiveAudit] =
+    useState<CodingAgentDispatchArchiveAudit | null>(null);
+  const [
+    codingAgentDispatchArchiveAuditLink,
+    setCodingAgentDispatchArchiveAuditLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentDispatchArchiveAuditMarkdownLink,
+    setCodingAgentDispatchArchiveAuditMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentDispatchSimulation, setCodingAgentDispatchSimulation] =
+    useState<CodingAgentDispatchSimulation | null>(null);
+  const [
+    codingAgentDispatchSimulationLink,
+    setCodingAgentDispatchSimulationLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentDispatchSimulationMarkdownLink,
+    setCodingAgentDispatchSimulationMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerManifest, setCodingAgentRunnerManifest] =
+    useState<CodingAgentRunnerManifest | null>(null);
+  const [codingAgentRunnerManifestLink, setCodingAgentRunnerManifestLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentRunnerManifestMarkdownLink,
+    setCodingAgentRunnerManifestMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerInvocation, setCodingAgentRunnerInvocation] =
+    useState<CodingAgentRunnerInvocationPackage | null>(null);
+  const [codingAgentRunnerInvocationLink, setCodingAgentRunnerInvocationLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentRunnerInvocationMarkdownLink,
+    setCodingAgentRunnerInvocationMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerIntake, setCodingAgentRunnerIntake] =
+    useState<CodingAgentRunnerIntakeAudit | null>(null);
+  const [codingAgentRunnerIntakeLink, setCodingAgentRunnerIntakeLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentRunnerIntakeMarkdownLink,
+    setCodingAgentRunnerIntakeMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentRunnerSelfTest, setCodingAgentRunnerSelfTest] =
+    useState<CodingAgentRunnerSelfTest | null>(null);
+  const [codingAgentRunnerSelfTestLink, setCodingAgentRunnerSelfTestLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentRunnerSelfTestMarkdownLink,
+    setCodingAgentRunnerSelfTestMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSandboxRunnerPreflight,
+    setCodingAgentSandboxRunnerPreflight,
+  ] = useState<CodingAgentSandboxRunnerPreflight | null>(null);
+  const [
+    codingAgentSandboxRunnerPreflightLink,
+    setCodingAgentSandboxRunnerPreflightLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSandboxRunnerPreflightMarkdownLink,
+    setCodingAgentSandboxRunnerPreflightMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSandboxRunnerReport, setCodingAgentSandboxRunnerReport] =
+    useState<CodingAgentSandboxRunnerReport | null>(null);
+  const [
+    codingAgentSandboxRunnerReportLink,
+    setCodingAgentSandboxRunnerReportLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSandboxRunnerReportMarkdownLink,
+    setCodingAgentSandboxRunnerReportMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionDrill, setCodingAgentSessionDrill] =
+    useState<CodingAgentSessionDrillReport | null>(null);
+  const [codingAgentSessionDrillLink, setCodingAgentSessionDrillLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSessionDrillMarkdownLink,
+    setCodingAgentSessionDrillMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [codingAgentSessionReceipt, setCodingAgentSessionReceipt] =
+    useState<CodingAgentSessionReceipt | null>(null);
+  const [codingAgentSessionReceiptLink, setCodingAgentSessionReceiptLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentSessionReceiptMarkdownLink,
+    setCodingAgentSessionReceiptMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentImplementationEvidenceLink,
+    setCodingAgentImplementationEvidenceLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [
+    codingAgentImplementationEvidenceMarkdownLink,
+    setCodingAgentImplementationEvidenceMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringSelfSimulation, setEngineeringSelfSimulation] =
+    useState<EngineeringSelfSimulationReport | null>(null);
+  const [engineeringSelfSimulationLink, setEngineeringSelfSimulationLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    engineeringSelfSimulationMarkdownLink,
+    setEngineeringSelfSimulationMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringLaunchQueue, setEngineeringLaunchQueue] =
+    useState<EngineeringLaunchQueue | null>(null);
+  const [engineeringLaunchQueueLink, setEngineeringLaunchQueueLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [
+    engineeringLaunchQueueMarkdownLink,
+    setEngineeringLaunchQueueMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringExecutionReceipt, setEngineeringExecutionReceipt] =
+    useState<EngineeringExecutionReceipt | null>(null);
+  const [engineeringExecutionReceiptLink, setEngineeringExecutionReceiptLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [
+    engineeringExecutionReceiptMarkdownLink,
+    setEngineeringExecutionReceiptMarkdownLink,
+  ] = useState<{ href: string; fileName: string } | null>(null);
+  const [engineeringAutoWorkPreset, setEngineeringAutoWorkPreset] =
+    useState<EngineeringAutoWorkGatewayPreset>("fixture");
+  const [engineeringAutoWorkAdapterReady, setEngineeringAutoWorkAdapterReady] =
+    useState(false);
+  const [engineeringAutoWorkWorktree, setEngineeringAutoWorkWorktree] =
+    useState("output/engineering-auto-work-ui/fixture-worktree");
+  const [engineeringGuidedCabinetMode, setEngineeringGuidedCabinetMode] =
+    useState<EngineeringGuidedCabinetMode>("api-mock");
+  const [
+    engineeringGuidedCabinetProvider,
+    setEngineeringGuidedCabinetProvider,
+  ] = useState<ProviderKind>("openai");
+  const [
+    engineeringGuidedCabinetEndpoint,
+    setEngineeringGuidedCabinetEndpoint,
+  ] = useState("");
+  const [engineeringGuidedCabinetModel, setEngineeringGuidedCabinetModel] =
+    useState("");
+  const [
+    engineeringGuidedCabinetApiKeyAlias,
+    setEngineeringGuidedCabinetApiKeyAlias,
+  ] = useState("NAIKAKU_OPENAI_API_KEY");
   const [engineeringAutoWorkState, setEngineeringAutoWorkState] = useState<{
     status: "idle" | "running" | "completed" | "error";
     message: string;
@@ -384,7 +606,7 @@ export function App() {
   }>({
     status: "idle",
     message: "",
-    result: null
+    result: null,
   });
   const [engineeringCodexSmokeState, setEngineeringCodexSmokeState] = useState<{
     status: "idle" | "running" | "completed" | "error";
@@ -393,50 +615,71 @@ export function App() {
   }>({
     status: "idle",
     message: "",
-    result: null
+    result: null,
   });
-  const [engineeringGuidedCycleMaxRuns, setEngineeringGuidedCycleMaxRuns] = useState(1);
-  const [engineeringGuidedCycleState, setEngineeringGuidedCycleState] = useState<{
-    status: EngineeringGuidedCycleStatus;
+  const [engineeringGuidedCycleMaxRuns, setEngineeringGuidedCycleMaxRuns] =
+    useState(1);
+  const [engineeringGuidedCycleState, setEngineeringGuidedCycleState] =
+    useState<{
+      status: EngineeringGuidedCycleStatus;
+      message: string;
+      cyclesCompleted: number;
+      maxCycles: number;
+      result: EngineeringGuidedGatewayResponse | null;
+    }>({
+      status: "idle",
+      message: "",
+      cyclesCompleted: 0,
+      maxCycles: 1,
+      result: null,
+    });
+  const [engineeringRunnerReadinessState, setEngineeringRunnerReadinessState] =
+    useState<{
+      status: "idle" | "loading" | "ready" | "error";
+      message: string;
+      report: EngineeringRunnerReadinessReport | null;
+    }>({
+      status: "idle",
+      message: "",
+      report: null,
+    });
+  const [engineeringRunnerPresets, setEngineeringRunnerPresets] = useState<
+    EngineeringRunnerPreset[]
+  >([]);
+  const [
+    engineeringRunnerPresetTemplates,
+    setEngineeringRunnerPresetTemplates,
+  ] = useState<EngineeringRunnerPresetTemplate[]>([]);
+  const [
+    engineeringRunnerPresetEnableState,
+    setEngineeringRunnerPresetEnableState,
+  ] = useState<{
+    status: "idle" | "loading" | "ready" | "error";
     message: string;
-    cyclesCompleted: number;
-    maxCycles: number;
-    result: EngineeringGuidedGatewayResponse | null;
   }>({
     status: "idle",
     message: "",
-    cyclesCompleted: 0,
-    maxCycles: 1,
-    result: null
   });
-  const [engineeringRunnerReadinessState, setEngineeringRunnerReadinessState] = useState<{
-    status: "idle" | "loading" | "ready" | "error";
-    message: string;
-    report: EngineeringRunnerReadinessReport | null;
-  }>({
-    status: "idle",
-    message: "",
-    report: null
-  });
-  const [engineeringRunnerPresets, setEngineeringRunnerPresets] = useState<EngineeringRunnerPreset[]>([]);
-  const [engineeringRunnerPresetTemplates, setEngineeringRunnerPresetTemplates] = useState<EngineeringRunnerPresetTemplate[]>([]);
-  const [engineeringRunnerPresetEnableState, setEngineeringRunnerPresetEnableState] = useState<{
-    status: "idle" | "loading" | "ready" | "error";
-    message: string;
-  }>({
-    status: "idle",
-    message: ""
-  });
-  const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [providerReadinessLink, setProviderReadinessLink] = useState<{ href: string; fileName: string } | null>(null);
-  const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{ href: string; fileName: string } | null>(null);
+  const [developmentIssuesLink, setDevelopmentIssuesLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [developmentIssuesScriptLink, setDevelopmentIssuesScriptLink] =
+    useState<{ href: string; fileName: string } | null>(null);
+  const [providerReadinessLink, setProviderReadinessLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
+  const [executorEvidenceLink, setExecutorEvidenceLink] = useState<{
+    href: string;
+    fileName: string;
+  } | null>(null);
   const [serverLedger, setServerLedger] = useState<ServerLedgerState>({
     status: "idle",
     message: "Refresh gateway ledger when the local service is running.",
     summary: null,
     approvals: [],
-    evidenceBundles: []
+    evidenceBundles: [],
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const preserveCodingAgentBriefReviewRef = useRef(false);
@@ -447,14 +690,21 @@ export function App() {
   }, [locale]);
 
   const selectedRole = useMemo(
-    () => workspace.roles.find((role) => role.id === selectedRoleId) || workspace.roles[0],
-    [selectedRoleId, workspace.roles]
+    () =>
+      workspace.roles.find((role) => role.id === selectedRoleId) ||
+      workspace.roles[0],
+    [selectedRoleId, workspace.roles],
   );
 
   const activeRoles = workspace.roles.filter((role) => role.enabled);
+  const quickStartMission =
+    workspace.mission === defaultMission ? "" : workspace.mission;
+  const showRoleConfiguration =
+    advancedSection === "cabinet" ||
+    (advancedSection === "engineering" && engineeringView === "details");
   const approvalRecordsByAction = useMemo(
     () => Object.fromEntries(approvalRecordsByActionId(approvalRecords)),
-    [approvalRecords]
+    [approvalRecords],
   );
   const readyActionCount = useMemo(
     () =>
@@ -462,10 +712,10 @@ export function App() {
         ? buildExecutorHandoff({
             run,
             approvalRecords,
-            createdAt: run.completedAt
+            createdAt: run.completedAt,
           }).readyActions.length
         : 0,
-    [approvalRecords, run]
+    [approvalRecords, run],
   );
   const automationRunbook = useMemo<AutomationRunbook>(
     () =>
@@ -473,7 +723,7 @@ export function App() {
         ? buildAutomationRunbook({
             run,
             approvalRecords,
-            generatedAt: run.completedAt
+            generatedAt: run.completedAt,
           })
         : {
             schema: "naikaku.automation-runbook.v1",
@@ -490,40 +740,40 @@ export function App() {
               browser: 0,
               desktop: 0,
               mcp: 0,
-              human: 0
-            }
+              human: 0,
+            },
           },
-    [approvalRecords, run]
+    [approvalRecords, run],
   );
   const teamHandoff = useMemo(
     () => buildTeamHandoff({ workspace, run }),
-    [run, workspace]
+    [run, workspace],
   );
   const roleWorkspaceScaffolds = useMemo<RoleWorkspaceScaffolds>(
     () => buildRoleWorkspaceScaffolds({ handoff: teamHandoff }),
-    [teamHandoff]
+    [teamHandoff],
   );
   const memoryCandidates = useMemo(
     () => (run ? buildMemoryCandidates({ run }) : []),
-    [run]
+    [run],
   );
   const providerReadinessMatrix = useMemo(
     () =>
       buildProviderReadinessMatrix({
         roles: workspace.roles,
         sessionSecrets,
-        savedRows: providerReadinessRows
+        savedRows: providerReadinessRows,
       }),
-    [providerReadinessRows, sessionSecrets, workspace.roles]
+    [providerReadinessRows, sessionSecrets, workspace.roles],
   );
   const sandboxCapabilityRegistry = useMemo(
     () =>
       buildSandboxCapabilityRegistry({
         profiles: executorProfiles,
         roles: workspace.roles,
-        sandboxPolicy: workspace.sandboxPolicy
+        sandboxPolicy: workspace.sandboxPolicy,
       }),
-    [workspace.roles, workspace.sandboxPolicy]
+    [workspace.roles, workspace.sandboxPolicy],
   );
   const developmentBoard = useMemo(
     () =>
@@ -531,26 +781,26 @@ export function App() {
         handoff: teamHandoff,
         run,
         memoryEntries,
-        savedItems: developmentItems
+        savedItems: developmentItems,
       }),
-    [developmentItems, memoryEntries, run, teamHandoff]
+    [developmentItems, memoryEntries, run, teamHandoff],
   );
   const developmentIssueDrafts = useMemo<DevelopmentIssueDrafts>(
     () =>
       buildDevelopmentIssueDrafts({
         board: developmentBoard,
-        generatedAt: developmentBoard.generatedAt
+        generatedAt: developmentBoard.generatedAt,
       }),
-    [developmentBoard]
+    [developmentBoard],
   );
   const codingAgentBriefs = useMemo<CodingAgentBriefs>(
     () =>
       buildCodingAgentBriefs({
         board: developmentBoard,
         operatorLocale: locale,
-        releaseVerification
+        releaseVerification,
       }),
-    [developmentBoard, locale, releaseVerification]
+    [developmentBoard, locale, releaseVerification],
   );
   const engineeringLaunchProfile = useMemo(
     () =>
@@ -563,7 +813,7 @@ export function App() {
         runnerManifest: codingAgentRunnerManifest,
         runnerSelfTest: codingAgentRunnerSelfTest,
         sandboxRunnerPreflight: codingAgentSandboxRunnerPreflight,
-        sandboxRunnerReport: codingAgentSandboxRunnerReport
+        sandboxRunnerReport: codingAgentSandboxRunnerReport,
       }),
     [
       activeRoles.length,
@@ -574,59 +824,60 @@ export function App() {
       codingAgentSandboxRunnerReport,
       codingAgentSessionBundle,
       run,
-      workspace.mission
-    ]
+      workspace.mission,
+    ],
   );
   const currentEngineeringSelfSimulation =
-    engineeringSelfSimulation?.missionFingerprint === engineeringLaunchProfile.missionFingerprint
+    engineeringSelfSimulation?.missionFingerprint ===
+    engineeringLaunchProfile.missionFingerprint
       ? engineeringSelfSimulation
       : null;
   const currentEngineeringSelfSimulationLink = currentEngineeringSelfSimulation
     ? engineeringSelfSimulationLink
     : null;
-  const currentEngineeringSelfSimulationMarkdownLink = currentEngineeringSelfSimulation
-    ? engineeringSelfSimulationMarkdownLink
-    : null;
+  const currentEngineeringSelfSimulationMarkdownLink =
+    currentEngineeringSelfSimulation
+      ? engineeringSelfSimulationMarkdownLink
+      : null;
   const currentEngineeringLaunchQueue = currentEngineeringSelfSimulation
     ? engineeringLaunchQueue
     : null;
   const currentEngineeringLaunchQueueLink = currentEngineeringLaunchQueue
     ? engineeringLaunchQueueLink
     : null;
-  const currentEngineeringLaunchQueueMarkdownLink = currentEngineeringLaunchQueue
-    ? engineeringLaunchQueueMarkdownLink
-    : null;
+  const currentEngineeringLaunchQueueMarkdownLink =
+    currentEngineeringLaunchQueue ? engineeringLaunchQueueMarkdownLink : null;
   const currentEngineeringExecutionReceipt = currentEngineeringSelfSimulation
     ? engineeringExecutionReceipt
     : null;
-  const currentEngineeringExecutionReceiptLink = currentEngineeringExecutionReceipt
-    ? engineeringExecutionReceiptLink
-    : null;
-  const currentEngineeringExecutionReceiptMarkdownLink = currentEngineeringExecutionReceipt
-    ? engineeringExecutionReceiptMarkdownLink
-    : null;
+  const currentEngineeringExecutionReceiptLink =
+    currentEngineeringExecutionReceipt ? engineeringExecutionReceiptLink : null;
+  const currentEngineeringExecutionReceiptMarkdownLink =
+    currentEngineeringExecutionReceipt
+      ? engineeringExecutionReceiptMarkdownLink
+      : null;
   const engineeringMacRunnerReadiness = useMemo(
     () =>
       buildEngineeringMacRunnerReadiness({
         profile: engineeringLaunchProfile,
         selfSimulation: currentEngineeringSelfSimulation,
         launchQueue: currentEngineeringLaunchQueue,
-        executionReceipt: currentEngineeringExecutionReceipt
+        executionReceipt: currentEngineeringExecutionReceipt,
       }),
     [
       currentEngineeringExecutionReceipt,
       currentEngineeringLaunchQueue,
       currentEngineeringSelfSimulation,
-      engineeringLaunchProfile
-    ]
+      engineeringLaunchProfile,
+    ],
   );
   const engineeringMacRunnerContract = useMemo(
     () =>
       buildEngineeringMacRunnerContract({
         profile: engineeringLaunchProfile,
-        readiness: engineeringMacRunnerReadiness
+        readiness: engineeringMacRunnerReadiness,
       }),
-    [engineeringLaunchProfile, engineeringMacRunnerReadiness]
+    [engineeringLaunchProfile, engineeringMacRunnerReadiness],
   );
   const productReadinessReport = useMemo<ProductReadinessReport>(
     () =>
@@ -642,7 +893,7 @@ export function App() {
         issueDrafts: developmentIssueDrafts,
         approvalRecords,
         auditEvents,
-        memoryEntries
+        memoryEntries,
       }),
     [
       approvalRecords,
@@ -656,8 +907,8 @@ export function App() {
       run,
       sandboxCapabilityRegistry,
       teamHandoff,
-      workspace
-    ]
+      workspace,
+    ],
   );
   const productReleaseBundle = useMemo<ProductReleaseBundle>(
     () =>
@@ -673,7 +924,7 @@ export function App() {
         issueDrafts: developmentIssueDrafts,
         approvalRecords,
         auditEvents,
-        memoryEntries
+        memoryEntries,
       }),
     [
       approvalRecords,
@@ -687,8 +938,8 @@ export function App() {
       roleWorkspaceScaffolds,
       run,
       teamHandoff,
-      workspace
-    ]
+      workspace,
+    ],
   );
 
   useEffect(() => {
@@ -1141,7 +1392,7 @@ export function App() {
         : "Refresh gateway ledger when the local service is running.",
       approvals: [],
       evidenceBundles: [],
-      evidenceMessage: undefined
+      evidenceMessage: undefined,
     }));
   }, [run?.id]);
 
@@ -1178,22 +1429,22 @@ export function App() {
               ...patch,
               provider: {
                 ...role.provider,
-                ...(patch.provider || {})
+                ...(patch.provider || {}),
               },
               permissions: {
                 ...role.permissions,
-                ...(patch.permissions || {})
-              }
+                ...(patch.permissions || {}),
+              },
             }
-          : role
-      )
+          : role,
+      ),
     }));
   }
 
   function updateSecret(roleId: string, value: string) {
     setSessionSecrets((current) => ({
       ...current,
-      [roleId]: value
+      [roleId]: value,
     }));
   }
 
@@ -1204,8 +1455,8 @@ export function App() {
     updateRole(roleId, {
       provider: {
         ...role.provider,
-        ...patch
-      }
+        ...patch,
+      },
     });
   }
 
@@ -1215,7 +1466,7 @@ export function App() {
   }
 
   function clearProductReadinessDownload({
-    preserveCodingAgentBriefReview = false
+    preserveCodingAgentBriefReview = false,
   }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     if (productReadinessLink) {
       URL.revokeObjectURL(productReadinessLink.href);
@@ -1237,7 +1488,7 @@ export function App() {
   }
 
   function clearReleaseRehearsal({
-    preserveCodingAgentBriefReview = false
+    preserveCodingAgentBriefReview = false,
   }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     setReleaseRehearsal(null);
     if (releaseRehearsalLink) {
@@ -1256,7 +1507,7 @@ export function App() {
   }
 
   function clearReleaseVerification({
-    preserveCodingAgentBriefReview = false
+    preserveCodingAgentBriefReview = false,
   }: { preserveCodingAgentBriefReview?: boolean } = {}) {
     setReleaseVerification(null);
     if (releaseVerificationLink) {
@@ -1454,13 +1705,13 @@ export function App() {
     setServerLedger((current) => ({
       ...current,
       status: "loading",
-      message: "Reading gateway approval and evidence ledgers..."
+      message: "Reading gateway approval and evidence ledgers...",
     }));
 
     try {
       const [summary, approvalQuery] = await Promise.all([
         getLedgerSummaryViaGateway(),
-        listApprovalLedgerViaGateway(run?.id)
+        listApprovalLedgerViaGateway(run?.id),
       ]);
       let evidenceBundles: ExecutorEvidenceBundle[] = [];
       let evidenceMessage: string | undefined;
@@ -1469,9 +1720,10 @@ export function App() {
         const evidenceQuery = await listEvidenceLedgerViaGateway(run?.id);
         evidenceBundles = evidenceQuery.bundles;
       } catch (error) {
-        evidenceMessage = error instanceof Error
-          ? `${error.message}. Evidence reads may require runner authentication.`
-          : "Gateway evidence ledger unavailable. Evidence reads may require runner authentication.";
+        evidenceMessage =
+          error instanceof Error
+            ? `${error.message}. Evidence reads may require runner authentication.`
+            : "Gateway evidence ledger unavailable. Evidence reads may require runner authentication.";
       }
 
       setServerLedger({
@@ -1482,13 +1734,16 @@ export function App() {
         summary,
         approvals: approvalQuery.records,
         evidenceBundles,
-        evidenceMessage
+        evidenceMessage,
       });
     } catch (error) {
       setServerLedger((current) => ({
         ...current,
         status: "error",
-        message: error instanceof Error ? error.message : "Gateway ledger unavailable."
+        message:
+          error instanceof Error
+            ? error.message
+            : "Gateway ledger unavailable.",
       }));
     }
   }
@@ -1496,30 +1751,32 @@ export function App() {
   function addRole(sourceRole?: CabinetRole) {
     const role = createCustomRole({
       roles: workspace.roles,
-      sourceRole
+      sourceRole,
     });
     setWorkspace((current) => ({
       ...current,
-      roles: [...current.roles, role]
+      roles: [...current.roles, role],
     }));
     setSelectedRoleId(role.id);
     setRunState({
       status: "idle",
       message: sourceRole
         ? `Duplicated ${sourceRole.name}. Configure its provider and permissions before the next run.`
-        : "Added a custom role. Configure its provider and permissions before the next run."
+        : "Added a custom role. Configure its provider and permissions before the next run.",
     });
     recordAudit({
       type: sourceRole ? "role.duplicated" : "role.created",
       severity: "info",
-      summary: sourceRole ? `Duplicated role ${sourceRole.name}.` : `Created role ${role.name}.`,
+      summary: sourceRole
+        ? `Duplicated role ${sourceRole.name}.`
+        : `Created role ${role.name}.`,
       roleId: role.id,
       metadata: {
         ministry: role.ministry,
         stage: role.stage,
         provider: role.provider.provider,
-        sourceRoleId: sourceRole?.id || null
-      }
+        sourceRoleId: sourceRole?.id || null,
+      },
     });
   }
 
@@ -1532,7 +1789,7 @@ export function App() {
       setSelectedRoleId(nextRoles[0]?.id || "");
       return {
         ...current,
-        roles: nextRoles
+        roles: nextRoles,
       };
     });
     setSessionSecrets((current) => {
@@ -1542,7 +1799,7 @@ export function App() {
     });
     setRunState({
       status: "idle",
-      message: "Custom role removed from the workspace."
+      message: "Custom role removed from the workspace.",
     });
     recordAudit({
       type: "role.deleted",
@@ -1551,24 +1808,42 @@ export function App() {
       roleId,
       metadata: {
         ministry: deletedRole?.ministry || null,
-        stage: deletedRole?.stage || null
-      }
+        stage: deletedRole?.stage || null,
+      },
     });
   }
 
-  async function runCabinet() {
+  async function runCabinet(mode: CabinetRunMode = runMode) {
     setRunState({
       status: "running",
-      message: `Calling local gateway at ${gatewayBaseUrl()}...`
+      message: copy.cabinetCallingGateway(gatewayBaseUrl()),
     });
     try {
-      const result = await runCabinetViaGateway(workspace, runMode);
+      const result = await runCabinetViaGateway(workspace, mode);
+      const providerCounts = result.run.artifacts.reduce(
+        (counts, artifact) => ({
+          called:
+            counts.called + (artifact.providerStatus === "called" ? 1 : 0),
+          skipped:
+            counts.skipped + (artifact.providerStatus === "skipped" ? 1 : 0),
+          failed:
+            counts.failed + (artifact.providerStatus === "failed" ? 1 : 0),
+        }),
+        { called: 0, skipped: 0, failed: 0 },
+      );
       setRun(result.run);
       saveCurrentRun(result.run);
-      setRunHistory((current) => addRunHistoryItem(result.run, result.source, current));
+      setRunHistory((current) =>
+        addRunHistoryItem(result.run, result.source, current),
+      );
       setRunState({
         status: "gateway",
-        message: `Run completed through the local gateway in ${runMode} mode.`
+        message: copy.cabinetRunCompleted(
+          mode,
+          providerCounts.called,
+          providerCounts.skipped,
+          providerCounts.failed,
+        ),
       });
       recordAudit({
         type: "cabinet.run.completed",
@@ -1576,23 +1851,34 @@ export function App() {
         summary: `Cabinet run completed through ${result.source}.`,
         runId: result.run.id,
         metadata: {
-          mode: runMode,
+          mode,
           decision: result.run.score.decision,
           overall: result.run.score.overall,
-          automationActions: result.run.automationActions?.length || 0
-        }
+          automationActions: result.run.automationActions?.length || 0,
+        },
       });
       return result.run;
     } catch (error) {
-      const fallbackRun = runCabinetMission(workspace);
+      const localRun = runCabinetMission(workspace);
+      const fallbackRun = {
+        ...localRun,
+        artifacts: localRun.artifacts.map((artifact) => ({
+          ...artifact,
+          providerStatus: "dry-run" as const,
+          providerDetail:
+            "Local deterministic fallback; no external model call.",
+        })),
+      };
       setRun(fallbackRun);
       saveCurrentRun(fallbackRun);
-      setRunHistory((current) => addRunHistoryItem(fallbackRun, "fallback", current));
+      setRunHistory((current) =>
+        addRunHistoryItem(fallbackRun, "fallback", current),
+      );
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway unavailable; used local fallback. ${error.message}`
-          : "Gateway unavailable; used local fallback."
+        message: copy.cabinetRunFallback(
+          error instanceof Error ? error.message : undefined,
+        ),
       });
       recordAudit({
         type: "cabinet.run.completed",
@@ -1603,11 +1889,24 @@ export function App() {
           mode: "dry-run",
           decision: fallbackRun.score.decision,
           overall: fallbackRun.score.overall,
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
       return fallbackRun;
     }
+  }
+
+  function openAdvanced(section: AdvancedSection) {
+    if (section === "engineering") {
+      setEngineeringView("cli");
+      void refreshEngineeringRunnerReadinessFromLaunchpad();
+    }
+    setAdvancedSection(section);
+    setWorkspaceView("advanced");
+  }
+
+  function openEngineeringFromQuickStart() {
+    openAdvanced("engineering");
   }
 
   function persistWorkspace() {
@@ -1620,8 +1919,8 @@ export function App() {
       summary: "Workspace saved locally.",
       metadata: {
         roles: workspace.roles.length,
-        activeRoles: activeRoles.length
-      }
+        activeRoles: activeRoles.length,
+      },
     });
   }
 
@@ -1660,13 +1959,15 @@ export function App() {
       severity: "warning",
       summary: "Workspace reset to default cabinet.",
       metadata: {
-        roles: next.roles.length
-      }
+        roles: next.roles.length,
+      },
     });
   }
 
   function exportWorkspace() {
-    const blob = new Blob([serializeWorkspace(workspace)], { type: "application/json" });
+    const blob = new Blob([serializeWorkspace(workspace)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-workspace-${new Date().toISOString().slice(0, 10)}.json`;
 
@@ -1677,7 +1978,8 @@ export function App() {
     setExportLink({ href: url, fileName });
     setRunState({
       status: "idle",
-      message: "Workspace export is ready. Use Download JSON before closing this page."
+      message:
+        "Workspace export is ready. Use Download JSON before closing this page.",
     });
     recordAudit({
       type: "workspace.exported",
@@ -1685,8 +1987,8 @@ export function App() {
       summary: "Workspace export prepared.",
       metadata: {
         roles: workspace.roles.length,
-        activeRoles: activeRoles.length
-      }
+        activeRoles: activeRoles.length,
+      },
     });
   }
 
@@ -1725,7 +2027,7 @@ export function App() {
       setExecutorEvidenceLink(null);
       setRunState({
         status: "idle",
-        message: `Imported workspace from ${file.name}.`
+        message: `Imported workspace from ${file.name}.`,
       });
       recordAudit({
         type: "workspace.imported",
@@ -1733,27 +2035,30 @@ export function App() {
         summary: `Imported workspace from ${file.name}.`,
         metadata: {
           roles: imported.roles.length,
-          activeRoles: imported.roles.filter((role) => role.enabled).length
-        }
+          activeRoles: imported.roles.filter((role) => role.enabled).length,
+        },
       });
     } catch (error) {
       setRunState({
         status: "error",
-        message: error instanceof Error ? `Import failed: ${error.message}` : "Import failed."
+        message:
+          error instanceof Error
+            ? `Import failed: ${error.message}`
+            : "Import failed.",
       });
     }
   }
 
   function recordAutomationDecision(
     action: AutomationAction,
-    decision: AutomationApprovalDecision
+    decision: AutomationApprovalDecision,
   ) {
     const record = createApprovalRecord({
       action,
-      decision
+      decision,
     });
     const nextRecords = saveApprovalRecord(record).filter(
-      (candidate) => candidate.runId === action.runId
+      (candidate) => candidate.runId === action.runId,
     );
     void saveApprovalRecordViaGateway(record)
       .then(() => {
@@ -1779,15 +2084,19 @@ export function App() {
         decision,
         executorProfileId: action.executorProfileId,
         riskLevel: action.riskLevel,
-        target: action.target
-      }
+        target: action.target,
+      },
     });
   }
 
   function createTeamHandoffDownload(handoff: TeamHandoff) {
-    const blob = new Blob([serializeTeamHandoff(handoff)], { type: "application/json" });
+    const blob = new Blob([serializeTeamHandoff(handoff)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = handoff.runId ? handoff.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = handoff.runId
+      ? handoff.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-team-packages-${runSlug}.json`;
 
     if (teamHandoffLink) {
@@ -1803,7 +2112,7 @@ export function App() {
       createTeamHandoffDownload(gatewayHandoff);
       setRunState({
         status: "gateway",
-        message: "Team work packages exported through the local gateway."
+        message: "Team work packages exported through the local gateway.",
       });
       recordAudit({
         type: "team.handoff.exported",
@@ -1813,16 +2122,17 @@ export function App() {
         metadata: {
           packages: gatewayHandoff.packages.length,
           ready: gatewayHandoff.summary.ready,
-          blocked: gatewayHandoff.summary.blocked
-        }
+          blocked: gatewayHandoff.summary.blocked,
+        },
       });
     } catch (error) {
       createTeamHandoffDownload(teamHandoff);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway team packages unavailable; used local export. ${error.message}`
-          : "Gateway team packages unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway team packages unavailable; used local export. ${error.message}`
+            : "Gateway team packages unavailable; used local export.",
       });
       recordAudit({
         type: "team.handoff.exported",
@@ -1831,16 +2141,23 @@ export function App() {
         runId: teamHandoff.runId,
         metadata: {
           packages: teamHandoff.packages.length,
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
 
-  function createRoleWorkspaceScaffoldDownload(scaffolds: RoleWorkspaceScaffolds) {
-    const blob = new Blob([serializeRoleWorkspaceScaffoldScriptExport(scaffolds)], { type: "text/x-shellscript" });
+  function createRoleWorkspaceScaffoldDownload(
+    scaffolds: RoleWorkspaceScaffolds,
+  ) {
+    const blob = new Blob(
+      [serializeRoleWorkspaceScaffoldScriptExport(scaffolds)],
+      { type: "text/x-shellscript" },
+    );
     const url = URL.createObjectURL(blob);
-    const runSlug = scaffolds.runId ? scaffolds.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = scaffolds.runId
+      ? scaffolds.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-role-workspaces-${runSlug}.sh`;
 
     if (roleWorkspaceLink) {
@@ -1852,11 +2169,15 @@ export function App() {
 
   async function exportRoleWorkspaceScaffolds() {
     try {
-      const gatewayScaffolds = await createRoleWorkspaceScaffoldsViaGateway(workspace, run);
+      const gatewayScaffolds = await createRoleWorkspaceScaffoldsViaGateway(
+        workspace,
+        run,
+      );
       createRoleWorkspaceScaffoldDownload(gatewayScaffolds);
       setRunState({
         status: "gateway",
-        message: "Role workspace scaffold script exported through the local gateway."
+        message:
+          "Role workspace scaffold script exported through the local gateway.",
       });
       recordAudit({
         type: "role.workspaces.exported",
@@ -1866,16 +2187,17 @@ export function App() {
         metadata: {
           roles: gatewayScaffolds.summary.roles,
           files: gatewayScaffolds.summary.files,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createRoleWorkspaceScaffoldDownload(roleWorkspaceScaffolds);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway role workspaces unavailable; used local export. ${error.message}`
-          : "Gateway role workspaces unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway role workspaces unavailable; used local export. ${error.message}`
+            : "Gateway role workspaces unavailable; used local export.",
       });
       recordAudit({
         type: "role.workspaces.exported",
@@ -1886,16 +2208,20 @@ export function App() {
           roles: roleWorkspaceScaffolds.summary.roles,
           files: roleWorkspaceScaffolds.summary.files,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
 
   function createProductReadinessDownload(report: ProductReadinessReport) {
-    const blob = new Blob([serializeProductReadinessExport(report)], { type: "application/json" });
+    const blob = new Blob([serializeProductReadinessExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-product-readiness-${runSlug}.json`;
 
     if (productReadinessLink) {
@@ -1914,12 +2240,12 @@ export function App() {
         approvalRecords,
         memoryEntries,
         developmentItems,
-        auditEvents
+        auditEvents,
       );
       createProductReadinessDownload(gatewayReport);
       setRunState({
         status: "gateway",
-        message: "Product readiness report exported through the local gateway."
+        message: "Product readiness report exported through the local gateway.",
       });
       recordAudit({
         type: "product.readiness.exported",
@@ -1930,20 +2256,22 @@ export function App() {
           score: gatewayReport.score,
           blockers: gatewayReport.summary.blockers,
           warnings: gatewayReport.summary.warnings,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createProductReadinessDownload(productReadinessReport);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway product readiness unavailable; used local export. ${error.message}`
-          : "Gateway product readiness unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway product readiness unavailable; used local export. ${error.message}`
+            : "Gateway product readiness unavailable; used local export.",
       });
       recordAudit({
         type: "product.readiness.exported",
-        severity: productReadinessReport.decision === "blocked" ? "warning" : "info",
+        severity:
+          productReadinessReport.decision === "blocked" ? "warning" : "info",
         summary: `Product readiness report exported locally: ${productReadinessReport.decision}.`,
         runId: productReadinessReport.runId,
         metadata: {
@@ -1951,18 +2279,24 @@ export function App() {
           blockers: productReadinessReport.summary.blockers,
           warnings: productReadinessReport.summary.warnings,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
 
   function createProductReleaseBundleDownload(bundle: ProductReleaseBundle) {
-    const blob = new Blob([serializeProductReleaseBundleExport(bundle)], { type: "application/json" });
+    const blob = new Blob([serializeProductReleaseBundleExport(bundle)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = bundle.runId ? bundle.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = bundle.runId
+      ? bundle.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-product-release-bundle-${runSlug}.json`;
-    const notesBlob = new Blob([serializeProductReleaseNotesExport(bundle)], { type: "text/markdown" });
+    const notesBlob = new Blob([serializeProductReleaseNotesExport(bundle)], {
+      type: "text/markdown",
+    });
     const notesUrl = URL.createObjectURL(notesBlob);
     const notesFileName = `naikaku-release-notes-${runSlug}.md`;
 
@@ -1986,16 +2320,17 @@ export function App() {
         approvalRecords,
         memoryEntries,
         developmentItems,
-        auditEvents
+        auditEvents,
       );
       createProductReleaseBundleDownload(gatewayBundle);
       setRunState({
         status: "gateway",
-        message: "Product release bundle exported through the local gateway."
+        message: "Product release bundle exported through the local gateway.",
       });
       recordAudit({
         type: "product.release.exported",
-        severity: gatewayBundle.readiness.decision === "blocked" ? "warning" : "info",
+        severity:
+          gatewayBundle.readiness.decision === "blocked" ? "warning" : "info",
         summary: `Product release bundle exported: ${gatewayBundle.readiness.decision}.`,
         runId: gatewayBundle.runId,
         metadata: {
@@ -2003,20 +2338,24 @@ export function App() {
           artifacts: gatewayBundle.summary.artifacts,
           missing: gatewayBundle.summary.missing,
           reviewRequired: gatewayBundle.summary.reviewRequired,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createProductReleaseBundleDownload(productReleaseBundle);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway product release bundle unavailable; used local export. ${error.message}`
-          : "Gateway product release bundle unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway product release bundle unavailable; used local export. ${error.message}`
+            : "Gateway product release bundle unavailable; used local export.",
       });
       recordAudit({
         type: "product.release.exported",
-        severity: productReleaseBundle.readiness.decision === "blocked" ? "warning" : "info",
+        severity:
+          productReleaseBundle.readiness.decision === "blocked"
+            ? "warning"
+            : "info",
         summary: `Product release bundle exported locally: ${productReleaseBundle.readiness.decision}.`,
         runId: productReleaseBundle.runId,
         metadata: {
@@ -2025,8 +2364,8 @@ export function App() {
           missing: productReleaseBundle.summary.missing,
           reviewRequired: productReleaseBundle.summary.reviewRequired,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
@@ -2040,7 +2379,7 @@ export function App() {
       auditEvents,
       memoryEntries,
       savedItems: developmentItems,
-      secretProbeValues: Object.values(sessionSecrets)
+      secretProbeValues: Object.values(sessionSecrets),
     });
     setReleaseRehearsal(report);
 
@@ -2060,11 +2399,20 @@ export function App() {
 
     setRunState({
       status: "local",
-      message: copy.releaseRehearsalStatus(report.decision, report.summary.blockers, report.summary.warnings)
+      message: copy.releaseRehearsalStatus(
+        report.decision,
+        report.summary.blockers,
+        report.summary.warnings,
+      ),
     });
     recordAudit({
       type: "release.rehearsal.completed",
-      severity: report.decision === "blocked" ? "error" : report.decision === "needs-review" ? "warning" : "success",
+      severity:
+        report.decision === "blocked"
+          ? "error"
+          : report.decision === "needs-review"
+            ? "warning"
+            : "success",
       summary: `Release rehearsal completed: ${report.decision}.`,
       runId: report.runId,
       metadata: {
@@ -2073,15 +2421,17 @@ export function App() {
         warnings: report.summary.warnings,
         evidenceItems: report.summary.evidenceItems,
         sourceRun: report.sourceRun,
-        secretLeakDetected: report.summary.secretLeakDetected
-      }
+        secretLeakDetected: report.summary.secretLeakDetected,
+      },
     });
   }
 
   function exportReleaseRehearsal() {
     if (!releaseRehearsal) return;
 
-    const blob = new Blob([serializeReleaseRehearsalExport(releaseRehearsal)], { type: "application/json" });
+    const blob = new Blob([serializeReleaseRehearsalExport(releaseRehearsal)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-release-rehearsal-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.json`;
 
@@ -2092,20 +2442,29 @@ export function App() {
     setReleaseRehearsalLink({ href: url, fileName });
     recordAudit({
       type: "release.rehearsal.exported",
-      severity: releaseRehearsal.decision === "blocked" ? "error" : releaseRehearsal.decision === "needs-review" ? "warning" : "info",
+      severity:
+        releaseRehearsal.decision === "blocked"
+          ? "error"
+          : releaseRehearsal.decision === "needs-review"
+            ? "warning"
+            : "info",
       summary: `Release rehearsal export prepared: ${releaseRehearsal.decision}.`,
       runId: releaseRehearsal.runId,
       metadata: {
         score: releaseRehearsal.score,
         blockers: releaseRehearsal.summary.blockers,
         warnings: releaseRehearsal.summary.warnings,
-        evidenceItems: releaseRehearsal.summary.evidenceItems
-      }
+        evidenceItems: releaseRehearsal.summary.evidenceItems,
+      },
     });
   }
 
-  function createReleaseVerificationDownload(report: ReleaseVerificationReport) {
-    const blob = new Blob([serializeReleaseVerificationExport(report)], { type: "application/json" });
+  function createReleaseVerificationDownload(
+    report: ReleaseVerificationReport,
+  ) {
+    const blob = new Blob([serializeReleaseVerificationExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const mode = report.requireProductionEvidence ? "production" : report.scope;
     const fileName = `naikaku-release-verification-${mode}-${report.sourceRunId.replace(/[^a-z0-9-]/gi, "-")}.json`;
@@ -2117,14 +2476,19 @@ export function App() {
     setReleaseVerificationLink({ href: url, fileName });
     recordAudit({
       type: "release.verification.exported",
-      severity: report.decision === "verified" ? "success" : report.decision === "not-production-ready" ? "warning" : "error",
+      severity:
+        report.decision === "verified"
+          ? "success"
+          : report.decision === "not-production-ready"
+            ? "warning"
+            : "error",
       summary: `Release verification export prepared: ${report.decision}.`,
       runId: report.sourceRunId,
       metadata: {
         scope: report.scope,
         requireProductionEvidence: report.requireProductionEvidence,
-        failed: report.summary.failed
-      }
+        failed: report.summary.failed,
+      },
     });
   }
 
@@ -2133,17 +2497,22 @@ export function App() {
 
     let verification = buildReleaseVerification({
       report: releaseRehearsal,
-      requireProductionEvidence
+      requireProductionEvidence,
     });
     let source: "gateway" | "local" = "local";
 
     try {
-      verification = await createReleaseVerificationViaGateway(releaseRehearsal, requireProductionEvidence);
+      verification = await createReleaseVerificationViaGateway(
+        releaseRehearsal,
+        requireProductionEvidence,
+      );
       source = "gateway";
     } catch (error) {
       setRunState({
         status: "fallback",
-        message: copy.releaseVerificationFallback(error instanceof Error ? error.message : undefined)
+        message: copy.releaseVerificationFallback(
+          error instanceof Error ? error.message : undefined,
+        ),
       });
     }
 
@@ -2151,19 +2520,27 @@ export function App() {
     createReleaseVerificationDownload(verification);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: copy.releaseVerificationStatus(verification.decision, verification.summary.failed)
+      message: copy.releaseVerificationStatus(
+        verification.decision,
+        verification.summary.failed,
+      ),
     });
     recordAudit({
       type: "release.verification.completed",
-      severity: verification.decision === "verified" ? "success" : verification.decision === "not-production-ready" ? "warning" : "error",
+      severity:
+        verification.decision === "verified"
+          ? "success"
+          : verification.decision === "not-production-ready"
+            ? "warning"
+            : "error",
       summary: `Release verification completed: ${verification.decision}.`,
       runId: verification.sourceRunId,
       metadata: {
         scope: verification.scope,
         requireProductionEvidence: verification.requireProductionEvidence,
         failed: verification.summary.failed,
-        source
-      }
+        source,
+      },
     });
   }
 
@@ -2172,9 +2549,11 @@ export function App() {
 
     const drafts = buildReleaseRemediationIssueDrafts({
       report: releaseRehearsal,
-      generatedAt: releaseRehearsal.generatedAt
+      generatedAt: releaseRehearsal.generatedAt,
     });
-    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], { type: "application/json" });
+    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-release-remediation-issues-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.json`;
 
@@ -2191,8 +2570,8 @@ export function App() {
       metadata: {
         drafts: drafts.summary.total,
         highPriority: drafts.summary.highPriority,
-        source: "release-remediation"
-      }
+        source: "release-remediation",
+      },
     });
   }
 
@@ -2201,9 +2580,11 @@ export function App() {
 
     const drafts = buildReleaseRemediationIssueDrafts({
       report: releaseRehearsal,
-      generatedAt: releaseRehearsal.generatedAt
+      generatedAt: releaseRehearsal.generatedAt,
     });
-    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], { type: "text/x-shellscript" });
+    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], {
+      type: "text/x-shellscript",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-release-remediation-gh-issues-${releaseRehearsal.runId.replace(/[^a-z0-9-]/gi, "-")}.sh`;
 
@@ -2221,15 +2602,17 @@ export function App() {
         drafts: drafts.summary.total,
         highPriority: drafts.summary.highPriority,
         format: "gh-script",
-        source: "release-remediation"
-      }
+        source: "release-remediation",
+      },
     });
   }
 
   function exportExecutorHandoff() {
     if (!run) return;
 
-    const blob = new Blob([serializeRunBundle(run, approvalRecords)], { type: "application/json" });
+    const blob = new Blob([serializeRunBundle(run, approvalRecords)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-handoff-${run.id.replace(/[^a-z0-9-]/gi, "-")}.json`;
 
@@ -2245,15 +2628,20 @@ export function App() {
       runId: run.id,
       metadata: {
         approvalRecords: approvalRecords.length,
-        readyActions: buildExecutorHandoff({ run, approvalRecords }).readyActions.length
-      }
+        readyActions: buildExecutorHandoff({ run, approvalRecords })
+          .readyActions.length,
+      },
     });
   }
 
   function createAutomationRunbookDownload(runbook: AutomationRunbook) {
-    const blob = new Blob([serializeAutomationRunbookExport(runbook)], { type: "application/json" });
+    const blob = new Blob([serializeAutomationRunbookExport(runbook)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = runbook.runId ? runbook.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = runbook.runId
+      ? runbook.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-automation-runbook-${runSlug}.json`;
 
     if (automationRunbookLink) {
@@ -2267,11 +2655,14 @@ export function App() {
     if (!run) return;
 
     try {
-      const gatewayRunbook = await createAutomationRunbookViaGateway(run, approvalRecords);
+      const gatewayRunbook = await createAutomationRunbookViaGateway(
+        run,
+        approvalRecords,
+      );
       createAutomationRunbookDownload(gatewayRunbook);
       setRunState({
         status: "gateway",
-        message: "Automation runbook exported through the local gateway."
+        message: "Automation runbook exported through the local gateway.",
       });
       recordAudit({
         type: "automation.runbook.exported",
@@ -2281,16 +2672,17 @@ export function App() {
         metadata: {
           ready: gatewayRunbook.summary.ready,
           held: gatewayRunbook.summary.held,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createAutomationRunbookDownload(automationRunbook);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway automation runbook unavailable; used local export. ${error.message}`
-          : "Gateway automation runbook unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway automation runbook unavailable; used local export. ${error.message}`
+            : "Gateway automation runbook unavailable; used local export.",
       });
       recordAudit({
         type: "automation.runbook.exported",
@@ -2301,8 +2693,8 @@ export function App() {
           ready: automationRunbook.summary.ready,
           held: automationRunbook.summary.held,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
@@ -2312,7 +2704,7 @@ export function App() {
 
     const handoff = buildExecutorHandoff({
       run,
-      approvalRecords
+      approvalRecords,
     });
     setExecutorRunning(true);
     try {
@@ -2321,7 +2713,7 @@ export function App() {
       clearProductReadinessDownload();
       setRunState({
         status: "gateway",
-        message: "Executor dry-run completed through the local gateway."
+        message: "Executor dry-run completed through the local gateway.",
       });
       recordAudit({
         type: "executor.run.dry.completed",
@@ -2330,8 +2722,8 @@ export function App() {
         runId: handoff.runId,
         metadata: {
           readyActions: handoff.readyActions.length,
-          heldActions: handoff.heldActions.length
-        }
+          heldActions: handoff.heldActions.length,
+        },
       });
     } catch (error) {
       const localExecutorRun = runExecutorHandoff({ handoff });
@@ -2340,9 +2732,10 @@ export function App() {
       clearProductReadinessDownload();
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway executor unavailable; used local dry-run. ${error.message}`
-          : "Gateway executor unavailable; used local dry-run."
+        message:
+          error instanceof Error
+            ? `Gateway executor unavailable; used local dry-run. ${error.message}`
+            : "Gateway executor unavailable; used local dry-run.",
       });
       recordAudit({
         type: "executor.run.dry.completed",
@@ -2352,8 +2745,8 @@ export function App() {
         metadata: {
           simulated: localExecutorRun.summary.simulated,
           held: localExecutorRun.summary.held,
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     } finally {
       setExecutorRunning(false);
@@ -2371,16 +2764,20 @@ export function App() {
       source = "gateway";
       setRunState({
         status: "gateway",
-        message: "Executor evidence exported and stored through the local gateway."
+        message:
+          "Executor evidence exported and stored through the local gateway.",
       });
     } catch {
       setRunState({
         status: "fallback",
-        message: "Gateway evidence ledger unavailable; prepared local evidence export."
+        message:
+          "Gateway evidence ledger unavailable; prepared local evidence export.",
       });
     }
 
-    const blob = new Blob([serializeExecutorEvidenceExport(bundle)], { type: "application/json" });
+    const blob = new Blob([serializeExecutorEvidenceExport(bundle)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-executor-evidence-${executorRun.id.replace(/[^a-z0-9-]/gi, "-")}.json`;
 
@@ -2399,8 +2796,8 @@ export function App() {
         steps: executorRun.steps.length,
         evidenceItems: executorRun.summary.evidenceItems,
         replayableSteps: executorRun.summary.replayableSteps,
-        source
-      }
+        source,
+      },
     });
 
     if (source === "gateway") {
@@ -2409,7 +2806,9 @@ export function App() {
   }
 
   function exportAuditLog() {
-    const blob = new Blob([serializeAuditLog(auditEvents)], { type: "application/json" });
+    const blob = new Blob([serializeAuditLog(auditEvents)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-audit-log-${new Date().toISOString().slice(0, 10)}.json`;
 
@@ -2422,11 +2821,11 @@ export function App() {
 
   function recordMemoryReview(
     candidate: MemoryEntry,
-    decision: "accepted" | "rejected"
+    decision: "accepted" | "rejected",
   ) {
     const entry = createMemoryDecision({
       entry: candidate,
-      decision
+      decision,
     });
     const nextEntries = saveMemoryEntry(entry);
     setMemoryEntries(nextEntries);
@@ -2444,7 +2843,10 @@ export function App() {
     }
     clearProductReadinessDownload();
     recordAudit({
-      type: decision === "accepted" ? "memory.entry.accepted" : "memory.entry.rejected",
+      type:
+        decision === "accepted"
+          ? "memory.entry.accepted"
+          : "memory.entry.rejected",
       severity: decision === "accepted" ? "success" : "warning",
       summary: `${decision === "accepted" ? "Accepted" : "Rejected"} memory candidate ${candidate.title}.`,
       runId: candidate.runId,
@@ -2453,13 +2855,15 @@ export function App() {
         kind: candidate.kind,
         source: candidate.source,
         retention: candidate.retention,
-        tags: candidate.tags.slice(0, 4).join(",")
-      }
+        tags: candidate.tags.slice(0, 4).join(","),
+      },
     });
   }
 
   function exportMemoryLog() {
-    const blob = new Blob([serializeMemoryLog(memoryEntries)], { type: "application/json" });
+    const blob = new Blob([serializeMemoryLog(memoryEntries)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-memory-log-${new Date().toISOString().slice(0, 10)}.json`;
 
@@ -2474,19 +2878,21 @@ export function App() {
       summary: "Memory log export prepared.",
       metadata: {
         entries: memoryEntries.length,
-        accepted: memoryEntries.filter((entry) => entry.status === "accepted").length,
-        rejected: memoryEntries.filter((entry) => entry.status === "rejected").length
-      }
+        accepted: memoryEntries.filter((entry) => entry.status === "accepted")
+          .length,
+        rejected: memoryEntries.filter((entry) => entry.status === "rejected")
+          .length,
+      },
     });
   }
 
   function changeDevelopmentItemStatus(
     item: DevelopmentWorkItem,
-    status: DevelopmentWorkItemStatus
+    status: DevelopmentWorkItemStatus,
   ) {
     const nextItem = updateDevelopmentWorkItemStatus({
       item,
-      status
+      status,
     });
     const nextItems = saveDevelopmentWorkItem(nextItem);
     setDevelopmentItems(nextItems);
@@ -2507,7 +2913,12 @@ export function App() {
     clearProductReadinessDownload();
     recordAudit({
       type: "development.item.status.changed",
-      severity: status === "blocked" ? "warning" : status === "done" ? "success" : "info",
+      severity:
+        status === "blocked"
+          ? "warning"
+          : status === "done"
+            ? "success"
+            : "info",
       summary: `Set development item ${item.title} to ${status}.`,
       runId: item.runId,
       roleId: item.roleId,
@@ -2515,13 +2926,15 @@ export function App() {
         itemId: item.id,
         status,
         source: item.source,
-        priority: item.priority
-      }
+        priority: item.priority,
+      },
     });
   }
 
   function exportDevelopmentBoard() {
-    const blob = new Blob([serializeDevelopmentBoardExport(developmentBoard)], { type: "application/json" });
+    const blob = new Blob([serializeDevelopmentBoardExport(developmentBoard)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const runSlug = developmentBoard.runId
       ? developmentBoard.runId.replace(/[^a-z0-9-]/gi, "-")
@@ -2541,15 +2954,19 @@ export function App() {
       metadata: {
         items: developmentBoard.summary.total,
         blocked: developmentBoard.summary.blocked,
-        highPriority: developmentBoard.summary.highPriority
-      }
+        highPriority: developmentBoard.summary.highPriority,
+      },
     });
   }
 
   function createCodingAgentBriefsDownload(briefs: CodingAgentBriefs) {
-    const blob = new Blob([serializeCodingAgentBriefsExport(briefs)], { type: "application/json" });
+    const blob = new Blob([serializeCodingAgentBriefsExport(briefs)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = briefs.runId ? briefs.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = briefs.runId
+      ? briefs.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-briefs-${runSlug}-${briefs.operatorLocale}.json`;
 
     if (codingAgentBriefsLink) {
@@ -2560,9 +2977,13 @@ export function App() {
   }
 
   function createCodingAgentBriefsMarkdownDownload(briefs: CodingAgentBriefs) {
-    const blob = new Blob([serializeCodingAgentBriefsMarkdownExport(briefs)], { type: "text/markdown" });
+    const blob = new Blob([serializeCodingAgentBriefsMarkdownExport(briefs)], {
+      type: "text/markdown",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = briefs.runId ? briefs.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = briefs.runId
+      ? briefs.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-briefs-${runSlug}-${briefs.operatorLocale}.md`;
 
     if (codingAgentBriefsMarkdownLink) {
@@ -2580,12 +3001,12 @@ export function App() {
         memoryEntries,
         developmentItems,
         releaseVerification,
-        locale
+        locale,
       );
       createCodingAgentBriefsDownload(gatewayBriefs);
       setRunState({
         status: "gateway",
-        message: copy.codingBriefs.statusGateway
+        message: copy.codingBriefs.statusGateway,
       });
       recordAudit({
         type: "development.coding_briefs.exported",
@@ -2596,14 +3017,16 @@ export function App() {
           briefs: gatewayBriefs.summary.total,
           blocked: gatewayBriefs.summary.blocked,
           humanReview: gatewayBriefs.summary.humanReview,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createCodingAgentBriefsDownload(codingAgentBriefs);
       setRunState({
         status: "fallback",
-        message: copy.codingBriefs.statusFallback(error instanceof Error ? error.message : undefined)
+        message: copy.codingBriefs.statusFallback(
+          error instanceof Error ? error.message : undefined,
+        ),
       });
       recordAudit({
         type: "development.coding_briefs.exported",
@@ -2615,8 +3038,8 @@ export function App() {
           blocked: codingAgentBriefs.summary.blocked,
           humanReview: codingAgentBriefs.summary.humanReview,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
@@ -2625,7 +3048,7 @@ export function App() {
     createCodingAgentBriefsMarkdownDownload(codingAgentBriefs);
     setRunState({
       status: "local",
-      message: copy.codingBriefs.statusMarkdown
+      message: copy.codingBriefs.statusMarkdown,
     });
     recordAudit({
       type: "development.coding_briefs.exported",
@@ -2637,18 +3060,22 @@ export function App() {
         blocked: codingAgentBriefs.summary.blocked,
         humanReview: codingAgentBriefs.summary.humanReview,
         format: "markdown",
-        source: "local"
-      }
+        source: "local",
+      },
     });
   }
 
   function createCodingAgentBriefReviewDownload(
     report: CodingAgentBriefReviewReport,
-    requireProductionEvidence: boolean
+    requireProductionEvidence: boolean,
   ) {
-    const blob = new Blob([serializeCodingAgentBriefReviewExport(report)], { type: "application/json" });
+    const blob = new Blob([serializeCodingAgentBriefReviewExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const mode = requireProductionEvidence ? "production" : "dry-run";
     const fileName = `naikaku-coding-agent-brief-review-${mode}-${runSlug}-${report.operatorLocale}.json`;
 
@@ -2663,7 +3090,7 @@ export function App() {
     let review = buildCodingAgentBriefReview({
       briefs: codingAgentBriefs,
       releaseVerification,
-      requireProductionEvidence
+      requireProductionEvidence,
     });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -2672,7 +3099,7 @@ export function App() {
       review = await reviewCodingAgentBriefsViaGateway(
         codingAgentBriefs,
         releaseVerification,
-        requireProductionEvidence
+        requireProductionEvidence,
       );
       source = "gateway";
     } catch (error) {
@@ -2683,18 +3110,28 @@ export function App() {
     createCodingAgentBriefReviewDownload(review, requireProductionEvidence);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: source === "gateway"
-        ? copy.codingBriefs.statusReviewGateway(review.decision, review.summary.blockers, review.summary.warnings)
-        : copy.codingBriefs.statusReviewLocal(
-          review.decision,
-          review.summary.blockers,
-          review.summary.warnings,
-          gatewayError || undefined
-        )
+      message:
+        source === "gateway"
+          ? copy.codingBriefs.statusReviewGateway(
+              review.decision,
+              review.summary.blockers,
+              review.summary.warnings,
+            )
+          : copy.codingBriefs.statusReviewLocal(
+              review.decision,
+              review.summary.blockers,
+              review.summary.warnings,
+              gatewayError || undefined,
+            ),
     });
     recordAudit({
       type: "development.coding_briefs.reviewed",
-      severity: review.decision === "ready" ? "success" : review.decision === "needs-review" ? "warning" : "error",
+      severity:
+        review.decision === "ready"
+          ? "success"
+          : review.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent brief review completed: ${review.decision}.`,
       runId: review.runId,
       metadata: {
@@ -2704,20 +3141,27 @@ export function App() {
         blockers: review.summary.blockers,
         source,
         requireProductionEvidence,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
   }
 
   function createCodingAgentSessionBundleDownload(
     bundle: CodingAgentSessionBundle,
-    requireProductionEvidence: boolean
+    requireProductionEvidence: boolean,
   ) {
-    const blob = new Blob([serializeCodingAgentSessionBundleExport(bundle)], { type: "application/json" });
+    const blob = new Blob([serializeCodingAgentSessionBundleExport(bundle)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentSessionBundleMarkdownExport(bundle)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentSessionBundleMarkdownExport(bundle)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = bundle.runId ? bundle.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = bundle.runId
+      ? bundle.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const mode = requireProductionEvidence ? "production" : "dry-run";
     const fileName = `naikaku-coding-agent-session-bundle-${mode}-${runSlug}-${bundle.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-session-bundle-${mode}-${runSlug}-${bundle.operatorLocale}.md`;
@@ -2730,15 +3174,20 @@ export function App() {
     }
 
     setCodingAgentSessionBundleLink({ href: url, fileName });
-    setCodingAgentSessionBundleMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentSessionBundleMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  async function exportCodingAgentSessionBundle(requireProductionEvidence = false) {
+  async function exportCodingAgentSessionBundle(
+    requireProductionEvidence = false,
+  ) {
     let bundle = buildCodingAgentSessionBundle({
       briefs: codingAgentBriefs,
       review: codingAgentBriefReview,
       releaseVerification,
-      requireProductionEvidence
+      requireProductionEvidence,
     });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -2748,7 +3197,7 @@ export function App() {
         codingAgentBriefs,
         codingAgentBriefReview,
         releaseVerification,
-        requireProductionEvidence
+        requireProductionEvidence,
       );
       source = "gateway";
     } catch (error) {
@@ -2762,18 +3211,28 @@ export function App() {
     createCodingAgentSessionBundleDownload(bundle, requireProductionEvidence);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: source === "gateway"
-        ? copy.codingBriefs.statusSessionGateway(bundle.decision, bundle.summary.ready, bundle.summary.held)
-        : copy.codingBriefs.statusSessionLocal(
-          bundle.decision,
-          bundle.summary.ready,
-          bundle.summary.held,
-          gatewayError || undefined
-        )
+      message:
+        source === "gateway"
+          ? copy.codingBriefs.statusSessionGateway(
+              bundle.decision,
+              bundle.summary.ready,
+              bundle.summary.held,
+            )
+          : copy.codingBriefs.statusSessionLocal(
+              bundle.decision,
+              bundle.summary.ready,
+              bundle.summary.held,
+              gatewayError || undefined,
+            ),
     });
     recordAudit({
       type: "development.coding_sessions.exported",
-      severity: bundle.decision === "ready" ? "success" : bundle.decision === "needs-review" ? "warning" : "error",
+      severity:
+        bundle.decision === "ready"
+          ? "success"
+          : bundle.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent session bundle exported: ${bundle.decision}.`,
       runId: bundle.runId,
       metadata: {
@@ -2783,17 +3242,27 @@ export function App() {
         productionHeld: bundle.summary.productionHeld,
         source,
         requireProductionEvidence,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
   }
 
-  function createCodingAgentDispatchManifestDownload(manifest: CodingAgentDispatchManifest) {
-    const blob = new Blob([serializeCodingAgentDispatchManifestExport(manifest)], { type: "application/json" });
+  function createCodingAgentDispatchManifestDownload(
+    manifest: CodingAgentDispatchManifest,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentDispatchManifestExport(manifest)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentDispatchManifestMarkdownExport(manifest)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentDispatchManifestMarkdownExport(manifest)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = manifest.runId ? manifest.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = manifest.runId
+      ? manifest.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-dispatch-manifest-${runSlug}-${manifest.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-dispatch-manifest-${runSlug}-${manifest.operatorLocale}.md`;
 
@@ -2805,15 +3274,28 @@ export function App() {
     }
 
     setCodingAgentDispatchManifestLink({ href: url, fileName });
-    setCodingAgentDispatchManifestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentDispatchManifestMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentDispatchArchiveDownload(archive: CodingAgentDispatchArchive) {
-    const blob = new Blob([serializeCodingAgentDispatchArchiveExport(archive)], { type: "application/json" });
+  function createCodingAgentDispatchArchiveDownload(
+    archive: CodingAgentDispatchArchive,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentDispatchArchiveExport(archive)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentDispatchArchiveMarkdownExport(archive)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentDispatchArchiveMarkdownExport(archive)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = archive.runId ? archive.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = archive.runId
+      ? archive.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-dispatch-archive-${runSlug}-${archive.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-dispatch-archive-${runSlug}-${archive.operatorLocale}.md`;
 
@@ -2825,15 +3307,28 @@ export function App() {
     }
 
     setCodingAgentDispatchArchiveLink({ href: url, fileName });
-    setCodingAgentDispatchArchiveMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentDispatchArchiveMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentDispatchArchiveAuditDownload(audit: CodingAgentDispatchArchiveAudit) {
-    const blob = new Blob([serializeCodingAgentDispatchArchiveAuditExport(audit)], { type: "application/json" });
+  function createCodingAgentDispatchArchiveAuditDownload(
+    audit: CodingAgentDispatchArchiveAudit,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentDispatchArchiveAuditExport(audit)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentDispatchArchiveAuditMarkdownExport(audit)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentDispatchArchiveAuditMarkdownExport(audit)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = audit.runId ? audit.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = audit.runId
+      ? audit.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-dispatch-archive-audit-${runSlug}-${audit.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-dispatch-archive-audit-${runSlug}-${audit.operatorLocale}.md`;
 
@@ -2845,15 +3340,28 @@ export function App() {
     }
 
     setCodingAgentDispatchArchiveAuditLink({ href: url, fileName });
-    setCodingAgentDispatchArchiveAuditMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentDispatchArchiveAuditMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentDispatchSimulationDownload(report: CodingAgentDispatchSimulation) {
-    const blob = new Blob([serializeCodingAgentDispatchSimulationExport(report)], { type: "application/json" });
+  function createCodingAgentDispatchSimulationDownload(
+    report: CodingAgentDispatchSimulation,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentDispatchSimulationExport(report)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentDispatchSimulationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentDispatchSimulationMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-dispatch-simulation-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-dispatch-simulation-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2865,15 +3373,27 @@ export function App() {
     }
 
     setCodingAgentDispatchSimulationLink({ href: url, fileName });
-    setCodingAgentDispatchSimulationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentDispatchSimulationMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentRunnerManifestDownload(report: CodingAgentRunnerManifest) {
-    const blob = new Blob([serializeCodingAgentRunnerManifestExport(report)], { type: "application/json" });
+  function createCodingAgentRunnerManifestDownload(
+    report: CodingAgentRunnerManifest,
+  ) {
+    const blob = new Blob([serializeCodingAgentRunnerManifestExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentRunnerManifestMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentRunnerManifestMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-runner-manifest-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-runner-manifest-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2885,15 +3405,28 @@ export function App() {
     }
 
     setCodingAgentRunnerManifestLink({ href: url, fileName });
-    setCodingAgentRunnerManifestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentRunnerManifestMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentRunnerInvocationDownload(report: CodingAgentRunnerInvocationPackage) {
-    const blob = new Blob([serializeCodingAgentRunnerInvocationExport(report)], { type: "application/json" });
+  function createCodingAgentRunnerInvocationDownload(
+    report: CodingAgentRunnerInvocationPackage,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentRunnerInvocationExport(report)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentRunnerInvocationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentRunnerInvocationMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-runner-invocation-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-runner-invocation-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2905,15 +3438,27 @@ export function App() {
     }
 
     setCodingAgentRunnerInvocationLink({ href: url, fileName });
-    setCodingAgentRunnerInvocationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentRunnerInvocationMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentRunnerIntakeDownload(report: CodingAgentRunnerIntakeAudit) {
-    const blob = new Blob([serializeCodingAgentRunnerIntakeExport(report)], { type: "application/json" });
+  function createCodingAgentRunnerIntakeDownload(
+    report: CodingAgentRunnerIntakeAudit,
+  ) {
+    const blob = new Blob([serializeCodingAgentRunnerIntakeExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentRunnerIntakeMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentRunnerIntakeMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-runner-intake-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-runner-intake-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2925,15 +3470,27 @@ export function App() {
     }
 
     setCodingAgentRunnerIntakeLink({ href: url, fileName });
-    setCodingAgentRunnerIntakeMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentRunnerIntakeMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentRunnerSelfTestDownload(report: CodingAgentRunnerSelfTest) {
-    const blob = new Blob([serializeCodingAgentRunnerSelfTestExport(report)], { type: "application/json" });
+  function createCodingAgentRunnerSelfTestDownload(
+    report: CodingAgentRunnerSelfTest,
+  ) {
+    const blob = new Blob([serializeCodingAgentRunnerSelfTestExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentRunnerSelfTestMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentRunnerSelfTestMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-runner-self-test-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-runner-self-test-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2945,15 +3502,28 @@ export function App() {
     }
 
     setCodingAgentRunnerSelfTestLink({ href: url, fileName });
-    setCodingAgentRunnerSelfTestMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentRunnerSelfTestMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentSandboxRunnerPreflightDownload(report: CodingAgentSandboxRunnerPreflight) {
-    const blob = new Blob([serializeCodingAgentSandboxRunnerPreflightExport(report)], { type: "application/json" });
+  function createCodingAgentSandboxRunnerPreflightDownload(
+    report: CodingAgentSandboxRunnerPreflight,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentSandboxRunnerPreflightExport(report)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentSandboxRunnerPreflightMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentSandboxRunnerPreflightMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-sandbox-runner-preflight-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-sandbox-runner-preflight-${runSlug}-${report.operatorLocale}.md`;
 
@@ -2965,15 +3535,27 @@ export function App() {
     }
 
     setCodingAgentSandboxRunnerPreflightLink({ href: url, fileName });
-    setCodingAgentSandboxRunnerPreflightMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentSandboxRunnerPreflightMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createEngineeringSelfSimulationDownload(report: EngineeringSelfSimulationReport) {
-    const blob = new Blob([serializeEngineeringSelfSimulationExport(report)], { type: "application/json" });
+  function createEngineeringSelfSimulationDownload(
+    report: EngineeringSelfSimulationReport,
+  ) {
+    const blob = new Blob([serializeEngineeringSelfSimulationExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeEngineeringSelfSimulationMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeEngineeringSelfSimulationMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? safeFileStem(report.runId) : report.missionFingerprint;
+    const runSlug = report.runId
+      ? safeFileStem(report.runId)
+      : report.missionFingerprint;
     const fileName = `naikaku-engineering-self-simulation-${runSlug}.json`;
     const markdownFileName = `naikaku-engineering-self-simulation-${runSlug}.md`;
 
@@ -2985,13 +3567,23 @@ export function App() {
     }
 
     setEngineeringSelfSimulationLink({ href: url, fileName });
-    setEngineeringSelfSimulationMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setEngineeringSelfSimulationMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createEngineeringLaunchQueueDownload(report: EngineeringLaunchQueue) {
-    const blob = new Blob([serializeEngineeringLaunchQueueExport(report)], { type: "application/json" });
+  function createEngineeringLaunchQueueDownload(
+    report: EngineeringLaunchQueue,
+  ) {
+    const blob = new Blob([serializeEngineeringLaunchQueueExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeEngineeringLaunchQueueMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeEngineeringLaunchQueueMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
     const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
     const fileName = `naikaku-engineering-launch-queue-${runSlug}-${report.operatorLocale}.json`;
@@ -3005,13 +3597,24 @@ export function App() {
     }
 
     setEngineeringLaunchQueueLink({ href: url, fileName });
-    setEngineeringLaunchQueueMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setEngineeringLaunchQueueMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createEngineeringExecutionReceiptDownload(report: EngineeringExecutionReceipt) {
-    const blob = new Blob([serializeEngineeringExecutionReceiptExport(report)], { type: "application/json" });
+  function createEngineeringExecutionReceiptDownload(
+    report: EngineeringExecutionReceipt,
+  ) {
+    const blob = new Blob(
+      [serializeEngineeringExecutionReceiptExport(report)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeEngineeringExecutionReceiptMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeEngineeringExecutionReceiptMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
     const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
     const fileName = `naikaku-engineering-execution-receipt-${runSlug}-${report.operatorLocale}.json`;
@@ -3025,7 +3628,10 @@ export function App() {
     }
 
     setEngineeringExecutionReceiptLink({ href: url, fileName });
-    setEngineeringExecutionReceiptMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setEngineeringExecutionReceiptMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
   function refreshEngineeringExecutionReceipt({
@@ -3035,7 +3641,7 @@ export function App() {
     implementationEvidence = null,
     artifactAudit = null,
     reconciliation = null,
-    generatedAt
+    generatedAt,
   }: {
     launchQueue?: EngineeringLaunchQueue | null;
     sandboxRunnerReport?: CodingAgentSandboxRunnerReport | null;
@@ -3052,7 +3658,7 @@ export function App() {
       implementationEvidence,
       artifactAudit,
       reconciliation,
-      generatedAt
+      generatedAt,
     });
     setEngineeringExecutionReceipt(report);
     createEngineeringExecutionReceiptDownload(report);
@@ -3065,7 +3671,7 @@ export function App() {
     runnerIntake = codingAgentRunnerIntake,
     runnerSelfTest = codingAgentRunnerSelfTest,
     sandboxRunnerPreflight = codingAgentSandboxRunnerPreflight,
-    generatedAt
+    generatedAt,
   }: {
     runnerManifest?: CodingAgentRunnerManifest | null;
     runnerInvocation?: CodingAgentRunnerInvocationPackage | null;
@@ -3080,7 +3686,7 @@ export function App() {
       runnerIntake,
       runnerSelfTest,
       sandboxRunnerPreflight,
-      generatedAt
+      generatedAt,
     });
     setEngineeringLaunchQueue(queue);
     createEngineeringLaunchQueueDownload(queue);
@@ -3091,7 +3697,7 @@ export function App() {
       implementationEvidence: null,
       artifactAudit: null,
       reconciliation: null,
-      generatedAt: queue.generatedAt
+      generatedAt: queue.generatedAt,
     });
     return queue;
   }
@@ -3101,7 +3707,7 @@ export function App() {
     runnerSelfTest,
     updateStatus = false,
     updateLaunchQueue = false,
-    preferLocalOnly = false
+    preferLocalOnly = false,
   }: {
     bundle: CodingAgentSessionBundle;
     runnerSelfTest: CodingAgentRunnerSelfTest;
@@ -3112,7 +3718,7 @@ export function App() {
     let preflight = buildCodingAgentSandboxRunnerPreflight({
       selfTest: runnerSelfTest,
       bundle,
-      sandboxPolicy: workspace.sandboxPolicy
+      sandboxPolicy: workspace.sandboxPolicy,
     });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -3122,7 +3728,7 @@ export function App() {
         preflight = await createCodingAgentSandboxRunnerPreflightViaGateway(
           runnerSelfTest,
           bundle,
-          workspace.sandboxPolicy
+          workspace.sandboxPolicy,
         );
         source = "gateway";
       } catch (error) {
@@ -3136,33 +3742,39 @@ export function App() {
       refreshEngineeringLaunchQueue({
         runnerSelfTest,
         sandboxRunnerPreflight: preflight,
-        generatedAt: preflight.generatedAt
+        generatedAt: preflight.generatedAt,
       });
     }
     if (updateStatus) {
       setRunState({
         status: source === "gateway" ? "gateway" : "local",
-        message: source === "gateway"
-          ? copy.codingBriefs.statusSandboxRunnerPreflightGateway(
-            preflight.decision,
-            preflight.summary.readyTasks,
-            preflight.summary.heldTasks,
-            preflight.summary.blockedTasks,
-            preflight.summary.expectedProcessExecutions
-          )
-          : copy.codingBriefs.statusSandboxRunnerPreflightLocal(
-            preflight.decision,
-            preflight.summary.readyTasks,
-            preflight.summary.heldTasks,
-            preflight.summary.blockedTasks,
-            preflight.summary.expectedProcessExecutions,
-            gatewayError || undefined
-          )
+        message:
+          source === "gateway"
+            ? copy.codingBriefs.statusSandboxRunnerPreflightGateway(
+                preflight.decision,
+                preflight.summary.readyTasks,
+                preflight.summary.heldTasks,
+                preflight.summary.blockedTasks,
+                preflight.summary.expectedProcessExecutions,
+              )
+            : copy.codingBriefs.statusSandboxRunnerPreflightLocal(
+                preflight.decision,
+                preflight.summary.readyTasks,
+                preflight.summary.heldTasks,
+                preflight.summary.blockedTasks,
+                preflight.summary.expectedProcessExecutions,
+                gatewayError || undefined,
+              ),
       });
     }
     recordAudit({
       type: "development.coding_sessions.sandbox_runner_preflight_completed",
-      severity: preflight.decision === "ready" ? "success" : preflight.decision === "needs-review" ? "warning" : "error",
+      severity:
+        preflight.decision === "ready"
+          ? "success"
+          : preflight.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent sandbox runner preflight completed: ${preflight.decision}.`,
       runId: preflight.runId,
       metadata: {
@@ -3178,23 +3790,33 @@ export function App() {
         missingBundleSessions: preflight.summary.missingBundleSessions,
         extraBundleSessions: preflight.summary.extraBundleSessions,
         source,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
 
     return {
       preflight,
       source,
-      gatewayError
+      gatewayError,
     };
   }
 
-  function createCodingAgentSandboxRunnerReportDownload(report: CodingAgentSandboxRunnerReport) {
-    const blob = new Blob([serializeCodingAgentSandboxRunnerReportExport(report)], { type: "application/json" });
+  function createCodingAgentSandboxRunnerReportDownload(
+    report: CodingAgentSandboxRunnerReport,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentSandboxRunnerReportExport(report)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentSandboxRunnerReportMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentSandboxRunnerReportMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-sandbox-runner-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-sandbox-runner-${runSlug}-${report.operatorLocale}.md`;
 
@@ -3206,23 +3828,27 @@ export function App() {
     }
 
     setCodingAgentSandboxRunnerReportLink({ href: url, fileName });
-    setCodingAgentSandboxRunnerReportMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentSandboxRunnerReportMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
   async function runCodingAgentSandboxRunnerPreflightFromWorkbench() {
     if (!codingAgentSessionBundle || !codingAgentRunnerSelfTest) {
       const message = copy.codingBriefs.statusSandboxRunnerUnavailable(
-        "dispatch package and runner self-test are required."
+        "dispatch package and runner self-test are required.",
       );
       setRunState({ status: "error", message });
       recordAudit({
         type: "development.coding_sessions.sandbox_runner_preflight_completed",
         severity: "warning",
-        summary: "Coding agent sandbox runner preflight was not started: missing dispatch package or runner self-test.",
+        summary:
+          "Coding agent sandbox runner preflight was not started: missing dispatch package or runner self-test.",
         metadata: {
           hasSessionBundle: Boolean(codingAgentSessionBundle),
-          hasRunnerSelfTest: Boolean(codingAgentRunnerSelfTest)
-        }
+          hasRunnerSelfTest: Boolean(codingAgentRunnerSelfTest),
+        },
       });
       return;
     }
@@ -3231,39 +3857,44 @@ export function App() {
       bundle: codingAgentSessionBundle,
       runnerSelfTest: codingAgentRunnerSelfTest,
       updateStatus: true,
-      updateLaunchQueue: true
+      updateLaunchQueue: true,
     });
   }
 
   async function runCodingAgentSandboxRunnerFromWorkbench() {
-    if (!codingAgentSessionBundle || !codingAgentRunnerSelfTest || codingAgentRunnerSelfTest.decision !== "self-test-ready") {
+    if (
+      !codingAgentSessionBundle ||
+      !codingAgentRunnerSelfTest ||
+      codingAgentRunnerSelfTest.decision !== "self-test-ready"
+    ) {
       const message = copy.codingBriefs.statusSandboxRunnerUnavailable(
-        "dispatch package and runner self-test are required."
+        "dispatch package and runner self-test are required.",
       );
       setRunState({ status: "error", message });
       recordAudit({
         type: "development.coding_sessions.sandbox_runner_completed",
         severity: "warning",
-        summary: "Coding agent sandbox runner was not started: missing dispatch package or ready self-test.",
+        summary:
+          "Coding agent sandbox runner was not started: missing dispatch package or ready self-test.",
         metadata: {
           hasSessionBundle: Boolean(codingAgentSessionBundle),
           hasRunnerSelfTest: Boolean(codingAgentRunnerSelfTest),
-          runnerSelfTest: codingAgentRunnerSelfTest?.decision || null
-        }
+          runnerSelfTest: codingAgentRunnerSelfTest?.decision || null,
+        },
       });
       return;
     }
 
     setRunState({
       status: "running",
-      message: copy.codingBriefs.runSandboxRunner
+      message: copy.codingBriefs.runSandboxRunner,
     });
 
     try {
       const { preflight } = await prepareCodingAgentSandboxRunnerPreflight({
         bundle: codingAgentSessionBundle,
         runnerSelfTest: codingAgentRunnerSelfTest,
-        updateLaunchQueue: true
+        updateLaunchQueue: true,
       });
 
       if (preflight.decision !== "ready") {
@@ -3273,20 +3904,20 @@ export function App() {
             preflight.decision,
             preflight.summary.readyTasks,
             preflight.summary.heldTasks,
-            preflight.summary.blockedTasks
-          )
+            preflight.summary.blockedTasks,
+          ),
         });
         return;
       }
 
       const leaseLedger = await createCodingAgentRunnerLeaseViaGateway(
-        codingAgentRunnerSelfTest
+        codingAgentRunnerSelfTest,
       );
       const result = await runCodingAgentSandboxRunnerViaGateway(
         codingAgentRunnerSelfTest,
         codingAgentSessionBundle,
         leaseLedger,
-        workspace.sandboxPolicy
+        workspace.sandboxPolicy,
       );
 
       setCodingAgentSandboxRunnerPreflight(result.preflight);
@@ -3295,10 +3926,12 @@ export function App() {
       setCodingAgentSessionReceipt(result.receiptReview);
       createCodingAgentSandboxRunnerReportDownload(result.report);
       createCodingAgentSessionReceiptDownload(result.receiptReview);
-      createCodingAgentImplementationEvidenceLinks(result.implementationEvidence);
+      createCodingAgentImplementationEvidenceLinks(
+        result.implementationEvidence,
+      );
       const launchQueue = refreshEngineeringLaunchQueue({
         sandboxRunnerPreflight: result.preflight,
-        generatedAt: result.preflight.generatedAt
+        generatedAt: result.preflight.generatedAt,
       });
       const executionReceipt = refreshEngineeringExecutionReceipt({
         launchQueue,
@@ -3306,7 +3939,7 @@ export function App() {
         sessionReceipt: result.receiptReview,
         implementationEvidence: result.implementationEvidence,
         artifactAudit: result.artifactAudit,
-        generatedAt: result.report.generatedAt
+        generatedAt: result.report.generatedAt,
       });
       setRunState({
         status: "gateway",
@@ -3314,16 +3947,17 @@ export function App() {
           result.report.decision,
           result.report.summary.executedTasks,
           result.report.summary.processExecutions,
-          result.report.summary.commandResults
-        )
+          result.report.summary.commandResults,
+        ),
       });
       recordAudit({
         type: "development.coding_sessions.sandbox_runner_completed",
-        severity: result.report.decision === "sandbox-runner-verified"
-          ? "success"
-          : result.report.decision === "needs-review"
-            ? "warning"
-            : "error",
+        severity:
+          result.report.decision === "sandbox-runner-verified"
+            ? "success"
+            : result.report.decision === "needs-review"
+              ? "warning"
+              : "error",
         summary: `Coding agent sandbox runner completed: ${result.report.decision}.`,
         runId: result.report.runId,
         metadata: {
@@ -3339,27 +3973,29 @@ export function App() {
           evidenceArtifacts: result.report.summary.evidenceArtifacts,
           unsafePaths: result.report.summary.unsafePaths,
           preflight: result.preflight.decision,
-          preflightExpectedProcessExecutions: result.preflight.summary.expectedProcessExecutions,
+          preflightExpectedProcessExecutions:
+            result.preflight.summary.expectedProcessExecutions,
           preflightAllowedCommands: result.preflight.summary.allowedCommands,
           runnerLeaseDecision: leaseLedger.decision,
           runnerLeaseActiveLeases: leaseLedger.summary.activeLeases,
           runnerLeaseDeniedAttempts: leaseLedger.summary.deniedAttempts,
           leaseValidation: result.leaseValidation?.ok ?? null,
-          leaseValidationAcceptedLeases: result.leaseValidation?.acceptedLeaseIds.length ?? null,
+          leaseValidationAcceptedLeases:
+            result.leaseValidation?.acceptedLeaseIds.length ?? null,
           receiptReview: result.receiptReview.decision,
           implementationEvidence: result.implementationEvidence.decision,
           artifactAudit: result.artifactAudit.decision,
           engineeringExecutionReceipt: executionReceipt.decision,
           engineeringCanClaimCompletion: executionReceipt.canClaimCompletion,
           gatewayRunnerId: result.gatewayRunnerId || null,
-          authMode: result.authMode || "development-open"
-        }
+          authMode: result.authMode || "development-open",
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setRunState({
         status: "error",
-        message: copy.codingBriefs.statusSandboxRunnerUnavailable(errorMessage)
+        message: copy.codingBriefs.statusSandboxRunnerUnavailable(errorMessage),
       });
       recordAudit({
         type: "development.coding_sessions.sandbox_runner_completed",
@@ -3367,42 +4003,54 @@ export function App() {
         summary: `Coding agent sandbox runner failed: ${errorMessage}.`,
         runId: codingAgentRunnerSelfTest.runId,
         metadata: {
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
     }
   }
 
-  function receiptDraftPathsForSimulation(report: CodingAgentDispatchSimulation) {
-    return Object.fromEntries(report.items
-      .filter((item) => item.receiptDraft)
-      .map((item, index) => [
-        item.sessionId,
-        `receipt-drafts/${String(index + 1).padStart(2, "0")}-${safeFileStem(item.sessionId)}.json`
-      ]));
+  function receiptDraftPathsForSimulation(
+    report: CodingAgentDispatchSimulation,
+  ) {
+    return Object.fromEntries(
+      report.items
+        .filter((item) => item.receiptDraft)
+        .map((item, index) => [
+          item.sessionId,
+          `receipt-drafts/${String(index + 1).padStart(2, "0")}-${safeFileStem(item.sessionId)}.json`,
+        ]),
+    );
   }
 
-  function invocationBasePathForRunnerManifest(report: CodingAgentRunnerManifest) {
+  function invocationBasePathForRunnerManifest(
+    report: CodingAgentRunnerManifest,
+  ) {
     const runSlug = report.runId ? safeFileStem(report.runId) : "workspace";
     return `output/coding-agent-runner-invocation/${runSlug}-${report.operatorLocale}/invocations`;
   }
 
   async function exportCodingAgentDispatchManifest({
-    preferLocalOnly = false
+    preferLocalOnly = false,
   }: { preferLocalOnly?: boolean } = {}) {
-    const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
-      briefs: codingAgentBriefs,
-      review: codingAgentBriefReview,
-      releaseVerification
-    });
-    const drill = codingAgentSessionDrill || buildCodingAgentSessionDrill({ bundle });
+    const bundle =
+      codingAgentSessionBundle ||
+      buildCodingAgentSessionBundle({
+        briefs: codingAgentBriefs,
+        review: codingAgentBriefReview,
+        releaseVerification,
+      });
+    const drill =
+      codingAgentSessionDrill || buildCodingAgentSessionDrill({ bundle });
     let manifest = buildCodingAgentDispatchManifest({ bundle, drill });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
 
     if (!preferLocalOnly) {
       try {
-        manifest = await createCodingAgentDispatchManifestViaGateway(bundle, drill);
+        manifest = await createCodingAgentDispatchManifestViaGateway(
+          bundle,
+          drill,
+        );
         source = "gateway";
       } catch (error) {
         gatewayError = error instanceof Error ? error.message : "unknown";
@@ -3411,66 +4059,79 @@ export function App() {
     const archive = buildCodingAgentDispatchArchive({
       bundle,
       manifest,
-      generatedAt: manifest.generatedAt
+      generatedAt: manifest.generatedAt,
     });
     const archiveAudit = auditCodingAgentDispatchArchive({
       archive,
-      generatedAt: manifest.generatedAt
+      generatedAt: manifest.generatedAt,
     });
     let simulation = buildCodingAgentDispatchSimulation({
       manifest,
       archiveAudit,
-      generatedAt: manifest.generatedAt
+      generatedAt: manifest.generatedAt,
     });
     let simulationSource: "gateway" | "local" = "local";
     let simulationGatewayError: string | null = null;
 
     if (!preferLocalOnly) {
       try {
-        simulation = await createCodingAgentDispatchSimulationViaGateway(manifest, archiveAudit);
+        simulation = await createCodingAgentDispatchSimulationViaGateway(
+          manifest,
+          archiveAudit,
+        );
         simulationSource = "gateway";
       } catch (error) {
-        simulationGatewayError = error instanceof Error ? error.message : "unknown";
+        simulationGatewayError =
+          error instanceof Error ? error.message : "unknown";
       }
     }
     const receiptDraftPaths = receiptDraftPathsForSimulation(simulation);
     let runnerManifest = buildCodingAgentRunnerManifest({
       simulation,
       receiptDraftPaths,
-      generatedAt: simulation.generatedAt
+      generatedAt: simulation.generatedAt,
     });
     let runnerManifestSource: "gateway" | "local" = "local";
     let runnerManifestGatewayError: string | null = null;
 
     if (!preferLocalOnly) {
       try {
-        runnerManifest = await createCodingAgentRunnerManifestViaGateway(simulation, receiptDraftPaths);
+        runnerManifest = await createCodingAgentRunnerManifestViaGateway(
+          simulation,
+          receiptDraftPaths,
+        );
         runnerManifestSource = "gateway";
       } catch (error) {
-        runnerManifestGatewayError = error instanceof Error ? error.message : "unknown";
+        runnerManifestGatewayError =
+          error instanceof Error ? error.message : "unknown";
       }
     }
-    const invocationBasePath = invocationBasePathForRunnerManifest(runnerManifest);
+    const invocationBasePath =
+      invocationBasePathForRunnerManifest(runnerManifest);
     let runnerInvocation = buildCodingAgentRunnerInvocationPackage({
       manifest: runnerManifest,
       invocationBasePath,
-      generatedAt: runnerManifest.generatedAt
+      generatedAt: runnerManifest.generatedAt,
     });
     let runnerInvocationSource: "gateway" | "local" = "local";
     let runnerInvocationGatewayError: string | null = null;
 
     if (!preferLocalOnly) {
       try {
-        runnerInvocation = await createCodingAgentRunnerInvocationViaGateway(runnerManifest, invocationBasePath);
+        runnerInvocation = await createCodingAgentRunnerInvocationViaGateway(
+          runnerManifest,
+          invocationBasePath,
+        );
         runnerInvocationSource = "gateway";
       } catch (error) {
-        runnerInvocationGatewayError = error instanceof Error ? error.message : "unknown";
+        runnerInvocationGatewayError =
+          error instanceof Error ? error.message : "unknown";
       }
     }
     let runnerIntake = buildCodingAgentRunnerIntakeAudit({
       invocationPackage: runnerInvocation,
       sandboxPolicy: workspace.sandboxPolicy,
-      generatedAt: runnerInvocation.generatedAt
+      generatedAt: runnerInvocation.generatedAt,
     });
     let runnerIntakeSource: "gateway" | "local" = "local";
     let runnerIntakeGatewayError: string | null = null;
@@ -3479,26 +4140,29 @@ export function App() {
       try {
         runnerIntake = await createCodingAgentRunnerIntakeViaGateway(
           runnerInvocation,
-          workspace.sandboxPolicy
+          workspace.sandboxPolicy,
         );
         runnerIntakeSource = "gateway";
       } catch (error) {
-        runnerIntakeGatewayError = error instanceof Error ? error.message : "unknown";
+        runnerIntakeGatewayError =
+          error instanceof Error ? error.message : "unknown";
       }
     }
     let runnerSelfTest = buildCodingAgentRunnerSelfTest({
       manifest: runnerManifest,
-      generatedAt: runnerManifest.generatedAt
+      generatedAt: runnerManifest.generatedAt,
     });
     let runnerSelfTestSource: "gateway" | "local" = "local";
     let runnerSelfTestGatewayError: string | null = null;
 
     if (!preferLocalOnly) {
       try {
-        runnerSelfTest = await createCodingAgentRunnerSelfTestViaGateway(runnerManifest);
+        runnerSelfTest =
+          await createCodingAgentRunnerSelfTestViaGateway(runnerManifest);
         runnerSelfTestSource = "gateway";
       } catch (error) {
-        runnerSelfTestGatewayError = error instanceof Error ? error.message : "unknown";
+        runnerSelfTestGatewayError =
+          error instanceof Error ? error.message : "unknown";
       }
     }
 
@@ -3528,18 +4192,19 @@ export function App() {
     createCodingAgentRunnerInvocationDownload(runnerInvocation);
     createCodingAgentRunnerIntakeDownload(runnerIntake);
     createCodingAgentRunnerSelfTestDownload(runnerSelfTest);
-    const sandboxRunnerPreflightResult = await prepareCodingAgentSandboxRunnerPreflight({
-      bundle,
-      runnerSelfTest,
-      preferLocalOnly
-    });
+    const sandboxRunnerPreflightResult =
+      await prepareCodingAgentSandboxRunnerPreflight({
+        bundle,
+        runnerSelfTest,
+        preferLocalOnly,
+      });
     const launchQueue = refreshEngineeringLaunchQueue({
       runnerManifest,
       runnerInvocation,
       runnerIntake,
       runnerSelfTest,
       sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
-      generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt
+      generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt,
     });
     setEngineeringLaunchQueue(launchQueue);
     createEngineeringLaunchQueueDownload(launchQueue);
@@ -3552,42 +4217,49 @@ export function App() {
       runnerManifest,
       runnerSelfTest,
       sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
-      sandboxRunnerReport: codingAgentSandboxRunnerReport
-    });
-    const engineeringSelfSimulationReport = buildEngineeringSelfSimulationReport({
-      profile: selfSimulationProfile,
-      run,
-      briefs: codingAgentBriefs,
-      sessionBundle: bundle,
-      dispatchSimulation: simulation,
-      runnerManifest,
-      runnerSelfTest,
-      sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
       sandboxRunnerReport: codingAgentSandboxRunnerReport,
-      generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt
     });
+    const engineeringSelfSimulationReport =
+      buildEngineeringSelfSimulationReport({
+        profile: selfSimulationProfile,
+        run,
+        briefs: codingAgentBriefs,
+        sessionBundle: bundle,
+        dispatchSimulation: simulation,
+        runnerManifest,
+        runnerSelfTest,
+        sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
+        sandboxRunnerReport: codingAgentSandboxRunnerReport,
+        generatedAt: sandboxRunnerPreflightResult.preflight.generatedAt,
+      });
     setEngineeringSelfSimulation(engineeringSelfSimulationReport);
     createEngineeringSelfSimulationDownload(engineeringSelfSimulationReport);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: source === "gateway"
-        ? copy.codingBriefs.statusDispatchGateway(
-          manifest.decision,
-          manifest.summary.ready,
-          manifest.summary.held,
-          manifest.summary.promptFiles
-        )
-        : copy.codingBriefs.statusDispatchLocal(
-          manifest.decision,
-          manifest.summary.ready,
-          manifest.summary.held,
-          manifest.summary.promptFiles,
-          gatewayError || undefined
-        )
+      message:
+        source === "gateway"
+          ? copy.codingBriefs.statusDispatchGateway(
+              manifest.decision,
+              manifest.summary.ready,
+              manifest.summary.held,
+              manifest.summary.promptFiles,
+            )
+          : copy.codingBriefs.statusDispatchLocal(
+              manifest.decision,
+              manifest.summary.ready,
+              manifest.summary.held,
+              manifest.summary.promptFiles,
+              gatewayError || undefined,
+            ),
     });
     recordAudit({
       type: "development.coding_sessions.dispatch_prepared",
-      severity: manifest.decision === "dispatchable" ? "success" : manifest.decision === "held" ? "warning" : "error",
+      severity:
+        manifest.decision === "dispatchable"
+          ? "success"
+          : manifest.decision === "held"
+            ? "warning"
+            : "error",
       summary: `Coding agent dispatch manifest prepared: ${manifest.decision}.`,
       runId: manifest.runId,
       metadata: {
@@ -3619,22 +4291,31 @@ export function App() {
         runnerSelfTest: runnerSelfTest.decision,
         runnerSelfTestWouldRun: runnerSelfTest.summary.wouldRun,
         sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight.decision,
-        sandboxRunnerPreflightReady: sandboxRunnerPreflightResult.preflight.summary.readyTasks,
-        sandboxRunnerPreflightBlocked: sandboxRunnerPreflightResult.preflight.summary.blockedTasks,
+        sandboxRunnerPreflightReady:
+          sandboxRunnerPreflightResult.preflight.summary.readyTasks,
+        sandboxRunnerPreflightBlocked:
+          sandboxRunnerPreflightResult.preflight.summary.blockedTasks,
         engineeringLaunchQueue: launchQueue.decision,
         engineeringLaunchQueueReadyToRun: launchQueue.summary.readyToRun,
-        engineeringLaunchQueueReadyToHandoff: launchQueue.summary.readyToHandoff,
+        engineeringLaunchQueueReadyToHandoff:
+          launchQueue.summary.readyToHandoff,
         engineeringLaunchQueueBlocked: launchQueue.summary.blocked,
         sandboxRunnerPreflightSource: sandboxRunnerPreflightResult.source,
-        sandboxRunnerPreflightGatewayError: sandboxRunnerPreflightResult.gatewayError,
+        sandboxRunnerPreflightGatewayError:
+          sandboxRunnerPreflightResult.gatewayError,
         unsafePaths: manifest.summary.unsafePaths,
         source,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.dispatch_audited",
-      severity: archiveAudit.decision === "verified" ? "success" : archiveAudit.decision === "needs-review" ? "warning" : "error",
+      severity:
+        archiveAudit.decision === "verified"
+          ? "success"
+          : archiveAudit.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent dispatch archive audited: ${archiveAudit.decision}.`,
       runId: archiveAudit.runId,
       metadata: {
@@ -3651,12 +4332,17 @@ export function App() {
         missingReceiptTemplates: archiveAudit.summary.missingReceiptTemplates,
         blockers: archiveAudit.summary.blockers,
         warnings: archiveAudit.summary.warnings,
-        passed: archiveAudit.summary.passed
-      }
+        passed: archiveAudit.summary.passed,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.dispatch_simulated",
-      severity: simulation.decision === "ready-for-real-agent" ? "success" : simulation.decision === "needs-review" ? "warning" : "error",
+      severity:
+        simulation.decision === "ready-for-real-agent"
+          ? "success"
+          : simulation.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent dispatch simulation completed: ${simulation.decision}.`,
       runId: simulation.runId,
       metadata: {
@@ -3669,12 +4355,17 @@ export function App() {
         unsafePaths: simulation.summary.unsafePaths,
         archiveAuditBlockers: simulation.summary.archiveAuditBlockers,
         source: simulationSource,
-        gatewayError: simulationGatewayError
-      }
+        gatewayError: simulationGatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.runner_manifest_prepared",
-      severity: runnerManifest.decision === "runner-ready" ? "success" : runnerManifest.decision === "needs-review" ? "warning" : "error",
+      severity:
+        runnerManifest.decision === "runner-ready"
+          ? "success"
+          : runnerManifest.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent runner manifest prepared: ${runnerManifest.decision}.`,
       runId: runnerManifest.runId,
       metadata: {
@@ -3683,16 +4374,22 @@ export function App() {
         blockedTasks: runnerManifest.summary.blockedTasks,
         runnerTasks: runnerManifest.summary.runnerTasks,
         plannedCommands: runnerManifest.summary.plannedCommands,
-        expectedEvidenceArtifacts: runnerManifest.summary.expectedEvidenceArtifacts,
+        expectedEvidenceArtifacts:
+          runnerManifest.summary.expectedEvidenceArtifacts,
         receiptDraftPaths: runnerManifest.summary.receiptDraftPaths,
         unsafePaths: runnerManifest.summary.unsafePaths,
         source: runnerManifestSource,
-        gatewayError: runnerManifestGatewayError
-      }
+        gatewayError: runnerManifestGatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.runner_invocation_prepared",
-      severity: runnerInvocation.decision === "package-ready" ? "success" : runnerInvocation.decision === "needs-review" ? "warning" : "error",
+      severity:
+        runnerInvocation.decision === "package-ready"
+          ? "success"
+          : runnerInvocation.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent runner invocation package prepared: ${runnerInvocation.decision}.`,
       runId: runnerInvocation.runId,
       metadata: {
@@ -3701,16 +4398,22 @@ export function App() {
         blockedInvocations: runnerInvocation.summary.blockedInvocations,
         invocationFiles: runnerInvocation.summary.invocationFiles,
         commandContracts: runnerInvocation.summary.commandContracts,
-        expectedEvidenceArtifacts: runnerInvocation.summary.expectedEvidenceArtifacts,
+        expectedEvidenceArtifacts:
+          runnerInvocation.summary.expectedEvidenceArtifacts,
         receiptDraftPaths: runnerInvocation.summary.receiptDraftPaths,
         unsafePaths: runnerInvocation.summary.unsafePaths,
         source: runnerInvocationSource,
-        gatewayError: runnerInvocationGatewayError
-      }
+        gatewayError: runnerInvocationGatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.runner_intake_audited",
-      severity: runnerIntake.decision === "accepted-for-runner" ? "success" : runnerIntake.decision === "needs-review" ? "warning" : "error",
+      severity:
+        runnerIntake.decision === "accepted-for-runner"
+          ? "success"
+          : runnerIntake.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent runner intake audit completed: ${runnerIntake.decision}.`,
       runId: runnerIntake.runId,
       metadata: {
@@ -3720,17 +4423,23 @@ export function App() {
         invocationFiles: runnerIntake.summary.invocationFiles,
         commandContracts: runnerIntake.summary.commandContracts,
         receiptDraftPaths: runnerIntake.summary.receiptDraftPaths,
-        expectedEvidenceArtifacts: runnerIntake.summary.expectedEvidenceArtifacts,
+        expectedEvidenceArtifacts:
+          runnerIntake.summary.expectedEvidenceArtifacts,
         unsafePaths: runnerIntake.summary.unsafePaths,
         sourceBlockedChecks: runnerIntake.summary.sourceBlockedChecks,
         completedCommandResults: runnerIntake.summary.completedCommandResults,
         source: runnerIntakeSource,
-        gatewayError: runnerIntakeGatewayError
-      }
+        gatewayError: runnerIntakeGatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.runner_self_test_completed",
-      severity: runnerSelfTest.decision === "self-test-ready" ? "success" : runnerSelfTest.decision === "needs-review" ? "warning" : "error",
+      severity:
+        runnerSelfTest.decision === "self-test-ready"
+          ? "success"
+          : runnerSelfTest.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Coding agent runner self-test completed: ${runnerSelfTest.decision}.`,
       runId: runnerSelfTest.runId,
       metadata: {
@@ -3739,37 +4448,44 @@ export function App() {
         blocked: runnerSelfTest.summary.blocked,
         pendingCommands: runnerSelfTest.summary.pendingCommands,
         notExecutedCommands: runnerSelfTest.summary.notExecutedCommands,
-        expectedEvidenceArtifacts: runnerSelfTest.summary.expectedEvidenceArtifacts,
+        expectedEvidenceArtifacts:
+          runnerSelfTest.summary.expectedEvidenceArtifacts,
         receiptDraftPaths: runnerSelfTest.summary.receiptDraftPaths,
         unsafePaths: runnerSelfTest.summary.unsafePaths,
         source: runnerSelfTestSource,
-        gatewayError: runnerSelfTestGatewayError
-      }
+        gatewayError: runnerSelfTestGatewayError,
+      },
     });
     recordAudit({
       type: "development.engineering_self_simulation.completed",
-      severity: engineeringSelfSimulationReport.decision === "simulated-ready"
-        ? "success"
-        : engineeringSelfSimulationReport.decision === "approval-required" || engineeringSelfSimulationReport.decision === "needs-review"
-          ? "warning"
-          : "error",
+      severity:
+        engineeringSelfSimulationReport.decision === "simulated-ready"
+          ? "success"
+          : engineeringSelfSimulationReport.decision === "approval-required" ||
+              engineeringSelfSimulationReport.decision === "needs-review"
+            ? "warning"
+            : "error",
       summary: `Engineering self-simulation completed: ${engineeringSelfSimulationReport.decision}.`,
       runId: engineeringSelfSimulationReport.runId,
       metadata: {
         decision: engineeringSelfSimulationReport.decision,
         briefs: engineeringSelfSimulationReport.summary.briefs,
-        implementableBriefs: engineeringSelfSimulationReport.summary.implementableBriefs,
+        implementableBriefs:
+          engineeringSelfSimulationReport.summary.implementableBriefs,
         readySessions: engineeringSelfSimulationReport.summary.readySessions,
         heldSessions: engineeringSelfSimulationReport.summary.heldSessions,
         runnerTasks: engineeringSelfSimulationReport.summary.runnerTasks,
         wouldRunTasks: engineeringSelfSimulationReport.summary.wouldRunTasks,
-        allowedCommands: engineeringSelfSimulationReport.summary.allowedCommands,
-        blockedCommands: engineeringSelfSimulationReport.summary.blockedCommands,
+        allowedCommands:
+          engineeringSelfSimulationReport.summary.allowedCommands,
+        blockedCommands:
+          engineeringSelfSimulationReport.summary.blockedCommands,
         approvalItems: engineeringSelfSimulationReport.summary.approvalItems,
-        expectedEvidenceArtifacts: engineeringSelfSimulationReport.summary.expectedEvidenceArtifacts,
+        expectedEvidenceArtifacts:
+          engineeringSelfSimulationReport.summary.expectedEvidenceArtifacts,
         simulatedOnly: engineeringSelfSimulationReport.summary.simulatedOnly,
-        localOnly: preferLocalOnly
-      }
+        localOnly: preferLocalOnly,
+      },
     });
 
     return {
@@ -3784,16 +4500,25 @@ export function App() {
       runnerIntake,
       runnerSelfTest,
       sandboxRunnerPreflight: sandboxRunnerPreflightResult.preflight,
-      engineeringSelfSimulation: engineeringSelfSimulationReport
+      engineeringSelfSimulation: engineeringSelfSimulationReport,
     };
   }
 
-  function createCodingAgentSessionReceiptDownload(report: CodingAgentSessionReceipt) {
-    const blob = new Blob([serializeCodingAgentSessionReceiptExport(report)], { type: "application/json" });
+  function createCodingAgentSessionReceiptDownload(
+    report: CodingAgentSessionReceipt,
+  ) {
+    const blob = new Blob([serializeCodingAgentSessionReceiptExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentSessionReceiptMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentSessionReceiptMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-session-receipt-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-session-receipt-${runSlug}-${report.operatorLocale}.md`;
 
@@ -3805,15 +4530,28 @@ export function App() {
     }
 
     setCodingAgentSessionReceiptLink({ href: url, fileName });
-    setCodingAgentSessionReceiptMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentSessionReceiptMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  function createCodingAgentImplementationEvidenceLinks(evidence: CodingAgentImplementationEvidence) {
-    const blob = new Blob([serializeCodingAgentImplementationEvidenceExport(evidence)], { type: "application/json" });
+  function createCodingAgentImplementationEvidenceLinks(
+    evidence: CodingAgentImplementationEvidence,
+  ) {
+    const blob = new Blob(
+      [serializeCodingAgentImplementationEvidenceExport(evidence)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentImplementationEvidenceMarkdownExport(evidence)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentImplementationEvidenceMarkdownExport(evidence)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = evidence.runId ? evidence.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = evidence.runId
+      ? evidence.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-implementation-evidence-${runSlug}-${evidence.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-implementation-evidence-${runSlug}-${evidence.operatorLocale}.md`;
 
@@ -3825,10 +4563,15 @@ export function App() {
     }
 
     setCodingAgentImplementationEvidenceLink({ href: url, fileName });
-    setCodingAgentImplementationEvidenceMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentImplementationEvidenceMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
-  async function createCodingAgentImplementationEvidenceDownload(receipt: CodingAgentSessionReceipt): Promise<{
+  async function createCodingAgentImplementationEvidenceDownload(
+    receipt: CodingAgentSessionReceipt,
+  ): Promise<{
     evidence: CodingAgentImplementationEvidence;
     artifactAudit: CodingAgentImplementationArtifactAudit;
     reconciliation: CodingAgentImplementationReconciliation;
@@ -3837,7 +4580,8 @@ export function App() {
     artifactAuditSource: "gateway" | "local";
     artifactAuditError: string | null;
   }> {
-    let evidence: CodingAgentImplementationEvidence = buildCodingAgentImplementationEvidence({ receipt });
+    let evidence: CodingAgentImplementationEvidence =
+      buildCodingAgentImplementationEvidence({ receipt });
     let artifactAudit: CodingAgentImplementationArtifactAudit | null = null;
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -3845,14 +4589,16 @@ export function App() {
     let artifactAuditError: string | null = null;
 
     try {
-      evidence = await createCodingAgentImplementationEvidenceViaGateway(receipt);
+      evidence =
+        await createCodingAgentImplementationEvidenceViaGateway(receipt);
       source = "gateway";
     } catch (error) {
       gatewayError = error instanceof Error ? error.message : "unknown";
     }
 
     try {
-      artifactAudit = await auditCodingAgentImplementationArtifactsViaGateway(evidence);
+      artifactAudit =
+        await auditCodingAgentImplementationArtifactsViaGateway(evidence);
       artifactAuditSource = "gateway";
     } catch (error) {
       artifactAuditError = error instanceof Error ? error.message : "unknown";
@@ -3860,15 +4606,18 @@ export function App() {
     }
 
     createCodingAgentImplementationEvidenceLinks(evidence);
-    const { reconciliation, updatedItems } = reconcileCodingAgentImplementationEvidence({
-      evidence,
-      artifactAudit,
-      items: developmentBoard.items,
-      generatedAt: evidence.generatedAt
-    });
+    const { reconciliation, updatedItems } =
+      reconcileCodingAgentImplementationEvidence({
+        evidence,
+        artifactAudit,
+        items: developmentBoard.items,
+        generatedAt: evidence.generatedAt,
+      });
     const appliedItems = reconciliation.items
       .filter((item) => item.applied && item.sourceItemId)
-      .map((item) => updatedItems.find((candidate) => candidate.id === item.sourceItemId))
+      .map((item) =>
+        updatedItems.find((candidate) => candidate.id === item.sourceItemId),
+      )
       .filter((item): item is DevelopmentWorkItem => Boolean(item));
 
     if (appliedItems.length) {
@@ -3896,7 +4645,12 @@ export function App() {
 
     recordAudit({
       type: "development.coding_sessions.implementation_evidence_prepared",
-      severity: evidence.decision === "accepted-for-handoff" ? "success" : evidence.decision === "needs-evidence" ? "warning" : "error",
+      severity:
+        evidence.decision === "accepted-for-handoff"
+          ? "success"
+          : evidence.decision === "needs-evidence"
+            ? "warning"
+            : "error",
       summary: `Coding agent implementation evidence prepared: ${evidence.decision}.`,
       runId: evidence.runId,
       metadata: {
@@ -3908,16 +4662,17 @@ export function App() {
         commandResults: evidence.summary.commandResults,
         failedCommands: evidence.summary.failedCommands,
         source,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.implementation_artifacts_audited",
-      severity: artifactAudit.decision === "verified"
-        ? "success"
-        : artifactAudit.decision === "needs-artifacts"
-          ? "warning"
-          : "error",
+      severity:
+        artifactAudit.decision === "verified"
+          ? "success"
+          : artifactAudit.decision === "needs-artifacts"
+            ? "warning"
+            : "error",
       summary: `Coding agent implementation artifacts audited: ${artifactAudit.decision}.`,
       runId: artifactAudit.runId,
       metadata: {
@@ -3935,29 +4690,35 @@ export function App() {
         totalBytes: artifactAudit.summary.totalBytes,
         uniquePaths: artifactAudit.summary.uniquePaths,
         duplicatePathRefs: artifactAudit.summary.duplicatePathRefs,
-        uniqueFingerprintedPaths: artifactAudit.summary.uniqueFingerprintedPaths,
+        uniqueFingerprintedPaths:
+          artifactAudit.summary.uniqueFingerprintedPaths,
         uniqueFingerprintBytes: artifactAudit.summary.uniqueFingerprintBytes,
         evidenceArtifactRefs: artifactAudit.summary.evidenceArtifactRefs,
         evidenceArtifactPaths: artifactAudit.summary.evidenceArtifactPaths,
-        reusedEvidenceArtifactPaths: artifactAudit.summary.reusedEvidenceArtifactPaths,
-        reusedEvidenceArtifactRefs: artifactAudit.summary.reusedEvidenceArtifactRefs,
+        reusedEvidenceArtifactPaths:
+          artifactAudit.summary.reusedEvidenceArtifactPaths,
+        reusedEvidenceArtifactRefs:
+          artifactAudit.summary.reusedEvidenceArtifactRefs,
         reusedTranscriptPaths: artifactAudit.summary.reusedTranscriptPaths,
         reusedTranscriptRefs: artifactAudit.summary.reusedTranscriptRefs,
         reusedChangedFilePaths: artifactAudit.summary.reusedChangedFilePaths,
         reusedChangedFileRefs: artifactAudit.summary.reusedChangedFileRefs,
-        transcriptContentChecked: artifactAudit.summary.transcriptContentChecked,
-        transcriptContentMismatches: artifactAudit.summary.transcriptContentMismatches,
+        transcriptContentChecked:
+          artifactAudit.summary.transcriptContentChecked,
+        transcriptContentMismatches:
+          artifactAudit.summary.transcriptContentMismatches,
         source: artifactAuditSource,
-        gatewayError: artifactAuditError
-      }
+        gatewayError: artifactAuditError,
+      },
     });
     recordAudit({
       type: "development.coding_sessions.implementation_evidence_applied",
-      severity: reconciliation.decision === "applied"
-        ? "success"
-        : reconciliation.decision === "partial"
-          ? "warning"
-          : "error",
+      severity:
+        reconciliation.decision === "applied"
+          ? "success"
+          : reconciliation.decision === "partial"
+            ? "warning"
+            : "error",
       summary: `Coding agent implementation evidence reconciled with development board: ${reconciliation.decision}.`,
       runId: reconciliation.runId,
       metadata: {
@@ -3972,8 +4733,8 @@ export function App() {
         gatewayError,
         artifactAudit: artifactAudit.decision,
         artifactAuditSource,
-        artifactAuditError
-      }
+        artifactAuditError,
+      },
     });
     refreshEngineeringExecutionReceipt({
       launchQueue: engineeringLaunchQueue,
@@ -3982,7 +4743,7 @@ export function App() {
       implementationEvidence: evidence,
       artifactAudit,
       reconciliation,
-      generatedAt: artifactAudit.generatedAt
+      generatedAt: artifactAudit.generatedAt,
     });
 
     return {
@@ -3992,16 +4753,18 @@ export function App() {
       source,
       gatewayError,
       artifactAuditSource,
-      artifactAuditError
+      artifactAuditError,
     };
   }
 
   async function createCodingAgentSessionReceiptTemplate() {
-    const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
-      briefs: codingAgentBriefs,
-      review: codingAgentBriefReview,
-      releaseVerification
-    });
+    const bundle =
+      codingAgentSessionBundle ||
+      buildCodingAgentSessionBundle({
+        briefs: codingAgentBriefs,
+        review: codingAgentBriefReview,
+        releaseVerification,
+      });
     let receipt = buildCodingAgentSessionReceiptTemplate({ bundle });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -4028,28 +4791,34 @@ export function App() {
       implementationEvidence: null,
       artifactAudit: null,
       reconciliation: null,
-      generatedAt: receipt.generatedAt
+      generatedAt: receipt.generatedAt,
     });
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: source === "gateway"
-        ? copy.codingBriefs.statusReceiptGateway(
-          receipt.decision,
-          receipt.summary.verified,
-          receipt.summary.pendingEvidence,
-          receipt.summary.failed
-        )
-        : copy.codingBriefs.statusReceiptLocal(
-          receipt.decision,
-          receipt.summary.verified,
-          receipt.summary.pendingEvidence,
-          receipt.summary.failed,
-          gatewayError || undefined
-        )
+      message:
+        source === "gateway"
+          ? copy.codingBriefs.statusReceiptGateway(
+              receipt.decision,
+              receipt.summary.verified,
+              receipt.summary.pendingEvidence,
+              receipt.summary.failed,
+            )
+          : copy.codingBriefs.statusReceiptLocal(
+              receipt.decision,
+              receipt.summary.verified,
+              receipt.summary.pendingEvidence,
+              receipt.summary.failed,
+              gatewayError || undefined,
+            ),
     });
     recordAudit({
       type: "development.coding_sessions.receipt_prepared",
-      severity: receipt.decision === "verified" ? "success" : receipt.decision === "needs-evidence" ? "warning" : "error",
+      severity:
+        receipt.decision === "verified"
+          ? "success"
+          : receipt.decision === "needs-evidence"
+            ? "warning"
+            : "error",
       summary: `Coding agent session receipt template prepared: ${receipt.decision}.`,
       runId: receipt.runId,
       metadata: {
@@ -4059,8 +4828,8 @@ export function App() {
         failed: receipt.summary.failed,
         held: receipt.summary.held,
         source,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
   }
 
@@ -4068,14 +4837,18 @@ export function App() {
     try {
       const raw = JSON.parse(await file.text()) as CodingAgentSessionReceipt;
       if (raw.schema !== "naikaku.coding-agent-session-receipt.v1") {
-        throw new Error("receipt with schema naikaku.coding-agent-session-receipt.v1 is required.");
+        throw new Error(
+          "receipt with schema naikaku.coding-agent-session-receipt.v1 is required.",
+        );
       }
 
-      const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
-        briefs: codingAgentBriefs,
-        review: codingAgentBriefReview,
-        releaseVerification
-      });
+      const bundle =
+        codingAgentSessionBundle ||
+        buildCodingAgentSessionBundle({
+          briefs: codingAgentBriefs,
+          review: codingAgentBriefReview,
+          releaseVerification,
+        });
       let receipt = reviewCodingAgentSessionReceipt({ bundle, receipt: raw });
       let source: "gateway" | "local" = "local";
       let gatewayError: string | null = null;
@@ -4094,39 +4867,48 @@ export function App() {
         createCodingAgentSessionBundleDownload(bundle, false);
       }
       createCodingAgentSessionReceiptDownload(receipt);
-      const implementationResult = await createCodingAgentImplementationEvidenceDownload(receipt);
-      const statusMessage = source === "gateway"
-        ? copy.codingBriefs.statusReceiptReviewGateway(
-          receipt.decision,
-          receipt.summary.verified,
-          receipt.summary.pendingEvidence,
-          receipt.summary.failed
-        )
-        : copy.codingBriefs.statusReceiptReviewLocal(
-          receipt.decision,
-          receipt.summary.verified,
-          receipt.summary.pendingEvidence,
-          receipt.summary.failed,
-          gatewayError || undefined
-        );
+      const implementationResult =
+        await createCodingAgentImplementationEvidenceDownload(receipt);
+      const statusMessage =
+        source === "gateway"
+          ? copy.codingBriefs.statusReceiptReviewGateway(
+              receipt.decision,
+              receipt.summary.verified,
+              receipt.summary.pendingEvidence,
+              receipt.summary.failed,
+            )
+          : copy.codingBriefs.statusReceiptReviewLocal(
+              receipt.decision,
+              receipt.summary.verified,
+              receipt.summary.pendingEvidence,
+              receipt.summary.failed,
+              gatewayError || undefined,
+            );
       setRunState({
         status: source === "gateway" ? "gateway" : "local",
         message: copy.codingBriefs.statusReceiptReviewApplied(
           statusMessage,
           implementationResult.artifactAudit.decision,
           implementationResult.artifactAudit.summary.verifiedPaths,
-          implementationResult.artifactAudit.summary.missingPaths + implementationResult.artifactAudit.summary.uncheckedPaths,
+          implementationResult.artifactAudit.summary.missingPaths +
+            implementationResult.artifactAudit.summary.uncheckedPaths,
           implementationResult.reconciliation.summary.applied,
           implementationResult.reconciliation.summary.skipped,
           implementationResult.artifactAudit.summary.reusedTranscriptRefs,
           implementationResult.artifactAudit.summary.reusedChangedFileRefs,
           implementationResult.artifactAudit.summary.reusedEvidenceArtifactRefs,
-          implementationResult.artifactAudit.summary.transcriptContentMismatches
-        )
+          implementationResult.artifactAudit.summary
+            .transcriptContentMismatches,
+        ),
       });
       recordAudit({
         type: "development.coding_sessions.receipt_reviewed",
-        severity: receipt.decision === "verified" ? "success" : receipt.decision === "needs-evidence" ? "warning" : "error",
+        severity:
+          receipt.decision === "verified"
+            ? "success"
+            : receipt.decision === "needs-evidence"
+              ? "warning"
+              : "error",
         summary: `Coding agent session receipt reviewed: ${receipt.decision}.`,
         runId: receipt.runId,
         metadata: {
@@ -4137,33 +4919,42 @@ export function App() {
           held: receipt.summary.held,
           source,
           gatewayError,
-          fileName: file.name
-        }
+          fileName: file.name,
+        },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       clearCodingAgentSessionReceipt();
       setRunState({
         status: "error",
-        message: copy.codingBriefs.statusReceiptImportError(message)
+        message: copy.codingBriefs.statusReceiptImportError(message),
       });
       recordAudit({
         type: "development.coding_sessions.receipt_reviewed",
         severity: "error",
         summary: `Coding agent session receipt import failed: ${message}.`,
         metadata: {
-          fileName: file.name
-        }
+          fileName: file.name,
+        },
       });
     }
   }
 
-  function createCodingAgentSessionDrillDownload(report: CodingAgentSessionDrillReport) {
-    const blob = new Blob([serializeCodingAgentSessionDrillExport(report)], { type: "application/json" });
+  function createCodingAgentSessionDrillDownload(
+    report: CodingAgentSessionDrillReport,
+  ) {
+    const blob = new Blob([serializeCodingAgentSessionDrillExport(report)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const markdownBlob = new Blob([serializeCodingAgentSessionDrillMarkdownExport(report)], { type: "text/markdown" });
+    const markdownBlob = new Blob(
+      [serializeCodingAgentSessionDrillMarkdownExport(report)],
+      { type: "text/markdown" },
+    );
     const markdownUrl = URL.createObjectURL(markdownBlob);
-    const runSlug = report.runId ? report.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = report.runId
+      ? report.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-coding-agent-session-drill-${runSlug}-${report.operatorLocale}.json`;
     const markdownFileName = `naikaku-coding-agent-session-drill-${runSlug}-${report.operatorLocale}.md`;
 
@@ -4175,15 +4966,20 @@ export function App() {
     }
 
     setCodingAgentSessionDrillLink({ href: url, fileName });
-    setCodingAgentSessionDrillMarkdownLink({ href: markdownUrl, fileName: markdownFileName });
+    setCodingAgentSessionDrillMarkdownLink({
+      href: markdownUrl,
+      fileName: markdownFileName,
+    });
   }
 
   async function runCodingAgentSessionDrill() {
-    const bundle = codingAgentSessionBundle || buildCodingAgentSessionBundle({
-      briefs: codingAgentBriefs,
-      review: codingAgentBriefReview,
-      releaseVerification
-    });
+    const bundle =
+      codingAgentSessionBundle ||
+      buildCodingAgentSessionBundle({
+        briefs: codingAgentBriefs,
+        review: codingAgentBriefReview,
+        releaseVerification,
+      });
     let drill = buildCodingAgentSessionDrill({ bundle });
     let source: "gateway" | "local" = "local";
     let gatewayError: string | null = null;
@@ -4205,18 +5001,28 @@ export function App() {
     createCodingAgentSessionDrillDownload(drill);
     setRunState({
       status: source === "gateway" ? "gateway" : "local",
-      message: source === "gateway"
-        ? copy.codingBriefs.statusDrillGateway(drill.decision, drill.summary.wouldAssign, drill.summary.notAssigned)
-        : copy.codingBriefs.statusDrillLocal(
-          drill.decision,
-          drill.summary.wouldAssign,
-          drill.summary.notAssigned,
-          gatewayError || undefined
-        )
+      message:
+        source === "gateway"
+          ? copy.codingBriefs.statusDrillGateway(
+              drill.decision,
+              drill.summary.wouldAssign,
+              drill.summary.notAssigned,
+            )
+          : copy.codingBriefs.statusDrillLocal(
+              drill.decision,
+              drill.summary.wouldAssign,
+              drill.summary.notAssigned,
+              gatewayError || undefined,
+            ),
     });
     recordAudit({
       type: "development.coding_sessions.drilled",
-      severity: drill.decision === "assignable" ? "success" : drill.decision === "held" ? "warning" : "error",
+      severity:
+        drill.decision === "assignable"
+          ? "success"
+          : drill.decision === "held"
+            ? "warning"
+            : "error",
       summary: `Coding agent session drill completed: ${drill.decision}.`,
       runId: drill.runId,
       metadata: {
@@ -4225,15 +5031,19 @@ export function App() {
         notAssigned: drill.summary.notAssigned,
         needsReview: drill.summary.needsReview,
         source,
-        gatewayError
-      }
+        gatewayError,
+      },
     });
   }
 
   function createDevelopmentIssuesDownload(drafts: DevelopmentIssueDrafts) {
-    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], { type: "application/json" });
+    const blob = new Blob([serializeDevelopmentIssueDraftsExport(drafts)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = drafts.runId ? drafts.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = drafts.runId
+      ? drafts.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-github-issue-drafts-${runSlug}.json`;
 
     if (developmentIssuesLink) {
@@ -4243,10 +5053,16 @@ export function App() {
     setDevelopmentIssuesLink({ href: url, fileName });
   }
 
-  function createDevelopmentIssuesScriptDownload(drafts: DevelopmentIssueDrafts) {
-    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], { type: "text/x-shellscript" });
+  function createDevelopmentIssuesScriptDownload(
+    drafts: DevelopmentIssueDrafts,
+  ) {
+    const blob = new Blob([serializeDevelopmentIssueGhScriptExport(drafts)], {
+      type: "text/x-shellscript",
+    });
     const url = URL.createObjectURL(blob);
-    const runSlug = drafts.runId ? drafts.runId.replace(/[^a-z0-9-]/gi, "-") : "workspace";
+    const runSlug = drafts.runId
+      ? drafts.runId.replace(/[^a-z0-9-]/gi, "-")
+      : "workspace";
     const fileName = `naikaku-gh-issue-create-${runSlug}.sh`;
 
     if (developmentIssuesScriptLink) {
@@ -4262,12 +5078,12 @@ export function App() {
         workspace,
         run,
         memoryEntries,
-        developmentItems
+        developmentItems,
       );
       createDevelopmentIssuesDownload(gatewayDrafts);
       setRunState({
         status: "gateway",
-        message: "GitHub issue drafts exported through the local gateway."
+        message: "GitHub issue drafts exported through the local gateway.",
       });
       recordAudit({
         type: "development.issues.exported",
@@ -4277,16 +5093,17 @@ export function App() {
         metadata: {
           drafts: gatewayDrafts.summary.total,
           blocked: gatewayDrafts.summary.blocked,
-          source: "gateway"
-        }
+          source: "gateway",
+        },
       });
     } catch (error) {
       createDevelopmentIssuesDownload(developmentIssueDrafts);
       setRunState({
         status: "fallback",
-        message: error instanceof Error
-          ? `Gateway issue drafts unavailable; used local export. ${error.message}`
-          : "Gateway issue drafts unavailable; used local export."
+        message:
+          error instanceof Error
+            ? `Gateway issue drafts unavailable; used local export. ${error.message}`
+            : "Gateway issue drafts unavailable; used local export.",
       });
       recordAudit({
         type: "development.issues.exported",
@@ -4297,8 +5114,8 @@ export function App() {
           drafts: developmentIssueDrafts.summary.total,
           blocked: developmentIssueDrafts.summary.blocked,
           source: "local",
-          gatewayError: error instanceof Error ? error.message : "unknown"
-        }
+          gatewayError: error instanceof Error ? error.message : "unknown",
+        },
       });
     }
   }
@@ -4307,7 +5124,7 @@ export function App() {
     createDevelopmentIssuesScriptDownload(developmentIssueDrafts);
     setRunState({
       status: "local",
-      message: "GitHub CLI issue script prepared locally."
+      message: "GitHub CLI issue script prepared locally.",
     });
     recordAudit({
       type: "development.issues.exported",
@@ -4318,52 +5135,66 @@ export function App() {
         drafts: developmentIssueDrafts.summary.total,
         blocked: developmentIssueDrafts.summary.blocked,
         format: "gh-script",
-        source: "local"
-      }
+        source: "local",
+      },
     });
   }
 
   async function testProviderReadiness(row: ProviderReadinessRow) {
-    const role = workspace.roles.find((candidate) => candidate.id === row.roleId);
+    const role = workspace.roles.find(
+      (candidate) => candidate.id === row.roleId,
+    );
     if (!role) return;
 
-    setTestingProviderRoleIds((current) => Array.from(new Set([...current, row.roleId])));
+    setTestingProviderRoleIds((current) =>
+      Array.from(new Set([...current, row.roleId])),
+    );
     try {
-      const result = await testProviderViaGateway(role.provider, sessionSecrets[role.id]);
+      const result = await testProviderViaGateway(
+        role.provider,
+        sessionSecrets[role.id],
+      );
       const checked = createProviderReadinessCheck({
         row,
         ok: result.ok,
         secretReady: Boolean(result.secretReady),
         source: "gateway",
-        message: result.message
+        message: result.message,
       });
       const nextRows = saveProviderReadinessRow(checked);
       setProviderReadinessRows(nextRows);
       recordProviderReadinessAudit(checked);
     } catch {
       const adapter = findAdapter(role.provider);
-      const ok = await adapter.testConnection(role.provider, sessionSecrets[role.id]);
+      const ok = await adapter.testConnection(
+        role.provider,
+        sessionSecrets[role.id],
+      );
       const checked = createProviderReadinessCheck({
         row,
         ok,
         secretReady: Boolean(sessionSecrets[role.id]) || row.secretReady,
         source: "local-fallback",
         message: ok
-          ? `${adapter.id}: local fallback accepted endpoint and model shape.`
-          : "Gateway unavailable and local fallback found missing endpoint or model."
+          ? `${adapter.id}: local structural check passed; provider remains unchecked until the local gateway validates its configuration.`
+          : "Gateway unavailable and local fallback found missing endpoint or model.",
       });
       const nextRows = saveProviderReadinessRow(checked);
       setProviderReadinessRows(nextRows);
       recordProviderReadinessAudit(checked);
     } finally {
-      setTestingProviderRoleIds((current) => current.filter((roleId) => roleId !== row.roleId));
+      setTestingProviderRoleIds((current) =>
+        current.filter((roleId) => roleId !== row.roleId),
+      );
     }
   }
 
   async function testAllProviders() {
     setIsTestingAllProviders(true);
     try {
-      for (const row of providerReadinessMatrix.rows.filter((candidate) => candidate.enabled)) {
+      for (const row of providerReadinessMatrix.rows.filter(
+        (candidate) => candidate.enabled,
+      )) {
         await testProviderReadiness(row);
       }
     } finally {
@@ -4379,7 +5210,12 @@ export function App() {
     clearProductReadinessDownload();
     recordAudit({
       type: "provider.readiness.checked",
-      severity: row.status === "ready" ? "success" : row.status === "failed" ? "error" : "warning",
+      severity:
+        row.status === "ready"
+          ? "success"
+          : row.status === "failed"
+            ? "error"
+            : "warning",
       summary: `Provider readiness for ${row.roleName}: ${row.status}.`,
       roleId: row.roleId,
       metadata: {
@@ -4387,13 +5223,16 @@ export function App() {
         model: row.model,
         status: row.status,
         source: row.source,
-        secretReady: row.secretReady
-      }
+        secretReady: row.secretReady,
+      },
     });
   }
 
   function exportProviderReadiness() {
-    const blob = new Blob([serializeProviderReadinessExport(providerReadinessMatrix)], { type: "application/json" });
+    const blob = new Blob(
+      [serializeProviderReadinessExport(providerReadinessMatrix)],
+      { type: "application/json" },
+    );
     const url = URL.createObjectURL(blob);
     const fileName = `naikaku-provider-readiness-${new Date().toISOString().slice(0, 10)}.json`;
 
@@ -4411,8 +5250,8 @@ export function App() {
         ready: providerReadinessMatrix.summary.ready,
         missingConfig: providerReadinessMatrix.summary.missingConfig,
         missingSecret: providerReadinessMatrix.summary.missingSecret,
-        failed: providerReadinessMatrix.summary.failed
-      }
+        failed: providerReadinessMatrix.summary.failed,
+      },
     });
   }
 
@@ -4436,15 +5275,18 @@ export function App() {
   function applyEngineeringMissionTemplate() {
     setWorkspace((current) => ({
       ...current,
-      mission: engineeringLaunchProfile.missionTemplate.text
+      mission: engineeringLaunchProfile.missionTemplate.text,
     }));
     window.requestAnimationFrame(focusMissionBrief);
   }
 
-  function updateEngineeringAutoWorkPreset(preset: EngineeringAutoWorkGatewayPreset) {
+  function updateEngineeringAutoWorkPreset(
+    preset: EngineeringAutoWorkGatewayPreset,
+  ) {
     setEngineeringAutoWorkPreset(preset);
     setEngineeringAutoWorkWorktree((current) => {
-      const fixtureWorktree = "output/engineering-auto-work-ui/fixture-worktree";
+      const fixtureWorktree =
+        "output/engineering-auto-work-ui/fixture-worktree";
       if (preset === "fixture") return fixtureWorktree;
       if (current === fixtureWorktree) return ".";
       return current || ".";
@@ -4456,15 +5298,17 @@ export function App() {
   }
 
   async function runEngineeringSelfSimulationFromLaunchpad() {
-    const result = await exportCodingAgentDispatchManifest({ preferLocalOnly: true });
+    const result = await exportCodingAgentDispatchManifest({
+      preferLocalOnly: true,
+    });
     setRunState({
       status: "local",
       message: copy.engineeringLaunchpad.selfSimulationStatus(
         result.engineeringSelfSimulation.decision,
         result.engineeringSelfSimulation.summary.readySessions,
         result.engineeringSelfSimulation.summary.allowedCommands,
-        result.engineeringSelfSimulation.summary.expectedEvidenceArtifacts
-      )
+        result.engineeringSelfSimulation.summary.expectedEvidenceArtifacts,
+      ),
     });
   }
 
@@ -4472,7 +5316,7 @@ export function App() {
     preset = engineeringAutoWorkPreset,
     adapterReadyOverride,
     worktreeOverride,
-    timeoutMs
+    timeoutMs,
   }: {
     preset?: EngineeringAutoWorkGatewayPreset;
     adapterReadyOverride?: boolean;
@@ -4480,25 +5324,31 @@ export function App() {
     timeoutMs?: number;
   } = {}) {
     const mission = workspace.mission.trim();
-    const adapterReady = preset === "fixture" || (adapterReadyOverride ?? engineeringAutoWorkAdapterReady);
-    const selectedPreset = engineeringRunnerPresets.find((candidate) => candidate.id === preset);
-    const requiresAdapterReady = selectedPreset?.requiresAdapterReady || preset === "openhands";
+    const adapterReady =
+      preset === "fixture" ||
+      (adapterReadyOverride ?? engineeringAutoWorkAdapterReady);
+    const selectedPreset = engineeringRunnerPresets.find(
+      (candidate) => candidate.id === preset,
+    );
+    const requiresAdapterReady =
+      selectedPreset?.requiresAdapterReady || preset === "openhands";
 
     if (!mission) {
       setEngineeringAutoWorkState({
         status: "error",
         message: copy.engineeringLaunchpad.autoWorkMissionRequired,
-        result: null
+        result: null,
       });
       return;
     }
     if (requiresAdapterReady && !adapterReady) {
       setEngineeringAutoWorkState({
         status: "error",
-        message: preset === "openhands"
-          ? copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady
-          : copy.engineeringLaunchpad.autoWorkAdapterNeedsReady(preset),
-        result: null
+        message:
+          preset === "openhands"
+            ? copy.engineeringLaunchpad.autoWorkOpenHandsNeedsReady
+            : copy.engineeringLaunchpad.autoWorkAdapterNeedsReady(preset),
+        result: null,
       });
       return;
     }
@@ -4506,7 +5356,7 @@ export function App() {
     setEngineeringAutoWorkState({
       status: "running",
       message: copy.engineeringLaunchpad.autoWorkStarting(preset),
-      result: null
+      result: null,
     });
 
     try {
@@ -4515,25 +5365,33 @@ export function App() {
         locale,
         runnerPreset: preset,
         adapterReady,
-        worktree: preset === "fixture"
-          ? "output/engineering-auto-work-ui/fixture-worktree"
-          : worktreeOverride?.trim() || engineeringAutoWorkWorktree.trim() || ".",
-        timeoutMs: timeoutMs || (preset === "openhands" ? 180_000 : 60_000)
+        worktree:
+          preset === "fixture"
+            ? "output/engineering-auto-work-ui/fixture-worktree"
+            : worktreeOverride?.trim() ||
+              engineeringAutoWorkWorktree.trim() ||
+              ".",
+        timeoutMs:
+          timeoutMs ||
+          (selectedPreset?.kind === "external-command" ? 300_000 : 60_000),
       });
       const nextStatus = result.ok ? "completed" : "error";
       const message = result.ok
         ? copy.engineeringLaunchpad.autoWorkCompleted(
-          result.preset,
-          result.checks.pass,
-          result.summary?.counts?.adapterCompletedJobs || 0,
-          result.outputDir
-        )
-        : copy.engineeringLaunchpad.autoWorkFailed(result.exitCode, result.outputDir);
+            result.preset,
+            result.checks.pass,
+            result.summary?.counts?.adapterCompletedJobs || 0,
+            result.outputDir,
+          )
+        : copy.engineeringLaunchpad.autoWorkFailed(
+            result.exitCode,
+            result.outputDir,
+          );
 
       setEngineeringAutoWorkState({
         status: nextStatus,
         message,
-        result
+        result,
       });
       recordAudit({
         type: "development.engineering_auto_work.completed",
@@ -4547,18 +5405,21 @@ export function App() {
           checksPass: result.checks.pass,
           checksFail: result.checks.fail,
           mode: result.summary?.mode || null,
-          adapterCompletedJobs: result.summary?.counts?.adapterCompletedJobs || 0,
+          adapterCompletedJobs:
+            result.summary?.counts?.adapterCompletedJobs || 0,
           importedReceipts: result.summary?.counts?.importedReceipts || 0,
           acceptedEvidence: result.summary?.counts?.acceptedEvidence || 0,
-          verifiedArtifactPaths: result.summary?.counts?.verifiedArtifactPaths || 0
-        }
+          verifiedArtifactPaths:
+            result.summary?.counts?.verifiedArtifactPaths || 0,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setEngineeringAutoWorkState({
         status: "error",
-        message: copy.engineeringLaunchpad.autoWorkGatewayUnavailable(errorMessage),
-        result: null
+        message:
+          copy.engineeringLaunchpad.autoWorkGatewayUnavailable(errorMessage),
+        result: null,
       });
       recordAudit({
         type: "development.engineering_auto_work.completed",
@@ -4567,8 +5428,8 @@ export function App() {
         metadata: {
           preset,
           adapterReady,
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
     }
   }
@@ -4580,7 +5441,7 @@ export function App() {
       preset: "fixture",
       adapterReadyOverride: true,
       worktreeOverride: "output/engineering-auto-work-ui/fixture-worktree",
-      timeoutMs: 60_000
+      timeoutMs: 60_000,
     });
   }
 
@@ -4591,7 +5452,7 @@ export function App() {
       setEngineeringCodexSmokeState({
         status: "error",
         message: copy.engineeringLaunchpad.autoWorkMissionRequired,
-        result: null
+        result: null,
       });
       return null;
     }
@@ -4599,24 +5460,30 @@ export function App() {
     setEngineeringCodexSmokeState({
       status: "running",
       message: copy.engineeringLaunchpad.codexSmokeStarting,
-      result: null
+      result: null,
     });
 
     try {
       const result = await runEngineeringCodexSmokeViaGateway({
         mission,
         outputDir: "output/engineering-codex-smoke-ui",
-        timeoutMs: 300_000
+        timeoutMs: 300_000,
       });
       const nextStatus = result.ok ? "completed" : "error";
       const message = result.ok
-        ? copy.engineeringLaunchpad.codexSmokeCompleted(result.checks.pass, result.outputDir)
-        : copy.engineeringLaunchpad.codexSmokeFailed(result.exitCode, result.outputDir);
+        ? copy.engineeringLaunchpad.codexSmokeCompleted(
+            result.checks.pass,
+            result.outputDir,
+          )
+        : copy.engineeringLaunchpad.codexSmokeFailed(
+            result.exitCode,
+            result.outputDir,
+          );
 
       setEngineeringCodexSmokeState({
         status: nextStatus,
         message,
-        result
+        result,
       });
       recordAudit({
         type: "development.engineering_codex_smoke.completed",
@@ -4629,8 +5496,8 @@ export function App() {
           checksFail: result.checks.fail,
           changedFiles: result.summary?.files?.changedFiles?.length || 0,
           baselineExitCode: result.summary?.tests?.baselineExitCode ?? null,
-          finalExitCode: result.summary?.tests?.finalExitCode ?? null
-        }
+          finalExitCode: result.summary?.tests?.finalExitCode ?? null,
+        },
       });
       return result;
     } catch (error) {
@@ -4638,15 +5505,15 @@ export function App() {
       setEngineeringCodexSmokeState({
         status: "error",
         message: copy.engineeringLaunchpad.codexSmokeUnavailable(errorMessage),
-        result: null
+        result: null,
       });
       recordAudit({
         type: "development.engineering_codex_smoke.completed",
         severity: "error",
         summary: `Engineering Codex smoke gateway failed: ${errorMessage}.`,
         metadata: {
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
       return null;
     }
@@ -4662,7 +5529,7 @@ export function App() {
         message: copy.engineeringLaunchpad.autoWorkMissionRequired,
         cyclesCompleted: 0,
         maxCycles,
-        result: null
+        result: null,
       });
       return;
     }
@@ -4672,82 +5539,110 @@ export function App() {
       message: copy.engineeringLaunchpad.guidedCycleStarting(1, maxCycles),
       cyclesCompleted: 0,
       maxCycles,
-      result: null
+      result: null,
     });
 
     try {
-      const liveCabinetOptions = engineeringGuidedCabinetMode === "api"
-        ? {
-            cabinetProvider: engineeringGuidedCabinetProvider,
-            cabinetEndpoint: engineeringGuidedCabinetEndpoint.trim() || undefined,
-            cabinetModel: engineeringGuidedCabinetModel.trim() || undefined,
-            cabinetApiKeyAlias: engineeringGuidedCabinetApiKeyAlias.trim() || undefined
-          }
-        : {};
+      const liveCabinetOptions =
+        engineeringGuidedCabinetMode === "api"
+          ? {
+              cabinetProvider: engineeringGuidedCabinetProvider,
+              cabinetEndpoint:
+                engineeringGuidedCabinetEndpoint.trim() || undefined,
+              cabinetModel: engineeringGuidedCabinetModel.trim() || undefined,
+              cabinetApiKeyAlias:
+                engineeringGuidedCabinetApiKeyAlias.trim() || undefined,
+            }
+          : {};
       const result = await runEngineeringGuidedViaGateway({
         mission,
         locale,
         cabinetMode: engineeringGuidedCabinetMode,
         ...liveCabinetOptions,
         runnerPreset: engineeringAutoWorkPreset,
-        adapterReady: engineeringAutoWorkAdapterReady || engineeringAutoWorkPreset === "fixture",
+        adapterReady:
+          engineeringAutoWorkAdapterReady ||
+          engineeringAutoWorkPreset === "fixture",
         worktree: engineeringAutoWorkWorktree,
         maxLoops: maxCycles,
         outputDir: "output/engineering-guided-ui",
-        timeoutMs: 60_000
+        timeoutMs: 60_000,
       });
       const cyclesCompleted = result.summary?.final?.cyclesCompleted || 0;
       const finalDecision = result.summary?.final?.decision || result.decision;
       const stopReason = result.summary?.final?.stopReason || result.decision;
       const nextStatus = result.ok
         ? "completed"
-        : result.decision === "blocked" ? "blocked" : "error";
+        : result.decision === "blocked"
+          ? "blocked"
+          : "error";
       const message = result.ok
         ? copy.engineeringLaunchpad.guidedCycleCompleted(
             cyclesCompleted,
             maxCycles,
             finalDecision,
-            result.outputDir
+            result.outputDir,
           )
         : result.decision === "blocked"
-          ? copy.engineeringLaunchpad.guidedCycleBlocked(1, maxCycles, stopReason)
-          : copy.engineeringLaunchpad.guidedCycleFailed(cyclesCompleted || 1, maxCycles);
+          ? copy.engineeringLaunchpad.guidedCycleBlocked(
+              1,
+              maxCycles,
+              stopReason,
+            )
+          : copy.engineeringLaunchpad.guidedCycleFailed(
+              cyclesCompleted || 1,
+              maxCycles,
+            );
 
       setEngineeringGuidedCycleState({
         status: nextStatus,
         message,
         cyclesCompleted,
         maxCycles,
-        result
+        result,
       });
       recordAudit({
         type: result.ok
           ? "development.engineering_guided_cycle.completed"
           : "development.engineering_guided_cycle.stopped",
-        severity: result.ok ? "success" : result.decision === "blocked" ? "warning" : "error",
+        severity: result.ok
+          ? "success"
+          : result.decision === "blocked"
+            ? "warning"
+            : "error",
         summary: `Guided engineering cycle completed via gateway: ${result.decision}.`,
         metadata: {
           cabinetMode: result.cabinetMode,
-          cabinetProvider: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetProvider : null,
-          cabinetModel: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetModel.trim() || "env-default" : null,
-          cabinetApiKeyAlias: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetApiKeyAlias.trim() || "provider-default" : null,
+          cabinetProvider:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetProvider
+              : null,
+          cabinetModel:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetModel.trim() || "env-default"
+              : null,
+          cabinetApiKeyAlias:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetApiKeyAlias.trim() || "provider-default"
+              : null,
           runnerPreset: result.preset,
           maxCycles,
           cyclesCompleted,
           stopReason,
           outputDir: result.outputDir,
           checksPass: result.checks.pass,
-          checksFail: result.checks.fail
-        }
+          checksFail: result.checks.fail,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setEngineeringGuidedCycleState({
         status: "error",
-        message: copy.engineeringLaunchpad.guidedCycleGatewayFailed(errorMessage),
+        message:
+          copy.engineeringLaunchpad.guidedCycleGatewayFailed(errorMessage),
         cyclesCompleted: 0,
         maxCycles,
-        result: null
+        result: null,
       });
       recordAudit({
         type: "development.engineering_guided_cycle.stopped",
@@ -4755,12 +5650,21 @@ export function App() {
         summary: `Guided engineering gateway failed: ${errorMessage}.`,
         metadata: {
           cabinetMode: engineeringGuidedCabinetMode,
-          cabinetProvider: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetProvider : null,
-          cabinetModel: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetModel.trim() || "env-default" : null,
-          cabinetApiKeyAlias: engineeringGuidedCabinetMode === "api" ? engineeringGuidedCabinetApiKeyAlias.trim() || "provider-default" : null,
+          cabinetProvider:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetProvider
+              : null,
+          cabinetModel:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetModel.trim() || "env-default"
+              : null,
+          cabinetApiKeyAlias:
+            engineeringGuidedCabinetMode === "api"
+              ? engineeringGuidedCabinetApiKeyAlias.trim() || "provider-default"
+              : null,
           runnerPreset: engineeringAutoWorkPreset,
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
     }
   }
@@ -4769,13 +5673,13 @@ export function App() {
     setEngineeringRunnerReadinessState((current) => ({
       status: "loading",
       message: copy.engineeringLaunchpad.runnerReadinessChecking,
-      report: current.report
+      report: current.report,
     }));
 
     try {
       const [report, presetRegistry] = await Promise.all([
         getEngineeringRunnerReadinessViaGateway(),
-        getEngineeringRunnerPresetsViaGateway()
+        getEngineeringRunnerPresetsViaGateway(),
       ]);
       setEngineeringRunnerPresets(presetRegistry.presets);
       setEngineeringRunnerPresetTemplates(presetRegistry.templates);
@@ -4785,9 +5689,9 @@ export function App() {
           report.summary.ready,
           report.summary.detected,
           report.summary.launchableFromWorkbench,
-          report.summary.total
+          report.summary.total,
         ),
-        report
+        report,
       });
       recordAudit({
         type: "development.engineering_runner_readiness.checked",
@@ -4800,32 +5704,39 @@ export function App() {
           launchableFromWorkbench: report.summary.launchableFromWorkbench,
           blockedByDefault: report.summary.blockedByDefault,
           configuredPresets: presetRegistry.summary.configured,
-          presetErrors: presetRegistry.summary.errors
-        }
+          presetErrors: presetRegistry.summary.errors,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setEngineeringRunnerReadinessState({
         status: "error",
-        message: copy.engineeringLaunchpad.runnerReadinessUnavailable(errorMessage),
-        report: null
+        message:
+          copy.engineeringLaunchpad.runnerReadinessUnavailable(errorMessage),
+        report: null,
       });
       recordAudit({
         type: "development.engineering_runner_readiness.checked",
         severity: "error",
         summary: `Engineering runner readiness gateway failed: ${errorMessage}.`,
         metadata: {
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
     }
   }
 
-  async function enableEngineeringRunnerPresetTemplateFromLaunchpad(templateId: string) {
-    const templateLabel = engineeringRunnerPresetTemplates.find((template) => template.id === templateId)?.label || templateId;
+  async function enableEngineeringRunnerPresetTemplateFromLaunchpad(
+    templateId: string,
+  ) {
+    const templateLabel =
+      engineeringRunnerPresetTemplates.find(
+        (template) => template.id === templateId,
+      )?.label || templateId;
     setEngineeringRunnerPresetEnableState({
       status: "loading",
-      message: copy.engineeringLaunchpad.runnerPresetEnableStarting(templateLabel)
+      message:
+        copy.engineeringLaunchpad.runnerPresetEnableStarting(templateLabel),
     });
 
     try {
@@ -4839,7 +5750,9 @@ export function App() {
 
       setEngineeringRunnerPresetEnableState({
         status: "ready",
-        message: copy.engineeringLaunchpad.runnerPresetEnableCompleted(result.preset?.label || templateLabel)
+        message: copy.engineeringLaunchpad.runnerPresetEnableCompleted(
+          result.preset?.label || templateLabel,
+        ),
       });
       recordAudit({
         type: "development.engineering_runner_preset.enabled",
@@ -4851,14 +5764,15 @@ export function App() {
           preset: result.preset?.id || null,
           configPath: result.configPath,
           configuredPresets: result.registry.summary.configured,
-          presetErrors: result.registry.summary.errors
-        }
+          presetErrors: result.registry.summary.errors,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
       setEngineeringRunnerPresetEnableState({
         status: "error",
-        message: copy.engineeringLaunchpad.runnerPresetEnableFailed(errorMessage)
+        message:
+          copy.engineeringLaunchpad.runnerPresetEnableFailed(errorMessage),
       });
       recordAudit({
         type: "development.engineering_runner_preset.enabled",
@@ -4866,8 +5780,8 @@ export function App() {
         summary: `Engineering runner preset enable failed: ${errorMessage}.`,
         metadata: {
           templateId,
-          gatewayError: errorMessage
-        }
+          gatewayError: errorMessage,
+        },
       });
     }
   }
@@ -4884,17 +5798,21 @@ export function App() {
             <span>{copy.brandSubtitle}</span>
           </div>
         </div>
-        <nav className="topbar-nav" aria-label="Workspace status">
-          <span>
-            <Brain size={15} /> {copy.rolesActive(activeRoles.length)}
-          </span>
-          <span>
-            <Shield size={15} /> {copy.sandboxFirst}
-          </span>
-          <span>
-            <FileKey2 size={15} /> {copy.secretsSessionOnly}
-          </span>
-        </nav>
+        {workspaceView === "advanced" ? (
+          <nav className="topbar-nav" aria-label="Workspace status">
+            <span>
+              <Brain size={15} /> {copy.rolesActive(activeRoles.length)}
+            </span>
+            <span>
+              <Shield size={15} /> {copy.sandboxFirst}
+            </span>
+            <span>
+              <FileKey2 size={15} /> {copy.secretsSessionOnly}
+            </span>
+          </nav>
+        ) : (
+          <div className="topbar-spacer" aria-hidden="true" />
+        )}
         <div className="topbar-actions">
           <label className="locale-select">
             <Languages size={15} />
@@ -4902,7 +5820,9 @@ export function App() {
             <select
               aria-label={copy.language}
               value={locale}
-              onChange={(event) => setLocale(event.target.value as SupportedLocale)}
+              onChange={(event) =>
+                setLocale(event.target.value as SupportedLocale)
+              }
             >
               {supportedLocales.map((option) => (
                 <option value={option.code} key={option.code}>
@@ -4911,348 +5831,667 @@ export function App() {
               ))}
             </select>
           </label>
-          <button className="icon-button" type="button" onClick={resetWorkspace} aria-label={copy.resetWorkspace}>
-            <RefreshCcw size={17} />
-          </button>
-          <button className="icon-button" type="button" onClick={() => fileInputRef.current?.click()} aria-label={copy.importWorkspace}>
-            <Upload size={17} />
-          </button>
-          <button className="icon-button" type="button" onClick={exportWorkspace} aria-label={copy.exportWorkspace}>
-            <Download size={17} />
-          </button>
-          {exportLink ? (
-            <a className="secondary-button download-link" href={exportLink.href} download={exportLink.fileName}>
-              <Download size={16} /> JSON
-            </a>
-          ) : null}
-          <input
-            ref={fileInputRef}
-            className="visually-hidden"
-            type="file"
-            accept="application/json,.json"
-            onChange={importWorkspace}
-          />
-          <button className="secondary-button" type="button" onClick={persistWorkspace}>
-            {saveState === "saved" ? <CheckCircle2 size={16} /> : <Save size={16} />}
-            {saveState === "saved" ? copy.saved : copy.save}
-          </button>
-          <button className="primary-button" type="button" onClick={runCabinet} disabled={runState.status === "running"}>
-            <Play size={16} /> {runState.status === "running" ? copy.running : copy.runCabinet}
-          </button>
+          {workspaceView === "advanced" ? (
+            <>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => setWorkspaceView("guided")}
+              >
+                {copy.advancedWorkspace.returnToStart}
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={resetWorkspace}
+                aria-label={copy.resetWorkspace}
+              >
+                <RefreshCcw size={17} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label={copy.importWorkspace}
+              >
+                <Upload size={17} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={exportWorkspace}
+                aria-label={copy.exportWorkspace}
+              >
+                <Download size={17} />
+              </button>
+              {exportLink ? (
+                <a
+                  className="secondary-button download-link"
+                  href={exportLink.href}
+                  download={exportLink.fileName}
+                >
+                  <Download size={16} /> JSON
+                </a>
+              ) : null}
+              <input
+                ref={fileInputRef}
+                className="visually-hidden"
+                type="file"
+                accept="application/json,.json"
+                onChange={importWorkspace}
+              />
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={persistWorkspace}
+              >
+                {saveState === "saved" ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <Save size={16} />
+                )}
+                {saveState === "saved" ? copy.saved : copy.save}
+              </button>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => void runCabinet()}
+                disabled={runState.status === "running"}
+              >
+                <Play size={16} />{" "}
+                {runState.status === "running" ? copy.running : copy.runCabinet}
+              </button>
+            </>
+          ) : (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => openAdvanced("cabinet")}
+            >
+              <SlidersHorizontal size={16} /> {copy.quickStart.advanced}
+            </button>
+          )}
         </div>
       </header>
 
-      <section className="workspace-grid">
-        <RoleRail
-          roles={workspace.roles}
-          selectedRoleId={selectedRole?.id || ""}
-          onSelect={setSelectedRoleId}
-          onToggle={(roleId, enabled) => updateRole(roleId, { enabled })}
-          onCreateRole={() => addRole()}
-          onDuplicateRole={() => selectedRole && addRole(selectedRole)}
-        />
-
-        <section className="center-column">
-          <section className="mission-header">
-            <div>
-              <p className="section-kicker">{copy.missionKicker}</p>
-              <h1>{copy.missionTitle}</h1>
-            </div>
-            <div className="decision-tile" data-decision={run?.score.decision || "idle"}>
-              <span>{copy.decision}</span>
-              <strong>{run?.score.decision || copy.notRun}</strong>
-            </div>
-          </section>
-
-          <EngineeringLaunchpad
-            copy={copy.engineeringLaunchpad}
+      {workspaceView === "guided" ? (
+        <section className="guided-workspace">
+          <QuickStartPanel
+            copy={copy.quickStart}
+            mission={quickStartMission}
             activeRoles={activeRoles.length}
             run={run}
-            mission={workspace.mission}
-            profile={engineeringLaunchProfile}
-            selfSimulation={currentEngineeringSelfSimulation}
-            selfSimulationJsonLink={currentEngineeringSelfSimulationLink}
-            selfSimulationMarkdownLink={currentEngineeringSelfSimulationMarkdownLink}
-            launchQueue={currentEngineeringLaunchQueue}
-            launchQueueJsonLink={currentEngineeringLaunchQueueLink}
-            launchQueueMarkdownLink={currentEngineeringLaunchQueueMarkdownLink}
-            executionReceipt={currentEngineeringExecutionReceipt}
-            executionReceiptJsonLink={currentEngineeringExecutionReceiptLink}
-            executionReceiptMarkdownLink={currentEngineeringExecutionReceiptMarkdownLink}
-            macRunnerReadiness={engineeringMacRunnerReadiness}
-            macRunnerContract={engineeringMacRunnerContract}
-            briefs={codingAgentBriefs}
-            sessionBundle={codingAgentSessionBundle}
-            runnerManifest={codingAgentRunnerManifest}
-            runnerSelfTest={codingAgentRunnerSelfTest}
-            sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
-            sandboxRunnerReport={codingAgentSandboxRunnerReport}
-            issueDrafts={developmentIssueDrafts}
-            runStatus={runState.status}
-            autoWorkPreset={engineeringAutoWorkPreset}
-            autoWorkAdapterReady={engineeringAutoWorkAdapterReady}
-            autoWorkWorktree={engineeringAutoWorkWorktree}
-            autoWorkState={engineeringAutoWorkState}
-            codexSmokeState={engineeringCodexSmokeState}
-            guidedCycleState={engineeringGuidedCycleState}
-            guidedCycleMaxRuns={engineeringGuidedCycleMaxRuns}
-            guidedCabinetMode={engineeringGuidedCabinetMode}
-            guidedCabinetProvider={engineeringGuidedCabinetProvider}
-            guidedCabinetEndpoint={engineeringGuidedCabinetEndpoint}
-            guidedCabinetModel={engineeringGuidedCabinetModel}
-            guidedCabinetApiKeyAlias={engineeringGuidedCabinetApiKeyAlias}
-            runnerReadinessState={engineeringRunnerReadinessState}
-            runnerPresets={engineeringRunnerPresets}
-            runnerPresetTemplates={engineeringRunnerPresetTemplates}
-            runnerPresetEnableState={engineeringRunnerPresetEnableState}
-            onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
-            onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
-            onAutoWorkAdapterReadyChange={setEngineeringAutoWorkAdapterReady}
-            onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
-            onGuidedCycleMaxRunsChange={(maxRuns) => setEngineeringGuidedCycleMaxRuns(guidedCycleMaxRuns(maxRuns))}
-            onGuidedCabinetModeChange={setEngineeringGuidedCabinetMode}
-            onGuidedCabinetProviderChange={setEngineeringGuidedCabinetProvider}
-            onGuidedCabinetEndpointChange={setEngineeringGuidedCabinetEndpoint}
-            onGuidedCabinetModelChange={setEngineeringGuidedCabinetModel}
-            onGuidedCabinetApiKeyAliasChange={setEngineeringGuidedCabinetApiKeyAlias}
-            onRefreshRunnerReadiness={() => void refreshEngineeringRunnerReadinessFromLaunchpad()}
-            onEnableRunnerPresetTemplate={(templateId) => void enableEngineeringRunnerPresetTemplateFromLaunchpad(templateId)}
-            onFocusMission={focusMissionBrief}
-            onApplyMissionTemplate={applyEngineeringMissionTemplate}
-            onRunSelfSimulation={() => void runEngineeringSelfSimulationFromLaunchpad()}
-            onRunAutoWork={() => void runEngineeringAutoWorkFromLaunchpad()}
-            onRunAutoWorkSelfTest={() => void runEngineeringFixtureSelfTestFromLaunchpad()}
-            onRunCodexSmoke={() => void runEngineeringCodexSmokeFromLaunchpad()}
-            onRunGuidedCycle={() => void runEngineeringGuidedCycleFromLaunchpad()}
-            onRunCabinet={() => void runCabinet()}
-            onPrepareEngineeringPack={() => void prepareEngineeringPackFromLaunchpad()}
-            onRunPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}
-            onRunSandbox={() => void runCodingAgentSandboxRunnerFromWorkbench()}
-            onExportIssueScript={exportDevelopmentIssueScript}
-          />
-
-          <MissionControl
-            mission={workspace.mission}
-            onMissionChange={(mission) => setWorkspace((current) => ({ ...current, mission }))}
-            run={run}
-            roles={workspace.roles}
-            sandboxPolicy={workspace.sandboxPolicy}
-            runStatus={runState}
-            runMode={runMode}
-            onRunModeChange={setRunMode}
-          />
-
-          <ProductReadinessPanel
-            report={productReadinessReport}
-            exportLink={productReadinessLink}
-            releaseLink={productReleaseLink}
-            releaseNotesLink={productReleaseNotesLink}
-            onExport={exportProductReadiness}
-            onExportRelease={exportProductReleaseBundle}
-          />
-
-          <ReleaseRehearsalPanel
-            report={releaseRehearsal}
-            exportLink={releaseRehearsalLink}
-            verification={releaseVerification}
-            verificationLink={releaseVerificationLink}
-            issueDraftsLink={releaseRemediationIssuesLink}
-            issueScriptLink={releaseRemediationScriptLink}
-            copy={copy.releaseRehearsal}
-            onRun={runReleaseRehearsal}
-            onExport={exportReleaseRehearsal}
-            onVerify={() => void verifyRelease(false)}
-            onVerifyProduction={() => void verifyRelease(true)}
-            onExportIssueDrafts={exportReleaseRemediationIssues}
-            onExportIssueScript={exportReleaseRemediationScript}
-          />
-
-          <ProviderReadinessPanel
-            matrix={providerReadinessMatrix}
-            sessionSecrets={sessionSecrets}
-            testingRoleIds={testingProviderRoleIds}
-            isTestingAll={isTestingAllProviders}
-            exportLink={providerReadinessLink}
-            onProviderConfigChange={updateRoleProvider}
-            onSecretChange={updateSecret}
-            onTestRole={testProviderReadiness}
-            onTestAll={testAllProviders}
-            onExport={exportProviderReadiness}
-          />
-
-          <AutomationQueue
-            actions={run?.automationActions || []}
-            approvalRecords={approvalRecordsByAction}
-            readyCount={readyActionCount}
-            handoffLink={handoffLink}
-            evidenceLink={executorEvidenceLink}
-            executorRun={executorRun}
-            executorRunning={executorRunning}
-            onDecision={recordAutomationDecision}
-            onExportHandoff={exportExecutorHandoff}
-            onExportEvidence={exportExecutorEvidence}
-            onRunExecutor={runExecutorDryRun}
-          />
-
-          <AutomationRunbookPanel
-            runbook={automationRunbook}
-            exportLink={automationRunbookLink}
-            onExport={exportAutomationRunbook}
-          />
-
-          <ServerLedgerPanel
-            status={serverLedger.status}
-            message={serverLedger.message}
-            summary={serverLedger.summary}
-            approvals={serverLedger.approvals}
-            evidenceBundles={serverLedger.evidenceBundles}
-            evidenceMessage={serverLedger.evidenceMessage}
-            onRefresh={refreshServerLedger}
-          />
-
-          <TeamHandoffPanel
-            handoff={teamHandoff}
-            exportLink={teamHandoffLink}
-            scaffoldLink={roleWorkspaceLink}
-            onExport={exportTeamHandoff}
-            onExportScaffolds={exportRoleWorkspaceScaffolds}
-          />
-
-          <DevelopmentBoardPanel
-            board={developmentBoard}
-            exportLink={developmentBoardLink}
-            onStatusChange={changeDevelopmentItemStatus}
-            onExport={exportDevelopmentBoard}
-          />
-
-          <CodingAgentBriefsPanel
-            briefs={codingAgentBriefs}
-            review={codingAgentBriefReview}
-            sessionBundle={codingAgentSessionBundle}
-            dispatchManifest={codingAgentDispatchManifest}
-            dispatchArchive={codingAgentDispatchArchive}
-            dispatchArchiveAudit={codingAgentDispatchArchiveAudit}
-            dispatchSimulation={codingAgentDispatchSimulation}
-            runnerManifest={codingAgentRunnerManifest}
-            runnerInvocation={codingAgentRunnerInvocation}
-            runnerIntake={codingAgentRunnerIntake}
-            runnerSelfTest={codingAgentRunnerSelfTest}
-            sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
-            sandboxRunnerReport={codingAgentSandboxRunnerReport}
-            sessionDrill={codingAgentSessionDrill}
-            sessionReceipt={codingAgentSessionReceipt}
-            exportLink={codingAgentBriefsLink}
-            markdownLink={codingAgentBriefsMarkdownLink}
-            reviewLink={codingAgentBriefReviewLink}
-            sessionLink={codingAgentSessionBundleLink}
-            sessionMarkdownLink={codingAgentSessionBundleMarkdownLink}
-            dispatchLink={codingAgentDispatchManifestLink}
-            dispatchMarkdownLink={codingAgentDispatchManifestMarkdownLink}
-            dispatchArchiveLink={codingAgentDispatchArchiveLink}
-            dispatchArchiveMarkdownLink={codingAgentDispatchArchiveMarkdownLink}
-            dispatchArchiveAuditLink={codingAgentDispatchArchiveAuditLink}
-            dispatchArchiveAuditMarkdownLink={codingAgentDispatchArchiveAuditMarkdownLink}
-            dispatchSimulationLink={codingAgentDispatchSimulationLink}
-            dispatchSimulationMarkdownLink={codingAgentDispatchSimulationMarkdownLink}
-            runnerManifestLink={codingAgentRunnerManifestLink}
-            runnerManifestMarkdownLink={codingAgentRunnerManifestMarkdownLink}
-            runnerInvocationLink={codingAgentRunnerInvocationLink}
-            runnerInvocationMarkdownLink={codingAgentRunnerInvocationMarkdownLink}
-            runnerIntakeLink={codingAgentRunnerIntakeLink}
-            runnerIntakeMarkdownLink={codingAgentRunnerIntakeMarkdownLink}
-            runnerSelfTestLink={codingAgentRunnerSelfTestLink}
-            runnerSelfTestMarkdownLink={codingAgentRunnerSelfTestMarkdownLink}
-            sandboxRunnerPreflightLink={codingAgentSandboxRunnerPreflightLink}
-            sandboxRunnerPreflightMarkdownLink={codingAgentSandboxRunnerPreflightMarkdownLink}
-            sandboxRunnerLink={codingAgentSandboxRunnerReportLink}
-            sandboxRunnerMarkdownLink={codingAgentSandboxRunnerReportMarkdownLink}
-            drillLink={codingAgentSessionDrillLink}
-            drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
-            receiptLink={codingAgentSessionReceiptLink}
-            receiptMarkdownLink={codingAgentSessionReceiptMarkdownLink}
-            implementationEvidenceLink={codingAgentImplementationEvidenceLink}
-            implementationEvidenceMarkdownLink={codingAgentImplementationEvidenceMarkdownLink}
-            copy={copy.codingBriefs}
-            onExport={() => void exportCodingAgentBriefs()}
-            onExportMarkdown={exportCodingAgentBriefsMarkdown}
-            onReview={() => void runCodingAgentBriefReview(false)}
-            onProductionReview={() => void runCodingAgentBriefReview(true)}
-            onExportSession={() => void exportCodingAgentSessionBundle(false)}
-            onExportProductionSession={() => void exportCodingAgentSessionBundle(true)}
-            onExportDispatchManifest={() => void exportCodingAgentDispatchManifest()}
-            onRunSessionDrill={() => void runCodingAgentSessionDrill()}
-            onRunSandboxRunnerPreflight={() => void runCodingAgentSandboxRunnerPreflightFromWorkbench()}
-            onRunSandboxRunner={() => void runCodingAgentSandboxRunnerFromWorkbench()}
-            onCreateSessionReceipt={() => void createCodingAgentSessionReceiptTemplate()}
-            onImportSessionReceipt={(file) => void reviewImportedCodingAgentSessionReceipt(file)}
-          />
-
-          <DevelopmentIssuesPanel
-            drafts={developmentIssueDrafts}
-            exportLink={developmentIssuesLink}
-            scriptLink={developmentIssuesScriptLink}
-            onExport={exportDevelopmentIssues}
-            onExportScript={exportDevelopmentIssueScript}
-          />
-
-          <MemoryInboxPanel
-            candidates={memoryCandidates}
-            entries={memoryEntries}
-            exportLink={memoryLink}
-            onDecision={recordMemoryReview}
-            onExport={exportMemoryLog}
-          />
-
-          <SandboxCapabilityPanel registry={sandboxCapabilityRegistry} />
-
-          <SandboxPanel
-            policy={workspace.sandboxPolicy}
-            onChange={(sandboxPolicy) => setWorkspace((current) => ({ ...current, sandboxPolicy }))}
+            runState={runState}
+            onMissionChange={(mission) =>
+              setWorkspace((current) => ({ ...current, mission }))
+            }
+            onRunDry={() => void runCabinet("dry-run")}
+            onOpenProviders={() => openAdvanced("providers")}
+            onOpenEngineering={openEngineeringFromQuickStart}
+            onOpenCabinet={() => openAdvanced("cabinet")}
+            onOpenAdvanced={() => openAdvanced("cabinet")}
           />
         </section>
+      ) : (
+        <>
+          <nav
+            className="advanced-workspace-nav"
+            aria-label={copy.quickStart.advanced}
+          >
+            <button
+              type="button"
+              data-active={advancedSection === "cabinet"}
+              onClick={() => setAdvancedSection("cabinet")}
+            >
+              {copy.advancedWorkspace.cabinet}
+            </button>
+            <button
+              type="button"
+              data-active={advancedSection === "providers"}
+              onClick={() => setAdvancedSection("providers")}
+            >
+              {copy.advancedWorkspace.providers}
+            </button>
+            <button
+              type="button"
+              data-active={advancedSection === "automation"}
+              onClick={() => setAdvancedSection("automation")}
+            >
+              {copy.advancedWorkspace.automation}
+            </button>
+            <button
+              type="button"
+              data-active={advancedSection === "engineering"}
+              onClick={() => openAdvanced("engineering")}
+            >
+              {copy.advancedWorkspace.engineering}
+            </button>
+            <button
+              type="button"
+              data-active={advancedSection === "governance"}
+              onClick={() => setAdvancedSection("governance")}
+            >
+              {copy.advancedWorkspace.governance}
+            </button>
+          </nav>
 
-        <RoleInspector
-          role={selectedRole}
-          sessionSecret={sessionSecrets[selectedRole?.id || ""] || ""}
-          canDelete={Boolean(selectedRole && !isDefaultRoleId(selectedRole.id))}
-          onSecretChange={(value) => selectedRole && updateSecret(selectedRole.id, value)}
-          onChange={(patch) => selectedRole && updateRole(selectedRole.id, patch)}
-          onDelete={() => selectedRole && deleteRole(selectedRole.id)}
-        />
-      </section>
+          <section
+            className="workspace-grid"
+            data-focused={!showRoleConfiguration}
+          >
+            {showRoleConfiguration ? (
+              <RoleRail
+                roles={workspace.roles}
+                selectedRoleId={selectedRole?.id || ""}
+                onSelect={setSelectedRoleId}
+                onToggle={(roleId, enabled) => updateRole(roleId, { enabled })}
+                onCreateRole={() => addRole()}
+                onDuplicateRole={() => selectedRole && addRole(selectedRole)}
+              />
+            ) : null}
 
-      <footer className="operator-footer">
-        <RunLog
-          run={run}
-          history={runHistory}
-          onClearHistory={() => setRunHistory(clearRunHistory())}
-        />
-        <section className="footer-panel">
-          <div className="panel-heading">
-            <span>
-              <Activity size={15} /> Automation posture
-            </span>
-            <strong>{workspace.sandboxPolicy.killSwitchArmed ? "armed" : "open"}</strong>
-          </div>
-          <div className="metric-strip">
-            <Metric icon={<Cpu size={16} />} label="Executors" value={`${sandboxCapabilityRegistry.summary.profiles} profiles`} />
-            <Metric icon={<SlidersHorizontal size={16} />} label="Allowlist" value={`${workspace.sandboxPolicy.networkAllowlist.length} domains`} />
-            <Metric icon={<CircleStop size={16} />} label="Blocked" value={`${workspace.sandboxPolicy.blockedActions.length} actions`} />
-            <Metric icon={<Sparkles size={16} />} label="Next loop" value={run ? `${run.nextIteration.length} tasks` : "pending"} />
-            <Metric
-              icon={runState.status === "fallback" || runState.status === "error" ? <AlertTriangle size={16} /> : <Cloud size={16} />}
-              label="Run path"
-              value={runState.status}
-            />
-          </div>
-        </section>
-        <AuditTrailPanel
-          events={auditEvents}
-          exportLink={auditLink}
-          onExport={exportAuditLog}
-          onClear={clearAuditLog}
-        />
-      </footer>
+            <section className="center-column">
+              {advancedSection === "cabinet" ? (
+                <section className="mission-header">
+                  <div>
+                    <p className="section-kicker">{copy.missionKicker}</p>
+                    <h1>{copy.missionTitle}</h1>
+                  </div>
+                  <div
+                    className="decision-tile"
+                    data-decision={run?.score.decision || "idle"}
+                  >
+                    <span>{copy.decision}</span>
+                    <strong>{run?.score.decision || copy.notRun}</strong>
+                  </div>
+                </section>
+              ) : null}
+
+              {advancedSection === "engineering" && engineeringView === "cli" ? (
+                <LocalCodingCliPanel
+                  copy={copy.localCodingCli}
+                  mission={quickStartMission}
+                  selectedPreset={engineeringAutoWorkPreset}
+                  adapterApproved={engineeringAutoWorkAdapterReady}
+                  runnerReadinessState={engineeringRunnerReadinessState}
+                  runnerPresetTemplates={engineeringRunnerPresetTemplates}
+                  runnerPresetEnableState={engineeringRunnerPresetEnableState}
+                  autoWorkState={engineeringAutoWorkState}
+                  onRefresh={() =>
+                    void refreshEngineeringRunnerReadinessFromLaunchpad()
+                  }
+                  onEnable={(templateId) =>
+                    void enableEngineeringRunnerPresetTemplateFromLaunchpad(
+                      templateId,
+                    )
+                  }
+                  onSelect={updateEngineeringAutoWorkPreset}
+                  onApprovalChange={setEngineeringAutoWorkAdapterReady}
+                  onRun={() => void runEngineeringAutoWorkFromLaunchpad()}
+                  onOpenDetails={() => setEngineeringView("details")}
+                />
+              ) : null}
+
+              {advancedSection === "engineering" && engineeringView === "details" ? (
+                <>
+                  <button
+                    className="secondary-button engineering-detail-return"
+                    type="button"
+                    onClick={() => setEngineeringView("cli")}
+                  >
+                    <ArrowLeft size={16} /> {copy.localCodingCli.returnToCli}
+                  </button>
+                  <EngineeringLaunchpad
+                  copy={copy.engineeringLaunchpad}
+                  activeRoles={activeRoles.length}
+                  run={run}
+                  mission={workspace.mission}
+                  profile={engineeringLaunchProfile}
+                  selfSimulation={currentEngineeringSelfSimulation}
+                  selfSimulationJsonLink={currentEngineeringSelfSimulationLink}
+                  selfSimulationMarkdownLink={
+                    currentEngineeringSelfSimulationMarkdownLink
+                  }
+                  launchQueue={currentEngineeringLaunchQueue}
+                  launchQueueJsonLink={currentEngineeringLaunchQueueLink}
+                  launchQueueMarkdownLink={
+                    currentEngineeringLaunchQueueMarkdownLink
+                  }
+                  executionReceipt={currentEngineeringExecutionReceipt}
+                  executionReceiptJsonLink={
+                    currentEngineeringExecutionReceiptLink
+                  }
+                  executionReceiptMarkdownLink={
+                    currentEngineeringExecutionReceiptMarkdownLink
+                  }
+                  macRunnerReadiness={engineeringMacRunnerReadiness}
+                  macRunnerContract={engineeringMacRunnerContract}
+                  briefs={codingAgentBriefs}
+                  sessionBundle={codingAgentSessionBundle}
+                  runnerManifest={codingAgentRunnerManifest}
+                  runnerSelfTest={codingAgentRunnerSelfTest}
+                  sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
+                  sandboxRunnerReport={codingAgentSandboxRunnerReport}
+                  issueDrafts={developmentIssueDrafts}
+                  runStatus={runState.status}
+                  autoWorkPreset={engineeringAutoWorkPreset}
+                  autoWorkAdapterReady={engineeringAutoWorkAdapterReady}
+                  autoWorkWorktree={engineeringAutoWorkWorktree}
+                  autoWorkState={engineeringAutoWorkState}
+                  codexSmokeState={engineeringCodexSmokeState}
+                  guidedCycleState={engineeringGuidedCycleState}
+                  guidedCycleMaxRuns={engineeringGuidedCycleMaxRuns}
+                  guidedCabinetMode={engineeringGuidedCabinetMode}
+                  guidedCabinetProvider={engineeringGuidedCabinetProvider}
+                  guidedCabinetEndpoint={engineeringGuidedCabinetEndpoint}
+                  guidedCabinetModel={engineeringGuidedCabinetModel}
+                  guidedCabinetApiKeyAlias={engineeringGuidedCabinetApiKeyAlias}
+                  runnerReadinessState={engineeringRunnerReadinessState}
+                  runnerPresets={engineeringRunnerPresets}
+                  runnerPresetTemplates={engineeringRunnerPresetTemplates}
+                  runnerPresetEnableState={engineeringRunnerPresetEnableState}
+                  onMissionChange={(mission) =>
+                    setWorkspace((current) => ({ ...current, mission }))
+                  }
+                  onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
+                  onAutoWorkAdapterReadyChange={
+                    setEngineeringAutoWorkAdapterReady
+                  }
+                  onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
+                  onGuidedCycleMaxRunsChange={(maxRuns) =>
+                    setEngineeringGuidedCycleMaxRuns(
+                      guidedCycleMaxRuns(maxRuns),
+                    )
+                  }
+                  onGuidedCabinetModeChange={setEngineeringGuidedCabinetMode}
+                  onGuidedCabinetProviderChange={
+                    setEngineeringGuidedCabinetProvider
+                  }
+                  onGuidedCabinetEndpointChange={
+                    setEngineeringGuidedCabinetEndpoint
+                  }
+                  onGuidedCabinetModelChange={setEngineeringGuidedCabinetModel}
+                  onGuidedCabinetApiKeyAliasChange={
+                    setEngineeringGuidedCabinetApiKeyAlias
+                  }
+                  onRefreshRunnerReadiness={() =>
+                    void refreshEngineeringRunnerReadinessFromLaunchpad()
+                  }
+                  onEnableRunnerPresetTemplate={(templateId) =>
+                    void enableEngineeringRunnerPresetTemplateFromLaunchpad(
+                      templateId,
+                    )
+                  }
+                  onFocusMission={focusMissionBrief}
+                  onApplyMissionTemplate={applyEngineeringMissionTemplate}
+                  onRunSelfSimulation={() =>
+                    void runEngineeringSelfSimulationFromLaunchpad()
+                  }
+                  onRunAutoWork={() =>
+                    void runEngineeringAutoWorkFromLaunchpad()
+                  }
+                  onRunAutoWorkSelfTest={() =>
+                    void runEngineeringFixtureSelfTestFromLaunchpad()
+                  }
+                  onRunCodexSmoke={() =>
+                    void runEngineeringCodexSmokeFromLaunchpad()
+                  }
+                  onRunGuidedCycle={() =>
+                    void runEngineeringGuidedCycleFromLaunchpad()
+                  }
+                  onRunCabinet={() => void runCabinet()}
+                  onPrepareEngineeringPack={() =>
+                    void prepareEngineeringPackFromLaunchpad()
+                  }
+                  onRunPreflight={() =>
+                    void runCodingAgentSandboxRunnerPreflightFromWorkbench()
+                  }
+                  onRunSandbox={() =>
+                    void runCodingAgentSandboxRunnerFromWorkbench()
+                  }
+                  onExportIssueScript={exportDevelopmentIssueScript}
+                  />
+                </>
+              ) : null}
+
+              {advancedSection === "cabinet" ? (
+                <MissionControl
+                  mission={workspace.mission}
+                  onMissionChange={(mission) =>
+                    setWorkspace((current) => ({ ...current, mission }))
+                  }
+                  run={run}
+                  roles={workspace.roles}
+                  sandboxPolicy={workspace.sandboxPolicy}
+                  runStatus={runState}
+                  runMode={runMode}
+                  onRunModeChange={setRunMode}
+                />
+              ) : null}
+
+              {advancedSection === "cabinet" ? (
+                <ProductReadinessPanel
+                  report={productReadinessReport}
+                  exportLink={productReadinessLink}
+                  releaseLink={productReleaseLink}
+                  releaseNotesLink={productReleaseNotesLink}
+                  onExport={exportProductReadiness}
+                  onExportRelease={exportProductReleaseBundle}
+                />
+              ) : null}
+
+              {advancedSection === "governance" ? (
+                <ReleaseRehearsalPanel
+                  report={releaseRehearsal}
+                  exportLink={releaseRehearsalLink}
+                  verification={releaseVerification}
+                  verificationLink={releaseVerificationLink}
+                  issueDraftsLink={releaseRemediationIssuesLink}
+                  issueScriptLink={releaseRemediationScriptLink}
+                  copy={copy.releaseRehearsal}
+                  onRun={runReleaseRehearsal}
+                  onExport={exportReleaseRehearsal}
+                  onVerify={() => void verifyRelease(false)}
+                  onVerifyProduction={() => void verifyRelease(true)}
+                  onExportIssueDrafts={exportReleaseRemediationIssues}
+                  onExportIssueScript={exportReleaseRemediationScript}
+                />
+              ) : null}
+
+              {advancedSection === "providers" ? (
+                <ProviderReadinessPanel
+                  copy={copy.providerReadiness}
+                  matrix={providerReadinessMatrix}
+                  sessionSecrets={sessionSecrets}
+                  testingRoleIds={testingProviderRoleIds}
+                  isTestingAll={isTestingAllProviders}
+                  exportLink={providerReadinessLink}
+                  onProviderConfigChange={updateRoleProvider}
+                  onSecretChange={updateSecret}
+                  onTestRole={testProviderReadiness}
+                  onTestAll={testAllProviders}
+                  onExport={exportProviderReadiness}
+                />
+              ) : null}
+
+              {advancedSection === "automation" ? (
+                <>
+                  <AutomationQueue
+                    actions={run?.automationActions || []}
+                    approvalRecords={approvalRecordsByAction}
+                    readyCount={readyActionCount}
+                    handoffLink={handoffLink}
+                    evidenceLink={executorEvidenceLink}
+                    executorRun={executorRun}
+                    executorRunning={executorRunning}
+                    onDecision={recordAutomationDecision}
+                    onExportHandoff={exportExecutorHandoff}
+                    onExportEvidence={exportExecutorEvidence}
+                    onRunExecutor={runExecutorDryRun}
+                  />
+
+                  <AutomationRunbookPanel
+                    runbook={automationRunbook}
+                    exportLink={automationRunbookLink}
+                    onExport={exportAutomationRunbook}
+                  />
+                </>
+              ) : null}
+
+              {advancedSection === "governance" ? (
+                <>
+                  <ServerLedgerPanel
+                    status={serverLedger.status}
+                    message={serverLedger.message}
+                    summary={serverLedger.summary}
+                    approvals={serverLedger.approvals}
+                    evidenceBundles={serverLedger.evidenceBundles}
+                    evidenceMessage={serverLedger.evidenceMessage}
+                    onRefresh={refreshServerLedger}
+                  />
+
+                  <TeamHandoffPanel
+                    handoff={teamHandoff}
+                    exportLink={teamHandoffLink}
+                    scaffoldLink={roleWorkspaceLink}
+                    onExport={exportTeamHandoff}
+                    onExportScaffolds={exportRoleWorkspaceScaffolds}
+                  />
+                </>
+              ) : null}
+
+              {advancedSection === "engineering" && engineeringView === "details" ? (
+                <>
+                  <DevelopmentBoardPanel
+                    board={developmentBoard}
+                    exportLink={developmentBoardLink}
+                    onStatusChange={changeDevelopmentItemStatus}
+                    onExport={exportDevelopmentBoard}
+                  />
+
+                  <CodingAgentBriefsPanel
+                    briefs={codingAgentBriefs}
+                    review={codingAgentBriefReview}
+                    sessionBundle={codingAgentSessionBundle}
+                    dispatchManifest={codingAgentDispatchManifest}
+                    dispatchArchive={codingAgentDispatchArchive}
+                    dispatchArchiveAudit={codingAgentDispatchArchiveAudit}
+                    dispatchSimulation={codingAgentDispatchSimulation}
+                    runnerManifest={codingAgentRunnerManifest}
+                    runnerInvocation={codingAgentRunnerInvocation}
+                    runnerIntake={codingAgentRunnerIntake}
+                    runnerSelfTest={codingAgentRunnerSelfTest}
+                    sandboxRunnerPreflight={codingAgentSandboxRunnerPreflight}
+                    sandboxRunnerReport={codingAgentSandboxRunnerReport}
+                    sessionDrill={codingAgentSessionDrill}
+                    sessionReceipt={codingAgentSessionReceipt}
+                    exportLink={codingAgentBriefsLink}
+                    markdownLink={codingAgentBriefsMarkdownLink}
+                    reviewLink={codingAgentBriefReviewLink}
+                    sessionLink={codingAgentSessionBundleLink}
+                    sessionMarkdownLink={codingAgentSessionBundleMarkdownLink}
+                    dispatchLink={codingAgentDispatchManifestLink}
+                    dispatchMarkdownLink={
+                      codingAgentDispatchManifestMarkdownLink
+                    }
+                    dispatchArchiveLink={codingAgentDispatchArchiveLink}
+                    dispatchArchiveMarkdownLink={
+                      codingAgentDispatchArchiveMarkdownLink
+                    }
+                    dispatchArchiveAuditLink={
+                      codingAgentDispatchArchiveAuditLink
+                    }
+                    dispatchArchiveAuditMarkdownLink={
+                      codingAgentDispatchArchiveAuditMarkdownLink
+                    }
+                    dispatchSimulationLink={codingAgentDispatchSimulationLink}
+                    dispatchSimulationMarkdownLink={
+                      codingAgentDispatchSimulationMarkdownLink
+                    }
+                    runnerManifestLink={codingAgentRunnerManifestLink}
+                    runnerManifestMarkdownLink={
+                      codingAgentRunnerManifestMarkdownLink
+                    }
+                    runnerInvocationLink={codingAgentRunnerInvocationLink}
+                    runnerInvocationMarkdownLink={
+                      codingAgentRunnerInvocationMarkdownLink
+                    }
+                    runnerIntakeLink={codingAgentRunnerIntakeLink}
+                    runnerIntakeMarkdownLink={
+                      codingAgentRunnerIntakeMarkdownLink
+                    }
+                    runnerSelfTestLink={codingAgentRunnerSelfTestLink}
+                    runnerSelfTestMarkdownLink={
+                      codingAgentRunnerSelfTestMarkdownLink
+                    }
+                    sandboxRunnerPreflightLink={
+                      codingAgentSandboxRunnerPreflightLink
+                    }
+                    sandboxRunnerPreflightMarkdownLink={
+                      codingAgentSandboxRunnerPreflightMarkdownLink
+                    }
+                    sandboxRunnerLink={codingAgentSandboxRunnerReportLink}
+                    sandboxRunnerMarkdownLink={
+                      codingAgentSandboxRunnerReportMarkdownLink
+                    }
+                    drillLink={codingAgentSessionDrillLink}
+                    drillMarkdownLink={codingAgentSessionDrillMarkdownLink}
+                    receiptLink={codingAgentSessionReceiptLink}
+                    receiptMarkdownLink={codingAgentSessionReceiptMarkdownLink}
+                    implementationEvidenceLink={
+                      codingAgentImplementationEvidenceLink
+                    }
+                    implementationEvidenceMarkdownLink={
+                      codingAgentImplementationEvidenceMarkdownLink
+                    }
+                    copy={copy.codingBriefs}
+                    onExport={() => void exportCodingAgentBriefs()}
+                    onExportMarkdown={exportCodingAgentBriefsMarkdown}
+                    onReview={() => void runCodingAgentBriefReview(false)}
+                    onProductionReview={() =>
+                      void runCodingAgentBriefReview(true)
+                    }
+                    onExportSession={() =>
+                      void exportCodingAgentSessionBundle(false)
+                    }
+                    onExportProductionSession={() =>
+                      void exportCodingAgentSessionBundle(true)
+                    }
+                    onExportDispatchManifest={() =>
+                      void exportCodingAgentDispatchManifest()
+                    }
+                    onRunSessionDrill={() => void runCodingAgentSessionDrill()}
+                    onRunSandboxRunnerPreflight={() =>
+                      void runCodingAgentSandboxRunnerPreflightFromWorkbench()
+                    }
+                    onRunSandboxRunner={() =>
+                      void runCodingAgentSandboxRunnerFromWorkbench()
+                    }
+                    onCreateSessionReceipt={() =>
+                      void createCodingAgentSessionReceiptTemplate()
+                    }
+                    onImportSessionReceipt={(file) =>
+                      void reviewImportedCodingAgentSessionReceipt(file)
+                    }
+                  />
+
+                  <DevelopmentIssuesPanel
+                    drafts={developmentIssueDrafts}
+                    exportLink={developmentIssuesLink}
+                    scriptLink={developmentIssuesScriptLink}
+                    onExport={exportDevelopmentIssues}
+                    onExportScript={exportDevelopmentIssueScript}
+                  />
+                </>
+              ) : null}
+
+              {advancedSection === "governance" ? (
+                <MemoryInboxPanel
+                  candidates={memoryCandidates}
+                  entries={memoryEntries}
+                  exportLink={memoryLink}
+                  onDecision={recordMemoryReview}
+                  onExport={exportMemoryLog}
+                />
+              ) : null}
+
+              {advancedSection === "automation" ? (
+                <>
+                  <SandboxCapabilityPanel
+                    registry={sandboxCapabilityRegistry}
+                  />
+
+                  <SandboxPanel
+                    policy={workspace.sandboxPolicy}
+                    onChange={(sandboxPolicy) =>
+                      setWorkspace((current) => ({ ...current, sandboxPolicy }))
+                    }
+                  />
+                </>
+              ) : null}
+            </section>
+
+            {showRoleConfiguration ? (
+              <RoleInspector
+                role={selectedRole}
+                sessionSecret={sessionSecrets[selectedRole?.id || ""] || ""}
+                canDelete={Boolean(
+                  selectedRole && !isDefaultRoleId(selectedRole.id),
+                )}
+                onSecretChange={(value) =>
+                  selectedRole && updateSecret(selectedRole.id, value)
+                }
+                onChange={(patch) =>
+                  selectedRole && updateRole(selectedRole.id, patch)
+                }
+                onDelete={() => selectedRole && deleteRole(selectedRole.id)}
+              />
+            ) : null}
+          </section>
+
+          {advancedSection === "governance" ? (
+            <footer className="operator-footer">
+              <RunLog
+                run={run}
+                history={runHistory}
+                onClearHistory={() => setRunHistory(clearRunHistory())}
+              />
+              <section className="footer-panel">
+                <div className="panel-heading">
+                  <span>
+                    <Activity size={15} /> Automation posture
+                  </span>
+                  <strong>
+                    {workspace.sandboxPolicy.killSwitchArmed ? "armed" : "open"}
+                  </strong>
+                </div>
+                <div className="metric-strip">
+                  <Metric
+                    icon={<Cpu size={16} />}
+                    label="Executors"
+                    value={`${sandboxCapabilityRegistry.summary.profiles} profiles`}
+                  />
+                  <Metric
+                    icon={<SlidersHorizontal size={16} />}
+                    label="Allowlist"
+                    value={`${workspace.sandboxPolicy.networkAllowlist.length} domains`}
+                  />
+                  <Metric
+                    icon={<CircleStop size={16} />}
+                    label="Blocked"
+                    value={`${workspace.sandboxPolicy.blockedActions.length} actions`}
+                  />
+                  <Metric
+                    icon={<Sparkles size={16} />}
+                    label="Next loop"
+                    value={
+                      run ? `${run.nextIteration.length} tasks` : "pending"
+                    }
+                  />
+                  <Metric
+                    icon={
+                      runState.status === "fallback" ||
+                      runState.status === "error" ? (
+                        <AlertTriangle size={16} />
+                      ) : (
+                        <Cloud size={16} />
+                      )
+                    }
+                    label="Run path"
+                    value={runState.status}
+                  />
+                </div>
+              </section>
+              <AuditTrailPanel
+                events={auditEvents}
+                exportLink={auditLink}
+                onExport={exportAuditLog}
+                onClear={clearAuditLog}
+              />
+            </footer>
+          ) : null}
+        </>
+      )}
     </main>
   );
 }
@@ -5260,7 +6499,7 @@ export function App() {
 function Metric({
   icon,
   label,
-  value
+  value,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -5276,6 +6515,9 @@ function Metric({
 }
 
 function safeFileStem(value: string) {
-  const stem = value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  const stem = value
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
   return stem || "session";
 }

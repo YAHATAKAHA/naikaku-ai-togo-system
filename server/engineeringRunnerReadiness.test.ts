@@ -87,7 +87,7 @@ describe("engineering runner readiness", () => {
     expect(openClaw?.detectedCommands).toEqual(["openclaw"]);
   });
 
-  it("detects Codex and Claude CLI candidates through safe local templates", () => {
+  it("detects Codex, Claude, and Qwen CLI candidates through safe local templates", () => {
     const report = buildEngineeringRunnerReadiness({
       runnerPresetRegistry: buildEngineeringRunnerPresetRegistry({
         envValue: JSON.stringify([
@@ -104,25 +104,37 @@ describe("engineering runner readiness", () => {
             adapterId: "claude-code-runner",
             command: "claude",
             args: ["--print", "--permission-mode", "auto", "Read {taskPath}"]
+          },
+          {
+            id: "qwen-code-local",
+            label: "Qwen Code local runner",
+            adapterId: "qwen-code-runner",
+            command: "qwen",
+            args: ["--prompt", "Read {taskPath}", "--approval-mode", "auto"]
           }
         ]),
         configPath: ""
       }),
-      commandExists: (command) => ["npm", "npm.cmd", "codex", "claude"].includes(command),
+      commandExists: (command) => ["npm", "npm.cmd", "codex", "claude", "qwen"].includes(command),
       pathExists: () => false
     });
 
     const codex = report.items.find((item) => item.adapterId === "codex-cli-runner");
     const claude = report.items.find((item) => item.adapterId === "claude-code-runner");
+    const qwen = report.items.find((item) => item.adapterId === "qwen-code-runner");
 
     expect(codex?.detectedCommands).toEqual(["codex"]);
     expect(claude?.detectedCommands).toEqual(["claude"]);
+    expect(qwen?.detectedCommands).toEqual(["qwen"]);
     expect(codex?.status).toBe("detected-needs-approval");
     expect(claude?.status).toBe("detected-needs-approval");
+    expect(qwen?.status).toBe("detected-needs-approval");
     expect(codex?.canLaunchFromWorkbench).toBe(true);
     expect(claude?.canLaunchFromWorkbench).toBe(true);
+    expect(qwen?.canLaunchFromWorkbench).toBe(true);
     expect(codex?.workbenchPreset).toBe("codex-cli-local");
     expect(claude?.workbenchPreset).toBe("claude-code-local");
+    expect(qwen?.workbenchPreset).toBe("qwen-code-local");
   });
 });
 

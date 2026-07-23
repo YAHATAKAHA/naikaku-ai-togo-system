@@ -53,6 +53,27 @@ describe("provider readiness", () => {
     expect(matrix.rows[0].message).toContain("environment variable");
   });
 
+  it("requires an alias before accepting a session-only test secret", () => {
+    const matrix = buildProviderReadinessMatrix({
+      roles: [
+        {
+          ...defaultRoles[0],
+          provider: {
+            ...defaultRoles[0].provider,
+            apiKeyAlias: ""
+          }
+        }
+      ],
+      sessionSecrets: {
+        [defaultRoles[0].id]: "temporary-secret"
+      }
+    });
+
+    expect(matrix.rows[0].status).toBe("missing-secret");
+    expect(matrix.rows[0].secretReady).toBe(false);
+    expect(matrix.rows[0].message).toContain("API key alias");
+  });
+
   it("does not mark local/custom aliases ready until a secret is available", () => {
     const localRole = defaultRoles.find((role) => role.provider.provider === "local");
     if (!localRole) {
@@ -85,6 +106,24 @@ describe("provider readiness", () => {
     expect(next.rows[0].status).toBe("ready");
     expect(next.rows[0].source).toBe("gateway");
     expect(next.rows[0].checkedAt).toBe("2026-06-25T01:00:00.000Z");
+  });
+
+  it("keeps a gateway-offline structural check unchecked", () => {
+    const matrix = buildProviderReadinessMatrix({ roles: [defaultRoles[0]] });
+    const checked = createProviderReadinessCheck({
+      row: {
+        ...matrix.rows[0],
+        status: "ready",
+        source: "gateway"
+      },
+      ok: true,
+      secretReady: true,
+      source: "local-fallback",
+      message: "Local structural check passed."
+    });
+
+    expect(checked.status).toBe("unchecked");
+    expect(checked.source).toBe("local-fallback");
   });
 
   it("exports readiness without raw session secrets", () => {

@@ -81,17 +81,32 @@ export function scoreCabinetRun(
     sandboxPolicy.networkAllowlist.length > 0 && sandboxPolicy.blockedActions.length > 0
       ? 8
       : -8;
+  const unavailableLiveArtifacts = artifacts.filter(
+    (artifact) => artifact.providerStatus === "skipped" || artifact.providerStatus === "failed"
+  ).length;
+  const providerPenalty = unavailableLiveArtifacts * 12;
 
-  const readiness = clamp(Math.round(coverageScore + averageImpact / 3));
+  const readiness = clamp(Math.round(coverageScore + averageImpact / 3 - providerPenalty));
   const safety = clamp(88 + sandboxBonus + allowlistBonus - highestRiskPenalty);
   const execution = clamp(
-    60 + roles.filter((role) => role.permissions.canUseFiles || role.permissions.canUseShell).length * 7
+    60 +
+      roles.filter((role) => role.permissions.canUseFiles || role.permissions.canUseShell).length * 7 -
+      providerPenalty * 2
   );
   const critique = clamp(
-    65 + roles.filter((role) => role.stage === "critique" || role.stage === "supervision").length * 11
+    65 +
+      roles.filter((role) => role.stage === "critique" || role.stage === "supervision").length * 11 -
+      providerPenalty
   );
   const overall = clamp(Math.round((readiness + safety + execution + critique) / 4));
-  const decision = safety < 70 ? "block" : overall >= 84 ? "ship" : "revise";
+  const decision =
+    safety < 70
+      ? "block"
+      : unavailableLiveArtifacts > 0
+        ? "revise"
+        : overall >= 84
+          ? "ship"
+          : "revise";
 
   return {
     readiness,
