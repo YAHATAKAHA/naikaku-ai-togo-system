@@ -80,7 +80,7 @@ naikaku gateway
 naikaku task "レビュー可能な実装計画を準備する"
 ```
 
-`doctor` は Node.js、依存関係、local gateway の health、`PATH` 上の `codex`、`claude`、`qwen` だけを確認します。モデル、Coding CLI、provider、desktop automation は実行しません。`task` はデフォルトで統制された準備モードです。runner を明示しない限り、外部 Coding CLI を始めず、レビュー可能な task と evidence package だけを準備します。`naikaku verify` は公開ソース向け検証一式を実行します。
+`doctor` は Node.js、依存関係、local gateway の health、`PATH` 上の `codex`、`claude`、`qwen` だけを確認します。モデル、Coding CLI、provider、desktop automation は実行しません。人が読む CLI は日本語を主言語とし、`--locale` で `ja`、`en`、`zh-Hans`、`zh-Hant`、`ko` を選べます。対話ターミナルだけで控えめな色を使い、`NO_COLOR` または `--no-color` を尊重します。`task` はデフォルトで統制された準備モードです。runner を明示しない限り、外部 Coding CLI を始めず、レビュー可能な task と evidence package だけを準備します。`naikaku verify` は公開ソース向け検証一式を実行します。
 
 ローカル API とランナーゲートウェイ機能を使う場合は、別のターミナルで起動します。
 

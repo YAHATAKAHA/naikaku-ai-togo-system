@@ -18,6 +18,7 @@ All notable public-source changes are tracked here. This project uses a source-a
 
 ### Changed
 
+- The first-party CLI now has a Japanese-first terminal presentation for help, task guidance, and local readiness, with support for all five product locales and optional TTY-only color.
 - The Japanese-first quick start now exposes a direct local Coding CLI path and opens a local runner readiness check instead of requiring API configuration for coding work.
 - `ci:open-source` now includes deployment readiness checks.
 - README and Japanese README now expose deployment and commercial-readiness entry points.

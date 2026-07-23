@@ -78,7 +78,7 @@ naikaku gateway
 naikaku task "Prepare a reviewed implementation plan"
 ```
 
-`doctor` only checks the local Node runtime, dependency installation, local gateway health, and whether `codex`, `claude`, or `qwen` is visible on `PATH`. It never runs a model, a Coding CLI, a provider call, or desktop automation. `task` is governed by default: without an explicit runner mode, it prepares a reviewable task and evidence package rather than starting an external coding runner. `naikaku verify` runs the public-source verification suite.
+`doctor` only checks the local Node runtime, dependency installation, local gateway health, and whether `codex`, `claude`, or `qwen` is visible on `PATH`. It never runs a model, a Coding CLI, a provider call, or desktop automation. The human-readable CLI is Japanese-first and supports `ja`, `en`, `zh-Hans`, `zh-Hant`, and `ko` through `--locale`; it uses restrained terminal color only in an interactive terminal and respects `NO_COLOR` or `--no-color`. `task` is governed by default: without an explicit runner mode, it prepares a reviewable task and evidence package rather than starting an external coding runner. `naikaku verify` runs the public-source verification suite.
 
 For local API and runner gateway features, start the gateway in another terminal:
 

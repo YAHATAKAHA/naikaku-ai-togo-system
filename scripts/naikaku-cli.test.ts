@@ -15,7 +15,7 @@ function runCli(args: string[]) {
 }
 
 describe("Naikaku CLI", () => {
-  it("exposes the package binary and governed local workflow commands", () => {
+  it("exposes a Japanese-first, governed local workflow command surface", () => {
     const packageJson = JSON.parse(readFileSync(path.join(projectRoot, "package.json"), "utf8")) as {
       bin?: Record<string, string>;
     };
@@ -24,9 +24,19 @@ describe("Naikaku CLI", () => {
 
     const result = runCli(["--help"]);
     expect(result.status).toBe(0);
+    expect(result.stdout).toContain("内閣ワークベンチ CLI");
     expect(result.stdout).toContain("naikaku doctor");
     expect(result.stdout).toContain("naikaku task");
-    expect(result.stdout).toContain("default mode prepares evidence only");
+    expect(result.stdout).toContain("既定では外部 runner を始めません");
+    expect(result.stdout).not.toContain("\u001b[");
+  });
+
+  it("renders human-readable help in a requested supported locale", () => {
+    const result = runCli(["help", "--locale", "en"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Cabinet Workbench CLI");
+    expect(result.stdout).toContain("Run local AI work with approvals");
   });
 
   it("reports local coding CLI and gateway readiness without running a model", () => {
@@ -43,11 +53,12 @@ describe("Naikaku CLI", () => {
     expect(report.claimBoundary).toContain("does not execute models");
   });
 
-  it("delegates task help to the governed task entrypoint", () => {
+  it("keeps task help polished while preserving advanced script help", () => {
     const result = runCli(["task", "--help"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("This is the operator-facing CLI entry");
-    expect(result.stdout).toContain("--self-test");
+    expect(result.stdout).toContain("統制された task");
+    expect(result.stdout).toContain("naikaku task --self-test");
+    expect(result.stdout).toContain("npm run naikaku:task -- --help");
   });
 });
