@@ -107,6 +107,12 @@ async function main() {
   applyRunnerPreset(options);
 
   const outputDir = path.resolve(options.outputDir);
+
+  // Paths outside the repository become absolute in every downstream contract, and the runner
+  // manifest then rejects them as unsafe without saying why. Fail here with the actual reason.
+  requireInsideRepository(outputDir, "--out");
+  requireInsideRepository(path.resolve(options.worktreeDir), "--worktree");
+
   const simulationDir = path.join(outputDir, "simulate");
   const handoffDir = path.join(outputDir, "handoff");
   const adapterRunDir = path.join(outputDir, "adapter-run");
@@ -688,6 +694,21 @@ function parseLocale(value: string): SupportedLocale {
     return value as SupportedLocale;
   }
   throw new Error(`Unsupported locale: ${value}. Use one of ${supportedLocales.map((item) => item.code).join(", ")}.`);
+}
+
+function requireInsideRepository(target: string, flag: string) {
+  const relative = path.relative(process.cwd(), target);
+  if (!relative || (!relative.startsWith("..") && !path.isAbsolute(relative))) return;
+  throw new Error(
+    [
+      `${flag} must stay inside the repository working directory.`,
+      `  given:      ${target}`,
+      `  repository: ${process.cwd()}`,
+      `Coding-agent task, prompt, receipt, and evidence paths are contract-checked as repository-relative;`,
+      `an outside path is reported as an unsafe path and every task is blocked.`,
+      `Use a path such as ${flag} output/engineering-auto-work instead.`
+    ].join("\n")
+  );
 }
 
 function relativePath(filePath: string) {

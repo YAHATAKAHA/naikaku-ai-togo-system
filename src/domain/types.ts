@@ -2862,6 +2862,7 @@ export type CodingAgentImplementationArtifactPathKind =
 export type CodingAgentImplementationArtifactPathStatus =
   | "verified"
   | "missing"
+  | "mismatch"
   | "unsafe"
   | "not-checked";
 
@@ -2917,6 +2918,7 @@ export interface CodingAgentImplementationArtifactAudit {
     paths: number;
     verifiedPaths: number;
     missingPaths: number;
+    mismatchedPaths: number;
     unsafePaths: number;
     uncheckedPaths: number;
     fingerprintedPaths: number;

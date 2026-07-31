@@ -110,6 +110,7 @@ export interface ExternalRunnerHandoff {
   outputDir: string;
   taskDirectory: string;
   jobDirectory: string;
+  promptDirectory: string;
   tasks: ExternalRunnerHandoffTask[];
   blockers: ExternalRunnerHandoffBlocker[];
   summary: {
@@ -155,6 +156,7 @@ export function buildExternalRunnerHandoff({
   const normalizedOutputDir = outputDir.replace(/\/+$/, "") || "output/engineering-handoff";
   const taskDirectory = `${normalizedOutputDir}/tasks`;
   const jobDirectory = `${normalizedOutputDir}/jobs`;
+  const promptDirectory = `${normalizedOutputDir}/prompts`;
   const adapter = adapterRegistry.adapters.find((item) => item.id === adapterId) ?? null;
   const blockers = blockersFor({ adapter, runnerInvocation });
   const decision = decisionFor({ adapter, runnerInvocation, blockers });
@@ -166,6 +168,7 @@ export function buildExternalRunnerHandoff({
       decision,
       taskDirectory,
       jobDirectory,
+      promptDirectory,
       taskIndex: index + 1
     })
   );
@@ -207,6 +210,7 @@ export function buildExternalRunnerHandoff({
     outputDir: normalizedOutputDir,
     taskDirectory,
     jobDirectory,
+    promptDirectory,
     tasks,
     blockers,
     summary: summarize(tasks, blockers),
@@ -501,6 +505,7 @@ function taskFor({
   decision,
   taskDirectory,
   jobDirectory,
+  promptDirectory,
   taskIndex
 }: {
   item: CodingAgentRunnerInvocationItem;
@@ -508,6 +513,7 @@ function taskFor({
   decision: ExternalRunnerHandoffDecision;
   taskDirectory: string;
   jobDirectory: string;
+  promptDirectory: string;
   taskIndex: number;
 }): ExternalRunnerHandoffTask {
   const compatible = adapter ? isCodingCompatible(adapter) : false;
@@ -523,6 +529,11 @@ function taskFor({
   const jobPath = canWriteTask
     ? `${jobDirectory}/${String(taskIndex).padStart(2, "0")}-${safeFileStem(item.sessionId)}.json`
     : null;
+  // The invocation package carries a bare `prompts/<file>.md` reference. Resolve it against the
+  // handoff output directory so an external runner started from the repository root can open it.
+  const promptPath = canWriteTask && item.promptPath
+    ? `${promptDirectory}/${promptFileName(item.promptPath)}`
+    : item.promptPath;
 
   return {
     sessionId: item.sessionId,
@@ -531,7 +542,7 @@ function taskFor({
     sourceInvocationPath: item.invocationPath,
     taskPath,
     jobPath,
-    promptPath: item.promptPath,
+    promptPath,
     receiptDraftPath: item.receiptDraftPath,
     executorProfileId: item.executorProfileId,
     runnerId: item.runnerId,
@@ -655,6 +666,12 @@ function summarize(tasks: ExternalRunnerHandoffTask[], blockers: ExternalRunnerH
     blockedTasks: tasks.filter((task) => task.status === "blocked").length,
     blockers: blockers.length
   };
+}
+
+function promptFileName(promptPath: string) {
+  const name = promptPath.split("/").pop() || "";
+  const stem = name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120);
+  return stem || "prompt.md";
 }
 
 function safeFileStem(value: string) {

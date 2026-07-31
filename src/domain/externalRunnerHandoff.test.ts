@@ -80,6 +80,36 @@ describe("external runner handoff", () => {
     });
   });
 
+  it("resolves ready task prompt paths under the handoff prompt directory so a runner can open them", () => {
+    const handoff = buildExternalRunnerHandoff({
+      adapterRegistry: buildExternalRunnerAdapterRegistry({
+        installedAdapterIds: ["openhands-coding-agent"],
+        licenseReviewedAdapterIds: ["openhands-coding-agent"],
+        approvedAdapterIds: ["openhands-coding-agent"],
+        generatedAt: "2026-06-27T00:00:00.000Z"
+      }),
+      runnerInvocation: defaultRunnerInvocation(),
+      outputDir: "output/handoff-test",
+      generatedAt: "2026-06-27T00:00:00.000Z"
+    });
+
+    expect(handoff.decision).toBe("handoff-ready");
+    expect(handoff.promptDirectory).toBe("output/handoff-test/prompts");
+
+    const readyTasks = handoff.tasks.filter((task) => task.status === "ready-for-adapter");
+    expect(readyTasks.length).toBeGreaterThan(0);
+
+    for (const task of readyTasks) {
+      // A bare "prompts/<file>.md" reference does not resolve from the repository root, which left
+      // the runner reading a dangling path and producing nothing.
+      expect(task.promptPath).toMatch(/^output\/handoff-test\/prompts\/[^/]+\.md$/);
+    }
+
+    expect(
+      serializeExternalRunnerHandoffTaskMarkdown({ handoff, task: readyTasks[0] })
+    ).toContain(readyTasks[0].promptPath as string);
+  });
+
   it("blocks desktop adapters from consuming repository coding invocation packages", () => {
     const handoff = buildExternalRunnerHandoff({
       adapterRegistry: buildExternalRunnerAdapterRegistry({
