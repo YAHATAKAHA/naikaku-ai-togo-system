@@ -57,7 +57,7 @@ flowchart LR
 ## 3. 已实现模块与当前边界
 
 | 模块 | 已实现内容 | 证据状态 | 交接注意事项 |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | Web Workbench | React/Vite 操作台；任务输入、角色配置、Provider Readiness、Sandbox、审计、开发板、收据/证据面板和导出。 | 已确认代码与构建路径。 | UI 文案已建立五语言机制，但并非每个旧面板都完成全量本地化；不要把“支持五语言”理解为每一处历史文字都已翻译完。 |
 | 内阁编排 | 确定性 dry-run、角色阶段、评分、自动化计划与人工可审阅的下一步。 | 已确认域模块与测试。 | `dry-run` 不调用外部模型；其产物不能当作真实模型工作证据。 |
 | Provider 接入 | Gateway 有 OpenAI Responses、Anthropic Messages、OpenAI-compatible/OpenRouter、Gemini `generateContent`、自定义 JSON endpoint 的服务端调用层；配置层支持 Aliyun DashScope/Qwen 等 BYOK 用法。 | 已确认代码、mock/replay 和结构校验。 | 真实付费模型调用属于待运营者验证：需由使用者在 Gateway 环境中设置自己的密钥别名。 |
@@ -292,7 +292,7 @@ git diff --check
 | --- | --- |
 | `npm run ci:open-source` | 通过：公开源码范围检查通过；deployment readiness 为 `deployment-ready`；strategy iterations 为 `aligned`，5/5 pass；无 Provider MVP 检查 12/12 pass；Vitest 为 66 个测试文件、309 个测试全部通过；末尾 `git diff --check` 通过。 |
 | `npm run build` | 已由 MVP 门实际执行并通过。Vite 输出一个非阻断提示：主 JavaScript 产物为约 928.66 kB，超过默认 500 kB 提示阈值。此次没有收集到真机性能问题或用户故障证据，因此它是后续可测量的优化候选，不是已确认事故。 |
-| `npm run naikaku -- doctor --json` | Node `v25.8.0` 兼容，依赖已安装；默认 Gateway `http://127.0.0.1:8787` 当时未运行；`codex` 与 `claude` 在 PATH 中被检测到，`qwen` 未检测到。此命令没有执行这些 CLI，也没有证明它们已登录、可用或被 Naikaku 成功调用。 |
+| `npm run naikaku -- doctor --json` | Node `v25.8.0` 兼容，依赖已安装；默认 Gateway `http://127.0.0.1:8787` 当时未运行；`claude` 在 PATH 中被检测到（`/opt/homebrew/bin/claude`），`codex` 与 `qwen` 未检测到。CLI 检测结果取决于接手者本机 PATH，不同机器会不同。此命令没有执行这些 CLI，也没有证明它们已登录、可用或被 Naikaku 成功调用。 |
 | Vitest 过程日志 | `storage.test.ts` 期间 Node 输出过一次 `--localstorage-file` 路径警告；测试仍全部通过。当前没有由此推导出产品故障。 |
 
 真实模型、外部 runner 和生产部署仍按第 7 节标记为待运营者验证。
