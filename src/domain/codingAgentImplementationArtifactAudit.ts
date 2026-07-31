@@ -245,7 +245,9 @@ function checkPath(
     return {
       kind,
       path,
-      status: "missing",
+      // The artifact is present and non-empty; only its content fails to evidence the command.
+      // Reporting that as "missing" sent operators looking for a file that was already there.
+      status: "mismatch",
       reason: transcriptContentCheck.reason,
       bytes: probeResult.bytes,
       sha256: probeResult.sha256,
@@ -340,6 +342,7 @@ function summarizeAudit(
     paths: paths.length,
     verifiedPaths: paths.filter((path) => path.status === "verified").length,
     missingPaths: paths.filter((path) => path.status === "missing").length,
+    mismatchedPaths: paths.filter((path) => path.status === "mismatch").length,
     unsafePaths: paths.filter((path) => path.status === "unsafe").length,
     uncheckedPaths: paths.filter((path) => path.status === "not-checked").length,
     fingerprintedPaths: paths.filter((path) => Boolean(path.sha256)).length,
@@ -410,9 +413,9 @@ function checkTranscriptContent(
 ) {
   if (typeof text !== "string") return null;
 
-  const commandMatched = normalizedIncludes(text, expectation.command);
+  const commandMatched = transcriptMentionsCommand(text, expectation.command);
   const exitCodeMatched = typeof expectation.exitCode === "number"
-    ? transcriptMentionsExitCode(text, expectation.exitCode)
+    ? transcriptExitCodeVerdict(text, expectation.exitCode)
     : undefined;
 
   if (!commandMatched) {
@@ -445,8 +448,63 @@ function normalizedIncludes(text: string, expected: string) {
   return normalizeWhitespace(text).includes(normalizeWhitespace(expected));
 }
 
+/**
+ * A transcript is honest evidence of a command even when it never repeats the command line.
+ * `npm run test` prints `> package@version test` followed by the underlying script, so requiring
+ * the literal invocation rejected every genuine npm transcript. Accept the runner shapes a real
+ * transcript can carry, and keep rejecting transcripts that belong to a different command.
+ */
+function transcriptMentionsCommand(text: string, command: string) {
+  const trimmed = command.trim();
+  if (!trimmed) return false;
+  if (normalizedIncludes(text, trimmed)) return true;
+
+  // `npx vitest run x` is recorded by the tool itself as `vitest run x`.
+  const withoutRunner = trimmed.replace(/^(npx|pnpm exec|yarn dlx)\s+/i, "");
+  if (withoutRunner !== trimmed && normalizedIncludes(text, withoutRunner)) return true;
+
+  const script = npmScriptName(trimmed);
+  if (!script) return false;
+
+  // npm's own echo: "> naikaku-ai-togo-system@0.1.0 test" or "> test".
+  const escaped = script.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|\\n)\\s*>\\s+(\\S+@\\S+\\s+)?${escaped}(\\s|$)`).test(text);
+}
+
+function npmScriptName(command: string) {
+  const match = command.match(/^(?:npm|pnpm|yarn|bun)\s+(?:run\s+|run-script\s+)?([\w:@./-]+)/i);
+  if (!match) return null;
+  const script = match[1];
+  return script === "run" || script === "exec" ? null : script;
+}
+
 function normalizeWhitespace(value: string) {
   return value.trim().replace(/\s+/g, " ");
+}
+
+/**
+ * Raw tool output does not echo its own exit status, so a captured `npm run test` log can never
+ * contain "exitCode=0" unless a wrapper adds it. Requiring that marker failed honest transcripts.
+ *
+ * A claimed failure still has to be visible in the log, because that is the claim an operator would
+ * otherwise have to take on trust. A claimed success is accepted when nothing in the transcript
+ * contradicts it: this audit already states that it does not prove command output is truthful.
+ */
+function transcriptExitCodeVerdict(text: string, exitCode: number): boolean | undefined {
+  if (transcriptMentionsExitCode(text, exitCode)) return true;
+
+  const mentionsAnyExitCode = /(?:exit\s*code|exitCode)\s*[:=]?\s*\d+\b/i.test(text);
+  if (mentionsAnyExitCode) return false;
+
+  if (exitCode !== 0) return false;
+
+  // A success claim must not be contradicted by the log it points at.
+  return transcriptReportsFailure(text) ? false : undefined;
+}
+
+function transcriptReportsFailure(text: string) {
+  return /\b[1-9]\d*\s+(?:tests?\s+)?(?:failed|failing)\b/i.test(text) ||
+    /(^|\n)\s*(?:FAIL|ERROR)\b/.test(text);
 }
 
 function transcriptMentionsExitCode(text: string, exitCode: number) {
@@ -534,7 +592,9 @@ function itemDecision(
 ): CodingAgentImplementationArtifactAuditDecision {
   if (paths.some((path) => path.status === "unsafe")) return "blocked";
   if (missing.length) return "needs-artifacts";
-  if (paths.some((path) => path.status === "missing" || path.status === "not-checked")) {
+  if (paths.some((path) =>
+    path.status === "missing" || path.status === "mismatch" || path.status === "not-checked"
+  )) {
     return "needs-artifacts";
   }
   return "verified";

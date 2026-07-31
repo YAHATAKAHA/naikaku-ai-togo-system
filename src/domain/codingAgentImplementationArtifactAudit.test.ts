@@ -190,10 +190,130 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.transcriptContentChecked).toBe(16);
     expect(audit.summary.transcriptContentMismatches).toBe(16);
     expect(transcriptPath).toMatchObject({
-      status: "missing",
+      status: "mismatch",
       reason: "Command transcript does not mention the expected command.",
       transcriptCommandMatched: false,
       transcriptExitCodeMatched: true
+    });
+    expect(audit.summary.mismatchedPaths).toBe(16);
+    expect(audit.summary.missingPaths).toBe(0);
+  });
+
+  it("accepts an npm transcript that echoes the script name instead of the command line", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "b".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        // npm never echoes "npm run test"; it prints the package and script name instead.
+        text: relativePath.endsWith(".log")
+          ? `\n> naikaku-ai-togo-system@0.1.0 ${relativePath.includes("npm-run-test") ? "test" : "build"}\n> vitest run\n\nexitCode=0\n`
+          : undefined
+      })
+    });
+
+    const transcriptPath = audit.items[0].paths.find((path) => path.kind === "command-transcript");
+
+    expect(transcriptPath).toMatchObject({
+      status: "verified",
+      transcriptCommandMatched: true
+    });
+    expect(audit.summary.transcriptContentMismatches).toBe(0);
+    expect(audit.summary.mismatchedPaths).toBe(0);
+  });
+
+  it("accepts a successful transcript that carries no exit-code marker", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "d".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        // Real vitest output: no exit status anywhere in the log.
+        text: relativePath.endsWith(".log")
+          ? `\n> naikaku-ai-togo-system@0.1.0 ${relativePath.includes("npm-run-test") ? "test" : "build"}\n> vitest run\n\n Test Files  67 passed (67)\n`
+          : undefined
+      })
+    });
+
+    expect(audit.decision).toBe("verified");
+    expect(audit.summary.mismatchedPaths).toBe(0);
+  });
+
+  it("still rejects a transcript whose recorded exit code contradicts the receipt", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "e".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log")
+          ? `\n> naikaku-ai-togo-system@0.1.0 ${relativePath.includes("npm-run-test") ? "test" : "build"}\n> vitest run\n\nexit code: 1\n`
+          : undefined
+      })
+    });
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.items[0].paths.find((path) => path.kind === "command-transcript")).toMatchObject({
+      status: "mismatch",
+      transcriptExitCodeMatched: false
+    });
+  });
+
+  it("rejects a success claim whose transcript reports failing tests", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "9".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        // The receipt claims exit code 0 while the log it points at shows failures.
+        text: relativePath.endsWith(".log")
+          ? `\n> naikaku-ai-togo-system@0.1.0 ${relativePath.includes("npm-run-test") ? "test" : "build"}\n> vitest run\n\n Tests  3 failed | 14 passed (17)\n`
+          : undefined
+      })
+    });
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.items[0].paths.find((path) => path.kind === "command-transcript")).toMatchObject({
+      status: "mismatch",
+      transcriptExitCodeMatched: false
+    });
+  });
+
+  it("still rejects an npm transcript that echoes a different script name", () => {
+    const evidence = acceptedEvidenceFixture();
+    const audit = auditCodingAgentImplementationArtifacts({
+      evidence,
+      generatedAt: evidence.generatedAt,
+      artifactProbe: (relativePath) => ({
+        exists: true,
+        bytes: relativePath.length,
+        sha256: "c".repeat(64),
+        modifiedAt: evidence.generatedAt,
+        text: relativePath.endsWith(".log")
+          ? "\n> naikaku-ai-togo-system@0.1.0 lint\n> eslint .\n\nexitCode=0\n"
+          : undefined
+      })
+    });
+
+    expect(audit.decision).toBe("needs-artifacts");
+    expect(audit.items[0].paths.find((path) => path.kind === "command-transcript")).toMatchObject({
+      status: "mismatch",
+      transcriptCommandMatched: false
     });
   });
 
@@ -217,7 +337,7 @@ describe("coding agent implementation artifact audit", () => {
     expect(audit.summary.transcriptContentChecked).toBe(16);
     expect(audit.summary.transcriptContentMismatches).toBe(16);
     expect(transcriptPath).toMatchObject({
-      status: "missing",
+      status: "mismatch",
       reason: "Command transcript does not mention the expected exit code.",
       transcriptCommandMatched: true,
       transcriptExitCodeMatched: false
