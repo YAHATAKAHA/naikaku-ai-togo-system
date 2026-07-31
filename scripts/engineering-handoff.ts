@@ -14,7 +14,10 @@ import {
   serializeExternalRunnerHandoffMarkdown,
   serializeExternalRunnerHandoffTaskMarkdown
 } from "../src/domain/externalRunnerHandoff";
-import type { CodingAgentRunnerInvocationPackage } from "../src/domain/types";
+import type {
+  CodingAgentRunnerInvocationPackage,
+  CodingAgentSessionBundle
+} from "../src/domain/types";
 
 interface EngineeringHandoffOptions {
   inputDir: string;
@@ -53,14 +56,36 @@ async function main() {
     generatedAt: options.generatedAt
   });
 
+  const sessionBundle = await readJsonIfExists<CodingAgentSessionBundle>(
+    path.join(inputDir, "session-bundle.json")
+  );
+  const promptBySessionId = new Map(
+    (sessionBundle?.sessions ?? []).map((session) => [session.id, session.handoffMarkdown])
+  );
+
   await mkdir(outputDir, { recursive: true });
   await mkdir(path.join(outputDir, "tasks"), { recursive: true });
   await mkdir(path.join(outputDir, "jobs"), { recursive: true });
+  await mkdir(path.join(outputDir, "prompts"), { recursive: true });
   await writeFile(path.join(outputDir, "summary.json"), `${serializeExternalRunnerHandoff(handoff)}\n`, "utf8");
   await writeFile(path.join(outputDir, "summary.md"), serializeExternalRunnerHandoffMarkdown(handoff), "utf8");
 
+  let promptFilesWritten = 0;
+  let promptFilesMissing = 0;
+
   for (const task of handoff.tasks) {
     if (!task.taskPath) continue;
+    // A task file without its prompt on disk is not dispatchable: the runner is told to read a
+    // prompt path, so the prompt has to exist before the task claims ready-for-adapter.
+    if (task.promptPath) {
+      const prompt = promptBySessionId.get(task.sessionId);
+      if (prompt) {
+        await writeFile(resolveOutputPath(task.promptPath), prompt.endsWith("\n") ? prompt : `${prompt}\n`, "utf8");
+        promptFilesWritten += 1;
+      } else {
+        promptFilesMissing += 1;
+      }
+    }
     await writeFile(resolveOutputPath(task.taskPath), serializeExternalRunnerHandoffTaskMarkdown({
       handoff,
       task
@@ -72,9 +97,16 @@ async function main() {
     }))}\n`, "utf8");
   }
 
-  printSummary(handoff);
+  printSummary(handoff, { promptFilesWritten, promptFilesMissing });
 
   if (handoff.decision === "blocked") {
+    process.exitCode = 2;
+  }
+
+  if (promptFilesMissing > 0) {
+    console.error(
+      `${promptFilesMissing} ready task(s) have no prompt file. Provide session-bundle.json in --input so prompts can be written.`
+    );
     process.exitCode = 2;
   }
 }
@@ -112,7 +144,18 @@ async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
-function printSummary(handoff: ReturnType<typeof buildExternalRunnerHandoff>) {
+async function readJsonIfExists<T>(filePath: string): Promise<T | null> {
+  try {
+    return await readJson<T>(filePath);
+  } catch {
+    return null;
+  }
+}
+
+function printSummary(
+  handoff: ReturnType<typeof buildExternalRunnerHandoff>,
+  prompts: { promptFilesWritten: number; promptFilesMissing: number }
+) {
   console.log("Engineering external runner handoff written.");
   console.log(`- output: ${handoff.outputDir}`);
   console.log(`- adapter: ${handoff.adapter ? `${handoff.adapter.label} (${handoff.adapter.status})` : "missing"}`);
@@ -121,6 +164,7 @@ function printSummary(handoff: ReturnType<typeof buildExternalRunnerHandoff>) {
   console.log(`- task files: ${handoff.summary.handoffTaskFiles}`);
   console.log(`- job files: ${handoff.summary.adapterJobFiles}`);
   console.log(`- ready task files: ${handoff.summary.readyTaskFiles}`);
+  console.log(`- prompt files: ${prompts.promptFilesWritten}${prompts.promptFilesMissing ? ` (${prompts.promptFilesMissing} missing)` : ""}`);
   console.log(`- blockers: ${handoff.summary.blockers}`);
 }
 
