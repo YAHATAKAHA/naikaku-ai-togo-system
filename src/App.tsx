@@ -29,6 +29,7 @@ import { DevelopmentIssuesPanel } from "./components/DevelopmentIssuesPanel";
 import { EngineeringLaunchpad } from "./components/EngineeringLaunchpad";
 import { MemoryInboxPanel } from "./components/MemoryInboxPanel";
 import { MissionControl } from "./components/MissionControl";
+import { GoalRunnerPanel } from "./components/GoalRunnerPanel";
 import { LocalCodingCliPanel } from "./components/LocalCodingCliPanel";
 import { ProviderReadinessPanel } from "./components/ProviderReadinessPanel";
 import { ProductReadinessPanel } from "./components/ProductReadinessPanel";
@@ -291,7 +292,12 @@ type EngineeringGuidedCycleStatus =
 type WorkspaceView = "guided" | "advanced";
 type EngineeringView = "cli" | "details";
 type AdvancedSection =
-  "cabinet" | "providers" | "automation" | "engineering" | "governance";
+  | "cabinet"
+  | "goal"
+  | "providers"
+  | "automation"
+  | "engineering"
+  | "governance";
 
 function guidedCycleMaxRuns(value: number) {
   return Math.max(
@@ -5947,6 +5953,13 @@ export function App() {
             </button>
             <button
               type="button"
+              data-active={advancedSection === "goal"}
+              onClick={() => setAdvancedSection("goal")}
+            >
+              /goal
+            </button>
+            <button
+              type="button"
               data-active={advancedSection === "providers"}
               onClick={() => setAdvancedSection("providers")}
             >
@@ -6005,6 +6018,14 @@ export function App() {
                     <strong>{run?.score.decision || copy.notRun}</strong>
                   </div>
                 </section>
+              ) : null}
+
+              {advancedSection === "goal" ? (
+                <GoalRunnerPanel
+                  initialMission={workspace.mission}
+                  locale={locale}
+                  gatewayUrl={gatewayBaseUrl()}
+                />
               ) : null}
 
               {advancedSection === "engineering" && engineeringView === "cli" ? (

@@ -78,9 +78,27 @@ naikaku doctor
 naikaku start
 naikaku gateway
 naikaku task "レビュー可能な実装計画を準備する"
+naikaku goal "セッション有効期限チェックの実装とテスト" --max-cycles 3
 ```
 
-`doctor` は Node.js、依存関係、local gateway の health、`PATH` 上の `codex`、`claude`、`qwen` だけを確認します。モデル、Coding CLI、provider、desktop automation は実行しません。人が読む CLI は日本語を主言語とし、`--locale` で `ja`、`en`、`zh-Hans`、`zh-Hant`、`ko` を選べます。対話ターミナルだけで控えめな色を使い、`NO_COLOR` または `--no-color` を尊重します。`task` はデフォルトで統制された準備モードです。runner を明示しない限り、外部 Coding CLI を始めず、レビュー可能な task と evidence package だけを準備します。`naikaku verify` は公開ソース向け検証一式を実行します。
+`doctor` は Node.js、依存関係、local gateway の health、本機オープンソース LLM（`ollama`）、`PATH` 上の `codex`、`claude`、`qwen` を確認します。モデル、Coding CLI、provider、desktop automation は勝手に実行しません。人が読む CLI は日本語を主言語とし、`--locale` で `ja`、`en`、`zh-Hans`、`zh-Hant`、`ko` を選べます。対話ターミナルだけで控えめな色を使い、`NO_COLOR` または `--no-color` を尊重します。`task` はレビュー可能な計画パッケージを準備します。`goal` は目標達成まで自律的に設計・実装・テスト・査定・内閣投票を行う自律実行エンジンを回します。`naikaku verify` は公開ソース向け検証一式を実行します。
+
+### 自律目標実行エンジン (`/goal`)
+
+Naikaku は、単なるモックや外枠（空の殻）ではなく、実際にコードを書き換えてテストを回し検証を繰り返す**自律内閣目標実行エンジン**（`naikaku goal` および UI の `/goal` タブ）を内包しています：
+
+- **反復内閣討議ループ**: 総理（受付・合否基準設定）、戦略担当（計画立案）、デジタル実行担当（サンドボックス内安全ファイル変更・テスト実行）、野党批正（終了コード・diffの厳格検査）、公安監査（パストラバーサル防止・安全監査）、内閣投票（Ship / Revise / Block 判定）を目標完了まで自律反復。
+- **厳格な検証と証跡**: 隔離された worktree 内でコードを編集し、実テストランナー（Vitest 等）を起動して合否を判定。合格点（75点以上）に達した場合のみ SHIP（完成批准）されます。
+- **検証可能なレシート**: 暗号化ハッシュ付きセッションレシート (`receipt.json`)、Git 統一差分 (`git.diff`)、実行証跡 (`evidence.json`)、Markdown 査定書 (`summary.md`) を自動生成。
+- **本機オープンソース LLM 対応（Ollama）**: API キー不要・完全オフライン動作可能な **Ollama** (`--provider ollama`) をネイティブサポート。
+
+```bash
+# 自律目標エンジンのスモークテスト実行
+npm run goal:smoke
+
+# Ollama を使用した自律エンジニアリングミッションの実行
+naikaku goal "パスワード強度バリデータの実装とテスト作成" --provider ollama --worktree ./output/worktree
+```
 
 ローカル API とランナーゲートウェイ機能を使う場合は、別のターミナルで起動します。
 

@@ -31,6 +31,7 @@ const providerOptions: ProviderKind[] = [
   "openrouter",
   "aliyun",
   "google",
+  "ollama",
   "local",
   "custom",
 ];
@@ -72,6 +73,12 @@ const providerTemplates: Record<ProviderKind, ProviderSetupTemplate> = {
     endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
     model: "gemini-2.5-pro",
     apiKeyAlias: "NAIKAKU_GOOGLE_API_KEY",
+  },
+  ollama: {
+    provider: "ollama",
+    endpoint: "http://127.0.0.1:11434/v1",
+    model: "qwen2.5-coder:latest",
+    apiKeyAlias: "",
   },
   local: {
     provider: "local",
@@ -351,7 +358,7 @@ export function ProviderReadinessPanel({
 }
 
 function isSecretOptional(provider: ProviderKind) {
-  return provider === "local" || provider === "custom";
+  return provider === "local" || provider === "custom" || provider === "ollama";
 }
 
 function isEnvAlias(alias: string) {

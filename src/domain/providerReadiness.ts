@@ -85,7 +85,7 @@ function buildStaticRow({
   const apiKeyAlias = role.provider.apiKeyAlias.trim();
   const sessionSecretProvided = Boolean(sessionSecret?.trim());
   const aliasValid = !apiKeyAlias || isEnvAlias(apiKeyAlias);
-  const secretOptional = role.provider.provider === "local" || role.provider.provider === "custom";
+  const secretOptional = role.provider.provider === "local" || role.provider.provider === "custom" || role.provider.provider === "ollama";
   const sessionSecretReady = sessionSecretProvided && Boolean(apiKeyAlias) && aliasValid;
   const secretReady = sessionSecretReady || (secretOptional && !apiKeyAlias);
 

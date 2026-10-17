@@ -208,11 +208,13 @@ function defaultEndpoint(provider: ProviderKind) {
   if (provider === "openrouter") return "https://openrouter.ai/api/v1/chat/completions";
   if (provider === "aliyun") return process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
   if (provider === "google") return "https://generativelanguage.googleapis.com/v1beta/models";
+  if (provider === "ollama") return "http://127.0.0.1:11434/v1";
   if (provider === "local") return "http://localhost:8787/v1/evaluate";
   return "http://localhost:8790/chat";
 }
 
 function defaultModel(provider: ProviderKind) {
+  if (provider === "ollama") return process.env.NAIKAKU_ROLE_MODEL || "qwen2.5-coder:latest";
   if (provider === "aliyun") return process.env.NAIKAKU_ROLE_MODEL || process.env.DASHSCOPE_MODEL || "qwen-turbo";
   return process.env.NAIKAKU_ROLE_MODEL || process.env.OPENAI_MODEL || "";
 }
@@ -224,6 +226,7 @@ function defaultApiKeyAlias(provider: ProviderKind) {
   if (provider === "aliyun") return "DASHSCOPE_API_KEY";
   if (provider === "google") return "GOOGLE_API_KEY";
   if (provider === "local") return "NAIKAKU_LOCAL_GATEWAY_TOKEN";
+  if (provider === "ollama") return "";
   return "";
 }
 

@@ -58,6 +58,7 @@ import {
   buildEngineeringRunnerPresetRegistry,
   enableEngineeringRunnerPresetTemplate
 } from "./engineeringRunnerPresets";
+import { runAutonomousGoal } from "../src/domain/autonomousGoalEngine";
 import type {
   AutomationApprovalRecord,
   AuditEvent,
@@ -184,12 +185,50 @@ const server = createServer(async (request, response) => {
           "engineering-runner-presets",
           "engineering-runner-preset-enable",
           "engineering-runner-readiness",
+          "autonomous-goal-engine",
           "sandbox-capabilities",
           "sandbox-policy-check"
         ],
         runnerAuth: runnerAuthPosture(process.env),
         timestamp: new Date().toISOString()
       });
+      return;
+    }
+
+    if (request.method === "POST" && requestUrl.pathname === "/v1/goal/run") {
+      const body = await readJson<{
+        mission?: string;
+        worktreeDir?: string;
+        outputDir?: string;
+        maxCycles?: number;
+        provider?: ProviderConfig;
+        locale?: string;
+      }>(request);
+      const mission = (body.mission || defaultMission).trim();
+      const outputDir = body.outputDir || resolve(process.cwd(), `output/goals/${new Date().toISOString().replace(/[:.]/g, "-")}`);
+      const worktreeDir = body.worktreeDir || resolve(process.cwd(), "output/goal-worktree");
+
+      let providerConfig = body.provider;
+      if (providerConfig && providerConfig.provider === "ollama") {
+        providerConfig = {
+          ...providerConfig,
+          endpoint: providerConfig.endpoint || process.env.NAIKAKU_OLLAMA_ENDPOINT || "http://127.0.0.1:11434/v1",
+          model: providerConfig.model || process.env.NAIKAKU_OLLAMA_MODEL || "qwen2.5-coder:latest",
+          apiKeyAlias: providerConfig.apiKeyAlias || ""
+        };
+      }
+
+      const summary = await runAutonomousGoal({
+        mission,
+        worktreeDir,
+        outputDir,
+        maxCycles: body.maxCycles ?? 4,
+        provider: providerConfig,
+        locale: body.locale ?? "ja",
+        env: process.env
+      });
+
+      sendJson(response, summary.status === "completed" ? 200 : 422, summary);
       return;
     }
 

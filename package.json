@@ -39,6 +39,8 @@
     "engineering:auto-work": "tsx scripts/engineering-auto-work.ts",
     "engineering:guided": "tsx scripts/guided-engineering-cycle.ts",
     "naikaku:task": "tsx scripts/naikaku-task.ts",
+    "naikaku:goal": "tsx scripts/naikaku-goal.ts",
+    "goal:smoke": "tsx scripts/naikaku-goal.ts --smoke --max-cycles 1",
     "engineering:auto-work-gateway-smoke": "tsx scripts/engineering-auto-work-gateway-smoke.ts --out output/engineering-auto-work-gateway-smoke",
     "engineering:auto-work-smoke": "npm run engineering:auto-work -- --mission \"Open-source smoke: run one external CLI adapter and import its receipt\" --locale zh-Hans --out output/engineering-auto-work --runner-preset fixture --timeout-ms 60000 --generated-at 2026-06-27T00:00:00.000Z",
     "engineering:guided-smoke": "npm run engineering:guided -- --mission \"Open-source smoke: run a bounded cabinet loop through a fixed fixture runner\" --max-loops 3 --runner-preset fixture --adapter-ready --out output/engineering-guided-smoke --generated-at 2026-06-27T00:00:00.000Z --timeout-ms 60000",

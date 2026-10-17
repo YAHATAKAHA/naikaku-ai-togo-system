@@ -76,9 +76,27 @@ naikaku doctor
 naikaku start
 naikaku gateway
 naikaku task "Prepare a reviewed implementation plan"
+naikaku goal "Implement and verify user session timeout" --max-cycles 3
 ```
 
-`doctor` only checks the local Node runtime, dependency installation, local gateway health, and whether `codex`, `claude`, or `qwen` is visible on `PATH`. It never runs a model, a Coding CLI, a provider call, or desktop automation. The human-readable CLI is Japanese-first and supports `ja`, `en`, `zh-Hans`, `zh-Hant`, and `ko` through `--locale`; it uses restrained terminal color only in an interactive terminal and respects `NO_COLOR` or `--no-color`. `task` is governed by default: without an explicit runner mode, it prepares a reviewable task and evidence package rather than starting an external coding runner. `naikaku verify` runs the public-source verification suite.
+`doctor` checks the local Node runtime, dependency installation, local gateway health, local open-source LLMs (`ollama`), and whether `codex`, `claude`, or `qwen` is visible on `PATH`. It never leaks secrets or performs unapproved actions. The human-readable CLI is Japanese-first and supports `ja`, `en`, `zh-Hans`, `zh-Hant`, and `ko` through `--locale`; it uses restrained terminal color only in an interactive terminal and respects `NO_COLOR` or `--no-color`. `task` prepares a reviewable task and evidence package. `goal` runs the autonomous Cabinet deliberation and execution loop until the goal is shipped or safely revised. `naikaku verify` runs the public-source verification suite.
+
+### Autonomous Goal Engine (`/goal`)
+
+Naikaku includes a built-in **Autonomous Cabinet Goal Engine** (`naikaku goal` and UI `/goal` tab) for self-verifying, governed engineering execution:
+
+- **Iterative Deliberation Loop**: Multi-agent cabinet roles conduct intake, planning, sandboxed file modifications, command execution, opposition critique, safety auditing, and cabinet ratification votes across configurable cycles.
+- **Strict Verification & Evidence**: Code modifications are made inside isolated worktrees, tested with real test runners (e.g., Vitest), and ratified only when exit codes, diffs, and audit criteria achieve passing scores (>= 75).
+- **Verifiable Receipts**: Produces cryptographically sound session receipts (`receipt.json`), full git unified diffs (`git.diff`), execution evidence (`evidence.json`), and markdown audit reports (`summary.md`).
+- **Open-Source Local LLMs**: Built-in support for **Ollama** (`--provider ollama`) enables 100% offline, zero-secret local autonomous execution alongside commercial providers.
+
+```bash
+# Run the autonomous goal verification smoke test
+npm run goal:smoke
+
+# Execute an autonomous engineering mission with local Ollama
+naikaku goal "Implement password complexity validator with tests" --provider ollama --worktree ./output/worktree
+```
 
 For local API and runner gateway features, start the gateway in another terminal:
 

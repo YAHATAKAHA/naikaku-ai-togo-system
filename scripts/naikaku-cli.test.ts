@@ -61,4 +61,13 @@ describe("Naikaku CLI", () => {
     expect(result.stdout).toContain("naikaku task --self-test");
     expect(result.stdout).toContain("npm run naikaku:task -- --help");
   });
+
+  it("exposes autonomous goal execution command surface", () => {
+    const result = runCli(["goal", "--help"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("自律目標達成エンジン (/goal)");
+    expect(result.stdout).toContain("naikaku goal");
+    expect(result.stdout).toContain("--max-cycles");
+  });
 });

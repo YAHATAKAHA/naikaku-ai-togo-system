@@ -4,6 +4,7 @@ export type ProviderKind =
   | "openrouter"
   | "aliyun"
   | "google"
+  | "ollama"
   | "local"
   | "custom";
 
@@ -3126,3 +3127,102 @@ export interface RunHistoryItem {
 }
 
 export type CabinetRunMode = "dry-run" | "live";
+
+export interface GoalEngineInput {
+  mission: string;
+  worktreeDir: string;
+  outputDir: string;
+  maxCycles?: number;
+  provider?: ProviderConfig;
+  locale?: string;
+  timeoutMs?: number;
+  allowlistedCommands?: string[];
+  autoFixOnFailure?: boolean;
+  env?: NodeJS.ProcessEnv;
+}
+
+export interface GoalEngineToolCall {
+  tool: "list_files" | "read_file" | "write_file" | "patch_file" | "exec_command";
+  args: Record<string, unknown>;
+  output: string;
+  exitCode?: number | null;
+  durationMs: number;
+  status: "success" | "error";
+}
+
+export interface GoalCycleReport {
+  cycle: number;
+  startedAt: string;
+  completedAt: string;
+  intake: {
+    mission: string;
+    criteria: string[];
+    targetWorktree: string;
+  };
+  strategy: {
+    plan: string[];
+    targetFiles: string[];
+    testCommands: string[];
+  };
+  execution: {
+    toolCalls: GoalEngineToolCall[];
+    modifiedFiles: string[];
+    createdFiles: string[];
+    commandResults: Array<{
+      command: string;
+      exitCode: number | null;
+      stdout: string;
+      stderr: string;
+    }>;
+  };
+  critique: {
+    passed: boolean;
+    score: number;
+    flaws: string[];
+    recommendations: string[];
+  };
+  safety: {
+    passed: boolean;
+    killSwitchArmed: boolean;
+    checks: {
+      safeWorktree: boolean;
+      commandAllowlisted: boolean;
+      noSecretLeak: boolean;
+    };
+  };
+  cabinetVote: {
+    decision: "ship" | "revise" | "block";
+    overallScore: number;
+    readinessScore: number;
+    executionScore: number;
+    critiqueScore: number;
+    safetyScore: number;
+    rationale: string;
+  };
+}
+
+export interface GoalEngineSummary {
+  schema: "naikaku.goal-engine.v1";
+  generatedAt: string;
+  mission: string;
+  status: "completed" | "failed" | "blocked" | "max-cycles-exceeded";
+  cyclesCompleted: number;
+  finalDecision: "ship" | "revise" | "block";
+  finalScore: number;
+  worktreeDir: string;
+  outputDir: string;
+  changedFiles: string[];
+  diff: string;
+  receiptPath: string;
+  evidencePath: string;
+  cycles: GoalCycleReport[];
+  checks: {
+    goalAchieved: boolean;
+    testsPassed: boolean;
+    critiqueSatisfied: boolean;
+    safetyAudited: boolean;
+    evidenceAccepted: boolean;
+    noHostControlEscaped: boolean;
+  };
+  nextActions: string[];
+}

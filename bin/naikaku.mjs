@@ -23,6 +23,7 @@ const copy = {
     start: "ブラウザの Workbench を起動します。",
     gateway: "ローカル gateway を起動します。",
     task: "統制された task を準備します。既定では外部 runner を始めません。",
+    goal: "自律目標達成エンジン (/goal) を実行し、内閣閣議と実テストを経てコードと証跡を生成します。",
     verify: "公開ソースの検証一式を実行します。",
     version: "CLI のバージョンを表示します。",
     boundary: "provider key は受け取りません。Coding CLI の認証情報は upstream CLI と本機に残ります。",
@@ -65,6 +66,7 @@ const copy = {
     start: "Start the browser Workbench.",
     gateway: "Start the local gateway.",
     task: "Prepare a governed task. It does not start an external runner by default.",
+    goal: "Run autonomous goal execution (/goal) with multi-agent cabinet deliberation and verified evidence.",
     verify: "Run the public-source verification suite.",
     version: "Print the CLI version.",
     boundary: "The CLI never accepts provider keys. Coding CLI credentials remain with the upstream CLI and this machine.",
@@ -107,6 +109,7 @@ const copy = {
     start: "启动浏览器工作台。",
     gateway: "启动本地 gateway。",
     task: "准备受治理任务；默认不启动外部 runner。",
+    goal: "运行自律目标达成引擎 (/goal)，经内阁多智能体审议、实机测试并生成可信证据。",
     verify: "运行开源验证套件。",
     version: "显示 CLI 版本。",
     boundary: "CLI 不接收 provider key。Coding CLI 登录信息保留在上游 CLI 和本机。",
@@ -149,6 +152,7 @@ const copy = {
     start: "啟動瀏覽器工作台。",
     gateway: "啟動 local gateway。",
     task: "準備受治理的 task；預設不啟動外部 runner。",
+    goal: "執行自律目標達成引擎 (/goal)，經內閣多代理人審議、實機測試並產出可信證據。",
     verify: "執行開源驗證套件。",
     version: "顯示 CLI 版本。",
     boundary: "CLI 不接收 provider key。Coding CLI 認證資訊保留於上游 CLI 和本機。",
@@ -191,6 +195,7 @@ const copy = {
     start: "브라우저 Workbench를 시작합니다.",
     gateway: "로컬 gateway를 시작합니다.",
     task: "관리되는 task를 준비합니다. 기본값으로 외부 runner를 시작하지 않습니다.",
+    goal: "자율 목표 달성 엔진 (/goal)을 실행하여 다중 에이전트 내각 심의 및 검증된 증거를 생성합니다.",
     verify: "오픈 소스 검증 모음을 실행합니다.",
     version: "CLI 버전을 표시합니다.",
     boundary: "CLI는 provider key를 받지 않습니다. Coding CLI 인증 정보는 upstream CLI와 이 컴퓨터에 남습니다.",
@@ -263,6 +268,9 @@ async function main() {
       }
       await runTsx("scripts/naikaku-task.ts", args);
       return;
+    case "goal":
+      await runTsx("scripts/naikaku-goal.ts", args);
+      return;
     case "verify":
       await runNpm(["run", "ci:open-source", ...args]);
       return;
@@ -286,6 +294,7 @@ function printHelp(locale) {
   printCommand("naikaku start", text.start);
   printCommand("naikaku gateway", text.gateway);
   printCommand("naikaku task \"...\"", text.task);
+  printCommand("naikaku goal \"...\"", text.goal);
   printCommand("naikaku verify", text.verify);
   printCommand("naikaku version", text.version);
   printSection(text.firstSteps);
@@ -330,6 +339,14 @@ async function runDoctor(args) {
       command: name,
       path: findOnPath(name)
     })),
+    localLlm: ["ollama"].map((name) => ({
+      command: name,
+      path: findOnPath(name)
+    })),
+    autonomousGoalEngine: {
+      status: "ready",
+      cyclesSupported: 10
+    },
     claimBoundary: "Doctor only locates local commands and reads the local gateway health endpoint. It does not execute models, coding CLIs, provider calls, or desktop automation."
   };
 
@@ -351,6 +368,11 @@ function printDoctor(report, locale) {
   printSection(text.codingCli);
   for (const item of report.codingCli) {
     printStatus(displayCliName(item.command), item.path ? text.detected : text.missing, item.path ? "ready" : "muted");
+  }
+  if (report.localLlm) {
+    for (const item of report.localLlm) {
+      printStatus(`${displayCliName(item.command)} (Local LLM)`, item.path ? text.detected : text.missing, item.path ? "ready" : "muted");
+    }
   }
   printSection(text.next);
   if (report.gateway.status !== "ready") {
@@ -518,6 +540,7 @@ function printNotice(message) {
 function displayCliName(commandName) {
   if (commandName === "codex") return "Codex CLI";
   if (commandName === "claude") return "Claude Code";
+  if (commandName === "ollama") return "Ollama";
   return "Qwen Code";
 }
 

@@ -77,9 +77,45 @@ The repository ships a local `naikaku` binary through the package `bin` field. F
 - `naikaku start` starts the Vite Workbench.
 - `naikaku gateway` starts this local gateway.
 - `naikaku task ...` delegates to the governed task entrypoint. Its default mode prepares a reviewable task and evidence package; a real runner still requires an explicit preset, readiness, and approval.
+- `naikaku goal ...` runs the autonomous Cabinet goal execution engine with iterative deliberation cycles, sandboxed code implementation, command verification, diff checks, and Cabinet voting.
 - `naikaku verify` runs `npm run ci:open-source`.
 
-The binary accepts no provider key input and does not expose an arbitrary command shell. Upstream Coding CLI authentication remains entirely with the operator's installed `codex`, `claude`, or `qwen` client.
+The binary accepts no provider key input and does not expose an arbitrary command shell. Upstream Coding CLI authentication remains entirely with the operator's installed `codex`, `claude`, or `qwen` client, or local models via `ollama`.
+
+### `POST /v1/goal/run`
+
+Executes an autonomous goal run through the Autonomous Cabinet Goal Engine.
+
+Request body:
+
+```json
+{
+  "mission": "Autonomously implement and test feature",
+  "worktree": "/path/to/worktree",
+  "maxCycles": 3,
+  "locale": "ja",
+  "provider": "ollama",
+  "model": "llama3",
+  "dryRun": false
+}
+```
+
+Response body:
+
+```json
+{
+  "goalId": "goal-1729000000000-abcd",
+  "mission": "Autonomously implement and test feature",
+  "status": "completed",
+  "outcome": "ship",
+  "decisionScore": 94,
+  "cycles": [...],
+  "diff": "...",
+  "receipt": { ... },
+  "evidence": { ... },
+  "summaryMd": "# Autonomous Goal Execution Summary\n..."
+}
+```
 
 ### `GET /health`
 

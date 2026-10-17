@@ -75,8 +75,8 @@ export function resolveSecretAlias(config: ProviderConfig, env: NodeJS.ProcessEn
 
   if (!alias) {
     return {
-      ok: config.provider === "local" || config.provider === "custom",
-      detail: "No API key alias configured."
+      ok: config.provider === "local" || config.provider === "custom" || config.provider === "ollama",
+      detail: config.provider === "ollama" ? "Ollama does not require an API key alias." : "No API key alias configured."
     };
   }
 
@@ -104,7 +104,7 @@ export function validateProviderConfig(
   const hasInvalidAlias = Boolean(alias && !isEnvAlias(alias));
   const sessionSecretProvided = Boolean(sessionSecret?.trim());
   const sessionSecretReady = sessionSecretProvided && Boolean(alias) && !hasInvalidAlias;
-  const missingAliasForRequiredProvider = !alias && config.provider !== "local" && config.provider !== "custom";
+  const missingAliasForRequiredProvider = !alias && config.provider !== "local" && config.provider !== "custom" && config.provider !== "ollama";
   const configurationValid = structurallyValid && !hasInvalidAlias && !missingAliasForRequiredProvider;
 
   return {
@@ -182,6 +182,10 @@ async function callProvider({
 
   if (provider.provider === "google") {
     return callGeminiGenerateContent(provider, systemPrompt, prompt, secret || "", fetcher);
+  }
+
+  if (provider.provider === "ollama") {
+    return callOpenAiCompatibleChat(provider, systemPrompt, prompt, secret || "ollama", fetcher, {}, "Ollama local model completion completed.");
   }
 
   return callCustomJsonProvider(provider, systemPrompt, prompt, secret, fetcher);
