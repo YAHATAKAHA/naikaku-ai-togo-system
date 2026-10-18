@@ -104,6 +104,19 @@ npm run goal:smoke
 naikaku goal "Implement password complexity validator with tests" --provider ollama --worktree ./output/worktree
 ```
 
+### Enterprise Data Loss Prevention (DLP) Architecture
+
+Naikaku is built with a zero-leak, defense-in-depth posture specifically designed for corporate data sovereignty:
+
+- **Zero External Egress / 100% Offline (Ollama)**: Execute autonomous engineering workflows on air-gapped networks or local machines without transmitting a single packet externally.
+- **Zero Raw Secrets**: API keys are never stored in UI or browser storage; references use server-side environment variable aliases.
+- **Real-Time DLP Sanitizer**: Automatically detects and masks cloud tokens (AWS, GCP, GitHub), private keys, Japanese My Numbers, credit cards, and telephone numbers.
+- **Sandbox Worktree & Path Traversal Guard**: Prevents unauthorized access or modification to host credentials (`.env`, `~/.ssh`, `~/.aws`, `/etc/passwd`).
+- **Public Safety Auditor Veto**: Instantly blocks unauthorized outbound exfiltration commands (`curl -d`, netcat, unauthorized `git push`).
+- **Tamper-Evident SHA-256 Receipts**: Cryptographically signed audit packages (`receipt.json`) for corporate compliance and security officers.
+
+For complete architectural specifications, see [Data Loss Prevention (DLP) Architecture](./docs/information-leak-prevention.md) (Japanese: [docs/information-leak-prevention.ja.md](./docs/information-leak-prevention.ja.md)).
+
 For local API and runner gateway features, start the gateway in another terminal:
 
 ```bash

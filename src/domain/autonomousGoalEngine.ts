@@ -14,6 +14,12 @@ import type {
   ProviderConfig
 } from "./types";
 import { invokeRoleProvider } from "../../server/providerAdapters";
+import {
+  detectInformationLeaks,
+  sanitizeInformationLeaks,
+  validateWorktreeSafeBoundary
+} from "./dataLeakProtection";
+
 
 const defaultAllowlistedCommands = [
   "node",
@@ -264,7 +270,7 @@ export async function runAutonomousGoal(input: GoalEngineInput): Promise<GoalEng
     const critiquePassed = flaws.length === 0;
     const critiqueScore = critiquePassed ? 95 : Math.max(20, 80 - flaws.length * 20);
 
-    // --- STAGE 5: Public Safety Audit (国家公安・監査担当) ---
+    // --- STAGE 5: Public Safety Audit (国家公安・情報漏洩監査担当) ---
     const safetyViolations: string[] = [];
     for (const tc of toolCalls) {
       if (tc.tool === "exec_command") {
@@ -273,6 +279,18 @@ export async function runAutonomousGoal(input: GoalEngineInput): Promise<GoalEng
           if (pattern.test(cmdStr)) {
             safetyViolations.push(`Prohibited dangerous command pattern detected: ${cmdStr}`);
           }
+        }
+        const leaks = detectInformationLeaks(cmdStr);
+        for (const leak of leaks) {
+          if (leak.category === "exfiltration-vector" || leak.category === "system-secret") {
+            safetyViolations.push(`[DLP Violation] Unauthorized exfiltration or secret file access in command: ${leak.patternName}`);
+          }
+        }
+      } else if (tc.tool === "write_file" || tc.tool === "patch_file") {
+        const filePath = String(tc.args.path || "");
+        const leaks = detectInformationLeaks(filePath);
+        if (leaks.some((l) => l.category === "system-secret")) {
+          safetyViolations.push(`[DLP Violation] Unauthorized mutation of sensitive security asset: ${filePath}`);
         }
       }
     }
@@ -363,8 +381,9 @@ export async function runAutonomousGoal(input: GoalEngineInput): Promise<GoalEng
     }
   }
 
-  // Generate Git Unified Diff
-  const diff = generateUnifiedDiff(worktreeDir);
+  // Generate Git Unified Diff & Sanitize against credential/PII leakage
+  const rawDiff = generateUnifiedDiff(worktreeDir);
+  const diff = sanitizeInformationLeaks(rawDiff).sanitized;
   const changedFiles = Array.from(changedFilesSet).sort();
 
   // Generate Session Receipt & Evidence
@@ -384,7 +403,8 @@ export async function runAutonomousGoal(input: GoalEngineInput): Promise<GoalEng
     cycles,
     locale
   });
-  await writeFile(receiptPath, JSON.stringify(receipt, null, 2), "utf8");
+  const sanitizedReceipt = sanitizeInformationLeaks(JSON.stringify(receipt, null, 2)).sanitized;
+  await writeFile(receiptPath, sanitizedReceipt, "utf8");
 
   const summary: GoalEngineSummary = {
     schema: "naikaku.goal-engine.v1",
@@ -436,11 +456,11 @@ export async function runAutonomousGoal(input: GoalEngineInput): Promise<GoalEng
 }
 
 function safeResolve(baseDir: string, relativePath: string): string {
-  const resolved = path.resolve(baseDir, relativePath);
-  if (!resolved.startsWith(baseDir)) {
-    throw new Error(`Path traversal attempt blocked: '${relativePath}' escapes base dir '${baseDir}'`);
+  const boundaryCheck = validateWorktreeSafeBoundary(relativePath, baseDir);
+  if (!boundaryCheck.safe) {
+    throw new Error(boundaryCheck.reason || `Path traversal attempt blocked: '${relativePath}' escapes base dir '${baseDir}'`);
   }
-  return resolved;
+  return boundaryCheck.resolvedPath || path.resolve(baseDir, relativePath);
 }
 
 async function listWorktreeFiles(dir: string, base = dir): Promise<string[]> {

@@ -79,7 +79,12 @@ const securityRules: SecurityRule[] = [
       /\b(api[_ -]?key|secret|token|password|credential|private key)\b/i,
       /\b\.env\b/i,
       /\bNAIKAKU_[A-Z0-9_]+\b/,
-      /\bid_rsa\b/i
+      /\bid_rsa\b/i,
+      /\bAKIA[0-9A-Z]{16}\b/,
+      /\bghp_[A-Za-z0-9]{36}\b/,
+      /\bAIza[0-9A-Za-z_-]{30,40}\b/,
+      /(?<!\d)(?:\d{4}[ -]?\d{4}[ -]?\d{4})(?!\d|[- ]\d{4})/,
+      /\b(?:\d{4}[ -]?){3}\d{4}\b/
     ]
   },
   {
