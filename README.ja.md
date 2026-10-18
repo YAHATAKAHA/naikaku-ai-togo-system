@@ -221,7 +221,7 @@ docker compose up --build
 - [Architecture decision records](./docs/adr/README.md)
 - [Sandbox security](./docs/security-sandbox.md)
 - [Localization](./docs/localization.md)
-- [技術引き継ぎ資料（簡体字中国語）](./docs/engineering-handover.zh-CN.md)
+- [v0.1.1 リリースノート（日本語）](./docs/releases/v0.1.1.ja.md)
 - [macOS developer preview](./docs/install/macos-dev-preview.md)
 - [Open-source reference notes](./docs/reference/open-source-research.md)
 

@@ -219,7 +219,7 @@ The frontend reads `/naikaku-config.js` at runtime, so a deployment can point th
 - [Architecture decision records](./docs/adr/README.md)
 - [Sandbox security](./docs/security-sandbox.md)
 - [Localization](./docs/localization.md)
-- [Engineering handover (Simplified Chinese)](./docs/engineering-handover.zh-CN.md)
+- [Release v0.1.1 Notes](./docs/releases/v0.1.1.md)
 - [macOS developer preview](./docs/install/macos-dev-preview.md)
 - [Open-source reference notes](./docs/reference/open-source-research.md)
 
