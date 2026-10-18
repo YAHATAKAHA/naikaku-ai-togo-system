@@ -6,7 +6,13 @@ All notable public-source changes are tracked here. This project uses a source-a
 
 ### Added
 
-- First-party `naikaku` CLI binary with read-only local readiness checks plus fixed `start`, `gateway`, `task`, and `verify` entrypoints. The CLI does not accept provider keys or arbitrary shell commands.
+- Autonomous Cabinet Goal Engine (`/goal` and `naikaku goal`) with iterative multi-agent deliberation: Prime Minister intake, Strategy Minister planning, Digital Execution Minister sandboxed file operations and test runs, Opposition Critic verification and flaw reviews, Public Safety Auditor containment checks, and Cabinet ratification voting (SHIP/REVISE/BLOCK).
+- Native zero-secret local open-source LLM support for Ollama (`--provider ollama`, Qwen 2.5-Coder, Llama 3) across CLI, gateway, readiness panel, and workbench.
+- Interactive `/goal` Autonomous Cabinet Workbench panel in React UI with live deliberation timeline, git diff viewer, and session receipt downloads.
+- `npm run goal:smoke` instantaneous end-to-end autonomous goal verification test.
+- Domain synthesis templates covering input validation, password/authentication security, sliding-window rate limiting, and in-memory TTL cache storage.
+- Comprehensive test coverage expanding total test suites to 67 files and 320 tests.
+- First-party `naikaku` CLI binary with read-only local readiness checks plus fixed `start`, `gateway`, `task`, `goal`, and `verify` entrypoints. The CLI does not accept provider keys or arbitrary shell commands.
 - Fixed local-runner templates and readiness detection for Codex CLI, Claude Code, and Qwen Code; Qwen Code can use the operator's locally authenticated Alibaba Cloud Coding Plan without exposing that credential to the browser.
 - Self-host preview deployment path with `Dockerfile`, `compose.yaml`, and `.dockerignore`.
 - Runtime frontend gateway configuration through `/naikaku-config.js`, so hosted builds can change gateway URL without rebuilding source.

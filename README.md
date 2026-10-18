@@ -1,5 +1,11 @@
 # Naikaku AI Togo System
 
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](./LICENSE)
+[![Tests: 320 passed](https://img.shields.io/badge/Tests-320%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
+[![TypeScript: v5](https://img.shields.io/badge/TypeScript-v5-3178c6.svg)](https://www.typescriptlang.org/)
+[![Local LLM: Ollama](https://img.shields.io/badge/Local%20LLM-Ollama%20Ready-black.svg)](https://ollama.com/)
+[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-purple.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system/discussions)
+
 Naikaku AI Togo System is a Japan-built, multi-model AI cabinet workbench for governed software work, with Japanese as the primary operator language.
 
 Instead of treating one model as an unchecked operator, Naikaku separates a mission into roles: planning, execution, critique, supervision, scoring, memory, and safety. Runners such as local CLIs or automation tools are attached behind approval gates, scoped permissions, receipts, and artifact review.

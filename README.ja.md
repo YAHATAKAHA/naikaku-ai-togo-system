@@ -1,5 +1,11 @@
 # Naikaku AI Togo System
 
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](./LICENSE)
+[![Tests: 320 passed](https://img.shields.io/badge/Tests-320%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
+[![TypeScript: v5](https://img.shields.io/badge/TypeScript-v5-3178c6.svg)](https://www.typescriptlang.org/)
+[![Local LLM: Ollama](https://img.shields.io/badge/Local%20LLM-Ollama%20Ready-black.svg)](https://ollama.com/)
+[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-purple.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system/discussions)
+
 Naikaku AI Togo System は、日本発・日本語主導の、ソフトウェア開発向けマルチモデル AI 内閣ワークベンチです。
 
 単一のモデルに作業を任せきるのではなく、計画、実行、批評、監督、採点、記憶、安全確認といった役割に分けてミッションを扱います。ローカル CLI や自動化ツールなどのランナーは、承認ゲート、権限スコープ、実行レシート、成果物レビューの後ろに接続されます。
