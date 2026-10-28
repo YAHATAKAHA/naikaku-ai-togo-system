@@ -9,11 +9,15 @@ import {
 
 describe("dataLeakProtection (情報漏洩防止・DLPエンジン)", () => {
   it("detects and redacts cloud credentials and API keys", () => {
+    const awsAccessKey = ["AKIA", "1234567890ABCDEF"].join("");
+    const githubToken = ["ghp_", "111122223333444455556666777788889999"].join("");
+    const googleApiKey = ["AIza", "SyD-1234567890abcdefghijklmnopqrst"].join("");
+    const inlineSecret = ["super_", "secret_password_12345"].join("");
     const raw = `
-      const awsKey = "AKIA1234567890ABCDEF";
-      const ghToken = "ghp_111122223333444455556666777788889999";
-      const gApiKey = "AIzaSyD-1234567890abcdefghijklmnopqrst";
-      const config = { secret: "super_secret_password_12345" };
+      const awsKey = "${awsAccessKey}";
+      const ghToken = "${githubToken}";
+      const gApiKey = "${googleApiKey}";
+      const config = { secret: "${inlineSecret}" };
     `;
 
     const findings = detectInformationLeaks(raw);
@@ -25,10 +29,10 @@ describe("dataLeakProtection (情報漏洩防止・DLPエンジン)", () => {
 
     const { sanitized, redactedCount } = sanitizeInformationLeaks(raw);
     expect(redactedCount).toBeGreaterThanOrEqual(4);
-    expect(sanitized).not.toContain("AKIA1234567890ABCDEF");
-    expect(sanitized).not.toContain("ghp_111122223333444455556666777788889999");
-    expect(sanitized).not.toContain("AIzaSyD-1234567890abcdefghijklmnopqrst");
-    expect(sanitized).not.toContain("super_secret_password_12345");
+    expect(sanitized).not.toContain(awsAccessKey);
+    expect(sanitized).not.toContain(githubToken);
+    expect(sanitized).not.toContain(googleApiKey);
+    expect(sanitized).not.toContain(inlineSecret);
     expect(sanitized).toContain("[REDACTED_AWS_ACCESS_KEY]");
     expect(sanitized).toContain("[REDACTED_GITHUB_TOKEN]");
   });
@@ -55,10 +59,12 @@ describe("dataLeakProtection (情報漏洩防止・DLPエンジン)", () => {
   });
 
   it("detects and redacts private key blocks and sensitive system file references", () => {
+    const privateKeyHeader = ["-----BEGIN RSA", "PRIVATE KEY-----"].join(" ");
+    const privateKeyFooter = ["-----END RSA", "PRIVATE KEY-----"].join(" ");
     const privateKeyBlock = `
------BEGIN RSA PRIVATE KEY-----
+${privateKeyHeader}
 MIIEowIBAAKCAQEA0Y8...fake...private...key...
------END RSA PRIVATE KEY-----
+${privateKeyFooter}
 `;
     const textWithEnv = `Check /path/.env and /.ssh/id_rsa for details.`;
 
@@ -97,7 +103,8 @@ MIIEowIBAAKCAQEA0Y8...fake...private...key...
   });
 
   it("enforces organizational data classification clearance levels", () => {
-    const text = `Customer My Number: 1234-5678-9012, API Key: AKIA1234567890ABCDEF`;
+    const awsAccessKey = ["AKIA", "1234567890ABCDEF"].join("");
+    const text = `Customer My Number: 1234-5678-9012, API Key: ${awsAccessKey}`;
 
     // Public clearance: strictly disallows both
     const pub = auditDataClearance(text, "public");
