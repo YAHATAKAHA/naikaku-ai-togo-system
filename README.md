@@ -71,6 +71,8 @@ npm ci
 npm run dev
 ```
 
+`npm run dev` starts the browser Workbench and the local gateway together. Open the URL printed by Vite, write a task, then choose **Use local Coding CLI** to inspect locally authenticated runners. If you intentionally need the gateway without the browser Workbench, use `npm run gateway`.
+
 ### Naikaku CLI
 
 The repository also exposes a first-party `naikaku` command. It is available immediately through npm, and can be linked into the local shell when that is more convenient.
@@ -116,12 +118,6 @@ Naikaku is built with a zero-leak, defense-in-depth posture specifically designe
 - **Tamper-Evident SHA-256 Receipts**: Cryptographically signed audit packages (`receipt.json`) for corporate compliance and security officers.
 
 For complete architectural specifications, see [Data Loss Prevention (DLP) Architecture](./docs/information-leak-prevention.md) (Japanese: [docs/information-leak-prevention.ja.md](./docs/information-leak-prevention.ja.md)).
-
-For local API and runner gateway features, start the gateway in another terminal:
-
-```bash
-npm run gateway
-```
 
 The repository does not ship API keys, runner tokens, or hosted credentials. Leave `.env.example` values blank until you need live providers or authenticated runners, then set your own environment variables in your local shell, `.env`, local vault, or deployment environment.
 

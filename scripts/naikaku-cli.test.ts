@@ -27,6 +27,7 @@ describe("Naikaku CLI", () => {
     expect(result.stdout).toContain("内閣ワークベンチ CLI");
     expect(result.stdout).toContain("naikaku doctor");
     expect(result.stdout).toContain("naikaku task");
+    expect(result.stdout).toContain("local gateway をまとめて起動します");
     expect(result.stdout).toContain("既定では外部 runner を始めません");
     expect(result.stdout).not.toContain("\u001b[");
   });

@@ -214,6 +214,7 @@ import {
   gatewayBaseUrl,
   getEngineeringRunnerPresetsViaGateway,
   getEngineeringRunnerReadinessViaGateway,
+  isGatewayConnectionError,
   getLedgerSummaryViaGateway,
   listApprovalLedgerViaGateway,
   listEvidenceLedgerViaGateway,
@@ -644,10 +645,12 @@ export function App() {
       status: "idle" | "loading" | "ready" | "error";
       message: string;
       report: EngineeringRunnerReadinessReport | null;
+      gatewayUnavailable: boolean;
     }>({
       status: "idle",
       message: "",
       report: null,
+      gatewayUnavailable: false,
     });
   const [engineeringRunnerPresets, setEngineeringRunnerPresets] = useState<
     EngineeringRunnerPreset[]
@@ -5680,6 +5683,7 @@ export function App() {
       status: "loading",
       message: copy.engineeringLaunchpad.runnerReadinessChecking,
       report: current.report,
+      gatewayUnavailable: false,
     }));
 
     try {
@@ -5698,6 +5702,7 @@ export function App() {
           report.summary.total,
         ),
         report,
+        gatewayUnavailable: false,
       });
       recordAudit({
         type: "development.engineering_runner_readiness.checked",
@@ -5715,11 +5720,14 @@ export function App() {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "unknown";
+      const gatewayUnavailable = isGatewayConnectionError(error);
       setEngineeringRunnerReadinessState({
         status: "error",
-        message:
-          copy.engineeringLaunchpad.runnerReadinessUnavailable(errorMessage),
+        message: gatewayUnavailable
+          ? copy.localCodingCli.gatewayUnavailableStatus
+          : copy.engineeringLaunchpad.runnerReadinessUnavailable(errorMessage),
         report: null,
+        gatewayUnavailable,
       });
       recordAudit({
         type: "development.engineering_runner_readiness.checked",

@@ -121,11 +121,7 @@ npm ci
 npm run dev
 ```
 
-另开一个终端启动本地 Gateway：
-
-```bash
-npm run gateway
-```
+`npm run dev` 会同时启动浏览器 Workbench 与本地 Gateway。只有在不需要浏览器工作台时，才单独执行 `npm run gateway`。
 
 检查本机依赖和 Gateway，不产生模型调用：
 
@@ -255,7 +251,7 @@ npm run naikaku:task -- --help
 
 - [ ] `git status --short --branch` 确认接手分支和本地改动。
 - [ ] `npm ci` 后执行 `npm run ci:open-source`。
-- [ ] `npm run dev` 与 `npm run gateway` 分别启动，访问 `/health`。
+- [ ] `npm run dev` 启动后，访问 Workbench 与 `/health`；仅需 Gateway 时单独执行 `npm run gateway`。
 - [ ] `npm run naikaku -- doctor --json` 保存本机依赖快照。
 - [ ] 复核 [docs/architecture.md](./architecture.md)、[docs/gateway.md](./gateway.md)、[docs/security-sandbox.md](./security-sandbox.md)。
 - [ ] 决定本次工作是 UI、Provider、runner、部署还是文档，并只改对应模块。

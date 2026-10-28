@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { gatewayBaseUrl } from "./gatewayClient";
+import {
+  GatewayConnectionError,
+  gatewayBaseUrl,
+  getEngineeringRunnerReadinessViaGateway,
+  isGatewayConnectionError,
+} from "./gatewayClient";
 
 describe("gateway client runtime configuration", () => {
   afterEach(() => {
@@ -20,5 +25,18 @@ describe("gateway client runtime configuration", () => {
     vi.stubGlobal("window", {});
 
     expect(gatewayBaseUrl()).toBe("http://127.0.0.1:8787");
+  });
+
+  it("turns an unreachable local runner gateway into an actionable connection error", async () => {
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    const error = await getEngineeringRunnerReadinessViaGateway().catch(
+      (reason: unknown) => reason,
+    );
+
+    expect(error).toBeInstanceOf(GatewayConnectionError);
+    expect(isGatewayConnectionError(error)).toBe(true);
+    expect(error).toMatchObject({ gatewayUrl: "http://127.0.0.1:8787" });
   });
 });

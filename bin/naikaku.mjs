@@ -20,7 +20,7 @@ const copy = {
     commands: "主なコマンド",
     firstSteps: "最短の始め方",
     doctor: "本機と local gateway を読むだけで確認します。モデルや Coding CLI は実行しません。",
-    start: "ブラウザの Workbench を起動します。",
+    start: "ブラウザの Workbench と local gateway をまとめて起動します。",
     gateway: "ローカル gateway を起動します。",
     task: "統制された task を準備します。既定では外部 runner を始めません。",
     goal: "自律目標達成エンジン (/goal) を実行し、内閣閣議と実テストを経てコードと証跡を生成します。",
@@ -63,7 +63,7 @@ const copy = {
     commands: "Primary commands",
     firstSteps: "Quick start",
     doctor: "Read local prerequisites and the local gateway only. It never runs a model or Coding CLI.",
-    start: "Start the browser Workbench.",
+    start: "Start the browser Workbench and local gateway together.",
     gateway: "Start the local gateway.",
     task: "Prepare a governed task. It does not start an external runner by default.",
     goal: "Run autonomous goal execution (/goal) with multi-agent cabinet deliberation and verified evidence.",
@@ -106,7 +106,7 @@ const copy = {
     commands: "常用命令",
     firstSteps: "快速开始",
     doctor: "仅检查本机和本地 gateway，不会运行模型或 Coding CLI。",
-    start: "启动浏览器工作台。",
+    start: "一次启动浏览器工作台和本地 gateway。",
     gateway: "启动本地 gateway。",
     task: "准备受治理任务；默认不启动外部 runner。",
     goal: "运行自律目标达成引擎 (/goal)，经内阁多智能体审议、实机测试并生成可信证据。",
@@ -149,7 +149,7 @@ const copy = {
     commands: "常用指令",
     firstSteps: "快速開始",
     doctor: "只檢查本機與 local gateway，不會執行模型或 Coding CLI。",
-    start: "啟動瀏覽器工作台。",
+    start: "一次啟動瀏覽器工作台和 local gateway。",
     gateway: "啟動 local gateway。",
     task: "準備受治理的 task；預設不啟動外部 runner。",
     goal: "執行自律目標達成引擎 (/goal)，經內閣多代理人審議、實機測試並產出可信證據。",
@@ -192,7 +192,7 @@ const copy = {
     commands: "주요 명령",
     firstSteps: "빠른 시작",
     doctor: "로컬 준비 상태와 gateway만 읽습니다. 모델이나 Coding CLI를 실행하지 않습니다.",
-    start: "브라우저 Workbench를 시작합니다.",
+    start: "브라우저 Workbench와 로컬 gateway를 함께 시작합니다.",
     gateway: "로컬 gateway를 시작합니다.",
     task: "관리되는 task를 준비합니다. 기본값으로 외부 runner를 시작하지 않습니다.",
     goal: "자율 목표 달성 엔진 (/goal)을 실행하여 다중 에이전트 내각 심의 및 검증된 증거를 생성합니다.",
@@ -254,7 +254,7 @@ async function main() {
       return;
     case "start":
     case "dev":
-      await runLocalBinary("vite", args);
+      await runNode("scripts/dev-local.mjs", args);
       return;
     case "gateway":
       await runTsx("server/gateway.ts", args);
@@ -376,9 +376,10 @@ function printDoctor(report, locale) {
   }
   printSection(text.next);
   if (report.gateway.status !== "ready") {
-    printCommand("naikaku gateway", text.nextGateway);
+    printCommand("naikaku start", text.start);
+  } else {
+    printCommand("naikaku start", text.nextWorkbench);
   }
-  printCommand("naikaku start", text.nextWorkbench);
   printCommand("naikaku task \"...\"", text.nextTask);
   printNotice(text.doctorBoundary);
 }
@@ -561,6 +562,10 @@ function tone(value, kind) {
 
 async function runTsx(script, commandArgs) {
   await runLocalBinary("tsx", [script, ...commandArgs]);
+}
+
+async function runNode(script, commandArgs) {
+  await runProcess(process.execPath, [script, ...commandArgs]);
 }
 
 async function runLocalBinary(binary, commandArgs) {

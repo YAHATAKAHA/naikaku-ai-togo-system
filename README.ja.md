@@ -73,6 +73,8 @@ npm ci
 npm run dev
 ```
 
+`npm run dev` はブラウザの Workbench と local gateway をまとめて起動します。Vite が表示した URL を開き、タスクを書いてから **本機の Coding CLI を使う** を選ぶと、本機で認証済みの runner を確認できます。ブラウザの Workbench を起動せず gateway だけが必要な場合は、`npm run gateway` を使います。
+
 ### Naikaku CLI
 
 このリポジトリには、Naikaku 自身の `naikaku` コマンドも含まれます。まずは npm 経由で使え、必要ならローカル shell に link できます。
@@ -118,12 +120,6 @@ Naikaku は、日本企業の現場が最も重視する「機密情報・個人
 - **SHA-256 改竄防止セッション受領書**: 監査・法務部門に提出可能な暗号学的実行エビデンス（`receipt.json`）を自動出力。
 
 詳細なセキュリティ設計と検証手順については [情報漏洩防止（DLP）アーキテクチャ解説書](./docs/information-leak-prevention.ja.md) をご覧ください。
-
-ローカル API とランナーゲートウェイ機能を使う場合は、別のターミナルで起動します。
-
-```bash
-npm run gateway
-```
 
 このリポジトリには API キー、runner token、ホスト済み認証情報は含めません。`.env.example` は空のプレースホルダーです。live provider や認証付き runner を使う利用者が、自分のローカル shell、`.env`、ローカル vault、またはデプロイ環境に値を設定します。
 

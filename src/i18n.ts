@@ -705,6 +705,10 @@ export interface LocalCodingCliCopy {
   refresh: string;
   checking: string;
   idle: string;
+  gatewayUnavailableStatus: string;
+  gatewayUnavailableTitle: string;
+  gatewayUnavailableBody: string;
+  gatewayStartCommand: string;
   status: (status: string) => string;
   detected: string;
   missing: string;
@@ -1178,6 +1182,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       refresh: "本機を確認",
       checking: "本機の CLI を確認中...",
       idle: "確認して使う CLI を選びます。",
+      gatewayUnavailableStatus: "作業エンジンに接続できません。",
+      gatewayUnavailableTitle: "作業エンジンに接続できません",
+      gatewayUnavailableBody: "このリポジトリを本機で動かす場合は、ターミナルで次を実行してからもう一度確認します。remote gateway を設定している場合は、その接続先を確認してください。",
+      gatewayStartCommand: "npm run dev",
       status: (status) =>
         ({
           ready: "利用可能",
@@ -1916,6 +1924,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       refresh: "Check this Mac",
       checking: "Checking local CLIs...",
       idle: "Check this Mac, then choose a CLI.",
+      gatewayUnavailableStatus: "The work engine cannot be reached.",
+      gatewayUnavailableTitle: "The work engine cannot be reached",
+      gatewayUnavailableBody: "When running this repository locally, run this in its terminal and check again. If you configured a remote gateway, check that connection instead.",
+      gatewayStartCommand: "npm run dev",
       status: (status) =>
         ({
           ready: "available",
@@ -2649,6 +2661,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       refresh: "检查本机",
       checking: "正在检查本机 CLI...",
       idle: "先检查本机，再选择 CLI。",
+      gatewayUnavailableStatus: "无法连接工作引擎。",
+      gatewayUnavailableTitle: "无法连接工作引擎",
+      gatewayUnavailableBody: "若在本机运行此仓库，请在终端执行下面命令后再次检查。若配置的是远程 gateway，请检查其连接地址。",
+      gatewayStartCommand: "npm run dev",
       status: (status) =>
         ({
           ready: "可用",
@@ -3376,6 +3392,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       refresh: "檢查本機",
       checking: "正在檢查本機 CLI...",
       idle: "先檢查本機，再選擇 CLI。",
+      gatewayUnavailableStatus: "無法連線至工作引擎。",
+      gatewayUnavailableTitle: "無法連線至工作引擎",
+      gatewayUnavailableBody: "若在本機執行此儲存庫，請在終端執行下列指令後再次檢查。若設定的是遠端 gateway，請檢查其連線位址。",
+      gatewayStartCommand: "npm run dev",
       status: (status) =>
         ({
           ready: "可用",
@@ -4106,6 +4126,10 @@ const copies: Record<SupportedLocale, AppCopy> = {
       refresh: "이 Mac 확인",
       checking: "로컬 CLI 확인 중...",
       idle: "이 Mac을 확인한 뒤 CLI를 선택하세요.",
+      gatewayUnavailableStatus: "작업 엔진에 연결할 수 없습니다.",
+      gatewayUnavailableTitle: "작업 엔진에 연결할 수 없습니다",
+      gatewayUnavailableBody: "이 저장소를 로컬에서 실행한다면 터미널에서 아래 명령을 실행한 후 다시 확인하세요. 원격 gateway를 설정했다면 해당 연결을 확인하세요.",
+      gatewayStartCommand: "npm run dev",
       status: (status) =>
         ({
           ready: "사용 가능",

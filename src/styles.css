@@ -469,6 +469,52 @@ a.secondary-button {
   line-height: 1.45;
 }
 
+.local-coding-cli-recovery {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  margin-top: 18px;
+  border-top: 1px solid rgba(184, 128, 31, 0.3);
+  border-bottom: 1px solid rgba(184, 128, 31, 0.3);
+  background: #fffaf0;
+  padding: 13px 0;
+}
+
+.local-coding-cli-recovery > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #a56416;
+}
+
+.local-coding-cli-recovery > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.local-coding-cli-recovery strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.local-coding-cli-recovery p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.local-coding-cli-recovery code {
+  width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(184, 128, 31, 0.24);
+  background: #fff;
+  color: var(--ink);
+  padding: 4px 7px;
+  font-size: 12px;
+}
+
 .local-coding-cli-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

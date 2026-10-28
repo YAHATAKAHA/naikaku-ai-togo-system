@@ -90,6 +90,22 @@ export interface GatewayHealth {
   timestamp: string;
 }
 
+export class GatewayConnectionError extends Error {
+  readonly gatewayUrl: string;
+
+  constructor(gatewayUrl: string) {
+    super(`Naikaku gateway is unavailable at ${gatewayUrl}.`);
+    this.name = "GatewayConnectionError";
+    this.gatewayUrl = gatewayUrl;
+  }
+}
+
+export function isGatewayConnectionError(
+  error: unknown,
+): error is GatewayConnectionError {
+  return error instanceof GatewayConnectionError;
+}
+
 export type EngineeringAutoWorkGatewayPreset = string;
 
 export interface EngineeringAutoWorkGatewayRequest {
@@ -1264,9 +1280,10 @@ export async function runEngineeringGuidedViaGateway(
 }
 
 export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSignal) {
-  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-readiness`, {
-    signal
-  });
+  const response = await fetchEngineeringRunnerGateway(
+    "/v1/engineering/runner-readiness",
+    { signal },
+  );
 
   if (!response.ok) {
     throw new Error(await gatewayErrorMessage(response, "Gateway engineering runner readiness failed"));
@@ -1276,9 +1293,10 @@ export async function getEngineeringRunnerReadinessViaGateway(signal?: AbortSign
 }
 
 export async function getEngineeringRunnerPresetsViaGateway(signal?: AbortSignal) {
-  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-presets`, {
-    signal
-  });
+  const response = await fetchEngineeringRunnerGateway(
+    "/v1/engineering/runner-presets",
+    { signal },
+  );
 
   if (!response.ok) {
     throw new Error(await gatewayErrorMessage(response, "Gateway engineering runner presets failed"));
@@ -1291,14 +1309,17 @@ export async function enableEngineeringRunnerPresetViaGateway(
   templateId: string,
   signal?: AbortSignal
 ) {
-  const response = await fetch(`${gatewayBaseUrl()}/v1/engineering/runner-presets/enable`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
+  const response = await fetchEngineeringRunnerGateway(
+    "/v1/engineering/runner-presets/enable",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ templateId }),
+      signal
     },
-    body: JSON.stringify({ templateId }),
-    signal
-  });
+  );
 
   if (!response.ok) {
     throw new Error(await gatewayErrorMessage(response, "Gateway runner preset enable failed"));
@@ -1314,4 +1335,13 @@ export async function checkGatewayHealth() {
   }
 
   return response.json() as Promise<GatewayHealth>;
+}
+
+async function fetchEngineeringRunnerGateway(path: string, init?: RequestInit) {
+  const baseUrl = gatewayBaseUrl();
+  try {
+    return await fetch(`${baseUrl}${path}`, init);
+  } catch {
+    throw new GatewayConnectionError(baseUrl);
+  }
 }

@@ -17,7 +17,9 @@
     "naikaku": "./bin/naikaku.mjs"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node ./scripts/dev-local.mjs",
+    "dev:web": "vite",
+    "start": "node ./bin/naikaku.mjs start",
     "gateway": "tsx server/gateway.ts",
     "naikaku": "node ./bin/naikaku.mjs",
     "naikaku:doctor": "node ./bin/naikaku.mjs doctor",

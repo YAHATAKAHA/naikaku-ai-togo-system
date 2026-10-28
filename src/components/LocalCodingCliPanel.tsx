@@ -24,6 +24,7 @@ interface LocalCodingCliPanelProps {
     status: "idle" | "loading" | "ready" | "error";
     message: string;
     report: EngineeringRunnerReadinessReport | null;
+    gatewayUnavailable: boolean;
   };
   runnerPresetTemplates: EngineeringRunnerPresetTemplate[];
   runnerPresetEnableState: {
@@ -116,86 +117,99 @@ export function LocalCodingCliPanel({
         {runnerReadinessState.message || copy.idle}
       </p>
 
-      <div className="local-coding-cli-list" aria-live="polite">
-        {templates.map((template) => {
-          const readiness = readinessItems.find(
-            (item) => item.adapterId === template.adapterId,
-          );
-          const detected = Boolean(readiness?.detectedCommands.length);
-          const active = selectedPreset === template.id;
-          const status = readiness?.status || "missing";
+      {runnerReadinessState.gatewayUnavailable ? (
+        <aside className="local-coding-cli-recovery" role="alert">
+          <CircleAlert size={18} />
+          <div>
+            <strong>{copy.gatewayUnavailableTitle}</strong>
+            <p>{copy.gatewayUnavailableBody}</p>
+            <code>{copy.gatewayStartCommand}</code>
+          </div>
+        </aside>
+      ) : (
+        <>
+          <div className="local-coding-cli-list" aria-live="polite">
+            {templates.map((template) => {
+              const readiness = readinessItems.find(
+                (item) => item.adapterId === template.adapterId,
+              );
+              const detected = Boolean(readiness?.detectedCommands.length);
+              const active = selectedPreset === template.id;
+              const status = readiness?.status || "missing";
 
-          return (
-            <article
-              className="local-coding-cli-option"
-              data-active={active}
-              data-status={status}
-              key={template.id}
+              return (
+                <article
+                  className="local-coding-cli-option"
+                  data-active={active}
+                  data-status={status}
+                  key={template.id}
+                >
+                  <div className="local-coding-cli-option-heading">
+                    <span className="local-coding-cli-icon">
+                      <Terminal size={17} />
+                    </span>
+                    <div>
+                      <strong>{template.label}</strong>
+                      <small>{copy.status(status)}</small>
+                    </div>
+                  </div>
+                  <p>{detected ? copy.detected : copy.missing}</p>
+                  {template.id === "qwen-code-local" && !detected ? (
+                    <em>{copy.qwenSetup}</em>
+                  ) : null}
+                  <div className="local-coding-cli-option-actions">
+                    {template.enabled ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelect(template.id)}
+                        disabled={!detected || active}
+                      >
+                        {active ? <CheckCircle2 size={15} /> : <Terminal size={15} />}
+                        {active ? copy.enabled : copy.select}
+                      </button>
+                    ) : detected ? (
+                      <button
+                        type="button"
+                        onClick={() => onEnable(template.id)}
+                        disabled={runnerPresetEnableState.status === "loading"}
+                      >
+                        <Wrench size={15} /> {copy.enable}
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="local-coding-cli-start">
+            {!mission.trim() ? <p>{copy.taskRequired}</p> : null}
+            <label>
+              <input
+                type="checkbox"
+                checked={adapterApproved}
+                disabled={!selectedRunnable || autoWorkState.status === "running"}
+                onChange={(event) => onApprovalChange(event.target.checked)}
+              />
+              <span>{copy.approval}</span>
+            </label>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={onRun}
+              disabled={!canRun}
             >
-              <div className="local-coding-cli-option-heading">
-                <span className="local-coding-cli-icon">
-                  <Terminal size={17} />
-                </span>
-                <div>
-                  <strong>{template.label}</strong>
-                  <small>{copy.status(status)}</small>
-                </div>
-              </div>
-              <p>{detected ? copy.detected : copy.missing}</p>
-              {template.id === "qwen-code-local" && !detected ? (
-                <em>{copy.qwenSetup}</em>
-              ) : null}
-              <div className="local-coding-cli-option-actions">
-                {template.enabled ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelect(template.id)}
-                    disabled={!detected || active}
-                  >
-                    {active ? <CheckCircle2 size={15} /> : <Terminal size={15} />}
-                    {active ? copy.enabled : copy.select}
-                  </button>
-                ) : detected ? (
-                  <button
-                    type="button"
-                    onClick={() => onEnable(template.id)}
-                    disabled={runnerPresetEnableState.status === "loading"}
-                  >
-                    <Wrench size={15} /> {copy.enable}
-                  </button>
-                ) : null}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="local-coding-cli-start">
-        {!mission.trim() ? <p>{copy.taskRequired}</p> : null}
-        <label>
-          <input
-            type="checkbox"
-            checked={adapterApproved}
-            disabled={!selectedRunnable || autoWorkState.status === "running"}
-            onChange={(event) => onApprovalChange(event.target.checked)}
-          />
-          <span>{copy.approval}</span>
-        </label>
-        <button
-          className="primary-button"
-          type="button"
-          onClick={onRun}
-          disabled={!canRun}
-        >
-          <Play size={16} />
-          {autoWorkState.status === "running" ? copy.running : copy.run}
-        </button>
-        {autoWorkState.message ? (
-          <output data-status={autoWorkState.status}>
-            <strong>{copy.result}</strong> {autoWorkState.message}
-          </output>
-        ) : null}
-      </div>
+              <Play size={16} />
+              {autoWorkState.status === "running" ? copy.running : copy.run}
+            </button>
+            {autoWorkState.message ? (
+              <output data-status={autoWorkState.status}>
+                <strong>{copy.result}</strong> {autoWorkState.message}
+              </output>
+            ) : null}
+          </div>
+        </>
+      )}
 
       <button
         className="local-coding-cli-details"
