@@ -61,6 +61,30 @@ Important variables:
 
 Do not put real secrets into `.env.example`. Use an ignored `.env`, CI secrets, a vault, or the hosting provider's secret store.
 
+### Hugging Face Static Demo
+
+For a public product walkthrough, prepare the browser-only demo bundle:
+
+```bash
+npm ci
+npm run huggingface:prepare
+```
+
+This creates `output/huggingface-space/`. Create a **Static** Space in Hugging Face, then push that directory as the Space repository root:
+
+```bash
+cd output/huggingface-space
+git init -b main
+git add .
+git commit -m "Publish Naikaku browser demo"
+git remote add origin https://huggingface.co/spaces/<account>/naikaku-ai-togo-demo
+git push -u origin main
+```
+
+The generated Space uses `sdk: static` and serves only prebuilt frontend files. It is deliberately not a hosted Naikaku gateway: it accepts no API keys, makes no provider request, does not call Codex/Claude/Qwen, does not run code, and does not persist visitor data. The full local Workbench continues to run on the operator's machine with their own provider configuration and scoped runners.
+
+Hugging Face currently documents Static Spaces as free, while Docker and Gradio Spaces require compute-plan eligibility. Check the current Hugging Face plan before creating a compute-backed Space.
+
 ## Production Boundary
 
 The included Compose file is a self-hosted preview baseline. For a production commercial deployment:

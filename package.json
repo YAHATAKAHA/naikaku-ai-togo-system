@@ -82,6 +82,8 @@
     "ci:open-source": "npm run public-scope:check && npm run deployment:check && npm run strategy:iterate && npm run open-source:mvp-check && npm run test && git diff --check",
     "release:mac-dev-package": "node scripts/package-mac-dev-preview.mjs",
     "runtime-config": "node scripts/write-runtime-config.mjs",
+    "huggingface:build": "vite build --config vite.huggingface.config.ts",
+    "huggingface:prepare": "node scripts/prepare-huggingface-space.mjs",
     "preview:self-host": "npm run build && npm run runtime-config && npm run preview -- --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "test": "vitest run",

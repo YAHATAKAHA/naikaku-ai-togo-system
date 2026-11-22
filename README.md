@@ -1,7 +1,7 @@
 # Naikaku AI Togo System
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](./LICENSE)
-[![Tests: 320 passed](https://img.shields.io/badge/Tests-320%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
+[![Tests: 329 passed](https://img.shields.io/badge/Tests-329%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
 [![TypeScript: v5](https://img.shields.io/badge/TypeScript-v5-3178c6.svg)](https://www.typescriptlang.org/)
 [![Local LLM: Ollama](https://img.shields.io/badge/Local%20LLM-Ollama%20Ready-black.svg)](https://ollama.com/)
 [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-purple.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system/discussions)
@@ -215,6 +215,16 @@ docker compose up --build
 ```
 
 The frontend reads `/naikaku-config.js` at runtime, so a deployment can point the browser to a different gateway without changing source code. See [docs/deployment.md](./docs/deployment.md) and [docs/deployment.ja.md](./docs/deployment.ja.md).
+
+### Hugging Face Browser Demo
+
+The repository can prepare a browser-only Hugging Face Static Space bundle:
+
+```bash
+npm run huggingface:prepare
+```
+
+The public demo shows the cabinet workflow without accepting secrets, calling providers, running code, or accessing a visitor's computer. It is intentionally separate from the local Workbench and its local Coding CLI integrations. See [the deployment guide](./docs/deployment.md#hugging-face-static-demo).
 
 ## Documentation
 

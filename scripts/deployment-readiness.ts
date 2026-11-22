@@ -47,6 +47,7 @@ function requiredFileCheck(): ReadinessCheck {
     ".env.example",
     "public/naikaku-config.js",
     "scripts/write-runtime-config.mjs",
+    "scripts/prepare-huggingface-space.mjs",
     "CHANGELOG.md",
     "README.md",
     "README.ja.md",
@@ -78,6 +79,7 @@ function packageScriptCheck(): ReadinessCheck {
     "gateway",
     "preview",
     "runtime-config",
+    "huggingface:prepare",
     "preview:self-host",
     "release:mac-dev-package",
     "public-scope:check",
@@ -240,8 +242,10 @@ function documentationCheck(): ReadinessCheck {
   const japanese = read("docs/deployment.ja.md");
   const ok =
     english.includes("Docker Compose") &&
+    english.includes("Hugging Face") &&
     english.includes("commercial license") &&
     japanese.includes("Docker Compose") &&
+    japanese.includes("Hugging Face") &&
     japanese.includes("商用") &&
     read("docs/commercial-deployment-checklist.md").includes("Commercial Deployment Checklist") &&
     read("docs/strategy-iterations.md").includes("Strategy Iterations") &&

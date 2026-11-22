@@ -61,6 +61,30 @@ docker compose up --build
 
 `.env.example` に本物の secret を入れないでください。実際の値は、Git に入らない `.env`、CI secrets、vault、hosting provider の secret store に置きます。
 
+### Hugging Face Static Demo
+
+公開向けの製品体験用には、ブラウザだけで動く demo bundle を作成します。
+
+```bash
+npm ci
+npm run huggingface:prepare
+```
+
+`output/huggingface-space/` が生成されます。Hugging Face で **Static** Space を作成し、その directory を Space repository の root として push してください。
+
+```bash
+cd output/huggingface-space
+git init -b main
+git add .
+git commit -m "Publish Naikaku browser demo"
+git remote add origin https://huggingface.co/spaces/<account>/naikaku-ai-togo-demo
+git push -u origin main
+```
+
+生成される Space は `sdk: static` を使い、build 済みの frontend だけを配信します。これは hosted Naikaku gateway ではありません。API key を受け取らず、provider request、Codex / Claude / Qwen の呼び出し、コード実行、visitor data の保存を行いません。実際の provider 設定と scoped runner を使う完全な Workbench は、利用者のローカル環境で動かし続けます。
+
+Hugging Face は現時点で Static Space を無料、Docker / Gradio Space を compute plan の対象として案内しています。compute を使う Space を作る前に、最新の plan を確認してください。
+
 ## Production Boundary
 
 同梱の Compose ファイルはセルフホスト preview の基準です。商用 production では次の前提が必要です。

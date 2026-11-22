@@ -1,7 +1,7 @@
 # Naikaku AI Togo System
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](./LICENSE)
-[![Tests: 320 passed](https://img.shields.io/badge/Tests-320%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
+[![Tests: 329 passed](https://img.shields.io/badge/Tests-329%20passed-success.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system)
 [![TypeScript: v5](https://img.shields.io/badge/TypeScript-v5-3178c6.svg)](https://www.typescriptlang.org/)
 [![Local LLM: Ollama](https://img.shields.io/badge/Local%20LLM-Ollama%20Ready-black.svg)](https://ollama.com/)
 [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-purple.svg)](https://github.com/YAHATAKAHA/naikaku-ai-togo-system/discussions)
@@ -217,6 +217,16 @@ docker compose up --build
 ```
 
 フロントエンドは実行時に `/naikaku-config.js` を読みます。そのため、ソースコードを変更せずに deployment 側で gateway URL を差し替えられます。[docs/deployment.ja.md](./docs/deployment.ja.md) と [docs/deployment.md](./docs/deployment.md) を確認してください。
+
+### Hugging Face Browser Demo
+
+ブラウザだけで動く Hugging Face Static Space 用 bundle を作成できます。
+
+```bash
+npm run huggingface:prepare
+```
+
+公開 demo は内閣制ワークフローを示しますが、secret を受け取らず、provider を呼び出さず、コードを実行せず、訪問者のコンピュータにもアクセスしません。ローカル Workbench と local Coding CLI 連携とは意図的に分離されています。[デプロイガイド](./docs/deployment.ja.md#hugging-face-static-demo) を確認してください。
 
 ## ドキュメント
 
