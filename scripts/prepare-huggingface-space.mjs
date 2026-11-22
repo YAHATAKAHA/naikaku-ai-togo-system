@@ -27,7 +27,7 @@ title: Naikaku AI Togo Demo
 sdk: static
 app_file: index.html
 fullWidth: true
-short_description: Browser-only demonstration of a governed multi-agent cabinet workflow
+short_description: Governed multi-agent cabinet workflow demo
 ---
 
 # Naikaku AI Togo Demo

@@ -41,6 +41,7 @@ Naikaku AI Togo System は、合同会社EMYSTIが開発・保守しています
 
 - 製品サイト: <https://naikaku.emysti.net/>
 - 日本語ページ: <https://naikaku.emysti.net/ja/>
+- ブラウザデモ: <https://huggingface.co/spaces/EMYSTI/naikaku-ai-togo-demo>
 - 会社サイト: <https://www.emysti.net>
 - GitHub Releases: <https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases>
 

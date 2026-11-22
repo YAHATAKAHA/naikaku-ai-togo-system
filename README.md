@@ -41,6 +41,7 @@ Project links:
 
 - Product site: <https://naikaku.emysti.net/>
 - Japanese product page: <https://naikaku.emysti.net/ja/>
+- Browser demo: <https://huggingface.co/spaces/EMYSTI/naikaku-ai-togo-demo>
 - Company site: <https://www.emysti.net>
 - GitHub releases: <https://github.com/YAHATAKAHA/naikaku-ai-togo-system/releases>
 
