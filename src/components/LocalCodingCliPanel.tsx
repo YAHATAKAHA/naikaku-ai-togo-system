@@ -17,7 +17,10 @@ import type { LocalCodingCliCopy } from "../i18n";
 
 interface LocalCodingCliPanelProps {
   copy: LocalCodingCliCopy;
+  taskLabel: string;
+  taskPlaceholder: string;
   mission: string;
+  worktree: string;
   selectedPreset: EngineeringAutoWorkGatewayPreset;
   adapterApproved: boolean;
   runnerReadinessState: {
@@ -37,6 +40,8 @@ interface LocalCodingCliPanelProps {
     result: EngineeringAutoWorkGatewayResponse | null;
   };
   onRefresh: () => void;
+  onMissionChange: (mission: string) => void;
+  onWorktreeChange: (worktree: string) => void;
   onEnable: (templateId: string) => void;
   onSelect: (preset: EngineeringAutoWorkGatewayPreset) => void;
   onApprovalChange: (approved: boolean) => void;
@@ -52,7 +57,10 @@ const localTemplateIds = [
 
 export function LocalCodingCliPanel({
   copy,
+  taskLabel,
+  taskPlaceholder,
   mission,
+  worktree,
   selectedPreset,
   adapterApproved,
   runnerReadinessState,
@@ -60,6 +68,8 @@ export function LocalCodingCliPanel({
   runnerPresetEnableState,
   autoWorkState,
   onRefresh,
+  onMissionChange,
+  onWorktreeChange,
   onEnable,
   onSelect,
   onApprovalChange,
@@ -77,11 +87,13 @@ export function LocalCodingCliPanel({
     : undefined;
   const selectedDetected = Boolean(selectedReadiness?.detectedCommands.length);
   const selectedRunnable = Boolean(selectedTemplate?.enabled && selectedDetected);
+  const running = autoWorkState.status === "running";
   const canRun =
     Boolean(mission.trim()) &&
+    Boolean(worktree.trim()) &&
     selectedRunnable &&
     adapterApproved &&
-    autoWorkState.status !== "running";
+    !running;
 
   return (
     <section className="local-coding-cli-panel">
@@ -95,7 +107,7 @@ export function LocalCodingCliPanel({
           className="secondary-button"
           type="button"
           onClick={onRefresh}
-          disabled={runnerReadinessState.status === "loading"}
+          disabled={running || runnerReadinessState.status === "loading"}
         >
           <RefreshCcw size={16} />
           {runnerReadinessState.status === "loading"
@@ -103,6 +115,28 @@ export function LocalCodingCliPanel({
             : copy.refresh}
         </button>
       </header>
+
+      <div className="local-coding-cli-fields">
+        <label htmlFor="local-cli-mission">{taskLabel}</label>
+        <textarea
+          id="local-cli-mission"
+          value={mission}
+          placeholder={taskPlaceholder}
+          rows={3}
+          disabled={running}
+          onChange={(event) => onMissionChange(event.target.value)}
+        />
+        <label htmlFor="local-cli-worktree">{copy.worktreeLabel}</label>
+        <input
+          id="local-cli-worktree"
+          value={worktree}
+          aria-describedby="local-cli-worktree-hint"
+          disabled={running}
+          spellCheck={false}
+          onChange={(event) => onWorktreeChange(event.target.value)}
+        />
+        <small id="local-cli-worktree-hint">{copy.worktreeHint}</small>
+      </div>
 
       <div className="local-coding-cli-boundaries">
         <span>
@@ -162,7 +196,7 @@ export function LocalCodingCliPanel({
                       <button
                         type="button"
                         onClick={() => onSelect(template.id)}
-                        disabled={!detected || active}
+                        disabled={running || !detected || active}
                       >
                         {active ? <CheckCircle2 size={15} /> : <Terminal size={15} />}
                         {active ? copy.enabled : copy.select}
@@ -171,7 +205,7 @@ export function LocalCodingCliPanel({
                       <button
                         type="button"
                         onClick={() => onEnable(template.id)}
-                        disabled={runnerPresetEnableState.status === "loading"}
+                        disabled={running || runnerPresetEnableState.status === "loading"}
                       >
                         <Wrench size={15} /> {copy.enable}
                       </button>
@@ -183,12 +217,14 @@ export function LocalCodingCliPanel({
           </div>
 
           <div className="local-coding-cli-start">
-            {!mission.trim() ? <p>{copy.taskRequired}</p> : null}
+            {runnerPresetEnableState.status === "error" ? (
+              <p role="alert">{runnerPresetEnableState.message}</p>
+            ) : null}
             <label>
               <input
                 type="checkbox"
                 checked={adapterApproved}
-                disabled={!selectedRunnable || autoWorkState.status === "running"}
+                disabled={!selectedRunnable || !mission.trim() || !worktree.trim() || running}
                 onChange={(event) => onApprovalChange(event.target.checked)}
               />
               <span>{copy.approval}</span>
@@ -200,11 +236,14 @@ export function LocalCodingCliPanel({
               disabled={!canRun}
             >
               <Play size={16} />
-              {autoWorkState.status === "running" ? copy.running : copy.run}
+              {running ? copy.running : copy.run}
             </button>
             {autoWorkState.message ? (
-              <output data-status={autoWorkState.status}>
+              <output data-status={autoWorkState.status} role="status">
                 <strong>{copy.result}</strong> {autoWorkState.message}
+                {autoWorkState.result?.ok ? (
+                  <code>{autoWorkState.result.summaryPath}</code>
+                ) : null}
               </output>
             ) : null}
           </div>

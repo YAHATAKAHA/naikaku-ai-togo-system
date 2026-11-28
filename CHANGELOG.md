@@ -2,7 +2,13 @@
 
 All notable public-source changes are tracked here. This project uses a source-available noncommercial license with separate commercial licensing controlled by 合同会社EMYSTI.
 
-## Unreleased
+## 0.1.2 - 2026-11-29
+
+- The quick start now distinguishes local coding from a plan-only preview.
+- Edit the task and working directory on the local Coding CLI page, choose a runner, and inspect the resulting summary without opening advanced settings. Changing the task, directory, or CLI clears the previous runner confirmation.
+- The updated entry flow is available in Japanese, English, Simplified Chinese, Traditional Chinese, and Korean. License terms and runner policies are unchanged.
+
+## Earlier changes since 0.1.0
 
 ### Added
 

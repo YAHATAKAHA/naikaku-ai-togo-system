@@ -65,8 +65,11 @@ export function QuickStartPanel({
         />
         <p>{copy.missionHelp}</p>
         <div className="quick-start-actions">
+          <button className="primary-button" type="button" onClick={onOpenEngineering}>
+            <Terminal size={16} /> {copy.localCli}
+          </button>
           <button
-            className="primary-button"
+            className="secondary-button"
             type="button"
             disabled={!mission.trim() || isRunning}
             onClick={onRunDry}
@@ -79,13 +82,6 @@ export function QuickStartPanel({
             onClick={onOpenProviders}
           >
             <KeyRound size={16} /> {copy.connectApi}
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={onOpenEngineering}
-          >
-            <Terminal size={16} /> {copy.localCli}
           </button>
         </div>
       </div>

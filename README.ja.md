@@ -74,7 +74,7 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` はブラウザの Workbench と local gateway をまとめて起動します。Vite が表示した URL を開き、タスクを書いてから **本機の Coding CLI を使う** を選ぶと、本機で認証済みの runner を確認できます。ブラウザの Workbench を起動せず gateway だけが必要な場合は、`npm run gateway` を使います。
+`npm run dev` はブラウザの Workbench とローカルゲートウェイをまとめて起動します。Vite が表示した URL を開き、**本機の Coding CLI を使う** を選びます。同じ画面で依頼を書き、作業ディレクトリを確認して、本機で認証済みの CLI を選べます。**計画だけ試す** では実装を実行しません。ゲートウェイだけを起動するには `npm run gateway` を使います。
 
 ### Naikaku CLI
 
@@ -154,8 +154,8 @@ npm run open-source:mvp-check
 アーカイブから起動:
 
 ```bash
-tar -xzf naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz
-cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
+tar -xzf naikaku-ai-togo-system-0.1.2-mac-dev-preview.tar.gz
+cd naikaku-ai-togo-system-0.1.2-mac-dev-preview
 npm ci
 npm run dev
 ```

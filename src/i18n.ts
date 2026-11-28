@@ -717,7 +717,8 @@ export interface LocalCodingCliCopy {
   select: string;
   qwenSetup: string;
   approval: string;
-  taskRequired: string;
+  worktreeLabel: string;
+  worktreeHint: string;
   run: string;
   running: string;
   result: string;
@@ -1152,12 +1153,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
     quickStart: {
       kicker: "かんたん開始",
       title: "内閣に仕事を任せる",
-      subtitle: "依頼を書いて、安全な試運転から始めます。",
+      subtitle: "実際の開発は本機の CLI で。まず試すだけなら、計画の試運転を選べます。",
       missionLabel: "やってほしいこと",
       missionPlaceholder:
         "例: このリポジトリのログイン画面を修正し、テストとビルドを実行して根拠をまとめて。",
       missionHelp: "目的、対象、変更してよい範囲、確認したいことを書きます。",
-      runDry: "安全に試す",
+      runDry: "計画だけ試す",
       running: "内閣が確認中...",
       connectApi: "自分の API をつなぐ",
       localCli: "本機の Coding CLI を使う",
@@ -1201,7 +1202,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       select: "この CLI を選ぶ",
       qwenSetup: "Qwen Code を導入後、qwen -> /auth -> Alibaba ModelStudio -> Coding Plan を選択します。",
       approval: "今回のタスクに限り、現在のリポジトリ内でこの CLI を実行することを承認する",
-      taskRequired: "先に、かんたん開始でタスクを書いてください。",
+      worktreeLabel: "作業ディレクトリ",
+      worktreeHint: "「.」はゲートウェイの起動ディレクトリ。サブディレクトリは相対パスで指定します。",
       run: "監督付きで開始",
       running: "CLI を起動中...",
       result: "実行結果",
@@ -1890,13 +1892,13 @@ const copies: Record<SupportedLocale, AppCopy> = {
     quickStart: {
       kicker: "Quick start",
       title: "Give the cabinet a job",
-      subtitle: "Write the request, then begin with a safe trial.",
+      subtitle: "Use a local CLI for code changes, or preview the plan without running it.",
       missionLabel: "What should the cabinet do?",
       missionPlaceholder:
         "Example: Fix the login screen in this repository, run tests and a build, then summarize the evidence.",
       missionHelp:
         "Include the goal, target, allowed scope, and what you want checked.",
-      runDry: "Try safely",
+      runDry: "Preview the plan",
       running: "Cabinet is reviewing...",
       connectApi: "Connect my API",
       localCli: "Use local Coding CLI",
@@ -1943,7 +1945,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       select: "Use this CLI",
       qwenSetup: "After installing Qwen Code, run qwen -> /auth -> Alibaba ModelStudio -> Coding Plan.",
       approval: "Approve this CLI only for the current task inside the current repository",
-      taskRequired: "Write a task in Quick start first.",
+      worktreeLabel: "Working directory",
+      worktreeHint: "Use . for the gateway's working directory or a relative path to a subdirectory.",
       run: "Start supervised work",
       running: "Starting CLI...",
       result: "Run result",
@@ -2632,12 +2635,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
     quickStart: {
       kicker: "快速开始",
       title: "交给内阁一项工作",
-      subtitle: "写下任务，从安全试运行开始。",
+      subtitle: "用本机 CLI 实际改代码，也可以只预览计划。",
       missionLabel: "希望内阁做什么？",
       missionPlaceholder:
         "例如：修复此仓库的登录页面，运行测试和构建，并整理证据。",
       missionHelp: "写明目标、对象、允许修改的范围，以及希望确认的事项。",
-      runDry: "安全试运行",
+      runDry: "只预览计划",
       running: "内阁正在审查...",
       connectApi: "连接我的 API",
       localCli: "使用本机 Coding CLI",
@@ -2680,7 +2683,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       select: "选择此 CLI",
       qwenSetup: "安装 Qwen Code 后，运行 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan。",
       approval: "仅批准此 CLI 在当前仓库内处理本次任务",
-      taskRequired: "请先在快速开始中填写任务。",
+      worktreeLabel: "工作目录",
+      worktreeHint: "「.」是网关启动目录。子目录请用相对路径。",
       run: "开始受监督工程",
       running: "正在启动 CLI...",
       result: "执行结果",
@@ -3363,12 +3367,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
     quickStart: {
       kicker: "快速開始",
       title: "交給內閣一項工作",
-      subtitle: "寫下任務，從安全試執行開始。",
+      subtitle: "用本機 CLI 實際修改程式碼，也可以只預覽計畫。",
       missionLabel: "希望內閣做什麼？",
       missionPlaceholder:
         "例如：修正此儲存庫的登入頁面，執行測試與建置，並整理證據。",
       missionHelp: "寫明目標、對象、允許修改的範圍，以及希望確認的事項。",
-      runDry: "安全試執行",
+      runDry: "只預覽計畫",
       running: "內閣正在審查...",
       connectApi: "連接我的 API",
       localCli: "使用本機 Coding CLI",
@@ -3411,7 +3415,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       select: "選擇此 CLI",
       qwenSetup: "安裝 Qwen Code 後，執行 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan。",
       approval: "僅核准此 CLI 在目前儲存庫內處理本次任務",
-      taskRequired: "請先在快速開始中填寫任務。",
+      worktreeLabel: "工作目錄",
+      worktreeHint: "「.」是閘道啟動目錄。子目錄請用相對路徑。",
       run: "開始受監督工程",
       running: "正在啟動 CLI...",
       result: "執行結果",
@@ -4095,12 +4100,12 @@ const copies: Record<SupportedLocale, AppCopy> = {
     quickStart: {
       kicker: "빠른 시작",
       title: "내각에 일을 맡기기",
-      subtitle: "요청을 작성하고 안전한 시험 실행부터 시작합니다.",
+      subtitle: "코드를 수정하려면 로컬 CLI를 사용하고, 실행 없이 계획만 미리 볼 수도 있습니다.",
       missionLabel: "내각이 무엇을 해야 하나요?",
       missionPlaceholder:
         "예: 이 저장소의 로그인 화면을 수정하고, 테스트와 빌드를 실행한 뒤 근거를 정리해 주세요.",
       missionHelp: "목표, 대상, 수정 가능한 범위, 확인할 내용을 작성하세요.",
-      runDry: "안전하게 시험",
+      runDry: "계획 미리 보기",
       running: "내각이 검토 중...",
       connectApi: "내 API 연결",
       localCli: "로컬 Coding CLI 사용",
@@ -4145,7 +4150,8 @@ const copies: Record<SupportedLocale, AppCopy> = {
       select: "이 CLI 선택",
       qwenSetup: "Qwen Code 설치 후 qwen -> /auth -> Alibaba ModelStudio -> Coding Plan을 선택하세요.",
       approval: "현재 저장소 안에서 이번 작업에만 이 CLI 실행을 승인합니다",
-      taskRequired: "먼저 빠른 시작에서 작업을 작성하세요.",
+      worktreeLabel: "작업 디렉터리",
+      worktreeHint: "'.'은 게이트웨이를 시작한 디렉터리입니다. 하위 디렉터리는 상대 경로로 지정하세요.",
       run: "감독 하에 시작",
       running: "CLI 시작 중...",
       result: "실행 결과",

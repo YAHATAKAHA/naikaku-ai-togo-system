@@ -469,6 +469,41 @@ a.secondary-button {
   line-height: 1.45;
 }
 
+.local-coding-cli-fields {
+  display: grid;
+  gap: 7px;
+  margin-block: 18px;
+}
+
+.local-coding-cli-fields label {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.local-coding-cli-fields textarea,
+.local-coding-cli-fields input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.local-coding-cli-fields textarea {
+  resize: vertical;
+  min-height: 90px;
+  margin-bottom: 3px;
+}
+
+.local-coding-cli-fields small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .local-coding-cli-recovery {
   display: flex;
   align-items: start;
@@ -671,6 +706,11 @@ a.secondary-button {
   overflow-wrap: anywhere;
 }
 
+.local-coding-cli-start output code {
+  display: block;
+  margin-top: 4px;
+}
+
 .local-coding-cli-start output strong {
   color: var(--ink);
 }
@@ -697,6 +737,10 @@ a.secondary-button {
   gap: 7px;
   padding: 14px 24px 0;
   background: var(--bg);
+}
+
+.advanced-workspace-nav[hidden] {
+  display: none;
 }
 
 .advanced-workspace-nav button {

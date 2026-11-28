@@ -300,6 +300,8 @@ type AdvancedSection =
   | "engineering"
   | "governance";
 
+const fixtureEngineeringWorktree = "output/engineering-auto-work-ui/fixture-worktree";
+
 function guidedCycleMaxRuns(value: number) {
   return Math.max(
     1,
@@ -589,7 +591,7 @@ export function App() {
   const [engineeringAutoWorkAdapterReady, setEngineeringAutoWorkAdapterReady] =
     useState(false);
   const [engineeringAutoWorkWorktree, setEngineeringAutoWorkWorktree] =
-    useState("output/engineering-auto-work-ui/fixture-worktree");
+    useState(fixtureEngineeringWorktree);
   const [engineeringGuidedCabinetMode, setEngineeringGuidedCabinetMode] =
     useState<EngineeringGuidedCabinetMode>("api-mock");
   const [
@@ -708,6 +710,11 @@ export function App() {
   const activeRoles = workspace.roles.filter((role) => role.enabled);
   const quickStartMission =
     workspace.mission === defaultMission ? "" : workspace.mission;
+  const showLocalCli =
+    workspaceView === "advanced" &&
+    advancedSection === "engineering" &&
+    engineeringView === "cli";
+  const showAdvancedControls = workspaceView === "advanced" && !showLocalCli;
   const showRoleConfiguration =
     advancedSection === "cabinet" ||
     (advancedSection === "engineering" && engineeringView === "details");
@@ -1916,6 +1923,16 @@ export function App() {
 
   function openEngineeringFromQuickStart() {
     openAdvanced("engineering");
+  }
+
+  function updateMission(mission: string) {
+    setWorkspace((current) => ({ ...current, mission }));
+    setEngineeringAutoWorkAdapterReady(false);
+  }
+
+  function updateEngineeringWorktree(worktree: string) {
+    setEngineeringAutoWorkWorktree(worktree);
+    setEngineeringAutoWorkAdapterReady(false);
   }
 
   function persistWorkspace() {
@@ -5293,11 +5310,10 @@ export function App() {
     preset: EngineeringAutoWorkGatewayPreset,
   ) {
     setEngineeringAutoWorkPreset(preset);
+    setEngineeringAutoWorkAdapterReady(false);
     setEngineeringAutoWorkWorktree((current) => {
-      const fixtureWorktree =
-        "output/engineering-auto-work-ui/fixture-worktree";
-      if (preset === "fixture") return fixtureWorktree;
-      if (current === fixtureWorktree) return ".";
+      if (preset === "fixture") return fixtureEngineeringWorktree;
+      if (current === fixtureEngineeringWorktree) return ".";
       return current || ".";
     });
   }
@@ -5376,7 +5392,7 @@ export function App() {
         adapterReady,
         worktree:
           preset === "fixture"
-            ? "output/engineering-auto-work-ui/fixture-worktree"
+            ? fixtureEngineeringWorktree
             : worktreeOverride?.trim() ||
               engineeringAutoWorkWorktree.trim() ||
               ".",
@@ -5445,11 +5461,10 @@ export function App() {
 
   async function runEngineeringFixtureSelfTestFromLaunchpad() {
     updateEngineeringAutoWorkPreset("fixture");
-    setEngineeringAutoWorkAdapterReady(false);
     await runEngineeringAutoWorkFromLaunchpad({
       preset: "fixture",
       adapterReadyOverride: true,
-      worktreeOverride: "output/engineering-auto-work-ui/fixture-worktree",
+      worktreeOverride: fixtureEngineeringWorktree,
       timeoutMs: 60_000,
     });
   }
@@ -5759,7 +5774,6 @@ export function App() {
       setEngineeringRunnerPresetTemplates(result.registry.templates);
       if (result.preset) {
         updateEngineeringAutoWorkPreset(result.preset.id);
-        setEngineeringAutoWorkAdapterReady(false);
       }
 
       setEngineeringRunnerPresetEnableState({
@@ -5812,7 +5826,7 @@ export function App() {
             <span>{copy.brandSubtitle}</span>
           </div>
         </div>
-        {workspaceView === "advanced" ? (
+        {showAdvancedControls ? (
           <nav className="topbar-nav" aria-label="Workspace status">
             <span>
               <Brain size={15} /> {copy.rolesActive(activeRoles.length)}
@@ -5846,14 +5860,16 @@ export function App() {
             </select>
           </label>
           {workspaceView === "advanced" ? (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setWorkspaceView("guided")}
+            >
+              {copy.advancedWorkspace.returnToStart}
+            </button>
+          ) : null}
+          {showAdvancedControls ? (
             <>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => setWorkspaceView("guided")}
-              >
-                {copy.advancedWorkspace.returnToStart}
-              </button>
               <button
                 className="icon-button"
                 type="button"
@@ -5916,7 +5932,7 @@ export function App() {
                 {runState.status === "running" ? copy.running : copy.runCabinet}
               </button>
             </>
-          ) : (
+          ) : workspaceView === "guided" ? (
             <button
               className="secondary-button"
               type="button"
@@ -5924,7 +5940,7 @@ export function App() {
             >
               <SlidersHorizontal size={16} /> {copy.quickStart.advanced}
             </button>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -5936,9 +5952,7 @@ export function App() {
             activeRoles={activeRoles.length}
             run={run}
             runState={runState}
-            onMissionChange={(mission) =>
-              setWorkspace((current) => ({ ...current, mission }))
-            }
+            onMissionChange={updateMission}
             onRunDry={() => void runCabinet("dry-run")}
             onOpenProviders={() => openAdvanced("providers")}
             onOpenEngineering={openEngineeringFromQuickStart}
@@ -5951,6 +5965,7 @@ export function App() {
           <nav
             className="advanced-workspace-nav"
             aria-label={copy.quickStart.advanced}
+            hidden={showLocalCli}
           >
             <button
               type="button"
@@ -6036,10 +6051,18 @@ export function App() {
                 />
               ) : null}
 
-              {advancedSection === "engineering" && engineeringView === "cli" ? (
+              {showLocalCli ? (
                 <LocalCodingCliPanel
                   copy={copy.localCodingCli}
+                  taskLabel={copy.quickStart.missionLabel}
+                  taskPlaceholder={copy.quickStart.missionPlaceholder}
                   mission={quickStartMission}
+                  worktree={
+                    engineeringAutoWorkPreset === "fixture" &&
+                    engineeringAutoWorkWorktree === fixtureEngineeringWorktree
+                      ? "."
+                      : engineeringAutoWorkWorktree
+                  }
                   selectedPreset={engineeringAutoWorkPreset}
                   adapterApproved={engineeringAutoWorkAdapterReady}
                   runnerReadinessState={engineeringRunnerReadinessState}
@@ -6054,9 +6077,14 @@ export function App() {
                       templateId,
                     )
                   }
+                  onMissionChange={updateMission}
+                  onWorktreeChange={updateEngineeringWorktree}
                   onSelect={updateEngineeringAutoWorkPreset}
                   onApprovalChange={setEngineeringAutoWorkAdapterReady}
-                  onRun={() => void runEngineeringAutoWorkFromLaunchpad()}
+                  onRun={() => {
+                    void runEngineeringAutoWorkFromLaunchpad();
+                    setEngineeringAutoWorkAdapterReady(false);
+                  }}
                   onOpenDetails={() => setEngineeringView("details")}
                 />
               ) : null}
@@ -6119,14 +6147,12 @@ export function App() {
                   runnerPresets={engineeringRunnerPresets}
                   runnerPresetTemplates={engineeringRunnerPresetTemplates}
                   runnerPresetEnableState={engineeringRunnerPresetEnableState}
-                  onMissionChange={(mission) =>
-                    setWorkspace((current) => ({ ...current, mission }))
-                  }
+                  onMissionChange={updateMission}
                   onAutoWorkPresetChange={updateEngineeringAutoWorkPreset}
                   onAutoWorkAdapterReadyChange={
                     setEngineeringAutoWorkAdapterReady
                   }
-                  onAutoWorkWorktreeChange={setEngineeringAutoWorkWorktree}
+                  onAutoWorkWorktreeChange={updateEngineeringWorktree}
                   onGuidedCycleMaxRunsChange={(maxRuns) =>
                     setEngineeringGuidedCycleMaxRuns(
                       guidedCycleMaxRuns(maxRuns),
@@ -6186,9 +6212,7 @@ export function App() {
               {advancedSection === "cabinet" ? (
                 <MissionControl
                   mission={workspace.mission}
-                  onMissionChange={(mission) =>
-                    setWorkspace((current) => ({ ...current, mission }))
-                  }
+                  onMissionChange={updateMission}
                   run={run}
                   roles={workspace.roles}
                   sandboxPolicy={workspace.sandboxPolicy}

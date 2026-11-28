@@ -60,6 +60,8 @@ describe("i18n", () => {
       expect(copy.quickStart.title).toBeTruthy();
       expect(copy.quickStart.missionLabel).toBeTruthy();
       expect(copy.quickStart.runDry).toBeTruthy();
+      expect(copy.localCodingCli.worktreeLabel).toBeTruthy();
+      expect(copy.localCodingCli.worktreeHint).toContain(".");
       expect(copy.quickStart.cabinetRoles(8)).toBeTruthy();
       expect(copy.quickStart.resultDecision("revise")).toBeTruthy();
       expect(copy.quickStart.resultSummary(8)).toBeTruthy();

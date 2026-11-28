@@ -72,7 +72,7 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` starts the browser Workbench and the local gateway together. Open the URL printed by Vite, write a task, then choose **Use local Coding CLI** to inspect locally authenticated runners. If you intentionally need the gateway without the browser Workbench, use `npm run gateway`.
+`npm run dev` starts the browser Workbench and the local gateway together. Open the URL printed by Vite and select **Use local Coding CLI**. Enter or edit the task, check the working directory, and choose a locally authenticated runner. **Preview the plan** does not run an engineering task. For gateway-only startup, use `npm run gateway`.
 
 ### Naikaku CLI
 
@@ -152,8 +152,8 @@ Latest release:
 Run from the archive:
 
 ```bash
-tar -xzf naikaku-ai-togo-system-0.1.0-mac-dev-preview.tar.gz
-cd naikaku-ai-togo-system-0.1.0-mac-dev-preview
+tar -xzf naikaku-ai-togo-system-0.1.2-mac-dev-preview.tar.gz
+cd naikaku-ai-togo-system-0.1.2-mac-dev-preview
 npm ci
 npm run dev
 ```
